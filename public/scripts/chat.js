@@ -871,6 +871,9 @@
     dropdownEl.classList.toggle("open", !!open);
     if (menuEl) {
       menuEl.classList.toggle("open", !!open);
+      menuEl.hidden = !open;
+      menuEl.style.display = open ? "grid" : "none";
+      menuEl.style.pointerEvents = open ? "auto" : "none";
     }
     buttonEl.setAttribute("aria-expanded", open ? "true" : "false");
   }
@@ -2770,6 +2773,8 @@
         renderActiveSessionMessages();
       });
     }
+
+    closeAllDropdowns();
 
   }
 
