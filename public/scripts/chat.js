@@ -1663,6 +1663,54 @@
       .trim() || raw;
   }
 
+  function extractBackendErrorReason(data, rawText, fallbackMessage) {
+    const fallback = String(fallbackMessage || "Backend returned an error").trim() || "Backend returned an error";
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error.trim();
+    }
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message.trim();
+    }
+
+    if (typeof data?.detail === "string" && data.detail.trim()) {
+      return data.detail.trim();
+    }
+
+    if (Array.isArray(data?.detail)) {
+      const detailMessages = data.detail
+        .map((item) => {
+          if (typeof item === "string") return item.trim();
+          if (item && typeof item === "object" && typeof item.msg === "string") return item.msg.trim();
+          return "";
+        })
+        .filter(Boolean);
+
+      if (detailMessages.length) {
+        return detailMessages.join("; ");
+      }
+    }
+
+    if (data?.detail && typeof data.detail === "object") {
+      const nestedReason = String(data.detail.message || data.detail.error || data.detail.reason || "").trim();
+      if (nestedReason) {
+        return nestedReason;
+      }
+    }
+
+    const text = String(rawText || "").trim();
+    if (!text) {
+      return fallback;
+    }
+
+    if (text.startsWith("<")) {
+      return fallback;
+    }
+
+    return text.length > 400 ? `${text.slice(0, 397)}...` : text;
+  }
+
   async function requestGeneratedImage(session, prompt, safetyProfile = null) {
     const preflight = preflightMediaGenerationCheck(prompt, "image");
     if (!preflight.ok) {
@@ -1771,14 +1819,16 @@
     }
 
     let data = null;
+    let rawText = "";
     try {
-      data = await res.json();
+      rawText = await res.text();
+      data = rawText ? JSON.parse(rawText) : null;
     } catch {
       data = null;
     }
 
     if (!res.ok) {
-      const reason = String(data?.error || data?.detail || data?.message || "Video backend returned an error").trim();
+      const reason = extractBackendErrorReason(data, rawText, "Video backend returned an error");
       throw new Error(reason || "Video generation failed");
     }
 
