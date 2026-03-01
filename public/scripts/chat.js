@@ -956,6 +956,75 @@
     renderActiveSessionMessages();
   }
 
+  function updateSessionMetaFromMessages(session) {
+    if (!session || typeof session !== "object") return;
+
+    const messages = Array.isArray(session.messages) ? session.messages : [];
+    const firstUserMessage = messages.find((msg) => msg && msg.role === "user" && String(msg.content || "").trim());
+
+    if (firstUserMessage) {
+      const title = String(firstUserMessage.content || "").trim().replace(/\s+/g, " ").slice(0, 64);
+      session.title = title || "New conversation";
+    } else {
+      session.title = session.title || "New conversation";
+    }
+
+    session.updatedAt = Date.now();
+  }
+
+  function deleteSession(id) {
+    if (!id || !state.sessions[id]) return;
+
+    const wasActive = state.activeSessionId === id;
+    delete state.sessions[id];
+
+    const remainingIds = Object.keys(state.sessions).sort((a, b) => {
+      return (state.sessions[b]?.updatedAt || 0) - (state.sessions[a]?.updatedAt || 0);
+    });
+
+    if (!remainingIds.length) {
+      createNewSession();
+    } else if (wasActive) {
+      state.activeSessionId = remainingIds[0];
+    }
+
+    saveState();
+    syncSelectorsFromSession();
+    renderSessionsSidebar();
+    renderActiveSessionMessages();
+  }
+
+  function resetToFreshChat() {
+    state = {
+      activeSessionId: null,
+      sessions: {}
+    };
+    createNewSession();
+    syncSelectorsFromSession();
+    renderSessionsSidebar();
+    renderActiveSessionMessages();
+  }
+
+  function formatAvailableStyles() {
+    return KNOWN_RENDER_STYLES.join(", ");
+  }
+
+  function formatAvailableCameras() {
+    return KNOWN_CAMERA_PROFILES.join(", ");
+  }
+
+  function formatAvailableLighting() {
+    return KNOWN_LIGHTING_PROFILES.join(", ");
+  }
+
+  function formatAvailableMaterials() {
+    return KNOWN_MATERIAL_PROFILES.join(", ");
+  }
+
+  function createGeneratedMediaCard(meta = {}) {
+    return createGeneratedImageCard(meta) || createGeneratedVideoCard(meta);
+  }
+
   function syncSelectorsFromSession() {
     const session = getActiveSession();
     if (!session) return;
