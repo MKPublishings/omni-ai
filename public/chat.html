@@ -38,29 +38,43 @@
         <div class="chat-controls">
           <div class="model-selector dropdown-control" id="model-dropdown">
             <label for="model-btn">Model</label>
-            <button id="model-btn" type="button" class="chat-control-btn" aria-haspopup="listbox" aria-expanded="false">Omni</button>
-            <div id="model-menu" class="chat-dropdown" role="listbox" aria-label="Model selection">
-              <button type="button" class="chat-dropdown-item" role="option" data-value="auto">Auto Router</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="omni">Omni</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="gpt-4o-mini">GPT‑4o Mini</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="gpt-4o">GPT‑4o</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="deepseek">DeepSeek</button>
+            <button
+              id="model-btn"
+              type="button"
+              class="chat-control-btn"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="model-menu"
+            >Omni</button>
+            <div id="model-menu" class="chat-dropdown" role="listbox" aria-label="Model selection" aria-labelledby="model-btn" tabindex="-1">
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="auto">Auto Router</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="omni">Omni</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="gpt-4o-mini">GPT‑4o Mini</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="gpt-4o">GPT‑4o</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="deepseek">DeepSeek</button>
             </div>
           </div>
           <div class="model-selector dropdown-control" id="mode-dropdown">
             <label for="mode-btn">Mode</label>
-            <button id="mode-btn" type="button" class="chat-control-btn" aria-haspopup="listbox" aria-expanded="false">Auto</button>
-            <div id="mode-menu" class="chat-dropdown" role="listbox" aria-label="Mode selection">
-              <button type="button" class="chat-dropdown-item" role="option" data-value="auto">Auto</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="architect">Architect</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="analyst">Analyst</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="visual">Visual</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="lore">Lore</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="reasoning">Reasoning</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="coding">Coding</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="knowledge">Knowledge</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="system-knowledge">System Knowledge</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="simulation">Simulation</button>
+            <button
+              id="mode-btn"
+              type="button"
+              class="chat-control-btn"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="mode-menu"
+            >Auto</button>
+            <div id="mode-menu" class="chat-dropdown" role="listbox" aria-label="Mode selection" aria-labelledby="mode-btn" tabindex="-1">
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="auto">Auto</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="architect">Architect</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="analyst">Analyst</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="visual">Visual</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="lore">Lore</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="reasoning">Reasoning</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="coding">Coding</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="knowledge">Knowledge</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="system-knowledge">System Knowledge</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="simulation">Simulation</button>
             </div>
           </div>
         </div>
