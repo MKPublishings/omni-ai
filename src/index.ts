@@ -1348,12 +1348,7 @@ function parseOptionalBoolFlag(value: unknown): boolean | null {
 }
 
 function resolvePlaceholderVideoAllowed(env: Env): boolean {
-  const allow = parseOptionalBoolFlag(env.OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO);
-  if (allow !== null) return allow;
-
-  const placeholderOnly = parseOptionalBoolFlag(env.OMNI_MEDIA_PLACEHOLDER_ONLY);
-  if (placeholderOnly !== null) return placeholderOnly;
-
+  void env;
   return false;
 }
 
@@ -3241,8 +3236,7 @@ export default {
                   JSON.stringify({
                     error:
                       "Prompt-grounded video backend is not ready." +
-                      (detail ? ` ${detail}` : "") +
-                      " Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
+                      (detail ? ` ${detail}` : ""),
                     code: "video-backend-not-ready",
                     backend
                   }),
@@ -3259,8 +3253,7 @@ export default {
               return new Response(
                 JSON.stringify({
                   error:
-                    "Prompt-grounded video backend health check failed before generation. " +
-                    "Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
+                    "Prompt-grounded video backend health check failed before generation.",
                   code: "video-backend-health-check-failed"
                 }),
                 {
@@ -3345,8 +3338,7 @@ export default {
           return new Response(
             JSON.stringify({
               error:
-                `Prompt-grounded video generation failed: ${String(error?.message || "unknown error")}. ` +
-                "Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
+                `Prompt-grounded video generation failed: ${String(error?.message || "unknown error")}.`,
               code: "video-generation-unavailable"
             }),
             {

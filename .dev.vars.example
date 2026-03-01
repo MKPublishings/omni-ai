@@ -3,6 +3,8 @@
 
 # ===== Worker runtime =====
 OMNI_ENV="development"
+# For Cloudflare deployment use your media worker URL, e.g.:
+# OMNI_MEDIA_API_BASE_URL="https://omni-media.<your-account-subdomain>.workers.dev"
 OMNI_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
 OMNI_MEDIA_API_KEY="replace-with-omni-media-key"
 OMNI_MEDIA_API_TIMEOUT_MS="45000"

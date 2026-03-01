@@ -1,3 +1,5 @@
+const { normalizePromptLanguage } = require("../core/promptNormalizer");
+
 function ensureType(value, fallback = "image") {
     const normalized = String(value || fallback).toLowerCase();
     if (["image", "auto"].includes(normalized)) {
@@ -19,21 +21,24 @@ function applyGenerationToken(prompt, intent) {
 
 function normalizeStillPromptLanguage(prompt) {
     return String(prompt || "")
-        .replace(/\bcinematic\b/gi, "cinematic lighting")
-        .replace(/\bdynamic\b/gi, "dynamic composition")
-        .replace(/\bscene\b/gi, "still scene");
+    .replace(/\bcinematic\b(?!\s+lighting)/gi, "cinematic lighting")
+    .replace(/\bdynamic\b(?!\s+composition)/gi, "dynamic composition")
+    .replace(/\bscene\b(?!\s*\b(still|composition)\b)/gi, "still scene")
+    .replace(/\b(\w+)(\s+\1\b)+/gi, "$1");
 }
 
 function validatePromptForGeneration(prompt, options = {}) {
     const requestedType = ensureType(options.requestedType, "image");
     const resolvedType = "image";
-    let normalizedPrompt = applyGenerationToken(prompt, resolvedType);
+    const promptNormalization = normalizePromptLanguage(prompt);
+    let normalizedPrompt = applyGenerationToken(promptNormalization.cleanedPrompt, resolvedType);
     normalizedPrompt = normalizeStillPromptLanguage(normalizedPrompt);
 
     return {
         requestedType,
         resolvedType,
         normalizedPrompt,
+        promptNormalization,
         routing: {
             intent: "image",
             confidence: 1,

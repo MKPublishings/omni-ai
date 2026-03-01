@@ -1,6 +1,7 @@
 const stylePacks = require("./stylePacks");
 const visualIntelligence = require("./visualIntelligence");
 const { buildLawPromptDirectives, applyLawsToVisualInfluence } = require("./imageLawBridge");
+const { normalizePromptLanguage } = require("./promptNormalizer");
 const tokenizer = require("../utils/tokenizer");
 const logger = require("../utils/logger");
 
@@ -46,15 +47,58 @@ function buildStrictPromptDirective() {
     return "strict prompt fidelity: include only elements explicitly requested by the user; do not add extra subjects, characters, objects, text, logos, or overlays";
 }
 
+function inferContextTags(prompt) {
+    const lower = String(prompt || "").toLowerCase();
+    const tags = [];
+
+    if (/(portrait|headshot|face|selfie)/.test(lower)) {
+        tags.push("portrait framing", "detailed facial rendering");
+    }
+    if (/(landscape|panorama|wide shot|vista)/.test(lower)) {
+        tags.push("wide-angle composition", "depth layering");
+    }
+    if (/(close up|close-up|macro|detail shot)/.test(lower)) {
+        tags.push("macro detail focus");
+    }
+    if (/(rain|storm|wet|drizzle|thunder)/.test(lower)) {
+        tags.push("rain-soaked surfaces", "atmospheric moisture");
+    }
+    if (/(snow|winter|frost|blizzard)/.test(lower)) {
+        tags.push("cold ambient haze", "snow particle detail");
+    }
+    if (/(vintage|retro|film|analog)/.test(lower)) {
+        tags.push("subtle film grain", "cinematic color grading");
+    }
+    if (/(horror|haunted|scary|ominous)/.test(lower)) {
+        tags.push("ominous atmosphere", "deep shadow sculpting");
+    }
+    if (/(cute|whimsical|playful)/.test(lower)) {
+        tags.push("playful color harmony", "soft expressive lighting");
+    }
+    if (/(fantasy|dragon|wizard|magic|mythic)/.test(lower)) {
+        tags.push("epic fantasy mood", "mythic visual language");
+    }
+
+    return [...new Set(tags)];
+}
+
 module.exports = function promptOrchestrator(userPrompt, options = {}) {
-    const tokens = tokenizer(userPrompt);
+    const promptNormalization = normalizePromptLanguage(userPrompt);
+    const normalizedPrompt = promptNormalization.cleanedPrompt || String(userPrompt || "");
+    const tokens = tokenizer(normalizedPrompt);
 
     const base = {
-        userPrompt,
+        userPrompt: normalizedPrompt,
         tokens,
+        promptNormalization,
         semanticExpansion: "",
         technicalTags: [],
         styleTags: [],
+        styleRouting: {
+            explicitStylePack: "",
+            inferredStylePacks: [],
+            matchedKeywords: []
+        },
         lawTags: [],
         lawInfluence: {
             ids: [],
@@ -67,15 +111,19 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
         finalPrompt: ""
     };
 
-    const sceneInsights = visualIntelligence.inferScene(userPrompt);
-    const sceneDescription = inferSceneDescription(userPrompt) || sceneInsights.description;
-    const timeDirective = buildTimeDirective(inferTimeIntent(userPrompt));
+    const sceneInsights = visualIntelligence.inferScene(normalizedPrompt);
+    const sceneDescription = inferSceneDescription(normalizedPrompt) || sceneInsights.description;
+    const timeDirective = buildTimeDirective(inferTimeIntent(normalizedPrompt));
     const strictDirective = buildStrictPromptDirective();
     const stylePackName = options.stylePack || "";
     const stylePack = stylePacks.getStylePack(stylePackName);
+    const inferredStyle = stylePacks.inferStylePacks(normalizedPrompt, {
+        maxPacks: Number.isFinite(options.maxAutoStyles) ? options.maxAutoStyles : 2
+    });
+    const contextTags = inferContextTags(normalizedPrompt);
 
     const semanticExpansion = [
-        userPrompt,
+        normalizedPrompt,
         sceneDescription,
         timeDirective,
         strictDirective
@@ -83,8 +131,8 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
 
     const lawTags = buildLawPromptDirectives(options.laws);
     const lawInfluence = applyLawsToVisualInfluence(options.laws);
-    const styleTags = stylePack.tags || [];
-    const technicalTags = [];
+    const styleTags = [...new Set([...(stylePack.tags || []), ...(inferredStyle.tags || [])])];
+    const technicalTags = [...contextTags];
 
     const finalPrompt = [
         semanticExpansion,
@@ -98,6 +146,11 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
         semanticExpansion,
         technicalTags,
         styleTags,
+        styleRouting: {
+            explicitStylePack: stylePackName || "",
+            inferredStylePacks: inferredStyle.packIds || [],
+            matchedKeywords: inferredStyle.matchedKeywords || []
+        },
         lawTags,
         lawInfluence,
         negativeTags: [],

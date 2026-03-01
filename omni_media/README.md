@@ -83,9 +83,9 @@ Worker proxy integration (for `POST /api/video/generate` in the Cloudflare worke
 Media env precedence (runtime):
 
 - Base URL resolution order: `OMNI_MEDIA_API_BASE_URL` -> `OMNI_MEDIA_BASE_URL` -> `OMNI_MEDIA_HOST` + `OMNI_MEDIA_PORT`
-- Placeholder-mode resolution order: `OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO` -> `OMNI_MEDIA_PLACEHOLDER_ONLY`
-- If both placeholder vars are set, `OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO` wins
-- Recommended local setup: set only `OMNI_MEDIA_API_BASE_URL` and `OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO`
+- Placeholder video mode is disabled for generation (worker + media service enforce strict backend routing)
+- `OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO` and `OMNI_MEDIA_PLACEHOLDER_ONLY` are ignored for runtime generation
+- Recommended local setup: set only `OMNI_MEDIA_API_BASE_URL`
 
 Common misconfigurations checklist:
 

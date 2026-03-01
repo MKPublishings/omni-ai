@@ -30,14 +30,6 @@ def _parse_optional_bool_env(value: str | None) -> bool | None:
 
 
 def _is_placeholder_video_allowed() -> bool:
-    allow_value = _parse_optional_bool_env(os.getenv("OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO", ""))
-    if allow_value is not None:
-        return allow_value
-
-    placeholder_only_value = _parse_optional_bool_env(os.getenv("OMNI_MEDIA_PLACEHOLDER_ONLY", ""))
-    if placeholder_only_value is not None:
-        return placeholder_only_value
-
     return False
 
 
@@ -319,8 +311,7 @@ class OmniMediaService:
             if not allow_placeholder:
                 response.error = (
                     "Prompt-grounded video backend is unavailable (vllm_omni missing). "
-                    "Install/enable the video model backend or set OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true "
-                    "to explicitly allow placeholder clips."
+                    "Install/enable the video model backend."
                 )
                 return GenerateApiResponse(
                     id=response.id,
