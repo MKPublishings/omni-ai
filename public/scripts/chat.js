@@ -35,19 +35,6 @@
   const simulationExportBtn = document.getElementById("simulation-export-btn");
   const simulationRulesEditorEl = document.getElementById("simulation-rules-editor");
   const simulationLogEl = document.getElementById("simulation-log");
-  const mindRouteEl = document.getElementById("mind-route");
-  const mindPersonaEl = document.getElementById("mind-persona");
-  const mindEmotionEl = document.getElementById("mind-emotion");
-  const mindTimelineEl = document.getElementById("mind-timeline");
-  const internetModeEl = document.getElementById("internet-mode");
-  const internetProfileEl = document.getElementById("internet-profile");
-  const internetCountEl = document.getElementById("internet-count");
-  const internetQueryEl = document.getElementById("internet-query");
-  const internetSourcesEl = document.getElementById("internet-sources");
-  const mediaFilterAllBtn = document.getElementById("media-filter-all");
-  const mediaFilterImagesBtn = document.getElementById("media-filter-images");
-  const mediaFilterGifsBtn = document.getElementById("media-filter-gifs");
-  const mediaFilterVideosBtn = document.getElementById("media-filter-videos");
   const savePreferencesBtn = document.getElementById("save-preferences-btn");
   const resetMemoryBtn = document.getElementById("reset-memory-btn");
 
@@ -120,13 +107,6 @@
     apiHealthIntervalSeconds: 30,
     apiRetries: 1
   };
-
-  let activeMediaFilter = "all";
-
-  function normalizeMediaFilter(value) {
-    const normalized = String(value || "").trim().toLowerCase();
-    return ["all", "images", "gifs", "videos"].includes(normalized) ? normalized : "all";
-  }
 
   function getSetting(key, fallback = "") {
     try {
@@ -731,175 +711,6 @@
     return session.simulation;
   }
 
-  function ensureMindState(session) {
-    if (!session) return null;
-    if (!session.mindState || typeof session.mindState !== "object") {
-      session.mindState = {
-        route: "chat",
-        persona: "pending",
-        userEmotion: "pending",
-        omniEmotion: "pending",
-        timeline: []
-      };
-    }
-
-    if (!Array.isArray(session.mindState.timeline)) {
-      session.mindState.timeline = [];
-    }
-
-    return session.mindState;
-  }
-
-  function appendMindTimeline(session, text) {
-    const mindState = ensureMindState(session);
-    if (!mindState) return;
-
-    const entry = {
-      ts: Date.now(),
-      text: String(text || "").trim()
-    };
-    if (!entry.text) return;
-
-    mindState.timeline.push(entry);
-    mindState.timeline = mindState.timeline.slice(-30);
-  }
-
-  function renderMindTimeline(session) {
-    if (!mindTimelineEl) return;
-    const mindState = ensureMindState(session);
-    const timeline = Array.isArray(mindState?.timeline) ? mindState.timeline : [];
-
-    mindTimelineEl.innerHTML = "";
-    if (!timeline.length) {
-      const empty = document.createElement("div");
-      empty.className = "mind-timeline-entry";
-      empty.textContent = "No mind-state events yet.";
-      mindTimelineEl.appendChild(empty);
-      return;
-    }
-
-    for (const item of timeline.slice(-8)) {
-      const row = document.createElement("div");
-      row.className = "mind-timeline-entry";
-      const time = Number.isFinite(item?.ts)
-        ? new Date(item.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        : "--:--:--";
-      row.textContent = `[${time}] ${String(item?.text || "")}`;
-      mindTimelineEl.appendChild(row);
-    }
-
-    mindTimelineEl.scrollTop = mindTimelineEl.scrollHeight;
-  }
-
-  function updateMindStateUI(session = getActiveSession()) {
-    const mindState = ensureMindState(session);
-    if (mindRouteEl) mindRouteEl.textContent = `Route: ${mindState?.route || "chat"}`;
-    if (mindPersonaEl) mindPersonaEl.textContent = `Persona: ${mindState?.persona || "pending"}`;
-    if (mindEmotionEl) {
-      const userEmotion = mindState?.userEmotion || "pending";
-      const omniEmotion = mindState?.omniEmotion || "pending";
-      mindEmotionEl.textContent = `Emotion: ${userEmotion} → ${omniEmotion}`;
-    }
-    renderMindTimeline(session);
-    renderInternetInspector(session);
-  }
-
-  function ensureInternetInspectorState(session = getActiveSession()) {
-    if (!session) return null;
-    if (!session.internetInspector || typeof session.internetInspector !== "object") {
-      session.internetInspector = {
-        mode: getActiveMode(session) || "auto",
-        profile: "none",
-        count: 0,
-        query: "",
-        sources: [],
-        updatedAt: 0
-      };
-    }
-    if (!Array.isArray(session.internetInspector.sources)) {
-      session.internetInspector.sources = [];
-    }
-    return session.internetInspector;
-  }
-
-  function renderInternetInspector(session = getActiveSession()) {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    if (internetModeEl) {
-      internetModeEl.textContent = `Internet Mode: ${String(internetState.mode || "auto")}`;
-    }
-    if (internetProfileEl) {
-      internetProfileEl.textContent = `Profile: ${String(internetState.profile || "none")}`;
-    }
-    if (internetCountEl) {
-      const count = Number.isFinite(Number(internetState.count)) ? Number(internetState.count) : 0;
-      internetCountEl.textContent = `Sources: ${count}`;
-    }
-    if (internetQueryEl) {
-      const query = String(internetState.query || "").trim();
-      internetQueryEl.textContent = query ? `Query: ${query}` : "Query: not used yet.";
-    }
-
-    if (!internetSourcesEl) return;
-    internetSourcesEl.innerHTML = "";
-    const sourceList = Array.isArray(internetState.sources) ? internetState.sources : [];
-    if (!sourceList.length) {
-      const row = document.createElement("div");
-      row.className = "internet-source-item";
-      row.textContent = "No internet sources captured for this session yet.";
-      internetSourcesEl.appendChild(row);
-      return;
-    }
-
-    for (const source of sourceList.slice(0, 6)) {
-      const row = document.createElement("div");
-      row.className = "internet-source-item";
-      row.textContent = String(source || "");
-      internetSourcesEl.appendChild(row);
-    }
-  }
-
-  function updateInternetInspectorFromMeta(session, meta, queryText = "") {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    if (meta?.internetMode) {
-      internetState.mode = String(meta.internetMode || "auto").trim().toLowerCase() || "auto";
-    }
-    if (meta?.internetProfile) {
-      internetState.profile = String(meta.internetProfile || "none").trim() || "none";
-    }
-    if (Number.isFinite(meta?.internetCount)) {
-      internetState.count = Number(meta.internetCount) || 0;
-    }
-    if (queryText) {
-      internetState.query = queryText;
-    }
-    internetState.updatedAt = Date.now();
-    renderInternetInspector(session);
-  }
-
-  function updateInternetInspectorFromWebSearch(session, query, searchResult) {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    internetState.mode = String(searchResult?.mode || getActiveMode(session) || "auto").trim().toLowerCase();
-    const profile = searchResult?.profile;
-    if (profile && typeof profile === "object") {
-      internetState.profile = `${String(profile.queryPrefix || "")}|${String(profile.querySuffix || "")}|${String(profile.limit || "")}`;
-    }
-    internetState.count = Array.isArray(searchResult?.hits) ? searchResult.hits.length : 0;
-    internetState.query = String(query || "").trim();
-    internetState.sources = Array.isArray(searchResult?.hits)
-      ? searchResult.hits
-          .slice(0, 6)
-          .map((hit) => `${String(hit?.source || "web")} · ${String(hit?.title || "Untitled")}`)
-      : [];
-    internetState.updatedAt = Date.now();
-    renderInternetInspector(session);
-  }
-
   function appendSimulationLog(session, message) {
     const simulation = ensureSimulationState(session);
     if (!simulation) return;
@@ -1084,7 +895,6 @@
       for (const session of Object.values(state.sessions)) {
         if (!session || typeof session !== "object") continue;
         session.mode = getActiveMode(session);
-        session.mediaFilter = normalizeMediaFilter(session.mediaFilter || "all");
         ensureSimulationState(session);
       }
 
@@ -1119,7 +929,6 @@
       title: "New conversation",
       messages: [],
       mode: getSelectedModeFromSettings(),
-      mediaFilter: "all",
       model: getDefaultModelFromSettings(),
       createdAt: Date.now(),
       updatedAt: Date.now()
@@ -1136,9 +945,6 @@
   function setActiveSession(id) {
     if (!state.sessions[id]) return;
     state.activeSessionId = id;
-    const session = state.sessions[id];
-    activeMediaFilter = normalizeMediaFilter(session?.mediaFilter || "all");
-    updateMediaFilterUI();
     saveState();
     renderSessionsSidebar();
     syncSelectorsFromSession();
@@ -1157,147 +963,24 @@
     updateModeButton(activeMode);
     setActiveDropdownItem(modelMenu, session.model);
     setActiveDropdownItem(modeMenu, activeMode);
-    activeMediaFilter = normalizeMediaFilter(session.mediaFilter || "all");
-    updateMediaFilterUI();
     updateModeIndicator(activeMode);
     updateSimulationUI(session);
-    updateMindStateUI(session);
   }
 
-  function updateSessionMetaFromMessages(session) {
-    if (!session.messages.length) {
-      session.title = "New conversation";
-      return;
-    }
-    const firstUser = session.messages.find(m => m.role === "user");
-    if (firstUser) {
-      session.title = firstUser.content.slice(0, 40) + (firstUser.content.length > 40 ? "…" : "");
-    }
-    session.updatedAt = Date.now();
-  }
-
-  function deleteSession(id) {
-    if (!state.sessions[id]) return;
-    delete state.sessions[id];
-    const remainingIds = Object.keys(state.sessions);
-    if (!remainingIds.length) {
-      createNewSession();
-    } else if (state.activeSessionId === id) {
-      state.activeSessionId = remainingIds[0];
-    }
-    saveState();
-    renderSessionsSidebar();
-    renderActiveSessionMessages();
-  }
-
-  function resetToFreshChat() {
     if (isStreaming && currentAbortController) {
-      try {
-        currentAbortController.abort();
-      } catch {
-        // ignore
-      }
-    }
-
-    isStreaming = false;
-    if (sendBtn) sendBtn.disabled = false;
-    if (inputEl) inputEl.disabled = false;
-    if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-
-    state = {
-      activeSessionId: null,
-      sessions: {}
-    };
-
-    createNewSession();
-    syncSelectorsFromSession();
-    renderSessionsSidebar();
-    renderActiveSessionMessages();
-    shouldStickToBottom = true;
-    updateJumpToLatestVisibility();
+    void session;
   }
 
   // =========================
-  // 3. MARKDOWN ENGINE
-  // =========================
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  }
-
-  function renderMarkdown(text) {
-    if (!text) return "";
-
-    let html = escapeHtml(text);
-
-    // Code blocks ``` ```
-    html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
-      return `<pre class="md-code"><code>${code.trim()}</code></pre>`;
-    });
-
-    // Inline code `code`
-    html = html.replace(/`([^`]+)`/g, (m, code) => {
-      return `<code class="md-inline-code">${code}</code>`;
-    });
-
-    // Bold **text**
-    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-
-    // Italic *text*
-    html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-
-    // Simple lists (lines starting with - or *)
-    html = html.replace(/(^|\n)[*-]\s+(.+?)(?=\n|$)/g, (m, start, item) => {
-      return `${start}<li>${item}</li>`;
-    });
-    html = html.replace(/(<li>[\s\S]+<\/li>)/g, "<ul>$1</ul>");
-
-    // Line breaks
-    html = html.replace(/\n/g, "<br>");
-
-    return html;
-  }
-
-  // =========================
-  // 4. MESSAGE ENGINE
-  // =========================
-  function clearMessages() {
-    if (!messagesEl) return;
-    messagesEl.innerHTML = "";
-  }
-
-  function encodeExportToken(input) {
-    const raw = String(input || "");
-    try {
-      return btoa(unescape(encodeURIComponent(raw)))
+    void session;
+    void meta;
+    void queryText;
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=+$/g, "")
-        .slice(0, 28);
-    } catch {
-      return btoa(raw)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "")
-        .slice(0, 28);
-    }
-  }
-
-  function buildOmniExportFilename(kind, extension, generatedAt = Date.now(), prompt = "") {
-    const safeKind = String(kind || "media").trim().toLowerCase();
-    const ts = Number.isFinite(Number(generatedAt)) ? Number(generatedAt) : Date.now();
-    const stamp = new Date(ts).toISOString().replace(/[:.]/g, "-");
-    const tokenSeed = `${safeKind}|${stamp}|${prompt}|${Math.random().toString(36).slice(2, 10)}`;
-    const token = encodeExportToken(tokenSeed);
-    const safeExt = String(extension || "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
-    return `Omni_${safeKind}_${token}_${stamp}.${safeExt}`;
-  }
-
-  function formatGeneratedTimestamp(value) {
-    const ts = Number(value);
-    if (!Number.isFinite(ts) || ts <= 0) return "";
+    void session;
+    void query;
+    void searchResult;
     return new Date(ts).toLocaleString();
   }
 
@@ -1499,13 +1182,7 @@
     const session = getActiveSession();
     if (!session) return;
 
-    const isMediaFilterActive = activeMediaFilter !== "all";
-
     for (const msg of session.messages) {
-      if (isMediaFilterActive && !doesMessageMatchMediaFilter(msg, activeMediaFilter)) {
-        continue;
-      }
-
       const activeMode = getActiveMode(session);
       appendMessage(msg.role, msg.content, {
         model: session.model || "auto",
@@ -1525,55 +1202,6 @@
         videoFallback: Boolean(msg.videoFallback)
       });
     }
-    updateMindStateUI(session);
-  }
-
-  function doesMessageMatchMediaFilter(msg, filter) {
-    const mediaType = getMessageMediaType(msg);
-    if (!mediaType) return false;
-    if (filter === "images") return mediaType === "image";
-    return true;
-  }
-
-  function getMessageMediaType(msg) {
-    const imageDataUrl = String(msg?.imageDataUrl || "").trim();
-    const videoUrl = String(msg?.videoUrl || "").trim();
-
-    if (videoUrl) {
-      return "video";
-    }
-
-    if (imageDataUrl.startsWith("data:image/")) {
-      return "image";
-    }
-
-    return null;
-  }
-
-  function updateMediaFilterUI() {
-    const map = {
-      all: mediaFilterAllBtn,
-      images: mediaFilterImagesBtn
-    };
-
-    for (const [key, button] of Object.entries(map)) {
-      if (!button) continue;
-      const active = activeMediaFilter === key;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", active ? "true" : "false");
-    }
-  }
-
-  function setMediaFilter(nextFilter) {
-    const session = getActiveSession();
-    activeMediaFilter = normalizeMediaFilter(nextFilter);
-    if (session) {
-      session.mediaFilter = activeMediaFilter;
-      session.updatedAt = Date.now();
-      saveState();
-    }
-    updateMediaFilterUI();
-    renderActiveSessionMessages();
   }
 
   // =========================
@@ -2182,7 +1810,6 @@
           try {
             const currentMode = getActiveMode(session);
             const search = await requestInternetSearch(webCommand.query, currentMode);
-            updateInternetInspectorFromWebSearch(session, webCommand.query, search);
             if (!search.hits.length) {
               assistantText = `No internet results found for **${webCommand.query}** in mode **${search.mode}**.`;
             } else {
@@ -2388,13 +2015,6 @@
 
     const shouldGenerateVideo = isVideoGenerationEnabled() && mediaIntent.kind === "video";
     if (shouldGenerateVideo) {
-      const mindState = ensureMindState(session);
-      if (mindState) {
-        mindState.route = "video";
-        appendMindTimeline(session, "route=video, source=prompt-aware-media-intent");
-        updateMindStateUI(session);
-      }
-
       const assistantMessage = appendMessage("assistant", "Generating video...", {
         model: session.model || "auto",
         mode: activeMode
@@ -2471,13 +2091,6 @@
 
     const shouldGenerateImage = mediaIntent.kind === "image";
     if (shouldGenerateImage) {
-      const mindState = ensureMindState(session);
-      if (mindState) {
-        mindState.route = "image";
-        appendMindTimeline(session, "route=image, source=prompt-aware-media-intent");
-        updateMindStateUI(session);
-      }
-
       const assistantMessage = appendMessage("assistant", "Generating image...", {
         model: session.model || "auto",
         mode: activeMode
@@ -2601,21 +2214,6 @@
         },
         (meta) => {
           updateModelInspector(meta?.modelUsed || session.model || "auto", meta?.routeReason || "");
-          updateInternetInspectorFromMeta(session, meta, trimmed);
-
-          const mindState = ensureMindState(session);
-          if (mindState) {
-            if (meta?.orchestratorRoute) mindState.route = meta.orchestratorRoute;
-            if (meta?.personaTone) mindState.persona = meta.personaTone;
-            if (meta?.userEmotion) mindState.userEmotion = meta.userEmotion;
-            if (meta?.omniEmotion) mindState.omniEmotion = meta.omniEmotion;
-
-            const route = meta?.orchestratorRoute || "chat";
-            const persona = meta?.personaTone || "pending";
-            const emotions = `${meta?.userEmotion || "pending"}->${meta?.omniEmotion || "pending"}`;
-            appendMindTimeline(session, `route=${route}, persona=${persona}, emotion=${emotions}`);
-            updateMindStateUI(session);
-          }
 
           if (getActiveMode(session) === "simulation") {
             const simulation = ensureSimulationState(session);
@@ -2672,7 +2270,6 @@
       delete session._streamingMeta;
       updateSessionMetaFromMessages(session);
       saveState();
-      updateMindStateUI(session);
       playNotificationSound("assistant");
 
       if (runtimeSettings.showTimestamps || runtimeSettings.compactMode) {
@@ -2992,7 +2589,6 @@
     syncSelectorsFromSession();
     renderSessionsSidebar();
     renderActiveSessionMessages();
-    updateMediaFilterUI();
     startApiChecks();
     updateModelInspector("auto", "router-ready");
     loadPreferences();
@@ -3102,7 +2698,6 @@
       const session = getActiveSession();
       updateAgeGateComposerNotice();
       if (!session) return;
-      updateMindStateUI(session);
     });
 
     if (modelBtn && modelDropdown) {
@@ -3246,18 +2841,6 @@
       });
     }
 
-    if (mediaFilterAllBtn) {
-      mediaFilterAllBtn.addEventListener("click", () => setMediaFilter("all"));
-    }
-    if (mediaFilterImagesBtn) {
-      mediaFilterImagesBtn.addEventListener("click", () => setMediaFilter("images"));
-    }
-    if (mediaFilterGifsBtn) {
-      mediaFilterGifsBtn.addEventListener("click", () => setMediaFilter("gifs"));
-    }
-    if (mediaFilterVideosBtn) {
-      mediaFilterVideosBtn.addEventListener("click", () => setMediaFilter("videos"));
-    }
   }
 
   init();
