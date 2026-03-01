@@ -3156,7 +3156,7 @@ export default {
           return new Response(
             JSON.stringify({
               error:
-                "Prompt-grounded video backend is not configured. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT) and disable placeholder-only mode.",
+                "Prompt-grounded video backend is not configured. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT).",
               code: "video-backend-not-configured"
             }),
             {
@@ -3229,41 +3229,17 @@ export default {
               const backend = healthData?.video_backend || {};
               const realReady = Boolean(backend?.real_video_backend_ready);
               if (!realReady) {
-                const backendError = String(backend?.error || "").trim();
-                const providerError = String(backend?.provider_error || "").trim();
-                const detail = [backendError, providerError].filter(Boolean).join(" | ");
-                return new Response(
-                  JSON.stringify({
-                    error:
-                      "Prompt-grounded video backend is not ready." +
-                      (detail ? ` ${detail}` : ""),
-                    code: "video-backend-not-ready",
-                    backend
-                  }),
-                  {
-                    status: 503,
-                    headers: {
-                      ...CORS_HEADERS,
-                      "Content-Type": "application/json"
-                    }
-                  }
-                );
+                logger.log("video_backend_health_not_ready", {
+                  health_status: healthResponse.status,
+                  backend,
+                  note: "continuing generation attempt despite readiness probe"
+                });
               }
-            } catch {
-              return new Response(
-                JSON.stringify({
-                  error:
-                    "Prompt-grounded video backend health check failed before generation.",
-                  code: "video-backend-health-check-failed"
-                }),
-                {
-                  status: 503,
-                  headers: {
-                    ...CORS_HEADERS,
-                    "Content-Type": "application/json"
-                  }
-                }
-              );
+            } catch (healthError: any) {
+              logger.log("video_backend_health_check_failed", {
+                error: String(healthError?.message || "unknown error"),
+                note: "continuing generation attempt despite health-check failure"
+              });
             }
           }
 
