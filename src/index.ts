@@ -71,6 +71,9 @@ export interface Env {
   OMNI_MEDIA_FALLBACK_VIDEO_URL?: string;
   OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO?: string;
   OMNI_MEDIA_PLACEHOLDER_ONLY?: string;
+  OMNI_MEDIA_PROVIDER_VIDEO_URL?: string;
+  OMNI_MEDIA_PROVIDER_API_KEY?: string;
+  OMNI_MEDIA_PROVIDER_API_KEY_HEADER?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -1556,6 +1559,22 @@ function extractVideoUrlFromMediaPayload(payload: any): string {
     }
     return text.length > 400 ? `${text.slice(0, 397)}...` : text;
 }
+
+  function isVideoModelUnavailableError(message: string): boolean {
+    const value = String(message || "").toLowerCase();
+    if (!value) return false;
+    return (
+      value.includes("video model is unavailable") ||
+      value.includes("configure omni_media_provider_video_url") ||
+      value.includes("no such model") ||
+      value.includes("5007")
+    );
+  }
+
+  function hasDirectProviderFallbackConfig(env: Env): boolean {
+    const providerUrl = sanitizePromptText(String(env.OMNI_MEDIA_PROVIDER_VIDEO_URL || "")).trim();
+    return Boolean(providerUrl);
+  }
 
 function buildVideoProxyPayload(upstreamData: any, fallbackUrl: string): Record<string, any> {
   const outputs = Array.isArray(upstreamData?.outputs) ? upstreamData.outputs : [];
@@ -3612,20 +3631,10 @@ export default {
             }
 
             if (!upstreamResponse.ok && upstreamError && targetIndex >= targetUrls.length - 1) {
-              return new Response(
-                JSON.stringify({
-                  error: upstreamError,
-                  details: String(rawText || "").slice(0, 500),
-                  code: "video-backend-upstream-error"
-                }),
-                {
-                  status: upstreamResponse.status,
-                  headers: {
-                    ...CORS_HEADERS,
-                    "Content-Type": "application/json"
-                  }
-                }
-              );
+              lastErrorMessage = upstreamError;
+              lastRawText = rawText;
+              lastStatus = upstreamResponse.status;
+              break;
             }
 
             if (upstreamResponse.ok && upstreamFailed && upstreamError) {
@@ -3652,6 +3661,80 @@ export default {
                 response_excerpt: String(rawText || "").slice(0, 220)
               });
               continue;
+            }
+          }
+
+          const shouldTryDirectProviderFallback =
+            isVideoModelUnavailableError(lastErrorMessage) ||
+            /\b1042\b/.test(String(lastErrorMessage || "")) ||
+            lastStatus === 404;
+
+          if (shouldTryDirectProviderFallback) {
+            const providerUrl = sanitizePromptText(String(env.OMNI_MEDIA_PROVIDER_VIDEO_URL || "")).trim();
+            if (providerUrl) {
+              const providerHeaders: Record<string, string> = {
+                "Content-Type": "application/json"
+              };
+              const providerApiKey = sanitizePromptText(String(env.OMNI_MEDIA_PROVIDER_API_KEY || "")).trim();
+              const providerApiKeyHeader =
+                sanitizePromptText(String(env.OMNI_MEDIA_PROVIDER_API_KEY_HEADER || "x-api-key")).trim() || "x-api-key";
+              if (providerApiKey) {
+                providerHeaders[providerApiKeyHeader] = providerApiKey;
+              }
+
+              const providerPayload = {
+                prompt,
+                negative_prompt: typeof body?.negative_prompt === "string" ? body.negative_prompt : undefined,
+                mode: upstreamPayload.mode,
+                params: upstreamParams,
+                metadata: {
+                  source: "omni-main-worker-direct-provider-fallback"
+                }
+              };
+
+              try {
+                const providerResponse = await fetch(providerUrl, {
+                  method: "POST",
+                  headers: providerHeaders,
+                  body: JSON.stringify(providerPayload),
+                  signal: controller.signal
+                });
+
+                const providerRawText = await providerResponse.text();
+                let providerData: any = null;
+                try {
+                  providerData = providerRawText ? JSON.parse(providerRawText) : null;
+                } catch {
+                  providerData = null;
+                }
+
+                const providerVideoUrl = extractVideoUrlFromMediaPayload(providerData);
+                if (providerResponse.ok && providerVideoUrl) {
+                  const normalizedProviderPayload = buildVideoProxyPayload(providerData || {}, providerVideoUrl);
+                  normalizedProviderPayload.metadata = {
+                    ...(normalizedProviderPayload.metadata || {}),
+                    provider_fallback: true,
+                    provider_fallback_source: "OMNI_MEDIA_PROVIDER_VIDEO_URL"
+                  };
+
+                  return new Response(JSON.stringify(normalizedProviderPayload), {
+                    status: 200,
+                    headers: {
+                      ...CORS_HEADERS,
+                      "Content-Type": "application/json"
+                    }
+                  });
+                }
+
+                const providerError = extractVideoBackendErrorMessage(providerData, providerRawText);
+                if (providerError) {
+                  lastErrorMessage = providerError;
+                  lastRawText = providerRawText;
+                  lastStatus = providerResponse.status;
+                }
+              } catch (providerError: any) {
+                lastErrorMessage = String(providerError?.message || "direct provider fallback failed");
+              }
             }
           }
 
@@ -3816,6 +3899,7 @@ export default {
       if (url.pathname === "/api/video/health" && request.method === "GET") {
         const baseUrl = resolveMediaBaseUrl(env);
         const allowPlaceholderVideo = resolvePlaceholderVideoAllowed(env);
+        const normalizedBase = baseUrl ? baseUrl.replace(/\/+$/, "") : "";
 
         const payload: Record<string, unknown> = {
           ok: true,
@@ -3823,7 +3907,11 @@ export default {
           placeholder_mode_enabled: allowPlaceholderVideo,
           media_base_configured: Boolean(baseUrl),
           real_video_backend_ready: false,
-          media_health_source: baseUrl ? `${baseUrl.replace(/\/+$/, "")}/v1/health` : null
+          direct_provider_fallback_configured: hasDirectProviderFallbackConfig(env),
+          media_health_source: normalizedBase ? `${normalizedBase}/v1/health` : null,
+          media_health_candidates: normalizedBase
+            ? [`${normalizedBase}/v1/health`, `${normalizedBase}/health`, `${normalizedBase}/debug/provider-config`]
+            : []
         };
 
         if (!baseUrl) {
@@ -3835,7 +3923,7 @@ export default {
           });
         }
 
-        const targetUrl = `${baseUrl.replace(/\/+$/, "")}/v1/health`;
+        const candidateUrls = [`${normalizedBase}/v1/health`, `${normalizedBase}/health`, `${normalizedBase}/debug/provider-config`];
         const controller = new AbortController();
         const timeoutMs = clamp(Number(env.OMNI_MEDIA_API_TIMEOUT_MS || "45000"), 5000, 120000);
         const timeoutHandle = setTimeout(() => {
@@ -3847,15 +3935,70 @@ export default {
         }, timeoutMs);
 
         try {
-          const response = await fetch(targetUrl, {
-            method: "GET",
-            signal: controller.signal
-          });
-          const data = (await response.json().catch(() => ({}))) as any;
-          payload.media_health_status = response.status;
-          payload.media_health_ok = response.ok;
-          payload.real_video_backend_ready = Boolean(data?.video_backend?.real_video_backend_ready);
-          payload.media_video_backend = data?.video_backend || null;
+          let lastStatus: number | null = null;
+          let lastError = "";
+
+          for (const targetUrl of candidateUrls) {
+            const response = await fetch(targetUrl, {
+              method: "GET",
+              signal: controller.signal
+            });
+
+            payload.media_health_source = targetUrl;
+            payload.media_health_status = response.status;
+            lastStatus = response.status;
+
+            const rawText = await response.text().catch(() => "");
+            let data: any = {};
+            try {
+              data = rawText ? JSON.parse(rawText) : {};
+            } catch {
+              data = {};
+            }
+
+            if (response.ok && targetUrl.endsWith("/debug/provider-config")) {
+              const providerReady = Boolean(data?.provider_url_present) && Boolean(data?.provider_url_valid);
+              payload.media_health_ok = true;
+              payload.real_video_backend_ready = providerReady;
+              payload.media_provider_config = {
+                provider_url_present: Boolean(data?.provider_url_present),
+                provider_url_valid: Boolean(data?.provider_url_valid),
+                provider_api_key_present: Boolean(data?.provider_api_key_present),
+                provider_api_key_header: String(data?.provider_api_key_header || "x-api-key")
+              };
+              return new Response(JSON.stringify(payload), {
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              });
+            }
+
+            if (response.ok && (targetUrl.endsWith("/v1/health") || targetUrl.endsWith("/health"))) {
+              payload.media_health_ok = true;
+              payload.real_video_backend_ready = Boolean(data?.video_backend?.real_video_backend_ready);
+              payload.media_video_backend = data?.video_backend || null;
+              if (!data || Object.keys(data).length === 0) {
+                payload.media_health_raw = rawText.slice(0, 500);
+              }
+              return new Response(JSON.stringify(payload), {
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              });
+            }
+
+            lastError = rawText || `status ${response.status}`;
+          }
+
+          payload.media_health_ok = false;
+          payload.media_health_status = lastStatus;
+          payload.media_health_error = String(lastError || "all health probes failed");
+          if (hasDirectProviderFallbackConfig(env)) {
+            payload.real_video_backend_ready = true;
+            payload.direct_provider_fallback_ready = true;
+          }
           return new Response(JSON.stringify(payload), {
             headers: {
               ...CORS_HEADERS,
@@ -3865,6 +4008,10 @@ export default {
         } catch (error: any) {
           payload.media_health_ok = false;
           payload.media_health_error = String(error?.message || "unknown error");
+          if (hasDirectProviderFallbackConfig(env)) {
+            payload.real_video_backend_ready = true;
+            payload.direct_provider_fallback_ready = true;
+          }
           return new Response(JSON.stringify(payload), {
             headers: {
               ...CORS_HEADERS,

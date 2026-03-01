@@ -13,4 +13,6 @@ preview_bucket_name = "omni-media"
 [vars]
 PUBLIC_BASE_URL = "https://omni-ai-media.omni-ai.workers.dev"
 VIDEO_MODEL = "@cf/bytedance/stable-video-diffusion-img2vid-xt"
+# Real self-hosted GPU backend endpoint (Cloudflare Tunnel / RunPod / Modal etc.)
+OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://gpu.mkomni.com/generate"
 OMNI_MEDIA_PROVIDER_API_KEY_HEADER = "x-api-key"

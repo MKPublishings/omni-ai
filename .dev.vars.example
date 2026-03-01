@@ -12,9 +12,11 @@ OMNI_MEDIA_FALLBACK_VIDEO_URL="https://interactive-examples.mdn.mozilla.net/medi
 OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO="false"
 OMNI_MEDIA_PLACEHOLDER_ONLY="false"
 
-# Optional external provider path for real prompt-grounded video generation
-OMNI_MEDIA_PROVIDER_VIDEO_URL=""
-OMNI_MEDIA_PROVIDER_API_KEY=""
+# Optional provider path used by Omni worker.
+# For self-hosted mode, point this to your omni-ai-media worker /generate route.
+# Example: OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
+OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
+OMNI_MEDIA_PROVIDER_API_KEY="replace-with-provider-key"
 OMNI_MEDIA_PROVIDER_API_KEY_HEADER="x-api-key"
 OMNI_MEDIA_PROVIDER_TIMEOUT_SEC="90"
 OMNI_MEDIA_PROVIDER_HEALTH_URL=""

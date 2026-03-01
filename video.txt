@@ -6,8 +6,8 @@
   10: OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO="false"
   11  
   12: # Optional external provider path for real prompt-grounded video generation
-  13: OMNI_MEDIA_PROVIDER_VIDEO_URL=""
-  14  OMNI_MEDIA_PROVIDER_API_KEY=""
+  13: OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
+  14  OMNI_MEDIA_PROVIDER_API_KEY="replace-with-provider-key"
 
 eslint.config.cjs:
   11        "omni_image_exports/**",
@@ -191,7 +191,7 @@ omni-video-engine\core\engine.py:
   75:     return VideoResult(frames=frames, metadata=metadata)
   76  
   77  OMNI_MEDIA_API_BASE_URL="http://127.0.0.1:8787"
-  78: OMNI_MEDIA_PROVIDER_VIDEO_URL="http://127.0.0.1:8787/omni_video_exports"
+  78: OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
   79  OMNI_MEDIA_PLACEHOLDER_ONLY="false"
 
 omni-video-engine\core\pipeline.py:

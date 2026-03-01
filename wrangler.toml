@@ -9,6 +9,7 @@ binding = "AI"
 [vars]
 OMNI_ENV = "production"
 OMNI_MEDIA_API_BASE_URL = "https://omni-ai-media.omni-ai.workers.dev"
+OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://omni-ai-media.omni-ai.workers.dev/generate"
 
 # Optional model aliases for omni runtime routing.
 # Uncomment and set these to provider model IDs available in your account.
@@ -27,6 +28,11 @@ OMNI_MEDIA_API_BASE_URL = "https://omni-ai-media.omni-ai.workers.dev"
 # For local dev override in .dev.vars (example uses http://127.0.0.1:8788)
 # OMNI_MEDIA_API_KEY = "replace-with-omni-media-key"
 # OMNI_MEDIA_API_TIMEOUT_MS = "45000" # clamped 5000..120000
+# External provider endpoint for fallback only (must NOT be your omni-ai-media worker URL).
+# For self-hosted setup, this should target your media worker generate route.
+# OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://omni-ai-media.omni-ai.workers.dev/generate"
+# OMNI_MEDIA_PROVIDER_API_KEY = "replace-with-provider-key"
+# OMNI_MEDIA_PROVIDER_API_KEY_HEADER = "x-api-key"
 # OMNI_MEDIA_FALLBACK_VIDEO_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 # OMNI_RESPONSE_MIN_CHARS = "2000"
 # OMNI_RESPONSE_BASE_CHARS = "4500"
