@@ -1834,15 +1834,30 @@
 
     const outputs = Array.isArray(data?.outputs) ? data.outputs : [];
     const videoOut = outputs.find((item) => String(item?.type || "").toLowerCase() === "video") || outputs[0] || null;
-    const videoUrl = String(videoOut?.url || "").trim();
+    const videoUrl = String(
+      videoOut?.url ||
+      data?.url ||
+      data?.video_url ||
+      data?.output_url ||
+      data?.result?.url ||
+      data?.result?.video_url ||
+      ""
+    ).trim();
     if (!videoUrl) {
       throw new Error("Video response did not include a playable URL");
     }
 
+    const responseMetadata =
+      videoOut?.metadata && typeof videoOut.metadata === "object"
+        ? videoOut.metadata
+        : data?.metadata && typeof data.metadata === "object"
+        ? data.metadata
+        : {};
+
     return {
       videoUrl,
       metadata: {
-        ...(videoOut?.metadata || {}),
+        ...responseMetadata,
         style_preset: String(videoOut?.metadata?.style_preset || styleProfile.stylePreset),
         motion_profile: String(videoOut?.metadata?.motion_profile || styleProfile.motion),
         camera_profile: String(videoOut?.metadata?.camera_profile || styleProfile.camera),

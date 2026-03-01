@@ -1485,6 +1485,57 @@ function validateMediaBaseUrl(baseUrl: string): { ok: boolean; reason?: string; 
   return { ok: true };
 }
 
+function extractVideoUrlFromMediaPayload(payload: any): string {
+  const outputs = Array.isArray(payload?.outputs) ? payload.outputs : [];
+  const videoOutput =
+    outputs.find((entry: any) => String(entry?.type || "").toLowerCase() === "video") ||
+    outputs[0] ||
+    null;
+
+  return sanitizePromptText(
+    String(
+      videoOutput?.url ||
+        payload?.url ||
+        payload?.video_url ||
+        payload?.output_url ||
+        payload?.result?.url ||
+        payload?.result?.video_url ||
+        payload?.data?.url ||
+        payload?.data?.video_url ||
+        payload?.job?.url ||
+        ""
+    )
+  ).trim();
+}
+
+function buildVideoProxyPayload(upstreamData: any, fallbackUrl: string): Record<string, any> {
+  const outputs = Array.isArray(upstreamData?.outputs) ? upstreamData.outputs : [];
+  const hasOutputUrl = outputs.some((entry: any) => Boolean(sanitizePromptText(String(entry?.url || "")).trim()));
+
+  if (hasOutputUrl) {
+    return upstreamData;
+  }
+
+  return {
+    id: String(upstreamData?.id || upstreamData?.job_id || crypto.randomUUID()),
+    status: String(upstreamData?.status || "completed"),
+    outputs: [
+      {
+        type: "video",
+        url: fallbackUrl,
+        data: null,
+        metadata: {
+          ...(upstreamData?.metadata || {})
+        }
+      }
+    ],
+    error: null,
+    metadata: {
+      ...(upstreamData?.metadata || {})
+    }
+  };
+}
+
 const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   mythic_cinematic: {
     name: "Mythic Cinematic",
@@ -3371,7 +3422,7 @@ export default {
 
         const normalizedBase = baseUrl.replace(/\/+$/, "");
         const healthUrl = `${normalizedBase}/v1/health`;
-        const targetUrl = `${normalizedBase}/v1/generate/video`;
+        const targetUrls = [`${normalizedBase}/v1/generate/video`, `${normalizedBase}/generate`];
         const userParams = typeof body?.params === "object" && body?.params ? body.params : {};
         const upstreamParams = {
           width: Number.isFinite(Number(userParams?.width)) ? Number(userParams.width) : 768,
@@ -3452,21 +3503,81 @@ export default {
             upstreamHeaders["x-api-key"] = serviceApiKey;
           }
 
-          const upstreamResponse = await fetch(targetUrl, {
-            method: "POST",
-            headers: upstreamHeaders,
-            body: JSON.stringify(upstreamPayload),
-            signal: controller.signal
-          });
+          const workerFallbackPayload = {
+            prompt,
+            negative_prompt: typeof body?.negative_prompt === "string" ? body.negative_prompt : undefined,
+            width: upstreamParams.width,
+            height: upstreamParams.height,
+            num_frames: upstreamParams.num_frames,
+            fps: upstreamParams.fps,
+            mode: upstreamPayload.mode,
+            params: upstreamParams,
+            safety_level: upstreamPayload.safety_level,
+            watermark: upstreamPayload.watermark,
+            return_format: upstreamPayload.return_format
+          };
 
-          const rawText = await upstreamResponse.text();
-          return new Response(rawText, {
-            status: upstreamResponse.status,
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
+          let lastRawText = "";
+          let lastStatus = 502;
+
+          for (let targetIndex = 0; targetIndex < targetUrls.length; targetIndex++) {
+            const targetUrl = targetUrls[targetIndex];
+            const bodyForTarget = targetIndex === 0 ? upstreamPayload : workerFallbackPayload;
+
+            const upstreamResponse = await fetch(targetUrl, {
+              method: "POST",
+              headers: upstreamHeaders,
+              body: JSON.stringify(bodyForTarget),
+              signal: controller.signal
+            });
+
+            const rawText = await upstreamResponse.text();
+            lastRawText = rawText;
+            lastStatus = upstreamResponse.status;
+
+            let upstreamData: any = null;
+            try {
+              upstreamData = rawText ? JSON.parse(rawText) : null;
+            } catch {
+              upstreamData = null;
             }
-          });
+
+            const videoUrl = extractVideoUrlFromMediaPayload(upstreamData);
+            if (upstreamResponse.ok && videoUrl) {
+              const normalizedPayload = buildVideoProxyPayload(upstreamData || {}, videoUrl);
+              return new Response(JSON.stringify(normalizedPayload), {
+                status: upstreamResponse.status,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              });
+            }
+
+            if (targetIndex < targetUrls.length - 1) {
+              logger.log("video_proxy_retry_alt_endpoint", {
+                attempted_url: targetUrl,
+                status: upstreamResponse.status,
+                response_excerpt: String(rawText || "").slice(0, 220)
+              });
+              continue;
+            }
+          }
+
+          return new Response(
+            JSON.stringify({
+              error: "Video backend response did not include a playable URL",
+              details: String(lastRawText || "").slice(0, 500),
+              code: "video-backend-invalid-response"
+            }),
+            {
+              status: lastStatus >= 400 ? lastStatus : 502,
+              headers: {
+                ...CORS_HEADERS,
+                "Content-Type": "application/json"
+              }
+            }
+          );
         } catch (error: any) {
           logger.error("video_proxy_error", error);
           const proxyError = String(error?.message || "unknown error");
