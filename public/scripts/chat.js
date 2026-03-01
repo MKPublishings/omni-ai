@@ -372,6 +372,10 @@
     return { ok: true };
   }
 
+  function isVideoGenerationEnabled() {
+    return false;
+  }
+
   function detectAutoMediaIntent(text) {
     const raw = String(text || "").trim();
     const value = raw.toLowerCase();
@@ -382,7 +386,7 @@
     }
 
     if (value.startsWith("/video")) {
-      return { kind: "video", prompt: extractVideoPrompt(raw) };
+      return { kind: "chat", prompt: raw };
     }
 
     const asksVideo = /\b(video|clip|animation|animate|cinematic\s+shot|motion)\b/i.test(value);
@@ -390,7 +394,7 @@
 
     const asksImage = /\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i.test(value);
 
-    if (asksVideo || asksGif) {
+    if (isVideoGenerationEnabled() && (asksVideo || asksGif)) {
       return { kind: "video", prompt: extractVideoPrompt(raw) };
     }
 
@@ -2382,7 +2386,7 @@
 
     const mediaIntent = detectAutoMediaIntent(trimmed);
 
-    const shouldGenerateVideo = mediaIntent.kind === "video";
+    const shouldGenerateVideo = isVideoGenerationEnabled() && mediaIntent.kind === "video";
     if (shouldGenerateVideo) {
       const mindState = ensureMindState(session);
       if (mindState) {

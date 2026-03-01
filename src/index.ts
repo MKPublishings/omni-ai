@@ -2895,6 +2895,26 @@ export default {
         });
       }
 
+      if (
+        url.pathname === "/api/video/generate" ||
+        url.pathname === "/api/video/health" ||
+        url.pathname === "/omni_video_exports"
+      ) {
+        return new Response(
+          JSON.stringify({
+            error: "Video generation is temporarily disabled in Omni AI.",
+            code: "video-generation-disabled"
+          }),
+          {
+            status: 410,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+
       if (url.pathname === "/api/video/generate" && request.method !== "POST") {
         return new Response("Method Not Allowed", {
           status: 405,
