@@ -1492,7 +1492,7 @@ function extractVideoUrlFromMediaPayload(payload: any): string {
     outputs[0] ||
     null;
 
-  return sanitizePromptText(
+  const directUrl = sanitizePromptText(
     String(
       videoOutput?.url ||
         payload?.url ||
@@ -1506,6 +1506,55 @@ function extractVideoUrlFromMediaPayload(payload: any): string {
         ""
     )
   ).trim();
+
+    if (directUrl) {
+      return directUrl;
+    }
+
+    const rawData = String(
+      videoOutput?.data ||
+        payload?.data ||
+        payload?.video_data ||
+        payload?.result?.data ||
+        payload?.result?.video_data ||
+        ""
+    ).trim();
+
+    if (!rawData) {
+      return "";
+    }
+
+    if (/^data:video\//i.test(rawData)) {
+      return rawData;
+    }
+
+    if (/^[A-Za-z0-9+/=\r\n]+$/.test(rawData) && rawData.replace(/[\r\n]/g, "").length > 256) {
+      return `data:video/mp4;base64,${rawData.replace(/[\r\n]/g, "")}`;
+    }
+
+    return "";
+  }
+
+  function extractVideoBackendErrorMessage(payload: any, rawText: string): string {
+    const primary = sanitizePromptText(
+      String(
+        payload?.error ||
+          payload?.message ||
+          payload?.detail ||
+          payload?.reason ||
+          payload?.errors?.[0]?.message ||
+          ""
+      )
+    ).trim();
+    if (primary) {
+      return primary;
+    }
+
+    const text = String(rawText || "").trim();
+    if (!text || text.startsWith("<")) {
+      return "";
+    }
+    return text.length > 400 ? `${text.slice(0, 397)}...` : text;
 }
 
 function buildVideoProxyPayload(upstreamData: any, fallbackUrl: string): Record<string, any> {
@@ -3519,6 +3568,7 @@ export default {
 
           let lastRawText = "";
           let lastStatus = 502;
+          let lastErrorMessage = "";
 
           for (let targetIndex = 0; targetIndex < targetUrls.length; targetIndex++) {
             const targetUrl = targetUrls[targetIndex];
@@ -3542,8 +3592,15 @@ export default {
               upstreamData = null;
             }
 
+            const upstreamError = extractVideoBackendErrorMessage(upstreamData, rawText);
+            const upstreamStatus = String(upstreamData?.status || "").toLowerCase();
+            const upstreamFailed = upstreamStatus === "failed";
+            if (upstreamError) {
+              lastErrorMessage = upstreamError;
+            }
+
             const videoUrl = extractVideoUrlFromMediaPayload(upstreamData);
-            if (upstreamResponse.ok && videoUrl) {
+            if (upstreamResponse.ok && videoUrl && !upstreamFailed) {
               const normalizedPayload = buildVideoProxyPayload(upstreamData || {}, videoUrl);
               return new Response(JSON.stringify(normalizedPayload), {
                 status: upstreamResponse.status,
@@ -3552,6 +3609,40 @@ export default {
                   "Content-Type": "application/json"
                 }
               });
+            }
+
+            if (!upstreamResponse.ok && upstreamError && targetIndex >= targetUrls.length - 1) {
+              return new Response(
+                JSON.stringify({
+                  error: upstreamError,
+                  details: String(rawText || "").slice(0, 500),
+                  code: "video-backend-upstream-error"
+                }),
+                {
+                  status: upstreamResponse.status,
+                  headers: {
+                    ...CORS_HEADERS,
+                    "Content-Type": "application/json"
+                  }
+                }
+              );
+            }
+
+            if (upstreamResponse.ok && upstreamFailed && upstreamError) {
+              return new Response(
+                JSON.stringify({
+                  error: upstreamError,
+                  details: String(rawText || "").slice(0, 500),
+                  code: "video-backend-generation-failed"
+                }),
+                {
+                  status: 502,
+                  headers: {
+                    ...CORS_HEADERS,
+                    "Content-Type": "application/json"
+                  }
+                }
+              );
             }
 
             if (targetIndex < targetUrls.length - 1) {
@@ -3566,7 +3657,7 @@ export default {
 
           return new Response(
             JSON.stringify({
-              error: "Video backend response did not include a playable URL",
+              error: lastErrorMessage || "Video backend response did not include a playable URL",
               details: String(lastRawText || "").slice(0, 500),
               code: "video-backend-invalid-response"
             }),
