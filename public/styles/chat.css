@@ -19,6 +19,9 @@
   margin-bottom: 20px;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 6;
+  overflow: visible;
 }
 
 .chat-subtitle {
@@ -32,6 +35,8 @@
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 7;
 }
 
 .chat-action-btn {
@@ -87,6 +92,7 @@
 
 .dropdown-control {
   position: relative;
+  z-index: 8;
 }
 
 .model-selector label {
@@ -176,14 +182,19 @@
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
+  right: auto;
   min-width: 100%;
+  max-width: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 6px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.32);
   background: rgba(14, 14, 14, 0.96);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.42), 0 0 12px rgba(15, 82, 186, 0.16);
   backdrop-filter: blur(14px) saturate(140%);
-  z-index: 20;
+  z-index: 50;
   display: none;
 }
 

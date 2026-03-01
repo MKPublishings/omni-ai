@@ -35,8 +35,6 @@
   const simulationExportBtn = document.getElementById("simulation-export-btn");
   const simulationRulesEditorEl = document.getElementById("simulation-rules-editor");
   const simulationLogEl = document.getElementById("simulation-log");
-  const savePreferencesBtn = document.getElementById("save-preferences-btn");
-  const resetMemoryBtn = document.getElementById("reset-memory-btn");
 
   const sessionsSidebarEl = document.getElementById("sessions-sidebar");
   const newSessionBtn = document.getElementById("new-session-btn");
@@ -1736,11 +1734,6 @@
             }
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore style preference save failures
-            }
             assistantText = requestedStyle
               ? `Image style set to **${requestedStyle}** for this session.`
               : "Image style reset to **auto** for this session.";
@@ -1757,11 +1750,6 @@
             session.imageCamera = requestedCamera;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore camera preference save failures
-            }
             assistantText = `Camera profile set to **${requestedCamera}**.`;
           }
         }
@@ -1776,11 +1764,6 @@
             session.imageLighting = requestedLighting;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore lighting preference save failures
-            }
             assistantText = `Lighting profile set to **${requestedLighting}**.`;
           }
         }
@@ -1795,11 +1778,6 @@
             session.imageMaterials = requestedMaterials;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore material preference save failures
-            }
             assistantText = `Materials set to **${requestedMaterials.join(", ")}**.`;
           }
         }
@@ -2435,41 +2413,6 @@
     }
   }
 
-  async function savePreferences() {
-    const session = getActiveSession();
-    if (!session) return;
-    const preferredImageStyle = getActiveImageStyle(session);
-    const preferredImageCamera = getActiveCameraProfile(session);
-    const preferredImageLighting = getActiveLightingProfile(session);
-    const preferredImageMaterials = getActiveMaterials(session);
-
-    const payload = {
-      preferredMode: getActiveMode(session),
-      writingStyle: "concise",
-      lastUsedSettings: {
-        preferredModel: session.model || "auto",
-        preferredImageStyle: preferredImageStyle || "",
-        preferredImageCamera: preferredImageCamera,
-        preferredImageLighting: preferredImageLighting,
-        preferredImageMaterials: preferredImageMaterials.join(","),
-        reasoningMode: getActiveMode(session) === "reasoning",
-        codingMode: getActiveMode(session) === "coding",
-        knowledgeMode: getActiveMode(session) === "knowledge"
-      }
-    };
-
-    try {
-      await fetch("/api/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      updateModelInspector(session.model || "auto", "preferences-saved");
-    } catch {
-      updateModelInspector(session.model || "auto", "save-failed");
-    }
-  }
-
   async function loadPreferences() {
     try {
       const res = await fetch("/api/preferences", { method: "GET" });
@@ -2494,15 +2437,6 @@
       syncSelectorsFromSession();
     } catch {
       // ignore
-    }
-  }
-
-  async function resetMemory() {
-    try {
-      await fetch("/api/preferences", { method: "DELETE" });
-      updateModelInspector("auto", "memory-reset");
-    } catch {
-      updateModelInspector("auto", "reset-failed");
     }
   }
 
@@ -2753,14 +2687,6 @@
         }
         closeAllDropdowns();
       });
-    }
-
-    if (savePreferencesBtn) {
-      savePreferencesBtn.addEventListener("click", savePreferences);
-    }
-
-    if (resetMemoryBtn) {
-      resetMemoryBtn.addEventListener("click", resetMemory);
     }
 
     if (simulationStartBtn) {
