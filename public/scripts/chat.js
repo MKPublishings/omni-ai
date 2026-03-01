@@ -972,20 +972,83 @@
     updateSimulationUI(session);
   }
 
-    if (isStreaming && currentAbortController) {
-    void session;
+  function clearMessages() {
+    if (!messagesEl) return;
+    messagesEl.innerHTML = "";
   }
 
-  // =========================
-    void session;
-    void meta;
-    void queryText;
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "")
-    void session;
-    void query;
-    void searchResult;
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderInlineMarkdown(value) {
+    let output = escapeHtml(value || "");
+    output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+    output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    output = output.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    output = output.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    output = output.replace(/\n/g, "<br>");
+    return output;
+  }
+
+  function renderMarkdown(value) {
+    const source = String(value || "");
+    if (!source.trim()) return "";
+
+    const segments = source.split(/```/);
+    const htmlParts = [];
+
+    for (let i = 0; i < segments.length; i += 1) {
+      const part = segments[i];
+      if (i % 2 === 1) {
+        const lines = part.split("\n");
+        const firstLine = String(lines[0] || "").trim();
+        const language = /^[-_a-z0-9+#]+$/i.test(firstLine) ? firstLine.toLowerCase() : "";
+        const codeContent = language ? lines.slice(1).join("\n") : part;
+        const langClass = language ? ` class="language-${language}"` : "";
+        htmlParts.push(`<pre><code${langClass}>${escapeHtml(codeContent)}</code></pre>`);
+      } else {
+        const blocks = part
+          .split(/\n{2,}/)
+          .map((block) => block.trim())
+          .filter(Boolean);
+
+        for (const block of blocks) {
+          htmlParts.push(`<p>${renderInlineMarkdown(block)}</p>`);
+        }
+      }
+    }
+
+    return htmlParts.join("\n");
+  }
+
+  function toFilenameSlug(value, fallback = "asset") {
+    const slug = String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 56);
+    return slug || fallback;
+  }
+
+  function buildOmniExportFilename(kind, ext, timestamp, prompt) {
+    const ts = Number(timestamp);
+    const date = Number.isFinite(ts) ? new Date(ts) : new Date();
+    const iso = date.toISOString().replace(/[:.]/g, "-");
+    const safeKind = toFilenameSlug(kind, "asset");
+    const safePrompt = toFilenameSlug(prompt, safeKind);
+    const safeExt = String(ext || "bin").toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+    return `${safeKind}-${safePrompt}-${iso}.${safeExt}`;
+  }
+
+  function formatGeneratedTimestamp(value) {
+    const ts = Number(value);
+    if (!Number.isFinite(ts) || ts <= 0) return "";
     return new Date(ts).toLocaleString();
   }
 
