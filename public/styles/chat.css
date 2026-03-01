@@ -203,6 +203,11 @@
   gap: 4px;
 }
 
+.chat-dropdown.open {
+  display: grid;
+  gap: 4px;
+}
+
 .chat-dropdown-item {
   width: 100%;
   border: 1px solid transparent;

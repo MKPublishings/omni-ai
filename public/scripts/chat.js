@@ -867,7 +867,11 @@
 
   function setDropdownOpen(dropdownEl, buttonEl, open) {
     if (!dropdownEl || !buttonEl) return;
+    const menuEl = dropdownEl.querySelector(".chat-dropdown");
     dropdownEl.classList.toggle("open", !!open);
+    if (menuEl) {
+      menuEl.classList.toggle("open", !!open);
+    }
     buttonEl.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
