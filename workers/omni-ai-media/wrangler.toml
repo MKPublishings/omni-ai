@@ -1,0 +1,16 @@
+name = "omni-ai-media"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[ai]
+binding = "AI"
+
+[[r2_buckets]]
+binding = "OMNI_MEDIA"
+bucket_name = "omni-media"
+preview_bucket_name = "omni-media"
+
+[vars]
+PUBLIC_BASE_URL = "https://omni-ai-media.omni-ai.workers.dev"
+VIDEO_MODEL = "@cf/bytedance/stable-video-diffusion-img2vid-xt"
+OMNI_MEDIA_PROVIDER_API_KEY_HEADER = "x-api-key"

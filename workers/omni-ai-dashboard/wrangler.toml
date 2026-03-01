@@ -1,0 +1,11 @@
+name = "omni-ai-dashboard"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+ORCHESTRATOR_URL = "https://omni-ai.omni-ai.workers.dev"
+MEDIA_URL = "https://omni-ai-media.omni-ai.workers.dev"
+IMAGES_URL = "https://omni-ai-images.omni-ai.workers.dev"
+AUDIO_URL = "https://omni-ai-audio.omni-ai.workers.dev"
+EMBEDDINGS_URL = "https://omni-ai-embeddings.omni-ai.workers.dev"
+ROUTER_URL = "https://omni-ai-router.omni-ai.workers.dev"

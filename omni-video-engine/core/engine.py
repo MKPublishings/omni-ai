@@ -92,5 +92,5 @@ def generate_video_from_prompt(
 
 # Local defaults for media integration (used by omni_media provider adapter)
 OMNI_MEDIA_API_BASE_URL = "http://127.0.0.1:8787"
-OMNI_MEDIA_PROVIDER_VIDEO_URL = "http://127.0.0.1:8787/omni_video_exports"
+OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://omni-ai-media.omni-ai.workers.dev/generate"
 OMNI_MEDIA_PLACEHOLDER_ONLY = "false"

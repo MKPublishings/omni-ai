@@ -31,6 +31,9 @@ import { buildPersonaPrompt, resolvePersonaProfile } from "./omni/behavior/perso
 import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./omni/behavior/emotionalResonance";
 import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./omni/behavior/adaptiveBehavior";
 import { executeTool } from "./tools/execute";
+import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
+import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
+import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
 import type { KVNamespace, Fetcher, DurableObjectNamespace, D1Database, ScheduledController, ExecutionContext } from "@cloudflare/workers-types";
 
 export { OmniSession } from "./memory/session";
@@ -531,6 +534,79 @@ function getLatestUserText(messages: OmniMessage[]): string {
   }
 
   return "";
+}
+
+function parseDepartment(value: unknown): Department | null {
+  const text = sanitizePromptText(String(value || "")).trim();
+  if (text === "Research" || text === "Ops" || text === "Finance" || text === "Creative" || text === "Infra") {
+    return text;
+  }
+
+  return null;
+}
+
+function parsePriority(value: unknown): Priority | null {
+  const text = sanitizePromptText(String(value || "")).trim().toLowerCase();
+  if (text === "low" || text === "normal" || text === "high" || text === "critical") {
+    return text;
+  }
+
+  return null;
+}
+
+function parseBlackwellProfilesFromConfig(): AgentProfile[] {
+  const root = blackwellAgentProfilesConfig as { agents?: unknown };
+  const rawAgents = Array.isArray(root?.agents) ? root.agents : [];
+
+  const profiles = rawAgents
+    .map((agent): AgentProfile | null => {
+      if (!agent || typeof agent !== "object") return null;
+      const record = agent as Record<string, unknown>;
+      const id = sanitizePromptText(String(record.id || "")).trim();
+      const role = sanitizePromptText(String(record.role || "")).trim();
+      const departmentRaw = sanitizePromptText(String(record.department || "")).trim();
+      const ritual = sanitizePromptText(String(record.ritual || "")).trim();
+      const handoff_targets = Array.isArray(record.handoff_targets)
+        ? record.handoff_targets.map((target) => sanitizePromptText(String(target || "")).trim()).filter(Boolean)
+        : [];
+
+      const isRoleValid =
+        role === "Engineer" || role === "Synthesizer" || role === "Archivist" || role === "Analyst" || role === "Manager";
+      const isDepartmentValid =
+        departmentRaw === "Research" ||
+        departmentRaw === "Ops" ||
+        departmentRaw === "Finance" ||
+        departmentRaw === "Creative" ||
+        departmentRaw === "Infra" ||
+        departmentRaw === "All";
+
+      if (!id || !isRoleValid || !isDepartmentValid || !ritual) {
+        return null;
+      }
+
+      return {
+        id,
+        role,
+        department: departmentRaw,
+        ritual,
+        handoff_targets
+      } as AgentProfile;
+    })
+    .filter((profile): profile is AgentProfile => Boolean(profile));
+
+  if (profiles.length > 0) {
+    return profiles;
+  }
+
+  return [
+    {
+      id: "agent.conductor.blackwell",
+      role: "Manager",
+      department: "Ops",
+      ritual: "Keep the pantheon in motion. No shard dies in silence.",
+      handoff_targets: []
+    }
+  ];
 }
 
 function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
@@ -1312,6 +1388,7 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
     endpoints: {
       omni: "/api/omni",
       image: "/api/image",
+      mindShardGenerate: "/api/mind/shards/generate",
       maintenanceStatus: "/api/maintenance/status",
       maintenanceRun: "/api/maintenance/run",
       releaseSpec: "/api/release/spec"
@@ -1366,6 +1443,46 @@ function resolveMediaBaseUrl(env: Env): string {
   }
 
   return "";
+}
+
+function validateMediaBaseUrl(baseUrl: string): { ok: boolean; reason?: string; hint?: string } {
+  const value = sanitizePromptText(String(baseUrl || "")).trim();
+  if (!value) {
+    return {
+      ok: false,
+      reason: "Media base URL is empty."
+    };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return {
+      ok: false,
+      reason: "Media base URL is not a valid absolute URL.",
+      hint: "Use a full URL such as https://<worker-name>.omni-ai.workers.dev"
+    };
+  }
+
+  if (!/^https?:$/i.test(parsed.protocol)) {
+    return {
+      ok: false,
+      reason: "Media base URL must use http or https.",
+      hint: "Use https://<worker-name>.omni-ai.workers.dev"
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (host.endsWith(".workers.dev") && host.split(".").length < 4) {
+    return {
+      ok: false,
+      reason: "workers.dev hostname is missing a worker name prefix.",
+      hint: "Use https://<worker-name>.omni-ai.workers.dev (not https://omni-ai.workers.dev)"
+    };
+  }
+
+  return { ok: true };
 }
 
 const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
@@ -2049,6 +2166,7 @@ export default {
         url.pathname === "/api/maintenance/run" ||
         url.pathname === "/api/maintenance/status" ||
         url.pathname === "/api/release/spec" ||
+        url.pathname === "/api/mind/shards/generate" ||
         url.pathname === "/internal/mind";
         
       if (isApiRoute && request.method === "OPTIONS") {
@@ -2506,6 +2624,74 @@ export default {
         });
       }
 
+      if (url.pathname === "/api/mind/shards/generate" && request.method === "POST") {
+        const body = (await request.json().catch(() => null)) as GenerateTaskShardRequestBody | null;
+        if (!body) {
+          return new Response(JSON.stringify({ ok: false, error: "Invalid JSON body" }), {
+            status: 400,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const title = sanitizePromptText(String(body.title || "")).trim();
+        const summary = sanitizePromptText(String(body.summary || "")).trim();
+        const department = parseDepartment(body.department);
+        const priority = parsePriority(body.priority) || "normal";
+        const legacyWeight = Number(body.legacy_weight);
+        const createdBy = sanitizePromptText(String(body.created_by || "agent.conductor.blackwell")).trim() || "agent.conductor.blackwell";
+        const decayAt = sanitizePromptText(String(body.decay_at || "")).trim() || undefined;
+
+        if (!title || !summary || !department) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              error: "Missing or invalid fields. Required: title, summary, department(Research|Ops|Finance|Creative|Infra)."
+            }),
+            {
+              status: 400,
+              headers: {
+                ...CORS_HEADERS,
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
+
+        const profiles = parseBlackwellProfilesFromConfig();
+        const result = generateTaskShards(
+          {
+            title,
+            summary,
+            department,
+            priority,
+            input_payload: body.input_payload ?? {},
+            legacy_weight: Number.isFinite(legacyWeight) ? legacyWeight : undefined,
+            decay_at: decayAt,
+            created_by: createdBy
+          },
+          profiles
+        );
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            ticket: result.ticket,
+            shards: result.shards,
+            assignmentPlan: result.assignmentPlan,
+            profileCount: profiles.length
+          }),
+          {
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+
       if (url.pathname === "/internal/mind" && request.method === "POST") {
         if (!isAdminAuthorized(request, env)) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -2668,6 +2854,16 @@ export default {
       }
 
       if (url.pathname === "/internal/mind" && request.method !== "POST") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            ...CORS_HEADERS,
+            "Allow": "POST, OPTIONS"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/mind/shards/generate" && request.method !== "POST") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -3070,6 +3266,7 @@ export default {
 
       if (url.pathname === "/api/video/generate" && request.method === "POST") {
         const baseUrl = resolveMediaBaseUrl(env);
+        const baseUrlValidation = validateMediaBaseUrl(baseUrl);
         const fallbackVideoUrl = sanitizePromptText(
           String(env.OMNI_MEDIA_FALLBACK_VIDEO_URL || "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4")
         ).trim();
@@ -3152,11 +3349,14 @@ export default {
           );
         }
 
-        if (!baseUrl) {
+        if (!baseUrlValidation.ok) {
           return new Response(
             JSON.stringify({
-              error:
-                "Prompt-grounded video backend is not configured. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT).",
+              error: [
+                "Prompt-grounded video backend base URL is invalid.",
+                String(baseUrlValidation.reason || ""),
+                String(baseUrlValidation.hint || "")
+              ].filter(Boolean).join(" "),
               code: "video-backend-not-configured"
             }),
             {
@@ -3269,6 +3469,25 @@ export default {
           });
         } catch (error: any) {
           logger.error("video_proxy_error", error);
+          const proxyError = String(error?.message || "unknown error");
+          if (/\b1016\b/.test(proxyError)) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  "Video backend DNS resolution failed (Cloudflare 1016). " +
+                  "Set OMNI_MEDIA_API_BASE_URL to a resolvable worker URL like https://<worker-name>.omni-ai.workers.dev.",
+                code: "video-backend-dns-error",
+                details: proxyError
+              }),
+              {
+                status: 502,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
+          }
           if (allowPlaceholderVideo && fallbackVideoUrl) {
             return new Response(
               JSON.stringify({
@@ -3314,7 +3533,7 @@ export default {
           return new Response(
             JSON.stringify({
               error:
-                `Prompt-grounded video generation failed: ${String(error?.message || "unknown error")}.`,
+                `Prompt-grounded video generation failed: ${proxyError}.`,
               code: "video-generation-unavailable"
             }),
             {
@@ -3332,11 +3551,15 @@ export default {
 
       if (url.pathname === "/omni_video_exports" && request.method === "POST") {
         const baseUrl = resolveMediaBaseUrl(env);
-        if (!baseUrl) {
+        const baseUrlValidation = validateMediaBaseUrl(baseUrl);
+        if (!baseUrlValidation.ok) {
           return new Response(
             JSON.stringify({
-              error:
-                "OMNI media base URL is required for /omni_video_exports proxy. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT)."
+              error: [
+                "OMNI media base URL is invalid for /omni_video_exports proxy.",
+                String(baseUrlValidation.reason || ""),
+                String(baseUrlValidation.hint || "")
+              ].filter(Boolean).join(" ")
             }),
             {
               status: 503,
@@ -3979,4 +4202,15 @@ type InternalMindRequestBody = {
   };
   issues?: string[];
   codexGaps?: string[];
+};
+
+type GenerateTaskShardRequestBody = {
+  title?: string;
+  summary?: string;
+  department?: Department;
+  priority?: Priority;
+  input_payload?: unknown;
+  legacy_weight?: number;
+  decay_at?: string;
+  created_by?: string;
 };

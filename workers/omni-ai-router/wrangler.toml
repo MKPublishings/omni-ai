@@ -1,0 +1,7 @@
+name = "omni-ai-router"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+API_TARGET = "https://omni-ai.omni-ai.workers.dev"
+SITE_TARGET = "https://mkptri.org"

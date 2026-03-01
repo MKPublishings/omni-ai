@@ -1,0 +1,56 @@
+{
+  "version": "v1",
+  "agents": [
+    {
+      "id": "agent.engineer.blackwell",
+      "role": "Engineer",
+      "department": "Infra",
+      "ritual": "Forge the pipeline, expose the seams, leave clean handoff notes.",
+      "handoff_targets": [
+        "agent.synthesizer.blackwell",
+        "agent.archivist.blackwell"
+      ]
+    },
+    {
+      "id": "agent.synthesizer.blackwell",
+      "role": "Synthesizer",
+      "department": "Creative",
+      "ritual": "Merge signals into a single, legible beam.",
+      "handoff_targets": [
+        "agent.archivist.blackwell",
+        "agent.conductor.blackwell"
+      ]
+    },
+    {
+      "id": "agent.archivist.blackwell",
+      "role": "Archivist",
+      "department": "Ops",
+      "ritual": "Inscribe, index, and make it reusable.",
+      "handoff_targets": [
+        "agent.analyst.blackwell"
+      ]
+    },
+    {
+      "id": "agent.analyst.blackwell",
+      "role": "Analyst",
+      "department": "Finance",
+      "ritual": "Measure the flow, expose the friction, propose the next move.",
+      "handoff_targets": [
+        "agent.engineer.blackwell",
+        "agent.conductor.blackwell"
+      ]
+    },
+    {
+      "id": "agent.conductor.blackwell",
+      "role": "Manager",
+      "department": "Ops",
+      "ritual": "Keep the pantheon in motion. No shard dies in silence.",
+      "handoff_targets": [
+        "agent.engineer.blackwell",
+        "agent.synthesizer.blackwell",
+        "agent.archivist.blackwell",
+        "agent.analyst.blackwell"
+      ]
+    }
+  ]
+}
