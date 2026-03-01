@@ -1,4 +1,4 @@
-name = "omni-mind-os"
+name = "omni-ai"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
@@ -7,7 +7,7 @@ binding = "AI"
 
 [vars]
 OMNI_ENV = "production"
-OMNI_MEDIA_API_BASE_URL = "https://omni-media.omni-ai.workers.dev"
+OMNI_MEDIA_API_BASE_URL = "https://omni-ai.workers.dev"
 
 # Optional model aliases for omni runtime routing.
 # Uncomment and set these to provider model IDs available in your account.
