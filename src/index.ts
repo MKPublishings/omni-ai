@@ -1814,6 +1814,7 @@ const OMNI_IMAGE_DEFAULT_RATIO = "9:16";
 const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
 const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
 const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
+const OMNI_IMAGE_DIMENSION_LOCK = "strict";
 
 const OMNI_QUALITY_DEFAULT = [
   "very high image quality",
@@ -2425,6 +2426,11 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
       model: modelConfig.model,
       ratio: modelConfig.ratio,
       resolution: modelConfig.resolution,
+      forced_resolution: `${OMNI_IMAGE_DEFAULT_WIDTH}x${OMNI_IMAGE_DEFAULT_HEIGHT}`,
+      forced_aspect_ratio: OMNI_IMAGE_DEFAULT_RATIO,
+      forced_width: OMNI_IMAGE_DEFAULT_WIDTH,
+      forced_height: OMNI_IMAGE_DEFAULT_HEIGHT,
+      dimension_lock: OMNI_IMAGE_DIMENSION_LOCK,
       quality: effectiveQuality,
       rendering_style: resolvedRenderingStyle,
       camera: effectiveCamera,
@@ -3534,6 +3540,11 @@ export default {
               model: modelConfig.model,
               ratio: modelConfig.ratio,
               resolution: modelConfig.resolution,
+              forced_resolution: `${OMNI_IMAGE_DEFAULT_WIDTH}x${OMNI_IMAGE_DEFAULT_HEIGHT}`,
+              forced_aspect_ratio: OMNI_IMAGE_DEFAULT_RATIO,
+              forced_width: OMNI_IMAGE_DEFAULT_WIDTH,
+              forced_height: OMNI_IMAGE_DEFAULT_HEIGHT,
+              dimension_lock: OMNI_IMAGE_DIMENSION_LOCK,
               mode: requestedMode,
               quality: effectiveQuality,
               rendering_style: resolvedRenderingStyle,
