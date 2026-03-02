@@ -37,10 +37,17 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text));
 }
 
+function extractExplicitRoute(text: string): OmniRouteKind | null {
+  const match = String(text || "").trim().toLowerCase().match(/^\/(chat|image|memory|simulation|tool)\b/);
+  if (!match) return null;
+  return match[1] as OmniRouteKind;
+}
+
 function scoreRouteCandidates(text: string, mode: string): { candidates: RouteScore[]; signals: string[] } {
   const lower = String(text || "").toLowerCase();
   const normalizedMode = String(mode || "").toLowerCase();
   const signals: string[] = [];
+  const explicit = extractExplicitRoute(lower);
 
   const candidates: RouteScore[] = [
     { route: "chat", score: 0.54, reason: "default-chat-path" },
@@ -59,6 +66,9 @@ function scoreRouteCandidates(text: string, mode: string): { candidates: RouteSc
         candidates.find((c) => c.route === "memory")!.score += 0.7;
         signals.push("explicit-route:/memory");
       }
+  }
+
+  if (explicit) {
     const target = candidates.find((c) => c.route === explicit);
     if (target) {
       target.score += 0.7;

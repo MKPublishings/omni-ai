@@ -250,6 +250,17 @@
       transform: translateY(-2px);
     }
 
+    .mode-card-clickable {
+      cursor: pointer;
+    }
+
+    .mode-card-clickable:focus-visible {
+      outline: 2px solid rgba(15, 82, 186, 0.9);
+      outline-offset: 2px;
+      border-color: rgba(15, 82, 186, 0.62);
+      box-shadow: 0 0 0 4px rgba(15, 82, 186, 0.22);
+    }
+
     .mode-card-icon {
       font-size: 48px;
       margin-bottom: 16px;
@@ -278,6 +289,13 @@
       display: inline-block;
       padding: 8px 14px;
       font-size: 12px;
+    }
+
+    .mode-card-link:focus-visible {
+      outline: 2px solid rgba(15, 82, 186, 0.9);
+      outline-offset: 2px;
+      border-color: rgba(15, 82, 186, 0.62);
+      box-shadow: 0 0 0 4px rgba(15, 82, 186, 0.22);
     }
 
     .features-grid {
@@ -447,64 +465,94 @@
       <section class="home-section">
         <h2 class="home-section-title">Cognitive Modes</h2>
         <div class="modes-grid">
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=chat" role="link" tabindex="0">
             <div class="mode-card-icon">💬</div>
             <h3 class="mode-card-title">Chat Mode</h3>
             <p class="mode-card-desc">Natural conversation, Q&A, and general assistance</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=chat" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=architect" role="link" tabindex="0">
             <div class="mode-card-icon">🏗️</div>
             <h3 class="mode-card-title">Architect Mode</h3>
             <p class="mode-card-desc">Build systems, structures, and technical logic</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=architect" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=analyst" role="link" tabindex="0">
             <div class="mode-card-icon">📊</div>
             <h3 class="mode-card-title">Analyst Mode</h3>
             <p class="mode-card-desc">Breakdowns, summaries, and data insights</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=analyst" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=visual" role="link" tabindex="0">
             <div class="mode-card-icon">🎨</div>
             <h3 class="mode-card-title">Visual Mode</h3>
             <p class="mode-card-desc">Cinematic scenes, composition, and creative direction</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=visual" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=lore" role="link" tabindex="0">
             <div class="mode-card-icon">📖</div>
             <h3 class="mode-card-title">Lore Mode</h3>
             <p class="mode-card-desc">Worldbuilding, narrative memory, and character arcs</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=lore" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=reasoning" role="link" tabindex="0">
             <div class="mode-card-icon">🧠</div>
             <h3 class="mode-card-title">Reasoning Mode</h3>
             <p class="mode-card-desc">Stepwise logic scaffolding with concise final outputs</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=reasoning" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=coding" role="link" tabindex="0">
             <div class="mode-card-icon">💻</div>
             <h3 class="mode-card-title">Coding Mode</h3>
             <p class="mode-card-desc">Logic-first implementation with code and self-review</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=coding" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=knowledge" role="link" tabindex="0">
             <div class="mode-card-icon">📚</div>
             <h3 class="mode-card-title">Knowledge Mode</h3>
             <p class="mode-card-desc">Retrieval-augmented factual responses from indexed knowledge</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=knowledge" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=system-knowledge" role="link" tabindex="0">
             <div class="mode-card-icon">🗂️</div>
             <h3 class="mode-card-title">System Knowledge Mode</h3>
             <p class="mode-card-desc">Internal module-aware answers grounded in system references</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=system-knowledge" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=simulation" role="link" tabindex="0">
             <div class="mode-card-icon">🧪</div>
             <h3 class="mode-card-title">Simulation Mode</h3>
             <p class="mode-card-desc">Run contained worlds, systems, and scenarios inside Omni’s cognitive OS.</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=simulation" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
         </div>
       </section>

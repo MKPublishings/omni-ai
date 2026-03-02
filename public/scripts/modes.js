@@ -12,6 +12,43 @@ const observerOptions = {
 
 const modeSections = document.querySelectorAll(".mode-section");
 
+const modeAliases = {
+  chat: "auto"
+};
+
+function getRequestedMode() {
+  const params = new URLSearchParams(window.location.search);
+  const rawMode = (params.get("mode") || "").trim().toLowerCase();
+  return modeAliases[rawMode] || rawMode;
+}
+
+function alignToRequestedMode() {
+  const requestedMode = getRequestedMode();
+  if (!requestedMode) {
+    return;
+  }
+
+  const targetSection = document.querySelector(`.mode-section[data-mode="${requestedMode}"]`);
+  if (!targetSection) {
+    return;
+  }
+
+  const modeSectionsArray = Array.from(modeSections);
+  currentModeIndex = modeSectionsArray.indexOf(targetSection);
+
+  setTimeout(() => {
+    targetSection.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    targetSection.style.borderColor = "rgba(255, 115, 115, 0.72)";
+    setTimeout(() => {
+      targetSection.style.borderColor = "";
+    }, 1200);
+  }, 100);
+}
+
 if (modeSections.length > 0 && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -87,6 +124,38 @@ useCaseTags.forEach((tag) => {
 });
 
 // ==============================================
+// HOME MODE CARDS CLICK NAVIGATION
+// ==============================================
+
+const modeCards = document.querySelectorAll(".mode-card[data-mode-link]");
+
+modeCards.forEach((card) => {
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) {
+      return;
+    }
+
+    const targetHref = card.dataset.modeLink;
+    if (targetHref) {
+      window.location.href = targetHref;
+    }
+  });
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+
+    const targetHref = card.dataset.modeLink;
+    if (targetHref) {
+      window.location.href = targetHref;
+    }
+  });
+});
+
+// ==============================================
 // KEYBOARD NAVIGATION
 // ==============================================
 
@@ -117,6 +186,8 @@ document.addEventListener("keydown", (e) => {
     }
   }
 });
+
+alignToRequestedMode();
 
 // ==============================================
 // FEATURE LIST STAGGER ANIMATION ON HOVER
