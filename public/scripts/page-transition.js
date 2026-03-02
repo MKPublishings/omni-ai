@@ -30,11 +30,19 @@
     return cleaned;
   }
 
+  function toRouteKey(pathname) {
+    const normalized = normalizePath(pathname).toLowerCase();
+    const withoutHtml = normalized.replace(/\.html$/, "");
+    if (withoutHtml === "/" || withoutHtml === "/index") return "index";
+    const parts = withoutHtml.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "index";
+  }
+
   function syncActiveNavLink() {
     const navLinks = Array.from(document.querySelectorAll(".nav .nav-link[href]"));
     if (navLinks.length === 0) return;
 
-    const currentPath = normalizePath(window.location.pathname);
+    const currentRouteKey = toRouteKey(window.location.pathname);
     let matched = false;
 
     navLinks.forEach((link) => {
@@ -44,8 +52,8 @@
         return;
       }
 
-      const linkPath = normalizePath(new URL(href, window.location.origin).pathname);
-      const isActive = linkPath === currentPath;
+      const linkPath = new URL(href, window.location.origin).pathname;
+      const isActive = toRouteKey(linkPath) === currentRouteKey;
 
       link.classList.toggle("active", isActive);
       if (isActive) matched = true;
@@ -53,7 +61,7 @@
 
     if (!matched) {
       navLinks.forEach((link) => {
-        if (link.getAttribute("href") === "/index.html") {
+        if (toRouteKey(link.getAttribute("href") || "") === "index") {
           link.classList.add("active");
         }
       });
@@ -62,6 +70,9 @@
 
   applyInterfaceFlags();
   syncActiveNavLink();
+
+  window.addEventListener("popstate", syncActiveNavLink);
+  window.addEventListener("pageshow", syncActiveNavLink);
 
   window.addEventListener("storage", (event) => {
     if (

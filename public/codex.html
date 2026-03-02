@@ -35,6 +35,18 @@
         <p>The codex is the archive brain of Omni Ai: laws, systems, mythic checkpoints, visual dialect, equations, and glossary linked as one inspectable graph.</p>
       </header>
 
+      <section class="codex-panel codex-panel-highlight codex-purpose-panel">
+        <h3>Codex Purpose in Omni</h3>
+        <ul>
+          <li><strong>Reasoning substrate:</strong> laws and glossary terms provide conceptual anchors for mode behavior.</li>
+          <li><strong>Narrative continuity:</strong> mythic checkpoints and archetypes preserve long-range symbolic coherence.</li>
+          <li><strong>Visual coherence:</strong> visual-dialect registers/motifs standardize style interpretation.</li>
+          <li><strong>Computational bridge:</strong> equations templates/solved artifacts make symbolic logic machine-tractable.</li>
+          <li><strong>Historical traceability:</strong> lineage fields connect legacy codex epochs to active Omni runtime.</li>
+          <li><strong>Auto-Codex operation:</strong> site navigation, chamber insights, and graph cross-links continuously hydrate a live codex layer.</li>
+        </ul>
+      </section>
+
       <section class="codex-overview-grid">
         <article class="codex-panel codex-panel-highlight">
           <h3>Codex Doctrine</h3>
@@ -61,6 +73,19 @@ npm run codex:register -- &lt;path-inside-codex&gt;</code></pre>
             <strong>register</strong> stamps one artifact and refreshes graph state.
           </p>
         </article>
+
+        <article class="codex-panel">
+          <h3>Auto-Codex Runtime</h3>
+          <p>The Auto-Codex layer continuously merges codex artifacts, site-linked artifacts, and generated cross-links into one evolving explorer.</p>
+          <div class="codex-auto-controls">
+            <label class="codex-auto-toggle-wrap" for="codex-auto-toggle">
+              <input id="codex-auto-toggle" type="checkbox" checked />
+              <span>Enable Auto-Codex refresh</span>
+            </label>
+            <button id="codex-refresh-btn" type="button" class="codex-refresh-btn">Refresh Now</button>
+          </div>
+          <p id="codex-auto-status" class="codex-muted">Auto-Codex is active.</p>
+        </article>
       </section>
 
       <section class="codex-stats" id="codex-stats" aria-label="Codex statistics">
@@ -80,12 +105,16 @@ npm run codex:register -- &lt;path-inside-codex&gt;</code></pre>
           <span class="codex-stat-label">Generated</span>
           <strong id="codex-stat-generated">--</strong>
         </article>
+        <article class="codex-stat-card">
+          <span class="codex-stat-label">Auto Artifacts</span>
+          <strong id="codex-stat-auto">--</strong>
+        </article>
       </section>
 
       <section class="codex-layout">
         <aside class="codex-chamber-sidebar" aria-label="Codex chamber controls">
           <h3>Codex Chambers</h3>
-          <p class="codex-muted">Use chamber buttons to focus artifacts by archive domain.</p>
+          <p class="codex-muted">Use chamber buttons to focus artifacts by archive domain, including Auto-Codex site chambers.</p>
           <div id="codex-chamber-buttons" class="codex-chamber-buttons"></div>
 
           <h4>Graph Insight</h4>
@@ -122,25 +151,26 @@ npm run codex:register -- &lt;path-inside-codex&gt;</code></pre>
           </section>
 
           <section class="codex-panel">
-            <h3>Artifact Explorer</h3>
-            <div class="codex-toolbar">
-              <input id="codex-search" type="search" placeholder="Search artifacts by id, title, tag, or path..." aria-label="Search codex artifacts" />
-              <span id="codex-result-count" class="codex-result-count">0 results</span>
-            </div>
-            <div id="codex-entry-list" class="codex-entry-list" aria-live="polite"></div>
+            <h3>Auto-Codex Upgrade Path</h3>
+            <ul>
+              <li><strong>Live hydration:</strong> pull codex index + web mirror, then merge auto artifacts generated from site routes.</li>
+              <li><strong>Chamber growth:</strong> automation, governance, integrations, and site chambers appear automatically in the explorer.</li>
+              <li><strong>Cross-link expansion:</strong> graph edges are inferred from links, tags, and route-level codex relationships.</li>
+              <li><strong>Operator flow:</strong> keep editing in codex directories while Auto-Codex keeps the web explorer synchronized.</li>
+            </ul>
           </section>
         </div>
       </section>
 
       <section class="codex-panel">
-        <h3>Codex Purpose in Omni</h3>
-        <ul>
-          <li><strong>Reasoning substrate:</strong> laws and glossary terms provide conceptual anchors for mode behavior.</li>
-          <li><strong>Narrative continuity:</strong> mythic checkpoints and archetypes preserve long-range symbolic coherence.</li>
-          <li><strong>Visual coherence:</strong> visual-dialect registers/motifs standardize style interpretation.</li>
-          <li><strong>Computational bridge:</strong> equations templates/solved artifacts make symbolic logic machine-tractable.</li>
-          <li><strong>Historical traceability:</strong> lineage fields connect legacy codex epochs to active Omni runtime.</li>
-        </ul>
+        <h3>Artifact Explorer</h3>
+        <div class="codex-toolbar">
+          <input id="codex-search" type="search" placeholder="Search artifacts by id, title, tag, chamber, or path..." aria-label="Search codex artifacts" />
+          <span id="codex-result-count" class="codex-result-count">0 results</span>
+        </div>
+        <div class="codex-entry-scroll">
+          <div id="codex-entry-list" class="codex-entry-list" aria-live="polite"></div>
+        </div>
       </section>
     </main>
   </div>
