@@ -20,10 +20,10 @@ const ADULT_TERMS = [
     "nsfw",
     "nude",
     "nudity",
-    "explicit",
+    "explicit nudity",
     "erotic",
     "porn",
-    "sexual",
+    "sexual content",
     "sex scene",
     "adult content",
     "fetish"
@@ -33,8 +33,25 @@ function normalizeText(value) {
     return String(value || "").toLowerCase().trim();
 }
 
+function escapeRegExp(value) {
+    return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildTermPattern(term) {
+    const tokens = String(term || "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((token) => escapeRegExp(token));
+    if (!tokens.length) {
+        return /$^/;
+    }
+    return new RegExp(`\\b${tokens.join("\\s+")}\\b`, "i");
+}
+
 function detectMatches(text, terms) {
-    return terms.filter((term) => text.includes(term));
+    return terms.filter((term) => buildTermPattern(term).test(text));
 }
 
 function isMinor(options = {}) {

@@ -460,8 +460,8 @@
   function evaluatePromptPolicy(text, safetyProfile) {
     const value = String(text || "").toLowerCase();
 
-    const directIllegalPattern = /\b(bestiality|child\s*porn|csam|rape\s*content|exploitative\s*sexual|incest\s*porn)\b/i;
-    const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual|nude|nudity|porn|erotic|fetish)\b/i;
+    const directIllegalPattern = /\b(bestiality|child\s*sexual\s*abuse|child\s*porn|csam|rape\s*content|exploitative\s*sexual\s*content|incest\s*porn)\b/i;
+    const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual\s*content|nude|nudity|porn|erotic|fetish|explicit\s*nudity)\b/i;
     const illegalAssaultPattern = /\b(sexual\s*assault|forced\s*sex|non[-\s]?consensual\s*sex)\b/i;
     if (directIllegalPattern.test(value) || illegalMinorSexualPattern.test(value) || illegalAssaultPattern.test(value)) {
       return {
@@ -471,7 +471,7 @@
       };
     }
 
-    const explicitSexualPattern = /\b(nsfw|porn|explicit|erotic|nude|nudity|fetish)\b/i;
+    const explicitSexualPattern = /\b(nsfw|porn|pornographic|erotic|nude|nudity|fetish|sex\s*scene|sexual\s*content|explicit\s*nudity)\b/i;
     if (explicitSexualPattern.test(value) && !Boolean(safetyProfile?.explicitAllowed)) {
       return {
         blocked: true,

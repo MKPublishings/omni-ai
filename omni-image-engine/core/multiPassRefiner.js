@@ -17,7 +17,7 @@ function inferTimeIntent(prompt) {
 
 function promptRequestsPeople(prompt) {
     const lower = String(prompt || "").toLowerCase();
-    return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|portrait|selfie|face|worker|hiker|runner|couple|family)\b/.test(lower);
+    return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|portrait|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
 }
 
 function applyStrictFidelityNegatives(data) {
