@@ -3465,7 +3465,7 @@ export default {
         const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
         const ctx = {
           mode: normalizedMode,
-          model: body.model || "auto",
+          model: "omni",
           messages: (body.messages || []).map((m) => ({
             role: (m?.role || "user") as OmniRole,
             content: OmniSafety.sanitizeInput(m?.content || "")
@@ -3513,7 +3513,7 @@ export default {
           latestUserText,
           mode: normalizedMode
         });
-        const routeSelection = chooseModelForTask(ctx.model, latestUserText, normalizedMode);
+        const routeSelection = chooseModelForTask("omni", latestUserText, normalizedMode);
 
         const promptSystemMessages: OmniMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;

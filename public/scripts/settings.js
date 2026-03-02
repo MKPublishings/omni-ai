@@ -287,8 +287,6 @@ if (clearHistoryBtn) {
 // MODEL & MODE SETTINGS
 // ==============================================
 
-const defaultModelDropdown = dropdownMgr.initDropdown("default-model-btn", "default-model-menu", "default-model-dropdown");
-const defaultModelMenu = document.getElementById("default-model-menu");
 const modeSelectionDropdown = dropdownMgr.initDropdown("mode-selection-btn", "mode-selection-menu", "mode-selection-dropdown");
 const modeSelectionMenu = document.getElementById("mode-selection-menu");
 const defaultModeDropdown = dropdownMgr.initDropdown("default-mode-btn", "default-mode-menu", "default-mode-dropdown");
@@ -306,17 +304,6 @@ function updateModeSettingVisibility() {
   const modeSelectionBtn = document.getElementById("mode-selection-btn");
   const isManual = modeSelectionBtn && modeSelectionBtn.textContent.trim().toLowerCase() === "manual";
   defaultModeSetting.style.display = isManual ? "flex" : "none";
-}
-
-if (defaultModelDropdown && defaultModelMenu) {
-  defaultModelDropdown.setActive(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "omni"));
-  defaultModelMenu.addEventListener("click", (e) => {
-    const item = e.target.closest(".settings-dropdown-item[data-value]");
-    if (!item) return;
-    const defaultModelBtn = document.getElementById("default-model-btn");
-    if (defaultModelBtn) defaultModelBtn.textContent = item.textContent.trim();
-    setSetting(SETTINGS_KEYS.DEFAULT_MODEL, item.dataset.value);
-  });
 }
 
 if (modeSelectionDropdown && modeSelectionMenu) {
@@ -384,7 +371,6 @@ if (simulationVerbosityDropdown && simulationVerbosityMenu) {
 }
 
 window.addEventListener("storage", (e) => {
-  const defaultModelBtn = document.getElementById("default-model-btn");
   const modeSelectionBtn = document.getElementById("mode-selection-btn");
   const defaultModeBtn = document.getElementById("default-mode-btn");
   const fontSizeBtn = document.getElementById("font-size-btn");
@@ -407,12 +393,6 @@ window.addEventListener("storage", (e) => {
     const val = getSetting(SETTINGS_KEYS.DEFAULT_MODE, "architect");
     if (defaultModeDropdown) defaultModeDropdown.setActive(val);
     if (defaultModeBtn) defaultModeBtn.textContent = formatModeLabel(val);
-  }
-
-  if (e.key === SETTINGS_KEYS.DEFAULT_MODEL) {
-    const val = getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "omni");
-    if (defaultModelDropdown) defaultModelDropdown.setActive(val);
-    if (defaultModelBtn) defaultModelBtn.textContent = "Omni";
   }
 
   if (e.key === SETTINGS_KEYS.RESPONSE_LENGTH) {

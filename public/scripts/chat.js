@@ -71,7 +71,7 @@
     API_HEALTH_INTERVAL: "omni-api-health-interval",
     API_RETRIES: "omni-api-retries"
   };
-  const KNOWN_MODELS = ["auto", "omni"];
+  const KNOWN_MODELS = ["omni"];
   const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "simulation"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
@@ -169,8 +169,8 @@
   }
 
   function getDefaultModelFromSettings() {
-    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "auto"));
-    return candidate || "auto";
+    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "omni"));
+    return candidate || "omni";
   }
 
   function formatMessageTimestamp(timestamp) {
@@ -218,7 +218,7 @@
 
   function normalizeModel(model) {
     const normalized = typeof model === "string" ? model.trim().toLowerCase() : "";
-    return KNOWN_MODELS.includes(normalized) ? normalized : "";
+    return KNOWN_MODELS.includes(normalized) ? normalized : "omni";
   }
 
   function normalizeImageStyle(style) {
@@ -754,8 +754,8 @@
   }
 
   function toModelLabel(model) {
-    const normalized = normalizeModel(model) || "auto";
-    if (normalized === "auto") return "Auto Router";
+    const normalized = normalizeModel(model) || "omni";
+    if (normalized === "auto") return "Omni";
     return "Omni";
   }
 
@@ -1146,7 +1146,7 @@
       title: "New conversation",
       messages: [],
       mode: getSelectedModeFromSettings(),
-      model: getDefaultModelFromSettings(),
+      model: "omni",
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -1243,7 +1243,7 @@
 
     const activeMode = getActiveMode(session);
     session.mode = activeMode;
-    session.model = normalizeModel(session.model) || "auto";
+    session.model = "omni";
 
     updateModelButton(session.model);
     updateModeButton(activeMode);
@@ -1479,7 +1479,7 @@
     for (const msg of session.messages) {
       const activeMode = getActiveMode(session);
       appendMessage(msg.role, msg.content, {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: activeMode,
         timestamp: msg.timestamp || msg.ts || null,
         generatedAt: msg.generatedAt || msg.timestamp || msg.ts || null,
@@ -1817,7 +1817,7 @@
     const outboundMessages = buildNetworkMessages(session);
     const payload = {
       messages: outboundMessages,
-      model: session.model || "auto",
+      model: "omni",
       mode: activeMode,
       safetyProfile: safetyProfile || buildSafetyProfile(),
       conversationHints: conversationHints && typeof conversationHints === "object" ? conversationHints : undefined
@@ -1976,7 +1976,7 @@
 
     if (!hasVerifiedLegalAttestation()) {
       appendMessage("assistant", "Legal attestation is required before chat can run. Please confirm jurisdiction eligibility and truthful/responsible use.", {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: getActiveMode(session),
         timestamp: Date.now()
       });
@@ -2000,7 +2000,7 @@
 
       const activeMode = getActiveMode(session);
       appendMessage("user", trimmed, {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: activeMode,
         timestamp: commandTimestamp
       });
@@ -2176,7 +2176,7 @@
         }
       } else {
         appendMessage("assistant", assistantText, {
-          model: session.model || "auto",
+          model: session.model || "omni",
           mode: getActiveMode(session),
           timestamp: Date.now(),
           ...(assistantMediaMeta || {})
@@ -2207,13 +2207,13 @@
       const blockTs = Date.now();
       session.messages.push({ role: "user", content: trimmed, timestamp: blockTs });
       appendMessage("user", trimmed, {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: getActiveMode(session),
         timestamp: blockTs
       });
 
       appendMessage("assistant", policy.message, {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: getActiveMode(session),
         timestamp: Date.now()
       });
@@ -2248,7 +2248,7 @@
       const detected = detectModeFromContent(trimmed, session);
       if (detected?.mode) {
         activeMode = normalizeMode(detected.mode) || "auto";
-        updateModelInspector(session.model || "auto", `auto-mode:${activeMode}`);
+        updateModelInspector(session.model || "omni", `mode:${activeMode}`);
       }
     }
 
@@ -2267,7 +2267,7 @@
     }
     
     appendMessage("user", trimmed, {
-      model: session.model || "auto",
+      model: session.model || "omni",
       mode: activeMode,
       timestamp: Date.now()
     });
@@ -2281,7 +2281,7 @@
     const shouldGenerateImage = mediaIntent.kind === "image";
     if (shouldGenerateImage) {
       const assistantMessage = appendMessage("assistant", "Generating image...", {
-        model: session.model || "auto",
+        model: session.model || "omni",
         mode: activeMode
       });
       const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2298,7 +2298,7 @@
         const resolution = String(imageResult?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
         const styleId = String(imageResult?.metadata?.style_id || "").trim();
 
-        updateModelInspector(imageResult.modelUsed || session.model || "auto", "image-generated");
+        updateModelInspector(imageResult.modelUsed || session.model || "omni", "image-generated");
 
         if (assistantBodyEl) {
           assistantBodyEl.innerHTML = renderMarkdown(`Generated image for: **${imagePrompt}**`);
@@ -2362,7 +2362,7 @@
 
     // Prepare assistant placeholder
     const assistantMessage = appendMessage("assistant", "", {
-      model: session.model || "auto",
+      model: session.model || "omni",
       mode: activeMode
     });
     const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2414,7 +2414,7 @@
           }
         },
         (meta) => {
-          updateModelInspector(meta?.modelUsed || session.model || "auto", meta?.routeReason || "");
+          updateModelInspector(meta?.modelUsed || session.model || "omni", meta?.routeReason || "");
 
           if (getActiveMode(session) === "simulation") {
             const simulation = ensureSimulationState(session);
@@ -2759,7 +2759,7 @@
     renderSessionsSidebar();
     renderActiveSessionMessages();
     startApiChecks();
-    updateModelInspector("auto", "router-ready");
+    updateModelInspector("omni", "omni-locked");
     loadPreferences();
     updateSimulationUI();
     updateAgeGateComposerNotice();
@@ -2895,7 +2895,7 @@
         if (!optionBtn) return;
         const session = getActiveSession();
         if (!session) return;
-        session.model = normalizeModel(optionBtn.dataset.value) || "auto";
+        session.model = normalizeModel(optionBtn.dataset.value) || "omni";
         session.updatedAt = Date.now();
         saveState();
         updateModelButton(session.model);
