@@ -243,6 +243,149 @@
   color: var(--text-dim);
   margin-top: 6px;
 }
+
+.system-main {
+  width: 100%;
+}
+
+.system-section {
+  margin-bottom: 18px;
+}
+
+.system-section ul,
+.system-section li,
+.system-section p,
+.system-section h3,
+.system-section code,
+.system-section strong {
+  overflow-wrap: anywhere;
+}
+
+.system-section .status-card {
+  display: grid;
+  gap: 10px;
+}
+
+.system-section .btn {
+  width: fit-content;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .system-section {
+    margin-bottom: 14px;
+  }
+
+  .system-section .status-card {
+    padding: 14px;
+  }
+
+  .system-section .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 320px) {
+  .system-section {
+    margin-bottom: 12px;
+  }
+
+  .system-section h3 {
+    font-size: 18px;
+  }
+
+  .system-section p,
+  .system-section li,
+  .system-section code {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .system-section .status-card {
+    padding: 12px;
+    gap: 8px;
+  }
+}
+
+.tools-main,
+.memory-main {
+  width: 100%;
+}
+
+.tools-section,
+.memory-list,
+.memory-actions {
+  margin-bottom: 16px;
+}
+
+.tools-section h3,
+.memory-list h3,
+.tools-section p,
+.memory-list p,
+.tools-section strong,
+.memory-list strong,
+.tool-log pre {
+  overflow-wrap: anywhere;
+}
+
+.tools-main .tool-grid,
+.memory-main .memory-list {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tool-log pre {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .tools-section,
+  .memory-list,
+  .memory-actions {
+    margin-bottom: 12px;
+  }
+
+  .tools-main .tool-grid,
+  .memory-main .memory-list {
+    gap: 10px;
+  }
+
+  .memory-actions .btn,
+  .tools-section .btn,
+  .memory-list .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 320px) {
+  .tools-section h3,
+  .memory-list h3 {
+    font-size: 18px;
+  }
+
+  .tools-section p,
+  .memory-list p,
+  .tool-log pre,
+  .memory-toggle-row {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .tools-main .feature-card,
+  .memory-main .feature-card,
+  .tool-log,
+  .memory-main .status-card {
+    padding: 12px;
+  }
+}
 .nav-link {
   position: relative;
   overflow: hidden;
