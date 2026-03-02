@@ -30,6 +30,8 @@
     "mind:readiness": "node ./scripts/mind/runShipReadiness.js",
     "mind:readiness:strict": "node ./scripts/mind/runShipReadiness.js --strict",
     "mind:auto-debug": "node ./scripts/tools/runAutoDebug.js",
+    "forensics:image": "node ./scripts/tools/runImageForensicsSweep.js",
+    "forensics:image:strict": "node ./scripts/tools/runImageForensicsSweep.js --strict",
     "mind:tokens": "node ./scripts/tools/printTaskTokens.js",
     "mind:tokens:set": "node ./scripts/tools/updateTaskTokenStatus.js",
     "mind:tokens:active": "node ./scripts/tools/printActiveTaskTokens.js",
