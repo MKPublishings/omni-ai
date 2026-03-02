@@ -16,6 +16,8 @@
   const messagesEl = document.getElementById("chat-messages") || document.getElementById("chat-container");
   const inputEl = document.getElementById("chat-input") || document.getElementById("user-input");
   const ageGateComposerNoticeEl = document.getElementById("age-gate-composer-notice");
+  const legalAttestationComposerNoticeEl = document.getElementById("legal-attestation-composer-notice");
+  const openLegalAttestationBtn = document.getElementById("open-legal-attestation-btn");
   const sendBtn = document.getElementById("send-btn");
   const modelDropdown = document.getElementById("model-dropdown");
   const modelBtn = document.getElementById("model-btn");
@@ -86,6 +88,7 @@
   const KNOWN_LIGHTING_PROFILES = ["studio-soft", "studio-hard", "natural-daylight", "cinematic-lowkey"];
   const KNOWN_MATERIAL_PROFILES = ["skin", "fabric", "metal", "glass"];
   const AGE_PROFILE_KEY = "omni-age-profile-v1";
+  const LEGAL_PROFILE_KEY = "omni-legal-attestation-v1";
 
   let state = {
     activeSessionId: null,
@@ -275,13 +278,158 @@
     return Boolean(profile && profile.verified && profile.humanVerified);
   }
 
+  function normalizeJurisdiction(value) {
+    const compact = String(value || "").trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(compact)) return "";
+    return compact;
+  }
+
+  function getLegalAttestationProfile() {
+    try {
+      const raw = localStorage.getItem(LEGAL_PROFILE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+
+      return {
+        accepted: parsed.accepted === true,
+        jurisdiction: normalizeJurisdiction(parsed.jurisdiction),
+        truthfulIdentity: parsed.truthfulIdentity === true,
+        lawfulUse: parsed.lawfulUse === true,
+        userDirected: parsed.userDirected === true,
+        acceptedAt: Number(parsed.acceptedAt || 0)
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function hasVerifiedLegalAttestation() {
+    const profile = getLegalAttestationProfile();
+    if (!profile) return false;
+    return Boolean(
+      profile.accepted &&
+      profile.truthfulIdentity &&
+      profile.lawfulUse &&
+      profile.userDirected &&
+      profile.jurisdiction
+    );
+  }
+
   function updateAgeGateComposerNotice() {
     if (!ageGateComposerNoticeEl) return;
     ageGateComposerNoticeEl.hidden = hasVerifiedAgeProfile();
   }
 
+  function updateLegalAttestationComposerNotice() {
+    if (!legalAttestationComposerNoticeEl) return;
+    legalAttestationComposerNoticeEl.hidden = hasVerifiedLegalAttestation();
+  }
+
+  function openLegalAttestationModal() {
+    const existing = document.getElementById("legal-attestation-overlay");
+    if (existing) return;
+
+    const profile = getLegalAttestationProfile();
+
+    const overlay = document.createElement("div");
+    overlay.id = "legal-attestation-overlay";
+    overlay.className = "age-gate-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "legal-attestation-title");
+
+    overlay.innerHTML = `
+      <div class="age-gate-modal">
+        <h2 id="legal-attestation-title">Legal Attestation Required</h2>
+        <p class="age-gate-copy">Before using chat, confirm your jurisdiction eligibility, truthful information, and responsible-use acceptance.</p>
+        <form id="legal-attestation-form" class="legal-attestation-form" novalidate>
+          <div class="legal-attestation-jurisdiction">
+            <label class="age-gate-label" for="legal-jurisdiction">Jurisdiction (2-letter country code)</label>
+            <input id="legal-jurisdiction" type="text" autocomplete="country-name" maxlength="2" placeholder="Example: US, CA, DE" />
+          </div>
+          <div class="legal-attestation-checks">
+            <label><input id="legal-eligible" type="checkbox" /> I confirm I am legally allowed to use Omni Ai in my jurisdiction.</label>
+            <label><input id="legal-truthful" type="checkbox" /> I confirm age/identity details I provide are truthful and accurate.</label>
+            <label><input id="legal-user-directed" type="checkbox" /> I understand Omni Ai acts on user input and my actions remain my responsibility.</label>
+          </div>
+          <p class="legal-attestation-links">See <a href="/legal.html" target="_blank" rel="noopener noreferrer">Legal Notice & Responsible Use</a> for full terms.</p>
+          <p id="legal-attestation-status" class="age-gate-status" aria-live="polite"></p>
+          <button id="legal-attestation-submit" type="submit" class="age-gate-submit">Accept & Continue</button>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const form = overlay.querySelector("#legal-attestation-form");
+    const jurisdictionEl = overlay.querySelector("#legal-jurisdiction");
+    const eligibleEl = overlay.querySelector("#legal-eligible");
+    const truthfulEl = overlay.querySelector("#legal-truthful");
+    const userDirectedEl = overlay.querySelector("#legal-user-directed");
+    const statusEl = overlay.querySelector("#legal-attestation-status");
+    const submitBtn = overlay.querySelector("#legal-attestation-submit");
+
+    if (jurisdictionEl) jurisdictionEl.value = String(profile?.jurisdiction || "");
+    if (eligibleEl) eligibleEl.checked = profile?.lawfulUse === true;
+    if (truthfulEl) truthfulEl.checked = profile?.truthfulIdentity === true;
+    if (userDirectedEl) userDirectedEl.checked = profile?.userDirected === true;
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const jurisdiction = normalizeJurisdiction(jurisdictionEl?.value || "");
+      const lawfulUse = Boolean(eligibleEl?.checked);
+      const truthfulIdentity = Boolean(truthfulEl?.checked);
+      const userDirected = Boolean(userDirectedEl?.checked);
+
+      if (!jurisdiction) {
+        if (statusEl) statusEl.textContent = "Enter a valid 2-letter country code (for example: US, CA, DE).";
+        return;
+      }
+
+      if (!lawfulUse || !truthfulIdentity || !userDirected) {
+        if (statusEl) statusEl.textContent = "All confirmations are required to continue.";
+        return;
+      }
+
+      if (submitBtn) submitBtn.disabled = true;
+
+      const nextProfile = {
+        accepted: true,
+        jurisdiction,
+        truthfulIdentity,
+        lawfulUse,
+        userDirected,
+        acceptedAt: Date.now()
+      };
+
+      try {
+        localStorage.setItem(LEGAL_PROFILE_KEY, JSON.stringify(nextProfile));
+      } catch {
+        if (statusEl) statusEl.textContent = "Unable to save attestation. Check browser storage settings.";
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("omni-legal-attestation-changed", {
+          detail: nextProfile
+        })
+      );
+
+      if (statusEl) statusEl.textContent = "Legal attestation complete.";
+      updateLegalAttestationComposerNotice();
+
+      setTimeout(() => {
+        overlay.remove();
+      }, 180);
+    });
+  }
+
   function buildSafetyProfile() {
     const profile = getAgeProfile() || {};
+    const legalProfile = getLegalAttestationProfile();
     const ageTier = String(profile.ageTier || "minor").toLowerCase() === "adult" ? "adult" : "minor";
     const nsfwAccess = Boolean(profile.nsfwAccess) && ageTier === "adult";
     return {
@@ -289,7 +437,15 @@
       humanVerified: Boolean(profile.humanVerified),
       nsfwAccess,
       explicitAllowed: nsfwAccess,
-      illegalBlocked: true
+      illegalBlocked: true,
+      legalAttestation: {
+        accepted: hasVerifiedLegalAttestation(),
+        jurisdiction: String(legalProfile?.jurisdiction || ""),
+        truthfulIdentity: Boolean(legalProfile?.truthfulIdentity),
+        lawfulUse: Boolean(legalProfile?.lawfulUse),
+        userDirected: Boolean(legalProfile?.userDirected),
+        acceptedAt: Number(legalProfile?.acceptedAt || 0)
+      }
     };
   }
 
@@ -1834,6 +1990,16 @@
     const trimmed = content.trim();
     if (!trimmed) return;
 
+    if (!hasVerifiedLegalAttestation()) {
+      appendMessage("assistant", "Legal attestation is required before chat can run. Please confirm jurisdiction eligibility and truthful/responsible use.", {
+        model: session.model || "auto",
+        mode: getActiveMode(session),
+        timestamp: Date.now()
+      });
+      openLegalAttestationModal();
+      return;
+    }
+
     const styleCommand = parseStyleCommand(trimmed);
     const cameraCommand = parseCameraCommand(trimmed);
     const lightCommand = parseLightCommand(trimmed);
@@ -2667,6 +2833,7 @@
     loadPreferences();
     updateSimulationUI();
     updateAgeGateComposerNotice();
+    updateLegalAttestationComposerNotice();
 
     // Listen for settings changes from other tabs or same page
     window.addEventListener("storage", (e) => {
@@ -2712,6 +2879,10 @@
 
       if (e.key === AGE_PROFILE_KEY) {
         updateAgeGateComposerNotice();
+      }
+
+      if (e.key === LEGAL_PROFILE_KEY) {
+        updateLegalAttestationComposerNotice();
       }
     });
 
@@ -2771,6 +2942,10 @@
       const session = getActiveSession();
       updateAgeGateComposerNotice();
       if (!session) return;
+    });
+
+    window.addEventListener("omni-legal-attestation-changed", () => {
+      updateLegalAttestationComposerNotice();
     });
 
     if (modelBtn && modelDropdown) {
@@ -2870,6 +3045,12 @@
 
     if (sendBtn) {
       sendBtn.addEventListener("click", handleSendClick);
+    }
+
+    if (openLegalAttestationBtn) {
+      openLegalAttestationBtn.addEventListener("click", () => {
+        openLegalAttestationModal();
+      });
     }
     if (inputEl) {
       inputEl.addEventListener("keydown", handleInputKeydown);

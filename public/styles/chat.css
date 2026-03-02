@@ -815,6 +815,64 @@
   line-height: 1.4;
 }
 
+#legal-attestation-composer-notice {
+  display: grid;
+  gap: 10px;
+}
+
+#open-legal-attestation-btn {
+  width: fit-content;
+  height: 34px;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.legal-attestation-form {
+  display: grid;
+  gap: 12px;
+}
+
+.legal-attestation-jurisdiction {
+  display: grid;
+  gap: 6px;
+}
+
+.legal-attestation-jurisdiction input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
+  padding: 10px;
+}
+
+.legal-attestation-checks {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.legal-attestation-checks label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.legal-attestation-links {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.legal-attestation-links a {
+  color: var(--text-primary);
+}
+
 .typing-indicator {
   margin: 0 16px 10px;
   color: var(--text-dim);

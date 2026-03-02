@@ -95,6 +95,14 @@ type OmniRequestBody = {
     nsfwAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
+    legalAttestation?: {
+      accepted?: boolean;
+      jurisdiction?: string;
+      truthfulIdentity?: boolean;
+      lawfulUse?: boolean;
+      userDirected?: boolean;
+      acceptedAt?: number;
+    };
   };
 };
 
@@ -132,6 +140,14 @@ type ImageRequestBody = {
     nsfwAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
+    legalAttestation?: {
+      accepted?: boolean;
+      jurisdiction?: string;
+      truthfulIdentity?: boolean;
+      lawfulUse?: boolean;
+      userDirected?: boolean;
+      acceptedAt?: number;
+    };
   };
 };
 
@@ -141,6 +157,14 @@ type SafetyProfile = {
   nsfwAccess: boolean;
   explicitAllowed: boolean;
   illegalBlocked: boolean;
+  legalAttestation: {
+    accepted: boolean;
+    jurisdiction: string;
+    truthfulIdentity: boolean;
+    lawfulUse: boolean;
+    userDirected: boolean;
+    acceptedAt: number;
+  };
 };
 
 type InternetSearchHit = {
@@ -616,13 +640,76 @@ function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageReq
   const tier = String(raw?.ageTier || "minor").trim().toLowerCase() === "adult" ? "adult" : "minor";
   const humanVerified = Boolean(raw?.humanVerified);
   const nsfwAccess = Boolean(raw?.nsfwAccess) && tier === "adult";
+  const legalAttestation = raw?.legalAttestation;
+  const rawJurisdiction = String(legalAttestation?.jurisdiction || "").trim().toUpperCase();
+  const jurisdiction = /^[A-Z]{2}$/.test(rawJurisdiction) ? rawJurisdiction : "";
 
   return {
     ageTier: tier,
     humanVerified,
     nsfwAccess,
     explicitAllowed: Boolean(raw?.explicitAllowed) && nsfwAccess,
-    illegalBlocked: raw?.illegalBlocked !== false
+    illegalBlocked: raw?.illegalBlocked !== false,
+    legalAttestation: {
+      accepted: Boolean(legalAttestation?.accepted),
+      jurisdiction,
+      truthfulIdentity: Boolean(legalAttestation?.truthfulIdentity),
+      lawfulUse: Boolean(legalAttestation?.lawfulUse),
+      userDirected: Boolean(legalAttestation?.userDirected),
+      acceptedAt: Number(legalAttestation?.acceptedAt || 0)
+    }
+  };
+}
+
+function getRequestCountryCode(request: Request): string {
+  const cf = (request as any)?.cf || {};
+  const raw = String(cf?.country || "").trim().toUpperCase();
+  if (!raw || raw === "XX" || raw === "T1") return "";
+  return /^[A-Z]{2}$/.test(raw) ? raw : "";
+}
+
+function evaluateLegalAttestation(
+  safetyProfile: SafetyProfile,
+  request: Request
+): { blocked: boolean; code: string; error: string } {
+  const legal = safetyProfile.legalAttestation;
+  if (!legal.accepted) {
+    return {
+      blocked: true,
+      code: "legal-attestation-required",
+      error: "Legal attestation is required before using Omni Ai chat features."
+    };
+  }
+
+  if (!legal.jurisdiction) {
+    return {
+      blocked: true,
+      code: "jurisdiction-required",
+      error: "Jurisdiction confirmation is required before proceeding."
+    };
+  }
+
+  if (!legal.truthfulIdentity || !legal.lawfulUse || !legal.userDirected) {
+    return {
+      blocked: true,
+      code: "legal-attestation-incomplete",
+      error: "Complete all legal confirmations (truthfulness, lawful use, and user responsibility) to continue."
+    };
+  }
+
+  const requestCountryCode = getRequestCountryCode(request);
+  if (requestCountryCode && legal.jurisdiction !== requestCountryCode) {
+    return {
+      blocked: true,
+      code: "jurisdiction-mismatch",
+      error: `Jurisdiction attestation (${legal.jurisdiction}) does not match detected request region (${requestCountryCode}).`
+    };
+  }
+
+  return {
+    blocked: false,
+    code: "allowed",
+    error: ""
   };
 }
 
@@ -3126,6 +3213,22 @@ export default {
         try {
           const body = (await request.json()) as ImageRequestBody;
           const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
+          const legalDecision = evaluateLegalAttestation(safetyProfile, request);
+          if (legalDecision.blocked) {
+            return new Response(
+              JSON.stringify({
+                error: legalDecision.error,
+                code: legalDecision.code
+              }),
+              {
+                status: 403,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
+          }
           const userId = sanitizePromptText(String(body?.userId || "anonymous"));
           const promptText = sanitizePromptText(String(body?.prompt || ""));
           const feedback = sanitizePromptText(String(body?.feedback || ""));
@@ -3424,6 +3527,22 @@ export default {
         }
 
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
+        const legalDecision = evaluateLegalAttestation(safetyProfile, request);
+        if (legalDecision.blocked) {
+          return new Response(
+            JSON.stringify({
+              error: legalDecision.error,
+              code: legalDecision.code
+            }),
+            {
+              status: 403,
+              headers: {
+                ...CORS_HEADERS,
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
         const safetyDecision = evaluateSexualSafetyPrompt(prompt, safetyProfile);
         if (safetyDecision.blocked) {
           return new Response(
@@ -4047,6 +4166,22 @@ export default {
         await ensureOmniMemorySchema(env);
         const body = (await request.json()) as OmniRequestBody;
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
+        const legalDecision = evaluateLegalAttestation(safetyProfile, request);
+        if (legalDecision.blocked) {
+          return new Response(
+            JSON.stringify({
+              error: legalDecision.error,
+              code: legalDecision.code
+            }),
+            {
+              status: 403,
+              headers: {
+                ...CORS_HEADERS,
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
 
         if (!body.messages || !OmniSafety.validateMessages(body.messages)) {
           logger.error("invalid_messages", body);
@@ -4068,6 +4203,7 @@ export default {
           : null;
         const sessionId = resolveSessionId(request);
         const workingMemory = await loadWorkingMemory(env, sessionId);
+        const requestCountryCode = getRequestCountryCode(request);
 
         const latestUserText = getLatestUserText(ctx.messages);
         const safetyDecision = evaluateSexualSafetyPrompt(latestUserText, safetyProfile);
@@ -4133,6 +4269,14 @@ export default {
                 ageTier: safetyProfile.ageTier,
                 explicitAllowed: safetyProfile.explicitAllowed,
                 illegalBlocked: safetyProfile.illegalBlocked,
+                legalAttestation: {
+                  accepted: safetyProfile.legalAttestation.accepted,
+                  jurisdiction: safetyProfile.legalAttestation.jurisdiction,
+                  truthfulIdentity: safetyProfile.legalAttestation.truthfulIdentity,
+                  lawfulUse: safetyProfile.legalAttestation.lawfulUse,
+                  userDirected: safetyProfile.legalAttestation.userDirected
+                },
+                requestCountryCode,
                 enforcement: "illegal content is always blocked"
               },
               null,
