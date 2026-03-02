@@ -47,6 +47,7 @@ export interface Env {
   OMNI_SESSION?: DurableObjectNamespace;
   MODEL_OMNI?: string;
   MODEL_IMAGE?: string;
+  MODEL_IMAGE_POLICY_FALLBACK?: string;
   OMNI_RESPONSE_MIN_CHARS?: string;
   OMNI_RESPONSE_BASE_CHARS?: string;
   OMNI_RESPONSE_MAX_CHARS?: string;
@@ -787,6 +788,7 @@ function normalizeImageGenerationError(err: any): {
     value.includes("moderat") ||
     value.includes("safety") ||
     value.includes("policy") ||
+    value.includes("nsfw") ||
     value.includes("unsafe") ||
     value.includes("content blocked")
   ) {
@@ -1575,6 +1577,7 @@ const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
 const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
 const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
 const OMNI_IMAGE_DIMENSION_LOCK = "strict";
+const OMNI_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 
 const OMNI_QUALITY_DEFAULT = [
   "very high image quality",
@@ -1690,6 +1693,18 @@ function promptRequestsPeople(prompt: string): boolean {
 
 function buildStrictPromptDirective(): string {
   return "strict prompt fidelity: include only elements explicitly requested by the user; do not add extra subjects, characters, objects, text, logos, or overlays";
+}
+
+function buildPolicySafePrompt(userPrompt: string): string {
+  const raw = sanitizePromptText(String(userPrompt || "")).trim();
+  if (!raw) return "";
+
+  const compact = raw
+    .replace(/^(please\s+)?(create|generate|make)\s+(an?\s+)?image\s+of\s+/i, "")
+    .replace(/^(please\s+)?(create|generate|make)\s+/i, "")
+    .trim();
+
+  return (compact || raw).slice(0, 700);
 }
 
 function applyPromptFreshness(options: OmniImageOptions): OmniImageOptions {
@@ -3242,6 +3257,7 @@ export default {
             effectiveWidth,
             effectiveHeight
           );
+          let outputModel = modelConfig.model;
 
           let fallbackUsed = false;
           let fallbackReason: string | null = null;
@@ -3255,6 +3271,7 @@ export default {
             .filter(Boolean)
             .join(", ")
             .slice(0, 900);
+          const policySafePrompt = buildPolicySafePrompt(orchestrated.userPrompt);
 
           let rawImage: any;
           try {
@@ -3264,15 +3281,36 @@ export default {
             const shouldRetryCompactPrompt =
               normalizedPrimaryError.code === "prompt-too-long" ||
               normalizedPrimaryError.code === "provider-timeout" ||
-              normalizedPrimaryError.code === "provider-unavailable";
+              normalizedPrimaryError.code === "provider-unavailable" ||
+              normalizedPrimaryError.code === "provider-policy-blocked";
 
-            if (!shouldRetryCompactPrompt || !compactPrompt) {
+            if (!shouldRetryCompactPrompt || (!compactPrompt && !policySafePrompt)) {
               throw primaryErr;
             }
 
             fallbackUsed = true;
             fallbackReason = normalizedPrimaryError.code;
-            rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(compactPrompt, modelConfig, refined.finalOptions.seed));
+
+            if (normalizedPrimaryError.code === "provider-policy-blocked") {
+              const fallbackModel =
+                String(env.MODEL_IMAGE_POLICY_FALLBACK || OMNI_IMAGE_POLICY_FALLBACK_MODEL).trim() ||
+                OMNI_IMAGE_POLICY_FALLBACK_MODEL;
+              const fallbackModelConfig = {
+                ...modelConfig,
+                model: fallbackModel,
+                width: 1152,
+                height: 2048,
+                resolution: "1152x2048"
+              };
+              const retryPrompt = policySafePrompt || compactPrompt;
+              outputModel = fallbackModelConfig.model;
+              rawImage = await env.AI.run(
+                fallbackModelConfig.model,
+                buildImageRunPayload(retryPrompt, fallbackModelConfig, refined.finalOptions.seed)
+              );
+            } else {
+              rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(compactPrompt, modelConfig, refined.finalOptions.seed));
+            }
           }
 
           const normalized = await normalizeImageOutput(rawImage);
@@ -3285,7 +3323,7 @@ export default {
             filename,
             metadata: {
               style_id: modelConfig.styleId,
-              model: modelConfig.model,
+              model: outputModel,
               ratio: modelConfig.ratio,
               resolution: modelConfig.resolution,
               forced_resolution: `${OMNI_IMAGE_DEFAULT_WIDTH}x${OMNI_IMAGE_DEFAULT_HEIGHT}`,
@@ -3376,7 +3414,7 @@ export default {
               headers: {
                 ...CORS_HEADERS,
                 "Content-Type": "application/json",
-                "X-Omni-Image-Model": modelConfig.model,
+                "X-Omni-Image-Model": outputModel,
                 "Access-Control-Expose-Headers": "X-Omni-Image-Model"
               }
             }

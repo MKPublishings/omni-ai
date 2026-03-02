@@ -58,6 +58,20 @@ function buildAttestedSafetyProfile() {
   };
 }
 
+function expectAttestedImageSuccess(result, label) {
+  expect(result.status === 200, `${label}: expected status 200, got ${result.status}`);
+  expect(result.data && typeof result.data === "object", `${label}: expected JSON response object`);
+  expect(
+    typeof result.data.imageDataUrl === "string" && result.data.imageDataUrl.startsWith("data:image/"),
+    `${label}: expected imageDataUrl data URI`
+  );
+  expect(typeof result.data.filename === "string" && result.data.filename.length > 0, `${label}: expected filename`);
+  expect(result.data.metadata && typeof result.data.metadata === "object", `${label}: expected metadata object`);
+
+  const modelHeader = String(result.headers.get("X-Omni-Image-Model") || "").trim();
+  expect(modelHeader.length > 0, `${label}: expected X-Omni-Image-Model header`);
+}
+
 async function run() {
   const commonPayload = {
     userId: "smoke-orchestrator-attestation",
@@ -88,19 +102,28 @@ async function run() {
     safetyProfile: buildAttestedSafetyProfile()
   });
 
-  expect(attested.status === 200, `expected attested status 200, got ${attested.status}`);
-  expect(attested.data && typeof attested.data === "object", "expected JSON response object for attested request");
-  expect(
-    typeof attested.data.imageDataUrl === "string" && attested.data.imageDataUrl.startsWith("data:image/"),
-    "expected imageDataUrl data URI in attested response"
-  );
-  expect(typeof attested.data.filename === "string" && attested.data.filename.length > 0, "expected filename in attested response");
-  expect(attested.data.metadata && typeof attested.data.metadata === "object", "expected metadata object in attested response");
-
-  const modelHeader = String(attested.headers.get("X-Omni-Image-Model") || "").trim();
-  expect(modelHeader.length > 0, "expected X-Omni-Image-Model response header");
-
+  expectAttestedImageSuccess(attested, "attested baseline prompt");
   console.log("✓ orchestrator /api/image returns attested image payload with metadata");
+
+  const dogRegression = await postJson("/api/image", {
+    ...commonPayload,
+    userId: "smoke-orchestrator-attestation-dog",
+    prompt: "create an image of a photo realistic dog.",
+    safetyProfile: buildAttestedSafetyProfile()
+  });
+
+  expectAttestedImageSuccess(dogRegression, "dog regression prompt");
+  console.log("✓ dog regression prompt no longer fails on false NSFW block");
+
+  const warriorRegression = await postJson("/api/image", {
+    ...commonPayload,
+    userId: "smoke-orchestrator-attestation-warrior",
+    prompt: "create an image of a ultra-detailed digital painting of a warrior",
+    safetyProfile: buildAttestedSafetyProfile()
+  });
+
+  expectAttestedImageSuccess(warriorRegression, "warrior regression prompt");
+  console.log("✓ warrior regression prompt no longer fails on false NSFW block");
   console.log("Orchestrator image attestation smoke test passed.");
 }
 
