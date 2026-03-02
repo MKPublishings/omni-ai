@@ -11,13 +11,14 @@ interface ImageRequest {
 }
 
 const MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+const QUALITY_PROFILE = "legacy-restored";
 const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
-const MAX_EXPORT_BYTES = 2 * 1024 * 1024;
-const DEFAULT_DIMENSION = 1024;
-const MIN_DIMENSION = 512;
+const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
+const DEFAULT_DIMENSION = 1536;
+const MIN_DIMENSION = 1024;
 const MAX_DIMENSION = 8192;
 const DIMENSION_STEP = 64;
-const MAX_GENERATION_ATTEMPTS = 8;
+const MAX_GENERATION_ATTEMPTS = 10;
 
 type NormalizedDimensions = { width: number; height: number; source: string };
 
@@ -86,12 +87,12 @@ function resolveDimensions(body: ImageRequest): NormalizedDimensions {
 
 function buildQualityPrompt(basePrompt: string): string {
   const suffix =
-    "ultra-detailed, crisp micro-textures, sharp focus, high-frequency details, clean edges, no artifacts, no blur, no pixelation";
+    "restored legacy Omni high-fidelity profile, ultra-detailed, crisp micro-textures, sharp focus, high-frequency details, clean edges, no artifacts, no blur, no pixelation, zoom-safe detail retention";
   return `${basePrompt.trim()}, ${suffix}`;
 }
 
 function mergeNegativePrompt(baseNegativePrompt?: string): string {
-  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise";
+  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces";
   if (!baseNegativePrompt) return antiArtifacts;
   return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
 }
@@ -156,8 +157,8 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
         width,
         height,
         seed: body.seed,
-        num_steps: 40,
-        guidance: 8
+        num_steps: 50,
+        guidance: 8.5
       });
     } catch (error: any) {
       lastError = String(error?.message || "unknown error");
@@ -200,7 +201,7 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
     }
 
     if (status === "over") {
-      const scale = Math.max(0.7, Math.sqrt(MAX_EXPORT_BYTES / bytes) * 0.98);
+      const scale = Math.max(0.8, Math.sqrt(MAX_EXPORT_BYTES / bytes) * 0.99);
       const next = nextScaledDimensions(width, height, scale);
       if (next.width === width && next.height === height) break;
       width = next.width;
@@ -208,7 +209,7 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
       continue;
     }
 
-    const scale = Math.min(1.35, Math.sqrt(MIN_EXPORT_BYTES / Math.max(1, bytes)) * 1.02);
+    const scale = Math.min(1.45, Math.sqrt(MIN_EXPORT_BYTES / Math.max(1, bytes)) * 1.06);
     const next = nextScaledDimensions(width, height, scale);
     if (next.width === width && next.height === height) break;
     width = next.width;
@@ -294,7 +295,8 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
         "X-Omni-Image-Height": String(generated.height),
         "X-Omni-Image-Attempts": String(generated.attempts),
         "X-Omni-Image-Dimension-Source": generated.dimensionSource,
-        "X-Omni-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`
+        "X-Omni-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`,
+        "X-Omni-Image-Quality-Profile": QUALITY_PROFILE
       }
     });
   } catch (error: any) {
