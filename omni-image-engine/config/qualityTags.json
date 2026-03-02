@@ -1,8 +1,15 @@
 {
   "default": [
+    "very high image quality",
+    "4k resolution",
     "high resolution",
     "sharp focus",
-    "detailed textures"
+    "detailed textures",
+    "physically based rendering",
+    "physically accurate lighting",
+    "realistic material response",
+    "anti-haze clarity",
+    "anti-pixelation"
   ],
   "high": [
     "8k resolution",

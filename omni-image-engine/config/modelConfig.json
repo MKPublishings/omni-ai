@@ -11,8 +11,8 @@
       "endpoint": "https://api.openai.com/v1/images/generations",
       "apiKeyEnv": "OPENAI_API_KEY",
       "fallbackModel": "omni_stability",
-      "defaultWidth": 1024,
-      "defaultHeight": 1024,
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
       "defaultSteps": 30,
       "defaultCfgScale": 7.5
     },
@@ -23,8 +23,8 @@
       "providerModel": "stable-image-core",
       "endpoint": "https://api.stability.ai/v2beta/stable-image/generate/core",
       "apiKeyEnv": "STABILITY_API_KEY",
-      "defaultWidth": 1024,
-      "defaultHeight": 1024,
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
       "defaultSteps": 30,
       "defaultCfgScale": 7.5
     }

@@ -1394,6 +1394,12 @@
     return `${safeKind}-${safePrompt}-${iso}.${safeExt}`;
   }
 
+  const IMAGE_EXPORT_WIDTH = 2160;
+  const IMAGE_EXPORT_HEIGHT = 3840;
+  const IMAGE_EXPORT_RATIO = "9:16";
+  const IMAGE_EXPORT_RESOLUTION = "4k";
+  const IMAGE_EXPORT_RESOLUTION_LABEL = `${IMAGE_EXPORT_WIDTH}x${IMAGE_EXPORT_HEIGHT}`;
+
   function formatGeneratedTimestamp(value) {
     const ts = Number(value);
     if (!Number.isFinite(ts) || ts <= 0) return "";
@@ -1409,7 +1415,7 @@
     const generatedAt = Number(meta.generatedAt || Date.now());
     const prompt = String(meta.imagePrompt || "Generated image").trim() || "Generated image";
     const filename = buildOmniExportFilename("image", "png", generatedAt, prompt);
-    const resolution = String(meta.imageResolution || "").trim();
+    const resolution = String(meta.imageResolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
     const styleId = String(meta.imageStyleId || "").trim();
     const createdLabel = formatGeneratedTimestamp(generatedAt);
 
@@ -1774,6 +1780,11 @@
       prompt,
       feedback: "",
       stylePack: selectedStyle || "",
+      quality: "ultra",
+      ratio: IMAGE_EXPORT_RATIO,
+      resolution: IMAGE_EXPORT_RESOLUTION,
+      width: IMAGE_EXPORT_WIDTH,
+      height: IMAGE_EXPORT_HEIGHT,
       safetyProfile: safetyProfile || buildSafetyProfile()
     };
 
@@ -2615,7 +2626,7 @@
         const imagePrompt = String(mediaIntent.prompt || extractImagePrompt(trimmed) || trimmed).trim();
         const imageResult = await requestGeneratedImage(session, imagePrompt, safetyProfile);
         const generatedAt = Date.now();
-        const resolution = String(imageResult?.metadata?.resolution || "").trim();
+        const resolution = String(imageResult?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
         const styleId = String(imageResult?.metadata?.style_id || "").trim();
 
         updateModelInspector(imageResult.modelUsed || session.model || "auto", "image-generated");
@@ -2711,7 +2722,7 @@
               route: String(payload.route || "").trim(),
               imageDataUrl: String(payload.imageDataUrl || "").trim(),
               imageFilename: String(payload?.image?.filename || "").trim(),
-              imageResolution: String(payload?.image?.metadata?.resolution || "").trim(),
+              imageResolution: String(payload?.image?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL,
               imageStyleId: String(payload?.image?.metadata?.style_id || "").trim(),
               imagePrompt: trimmed,
               generatedAt: Date.now()

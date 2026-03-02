@@ -11,9 +11,11 @@ interface ImageRequest {
 }
 
 const MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
-const QUALITY_PROFILE = "legacy-restored";
+const QUALITY_PROFILE = "legacy-restored-4k-physics-vhq";
 const FORCED_WIDTH = 2160;
 const FORCED_HEIGHT = 3840;
+const FORCED_ASPECT_RATIO = "9:16";
+const FORCED_RESOLUTION = `${FORCED_WIDTH}x${FORCED_HEIGHT}`;
 const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
 const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
 const MAX_GENERATION_ATTEMPTS = 10;
@@ -65,12 +67,12 @@ function resolveDimensions(_body: ImageRequest): NormalizedDimensions {
 
 function buildQualityPrompt(basePrompt: string): string {
   const suffix =
-    "restored legacy Omni high-fidelity profile, ultra-detailed, crisp micro-textures, sharp focus, high-frequency details, clean edges, no artifacts, no blur, no pixelation, zoom-safe detail retention";
+    "restored legacy Omni high-fidelity profile, very high image quality, 4k ultra high resolution output, physically based rendering, physically accurate lighting, realistic material response, ultra-detailed, crisp micro-textures, sharp focus, high-frequency details, clean edges, no artifacts, no blur, no haze, no pixelation, zoom-safe detail retention";
   return `${basePrompt.trim()}, ${suffix}`;
 }
 
 function mergeNegativePrompt(baseNegativePrompt?: string): string {
-  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces";
+  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, haze, hazy veil, fog veil, muddy details";
   if (!baseNegativePrompt) return antiArtifacts;
   return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
 }
@@ -128,8 +130,8 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
         width,
         height,
         seed: body.seed,
-        num_steps: 50,
-        guidance: 8.5
+        num_steps: 60,
+        guidance: 9
       });
     } catch (error: any) {
       lastError = String(error?.message || "unknown error");
@@ -238,6 +240,8 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
           headers: {
             "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
             "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
+            "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
+            "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
             "X-Omni-Image-Dimension-Lock": "strict"
           }
         }
@@ -271,6 +275,8 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
         "X-Omni-Image-Height": String(generated.height),
         "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
         "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
+        "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
+        "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
         "X-Omni-Image-Dimension-Lock": "strict",
         "X-Omni-Image-Attempts": String(generated.attempts),
         "X-Omni-Image-Dimension-Source": generated.dimensionSource,

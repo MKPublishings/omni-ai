@@ -1809,8 +1809,22 @@ const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   }
 };
 
+const OMNI_IMAGE_DEFAULT_QUALITY = "ultra";
+const OMNI_IMAGE_DEFAULT_RATIO = "9:16";
+const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
+const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
+const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
+
 const OMNI_QUALITY_DEFAULT = [
-  "high detail"
+  "very high image quality",
+  "4k uhd render",
+  "high detail",
+  "high-frequency texture retention",
+  "physically based rendering",
+  "physically accurate lighting",
+  "realistic material response",
+  "anti-haze clarity",
+  "anti-pixelation"
 ];
 
 const OMNI_NEGATIVE_BASE = [
@@ -1819,7 +1833,11 @@ const OMNI_NEGATIVE_BASE = [
   "no artifacts",
   "no watermark",
   "no blurry details",
-  "no deformed anatomy"
+  "no deformed anatomy",
+  "no haze",
+  "no fog veil",
+  "no pixelation",
+  "no compression artifacts"
 ];
 
 const OMNI_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
@@ -2126,9 +2144,9 @@ function parseResolutionPreset(value: string, quality: string): number {
     return presets[normalized];
   }
 
-  if (quality === "high") return 1280;
-  if (quality === "ultra") return 2048;
-  return 1024;
+  if (quality === "high") return 2560;
+  if (quality === "ultra" || quality === "very_high" || quality === "very-high") return 3840;
+  return OMNI_IMAGE_DEFAULT_WIDTH;
 }
 
 function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: string): { width: number; height: number; ratio: string } {
@@ -2176,22 +2194,31 @@ function selectImageModelConfig(
   const hasExplicitSize = Number.isFinite(width) && Number.isFinite(height);
   const hasRatioOrResolution = Boolean(String(requestedRatio || "").trim() || String(requestedResolution || "").trim());
   if (!hasExplicitSize && hasRatioOrResolution) {
-    const computed = deriveDimensionsFromRatio(requestedRatio || "1:1", requestedResolution || "", safeQuality || "default");
+    const computed = deriveDimensionsFromRatio(
+      requestedRatio || OMNI_IMAGE_DEFAULT_RATIO,
+      requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION,
+      safeQuality || OMNI_IMAGE_DEFAULT_QUALITY
+    );
     width = computed.width;
     height = computed.height;
+  }
+
+  if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    width = OMNI_IMAGE_DEFAULT_WIDTH;
+    height = OMNI_IMAGE_DEFAULT_HEIGHT;
   }
 
   const ratioLabel = String(requestedRatio || "").trim();
   const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
     ? `${width}x${height}`
-    : (String(requestedResolution || "").trim() || "provider-default");
+    : (String(requestedResolution || "").trim() || OMNI_IMAGE_DEFAULT_RESOLUTION);
 
   return {
     model: env.MODEL_IMAGE || "@cf/black-forest-labs/flux-1-schnell",
     styleId: styleId || "auto",
     width,
     height,
-    ratio: ratioLabel || "provider-default",
+    ratio: ratioLabel || OMNI_IMAGE_DEFAULT_RATIO,
     resolution: resolutionLabel
   };
 }
@@ -2315,6 +2342,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     : [];
 
   const requestedQuality = sanitizePromptText(String(options?.quality || "")).toLowerCase();
+  const effectiveQuality = requestedQuality || OMNI_IMAGE_DEFAULT_QUALITY;
   const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
   const visualReasoning = runVisualReasoning(promptText);
   const promptInferredCamera = inferCameraFromPrompt(promptText) || visualReasoning.cameraIntent;
@@ -2339,6 +2367,10 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
   const requestedResolution = sanitizePromptText(String(options?.resolution || ""));
   const requestedWidth = Number(options?.width);
   const requestedHeight = Number(options?.height);
+  const effectiveRatio = requestedRatio || OMNI_IMAGE_DEFAULT_RATIO;
+  const effectiveResolution = requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION;
+  const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : OMNI_IMAGE_DEFAULT_WIDTH;
+  const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : OMNI_IMAGE_DEFAULT_HEIGHT;
   const parsedSeed = Number(options?.seed);
 
   const orchestrated = orchestrateOmniImagePrompt(
@@ -2347,7 +2379,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
       mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
       stylePack: effectiveStylePack,
       laws: requestedLaws,
-      quality: requestedQuality,
+      quality: effectiveQuality,
       feedback,
       seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
       camera: effectiveCamera,
@@ -2360,7 +2392,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
     stylePack: effectiveStylePack,
     laws: requestedLaws,
-    quality: requestedQuality,
+    quality: effectiveQuality,
     feedback,
     seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
     camera: effectiveCamera,
@@ -2370,12 +2402,12 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
 
   const modelConfig = selectImageModelConfig(
     effectiveStylePack,
-    requestedQuality,
+    effectiveQuality,
     env,
-    requestedRatio,
-    requestedResolution,
-    requestedWidth,
-    requestedHeight
+    effectiveRatio,
+    effectiveResolution,
+    effectiveWidth,
+    effectiveHeight
   );
 
   const rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(refined.data.finalPrompt, modelConfig, refined.finalOptions.seed));
@@ -2393,7 +2425,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
       model: modelConfig.model,
       ratio: modelConfig.ratio,
       resolution: modelConfig.resolution,
-      quality: requestedQuality,
+      quality: effectiveQuality,
       rendering_style: resolvedRenderingStyle,
       camera: effectiveCamera,
       lighting: effectiveLighting,
@@ -3360,6 +3392,7 @@ export default {
                 .filter((law) => Boolean(law.id))
             : [];
           const requestedQuality = sanitizePromptText(String(body?.quality || "")).toLowerCase();
+          const effectiveQuality = requestedQuality || OMNI_IMAGE_DEFAULT_QUALITY;
           const requestedMode = sanitizePromptText(String(body?.mode || "simple")).toLowerCase() || "simple";
           const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
           const promptInferredCamera = inferCameraFromPrompt(promptText);
@@ -3383,6 +3416,10 @@ export default {
           const requestedResolution = sanitizePromptText(String(body?.resolution || ""));
           const requestedWidth = Number(body?.width);
           const requestedHeight = Number(body?.height);
+          const effectiveRatio = requestedRatio || OMNI_IMAGE_DEFAULT_RATIO;
+          const effectiveResolution = requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION;
+          const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : OMNI_IMAGE_DEFAULT_WIDTH;
+          const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : OMNI_IMAGE_DEFAULT_HEIGHT;
           const parsedSeed = Number(body?.seed);
           const debugRequested =
             body?.debug === true ||
@@ -3422,7 +3459,7 @@ export default {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
-            quality: requestedQuality,
+            quality: effectiveQuality,
             feedback,
             seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
             camera: effectiveCamera,
@@ -3434,7 +3471,7 @@ export default {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
-            quality: requestedQuality,
+            quality: effectiveQuality,
             feedback,
             seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
             camera: effectiveCamera,
@@ -3444,12 +3481,12 @@ export default {
 
           const modelConfig = selectImageModelConfig(
             effectiveStylePack,
-            requestedQuality,
+            effectiveQuality,
             env,
-            requestedRatio,
-            requestedResolution,
-            requestedWidth,
-            requestedHeight
+            effectiveRatio,
+            effectiveResolution,
+            effectiveWidth,
+            effectiveHeight
           );
 
           let fallbackUsed = false;
@@ -3498,7 +3535,7 @@ export default {
               ratio: modelConfig.ratio,
               resolution: modelConfig.resolution,
               mode: requestedMode,
-              quality: requestedQuality,
+              quality: effectiveQuality,
               rendering_style: resolvedRenderingStyle,
               rendering_style_source: promptInferredStyle ? "prompt" : (requestedStylePack ? "session-or-request" : "auto"),
               camera: effectiveCamera,
@@ -3537,7 +3574,7 @@ export default {
                 stylePack: requestedStylePack,
                 inferredStyleFromPrompt: promptInferredStyle || null,
                 effectiveStylePack: effectiveStylePack || null,
-                quality: requestedQuality,
+                quality: effectiveQuality,
                 renderingStyle: resolvedRenderingStyle,
                 inferredCameraFromPrompt: promptInferredCamera || null,
                 effectiveCamera: effectiveCamera,
