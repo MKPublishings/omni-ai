@@ -12,22 +12,21 @@
     "anti-pixelation"
   ],
   "high": [
-    "8k resolution",
     "ultra detailed",
     "sharp focus",
     "global illumination",
-    "subsurface scattering",
-    "film grain",
+    "subsurface scattering skin realism",
+    "micro-contrast detail",
     "depth of field",
-    "HDR"
+    "high dynamic range"
   ],
   "ultra": [
-    "16k resolution",
     "hyper realistic",
-    "extreme detail",
+    "extreme micro detail",
     "cinematic lighting",
     "advanced global illumination",
-    "complex reflections",
-    "perfect sharpness"
+    "physically accurate reflections",
+    "crisp edge fidelity",
+    "high-frequency texture preservation"
   ]
 }

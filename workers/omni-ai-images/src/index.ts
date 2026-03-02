@@ -16,6 +16,10 @@ const FORCED_WIDTH = 2160;
 const FORCED_HEIGHT = 3840;
 const FORCED_ASPECT_RATIO = "9:16";
 const FORCED_RESOLUTION = `${FORCED_WIDTH}x${FORCED_HEIGHT}`;
+const MODEL_MAX_EDGE = 2048;
+const MODEL_RENDER_WIDTH = 1152;
+const MODEL_RENDER_HEIGHT = 2048;
+const MODEL_RENDER_RESOLUTION = `${MODEL_RENDER_WIDTH}x${MODEL_RENDER_HEIGHT}`;
 const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
 const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
 const MAX_GENERATION_ATTEMPTS = 10;
@@ -59,26 +63,86 @@ function parseResolutionFromPrompt(prompt: string): { width: number; height: num
 
 function resolveDimensions(_body: ImageRequest): NormalizedDimensions {
   return {
-    width: FORCED_WIDTH,
-    height: FORCED_HEIGHT,
-    source: "forced-4k-vertical"
+    width: MODEL_RENDER_WIDTH,
+    height: MODEL_RENDER_HEIGHT,
+    source: "model-max-9x16"
   };
 }
 
 function buildQualityPrompt(basePrompt: string): string {
+  const core = String(basePrompt || "").trim();
   const suffix =
-    "restored legacy Omni high-fidelity profile, very high image quality, 4k ultra high resolution output, physically based rendering, physically accurate lighting, realistic material response, ultra-detailed, crisp micro-textures, sharp focus, high-frequency details, clean edges, no artifacts, no blur, no haze, no pixelation, zoom-safe detail retention";
-  return `${basePrompt.trim()}, ${suffix}`;
+    "strict prompt fidelity, preserve requested subject and context, highly detailed textures, high-frequency micro detail, physically plausible lighting, realistic materials, crisp focus, clean edges, 4k-grade detail retention";
+  return `${core}, ${suffix}`;
 }
 
 function mergeNegativePrompt(baseNegativePrompt?: string): string {
-  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, haze, hazy veil, fog veil, muddy details";
+  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, flat shading, plastic look, muddy details, haze, fog veil";
   if (!baseNegativePrompt) return antiArtifacts;
   return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
 }
 
+function base64ToBytes(base64: string): Uint8Array {
+  const normalized = String(base64 || "")
+    .replace(/\s+/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 function toUint8Array(value: Uint8Array | ArrayBuffer): Uint8Array {
   return value instanceof Uint8Array ? value : new Uint8Array(value);
+}
+
+function detectImageMime(bytes: Uint8Array): string | null {
+  if (!bytes || bytes.byteLength < 12) return null;
+
+  const png = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+  if (png) return "image/png";
+
+  const jpg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (jpg) return "image/jpeg";
+
+  const webp =
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50;
+  if (webp) return "image/webp";
+
+  return null;
+}
+
+function describeOutputShape(value: unknown, depth = 0): string {
+  if (depth > 2) return "max-depth";
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
+  if (value instanceof Uint8Array) return `Uint8Array(${value.byteLength})`;
+  if (value instanceof ArrayBuffer) return `ArrayBuffer(${value.byteLength})`;
+  if (ArrayBuffer.isView(value)) {
+    const view = value as ArrayBufferView;
+    return `${view.constructor?.name || "ArrayBufferView"}(${view.byteLength})`;
+  }
+  if (typeof value === "string") return `string(${value.length})`;
+  if (Array.isArray(value)) return `array(len=${value.length})`;
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const ctor = (value as any)?.constructor?.name || "Object";
+    const keys = Object.keys(obj).slice(0, 12);
+    const parts = keys.map((key) => `${key}:${describeOutputShape(obj[key], depth + 1)}`);
+    return `${ctor}{${parts.join(",")}}`;
+  }
+  return typeof value;
 }
 
 function sizeStatus(bytes: number): "under" | "within" | "over" {
@@ -89,11 +153,15 @@ function sizeStatus(bytes: number): "under" | "within" | "over" {
 
 async function runImageModel(env: Env, payload: GenerationPayload): Promise<Uint8Array> {
   const result = await env.AI.run(MODEL, payload);
-  const imageBytes = toImageBytes(result);
+  const imageBytes = await toImageBytes(result);
   if (!imageBytes) {
-    throw new Error("Image model returned unsupported output format");
+    throw new Error(`Image model returned unsupported output format (${describeOutputShape(result)})`);
   }
-  return toUint8Array(imageBytes);
+  const bytes = toUint8Array(imageBytes);
+  if (!detectImageMime(bytes)) {
+    throw new Error("Image model output is not a valid PNG/JPEG/WebP payload");
+  }
+  return bytes;
 }
 
 async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
@@ -130,7 +198,7 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
         width,
         height,
         seed: body.seed,
-        num_steps: 60,
+        num_steps: 20,
         guidance: 9
       });
     } catch (error: any) {
@@ -185,12 +253,132 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
   };
 }
 
-function toImageBytes(value: unknown): Uint8Array | ArrayBuffer | null {
+function isNumericByteArray(value: unknown): value is number[] {
+  return Array.isArray(value) && value.length > 0 && value.every((n) => Number.isInteger(n) && n >= 0 && n <= 255);
+}
+
+async function toImageBytes(value: unknown, depth = 0): Promise<Uint8Array | ArrayBuffer | null> {
+  if (depth > 6) return null;
+
   if (value instanceof Uint8Array || value instanceof ArrayBuffer) return value;
+
+  if (typeof ReadableStream !== "undefined" && value instanceof ReadableStream) {
+    return new Response(value).arrayBuffer();
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    const view = value as ArrayBufferView;
+    return new Uint8Array(view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength));
+  }
+
+  if (typeof Blob !== "undefined" && value instanceof Blob) {
+    return value.arrayBuffer();
+  }
+
+  if (typeof Response !== "undefined" && value instanceof Response) {
+    const contentType = String(value.headers.get("content-type") || "").toLowerCase();
+    if (contentType.startsWith("image/")) {
+      return value.arrayBuffer();
+    }
+
+    try {
+      const data = await value.clone().json();
+      return toImageBytes(data, depth + 1);
+    } catch {
+      try {
+        const text = await value.clone().text();
+        return toImageBytes(text, depth + 1);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  if (typeof value === "string") {
+    const text = String(value || "").trim();
+    if (!text) return null;
+
+    if (text.startsWith("data:image/")) {
+      const commaIndex = text.indexOf(",");
+      if (commaIndex > 0) {
+        try {
+          return base64ToBytes(text.slice(commaIndex + 1));
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    if (/^[A-Za-z0-9+/=_-]+$/.test(text) && text.length > 128) {
+      try {
+        return base64ToBytes(text);
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  if (isNumericByteArray(value)) {
+    return Uint8Array.from(value);
+  }
+
   if (value && typeof value === "object") {
     const v = value as any;
+
+    if (typeof v.arrayBuffer === "function") {
+      try {
+        const buffer = await v.arrayBuffer();
+        if (buffer && (buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer))) {
+          return buffer instanceof ArrayBuffer ? buffer : new Uint8Array(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength));
+        }
+      } catch {
+      }
+    }
+
+    if (v.body !== undefined) {
+      const candidate = await toImageBytes(v.body, depth + 1);
+      if (candidate) return candidate;
+    }
+
     if (v.image instanceof Uint8Array || v.image instanceof ArrayBuffer) return v.image;
     if (v.output instanceof Uint8Array || v.output instanceof ArrayBuffer) return v.output;
+
+    if (isNumericByteArray(v.image)) return Uint8Array.from(v.image);
+    if (isNumericByteArray(v.output)) return Uint8Array.from(v.output);
+    if (v.image && typeof v.image === "object" && isNumericByteArray(v.image.data)) return Uint8Array.from(v.image.data);
+    if (v.output && typeof v.output === "object" && isNumericByteArray(v.output.data)) return Uint8Array.from(v.output.data);
+
+    if (typeof v.image === "string") return toImageBytes(v.image, depth + 1);
+    if (typeof v.output === "string") return toImageBytes(v.output, depth + 1);
+    if (typeof v.b64_json === "string") return toImageBytes(v.b64_json, depth + 1);
+    if (typeof v.base64 === "string") return toImageBytes(v.base64, depth + 1);
+
+    if (Array.isArray(v.output)) {
+      for (const item of v.output) {
+        const candidate = await toImageBytes(item, depth + 1);
+        if (candidate) return candidate;
+      }
+    }
+
+    if (Array.isArray(v.data)) {
+      for (const item of v.data) {
+        const candidate = await toImageBytes(item, depth + 1);
+        if (candidate) return candidate;
+      }
+    }
+
+    if (v.result !== undefined) {
+      const candidate = await toImageBytes(v.result, depth + 1);
+      if (candidate) return candidate;
+    }
+
+    if (v.response !== undefined) {
+      const candidate = await toImageBytes(v.response, depth + 1);
+      if (candidate) return candidate;
+    }
   }
   return null;
 }
@@ -221,17 +409,18 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
 
   try {
     const generated = await generateWithinSizeRange(env, body);
+    const mime = detectImageMime(generated.image);
 
-    if (generated.width !== FORCED_WIDTH || generated.height !== FORCED_HEIGHT) {
+    if (generated.width !== MODEL_RENDER_WIDTH || generated.height !== MODEL_RENDER_HEIGHT) {
       return Response.json(
         {
           success: false,
-          error: `Generated image dimensions must be ${FORCED_WIDTH}x${FORCED_HEIGHT}`,
+          error: `Generated image dimensions must be ${MODEL_RENDER_WIDTH}x${MODEL_RENDER_HEIGHT}`,
           details: {
             width: generated.width,
             height: generated.height,
-            expectedWidth: FORCED_WIDTH,
-            expectedHeight: FORCED_HEIGHT,
+            expectedWidth: MODEL_RENDER_WIDTH,
+            expectedHeight: MODEL_RENDER_HEIGHT,
             dimensionSource: generated.dimensionSource
           }
         },
@@ -242,7 +431,11 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
             "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
             "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
             "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
-            "X-Omni-Image-Dimension-Lock": "strict"
+            "X-Omni-Image-Dimension-Lock": "strict",
+            "X-Omni-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
+            "X-Omni-Image-Render-Width": String(MODEL_RENDER_WIDTH),
+            "X-Omni-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
+            "X-Omni-Image-Render-Resolution": MODEL_RENDER_RESOLUTION
           }
         }
       );
@@ -265,9 +458,19 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
       );
     }
 
+    if (!mime) {
+      return Response.json(
+        {
+          success: false,
+          error: "Generated output did not match a supported image format"
+        },
+        { status: 500 }
+      );
+    }
+
     return new Response(generated.image, {
       headers: {
-        "Content-Type": "image/png",
+        "Content-Type": mime,
         "Cache-Control": "no-store",
         "X-Omni-Image-Bytes": String(generated.bytes),
         "X-Omni-Image-Size-Status": generated.status,
@@ -278,6 +481,10 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
         "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
         "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
         "X-Omni-Image-Dimension-Lock": "strict",
+        "X-Omni-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
+        "X-Omni-Image-Render-Width": String(MODEL_RENDER_WIDTH),
+        "X-Omni-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
+        "X-Omni-Image-Render-Resolution": MODEL_RENDER_RESOLUTION,
         "X-Omni-Image-Attempts": String(generated.attempts),
         "X-Omni-Image-Dimension-Source": generated.dimensionSource,
         "X-Omni-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`,

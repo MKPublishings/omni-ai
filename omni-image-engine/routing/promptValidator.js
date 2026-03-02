@@ -9,14 +9,11 @@ function ensureType(value, fallback = "image") {
 }
 
 function applyGenerationToken(prompt, intent) {
+    void intent;
     const raw = String(prompt || "").trim();
     if (!raw) return raw;
 
-    if (/^<still>\s+/i.test(raw)) {
-        return raw;
-    }
-
-    return `<still> ${raw}`;
+    return raw;
 }
 
 function normalizeStillPromptLanguage(prompt) {

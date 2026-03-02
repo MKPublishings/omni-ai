@@ -21,7 +21,7 @@ function inferSceneDescription(prompt) {
         return "urban environment, buildings, grounded textures, depth and perspective";
     }
 
-    return "coherent environment matching the subject and mood";
+    return "";
 }
 
 function inferTimeIntent(prompt) {
@@ -40,7 +40,7 @@ function buildTimeDirective(intent) {
     if (intent === "sunset") return "sunset lighting, warm sky tones";
     if (intent === "day") return "daytime lighting, natural sunlight, clear atmosphere";
     if (intent === "indoor") return "interior lighting setup, practical lights, no night sky elements unless requested";
-    return "neutral natural lighting, balanced exposure";
+    return "";
 }
 
 function buildStrictPromptDirective() {
@@ -125,14 +125,13 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
     const semanticExpansion = [
         normalizedPrompt,
         sceneDescription,
-        timeDirective,
-        strictDirective
+        timeDirective
     ].filter(Boolean).join(", ");
 
     const lawTags = buildLawPromptDirectives(options.laws);
     const lawInfluence = applyLawsToVisualInfluence(options.laws);
     const styleTags = [...new Set([...(stylePack.tags || []), ...(inferredStyle.tags || [])])];
-    const technicalTags = [...contextTags];
+    const technicalTags = [...contextTags, strictDirective];
 
     const finalPrompt = [
         semanticExpansion,

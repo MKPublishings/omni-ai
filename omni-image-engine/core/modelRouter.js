@@ -223,6 +223,12 @@ async function callOpenAIImages(prompt, options) {
 
     const requestSize = chooseOpenAISize(options.width, options.height);
     if (requestSize.width !== options.width || requestSize.height !== options.height) {
+        const strictDimensions = options.strictDimensions !== false;
+        if (strictDimensions) {
+            throw new Error(
+                `OpenAI does not support requested dimensions ${options.width}x${options.height}; closest supported is ${requestSize.width}x${requestSize.height}`
+            );
+        }
         logger.info(`OpenAI size adjusted to supported size ${requestSize.width}x${requestSize.height}`);
     }
 

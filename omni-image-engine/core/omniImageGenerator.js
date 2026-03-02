@@ -32,6 +32,11 @@ async function generate(userPrompt, options = {}) {
     // Call the underlying model (you plug in your provider here)
     const generationOptions = {
         ...finalOptions,
+        ratio: options.ratio || finalOptions.ratio || "9:16",
+        resolution: options.resolution || finalOptions.resolution || "4k",
+        width: Number(options.width) || Number(finalOptions.width) || 2160,
+        height: Number(options.height) || Number(finalOptions.height) || 3840,
+        strictDimensions: options.strictDimensions !== false,
         generation_mode: generationMode,
         disableTemporal: generationMode === "image",
         negativePrompt: Array.isArray(data.negativeTags) ? data.negativeTags.join(", ") : ""

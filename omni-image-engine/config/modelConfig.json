@@ -1,7 +1,7 @@
 {
   "minOutputSide": 256,
   "maxOutputSide": 8192,
-  "defaultModel": "omni_openai",
+  "defaultModel": "omni_stability",
   "models": {
     "omni_openai": {
       "name": "Omni OpenAI Image Generator",
@@ -23,6 +23,7 @@
       "providerModel": "stable-image-core",
       "endpoint": "https://api.stability.ai/v2beta/stable-image/generate/core",
       "apiKeyEnv": "STABILITY_API_KEY",
+      "fallbackModel": "omni_openai",
       "defaultWidth": 2160,
       "defaultHeight": 3840,
       "defaultSteps": 30,

@@ -40,6 +40,20 @@ function expect(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function makePseudoPng(byteLength) {
+  const length = Math.max(12, Number(byteLength || 12));
+  const bytes = new Uint8Array(length);
+  bytes[0] = 0x89;
+  bytes[1] = 0x50;
+  bytes[2] = 0x4e;
+  bytes[3] = 0x47;
+  bytes[4] = 0x0d;
+  bytes[5] = 0x0a;
+  bytes[6] = 0x1a;
+  bytes[7] = 0x0a;
+  return bytes;
+}
+
 function makeMockEnv() {
   return {
     AI: {
@@ -50,8 +64,8 @@ function makeMockEnv() {
           throw new Error("model dimension limit exceeded");
         }
 
-        const pseudoBytes = Math.max(200_000, Math.round(width * height * 0.18));
-        return new Uint8Array(pseudoBytes);
+        const pseudoBytes = Math.max(1_200_000, Math.round(width * height * 0.18));
+        return makePseudoPng(pseudoBytes);
       }
     }
   };
@@ -61,7 +75,7 @@ function makeAlwaysSmallEnv() {
   return {
     AI: {
       async run() {
-        return new Uint8Array(120_000);
+        return makePseudoPng(120_000);
       }
     }
   };
@@ -71,7 +85,7 @@ function makeAlwaysLargeEnv() {
   return {
     AI: {
       async run() {
-        return new Uint8Array(14_000_000);
+        return makePseudoPng(14_000_000);
       }
     }
   };
@@ -105,7 +119,7 @@ async function run() {
     width: 4096,
     height: 2304
   });
-  expect(resolved.width === 2160 && resolved.height === 3840, "worker should force 2160x3840 dimensions");
+  expect(resolved.width === 1152 && resolved.height === 2048, "worker should use max supported 9:16 render dimensions");
 
   const env = makeMockEnv();
   const generated = await generateWithinSizeRange(env, {
