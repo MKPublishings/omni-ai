@@ -34,23 +34,23 @@ type GenerationPayload = {
 
 function parseResolutionFromPrompt(prompt: string): { width: number; height: number; source: string } | null {
   const lower = prompt.toLowerCase();
-  const isPortrait = /\b(portrait|vertical|9:16|tall)\b/i.test(lower);
+  const isVertical = /\b(vertical|9:16|tall)\b/i.test(lower);
 
   if (/\b(8k|7680p)\b/i.test(lower)) {
-    return isPortrait
-      ? { width: 4320, height: 7680, source: "prompt-8k-portrait" }
+    return isVertical
+      ? { width: 4320, height: 7680, source: "prompt-8k-vertical" }
       : { width: 7680, height: 4320, source: "prompt-8k" };
   }
 
   if (/\b(4k|2160p|uhd)\b/i.test(lower)) {
-    return isPortrait
-      ? { width: 2160, height: 3840, source: "prompt-4k-portrait" }
+    return isVertical
+      ? { width: 2160, height: 3840, source: "prompt-4k-vertical" }
       : { width: 3840, height: 2160, source: "prompt-4k" };
   }
 
   if (/\b(2k|1440p|qhd)\b/i.test(lower)) {
-    return isPortrait
-      ? { width: 1440, height: 2560, source: "prompt-2k-portrait" }
+    return isVertical
+      ? { width: 1440, height: 2560, source: "prompt-2k-vertical" }
       : { width: 2560, height: 1440, source: "prompt-2k" };
   }
 
@@ -61,7 +61,7 @@ function resolveDimensions(_body: ImageRequest): NormalizedDimensions {
   return {
     width: FORCED_WIDTH,
     height: FORCED_HEIGHT,
-    source: "forced-4k-portrait"
+    source: "forced-4k-vertical"
   };
 }
 

@@ -94,10 +94,10 @@ async function run() {
   const fourK = parseResolutionFromPrompt("create a 4k cinematic image");
   expect(fourK?.width === 3840 && fourK?.height === 2160, "4k prompt should map to 3840x2160");
 
-  const eightKPortrait = parseResolutionFromPrompt("create an 8k portrait poster");
+  const eightKVertical = parseResolutionFromPrompt("create an 8k vertical poster");
   expect(
-    eightKPortrait?.width === 4320 && eightKPortrait?.height === 7680,
-    "8k portrait prompt should map to 4320x7680"
+    eightKVertical?.width === 4320 && eightKVertical?.height === 7680,
+    "8k vertical prompt should map to 4320x7680"
   );
 
   const resolved = resolveDimensions({

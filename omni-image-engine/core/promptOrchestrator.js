@@ -51,8 +51,8 @@ function inferContextTags(prompt) {
     const lower = String(prompt || "").toLowerCase();
     const tags = [];
 
-    if (/(portrait|headshot|face|selfie)/.test(lower)) {
-        tags.push("portrait framing", "detailed facial rendering");
+    if (/(headshot|face|selfie)/.test(lower)) {
+        tags.push("subject framing", "detailed facial rendering");
     }
     if (/(landscape|panorama|wide shot|vista)/.test(lower)) {
         tags.push("wide-angle composition", "depth layering");

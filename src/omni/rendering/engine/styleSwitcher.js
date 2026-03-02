@@ -14,7 +14,7 @@ export function applyStyle(styleName, userPrompt = "", options = {}) {
   if (normalizedStyle === "hyper-real") {
     return assembleHyperRealPrompt(
       userPrompt,
-      String(options.camera || "portrait-85mm"),
+      String(options.camera || "prime-85mm"),
       String(options.lighting || "studio-soft"),
       Array.isArray(options.materials) ? options.materials : ["skin"]
     );

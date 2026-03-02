@@ -85,7 +85,7 @@
     "vfx",
     "text"
   ];
-  const KNOWN_CAMERA_PROFILES = ["portrait-85mm", "wide-35mm", "macro", "telephoto-135mm"];
+  const KNOWN_CAMERA_PROFILES = ["prime-85mm", "wide-35mm", "macro", "telephoto-135mm"];
   const KNOWN_LIGHTING_PROFILES = ["studio-soft", "studio-hard", "natural-daylight", "cinematic-lowkey"];
   const KNOWN_MATERIAL_PROFILES = ["skin", "fabric", "metal", "glass"];
   const AGE_PROFILE_KEY = "omni-age-profile-v1";
@@ -587,7 +587,7 @@
 
     const camera = /\b(aerial|drone|overhead|bird'?s\s*eye)\b/i.test(prompt)
       ? "aerial"
-      : /\b(close\s*up|macro|portrait)\b/i.test(prompt)
+      : /\b(close\s*up|macro|headshot)\b/i.test(prompt)
       ? "close-up"
       : /\b(wide|landscape|establishing\s*shot)\b/i.test(prompt)
       ? "wide"
@@ -2989,7 +2989,7 @@
 
       const preferredMode = normalizeMode(data.preferredMode) || session.mode || "auto";
       const preferredImageStyle = normalizeImageStyle(data?.lastUsedSettings?.preferredImageStyle || "");
-      const preferredImageCamera = normalizeCameraProfile(data?.lastUsedSettings?.preferredImageCamera || "") || "portrait-85mm";
+      const preferredImageCamera = normalizeCameraProfile(data?.lastUsedSettings?.preferredImageCamera || "") || "prime-85mm";
       const preferredImageLighting = normalizeLightingProfile(data?.lastUsedSettings?.preferredImageLighting || "") || "studio-soft";
       const preferredImageMaterials = normalizeMaterialList(data?.lastUsedSettings?.preferredImageMaterials || "") || ["skin"];
       session.mode = preferredMode;

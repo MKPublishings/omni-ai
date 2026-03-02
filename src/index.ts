@@ -366,7 +366,7 @@ function deriveVideoStyleFromPrompt(promptText: string): {
 
   const cameraProfile = /\b(aerial|drone|overhead|bird'?s\s*eye)\b/i.test(prompt)
     ? "aerial"
-    : /\b(close\s*up|macro|portrait)\b/i.test(prompt)
+    : /\b(close\s*up|macro|headshot)\b/i.test(prompt)
     ? "close-up"
     : /\b(wide|landscape|establishing\s*shot)\b/i.test(prompt)
     ? "wide"
@@ -1978,7 +1978,7 @@ function getStylePack(name: string): { name: string; tags: string[] } {
 
 function promptRequestsPeople(prompt: string): boolean {
   const lower = String(prompt || "").toLowerCase();
-  return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|portrait|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
+  return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
 }
 
 function buildStrictPromptDirective(): string {
@@ -2032,8 +2032,8 @@ function inferCameraFromPrompt(prompt: string): string {
     return "wide-35mm";
   }
 
-  if (/\b(85mm|portrait lens|portrait shot|headshot|bokeh portrait)\b/i.test(lower)) return "portrait-85mm";
-  if (/\b(35mm|wide angle|wide-angle|environmental portrait|street photo)\b/i.test(lower)) return "wide-35mm";
+  if (/\b(85mm|subject lens|subject shot|headshot|bokeh shot)\b/i.test(lower)) return "prime-85mm";
+  if (/\b(35mm|wide angle|wide-angle|environmental shot|street photo)\b/i.test(lower)) return "wide-35mm";
   if (/\b(macro|close-up macro|extreme close-up|micro detail|micro-detail)\b/i.test(lower)) return "macro";
   if (/\b(135mm|telephoto|compressed background|long lens)\b/i.test(lower)) return "telephoto-135mm";
 
@@ -2057,7 +2057,7 @@ function inferMaterialsFromPrompt(prompt: string): string[] {
   if (!lower) return [];
 
   const inferred: string[] = [];
-  if (/\b(skin|portrait skin|face texture|pores)\b/i.test(lower)) inferred.push("skin");
+  if (/\b(skin|subject skin|face texture|pores)\b/i.test(lower)) inferred.push("skin");
   if (/\b(fabric|cloth|textile|cotton|silk|denim|wool)\b/i.test(lower)) inferred.push("fabric");
   if (/\b(metal|chrome|steel|iron|aluminum|brushed metal)\b/i.test(lower)) inferred.push("metal");
   if (/\b(glass|crystal|transparent|refraction|window pane)\b/i.test(lower)) inferred.push("glass");

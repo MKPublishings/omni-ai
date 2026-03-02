@@ -17,7 +17,7 @@ function inferTimeIntent(prompt) {
 
 function promptRequestsPeople(prompt) {
     const lower = String(prompt || "").toLowerCase();
-    return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|portrait|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
+    return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
 }
 
 function applyStrictFidelityNegatives(data) {
@@ -31,7 +31,7 @@ function applyStrictFidelityNegatives(data) {
     }
 
     if (!promptRequestsPeople(prompt)) {
-        negativeTags.push("no people", "no characters", "no human subjects", "no portraits", "no crowd");
+        negativeTags.push("no people", "no characters", "no human subjects", "no headshots", "no crowd");
     }
 
     data.negativeTags = [...new Set(negativeTags)];

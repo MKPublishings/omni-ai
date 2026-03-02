@@ -29,11 +29,11 @@ function buildMaterialBlock(materials) {
  * @returns {string}
  */
 export function assembleHyperRealPrompt(userPrompt, camera, lighting, materials = []) {
-  const cameraKey = String(camera || "portrait-85mm").trim().toLowerCase();
+  const cameraKey = String(camera || "prime-85mm").trim().toLowerCase();
   const lightingKey = String(lighting || "studio-soft").trim().toLowerCase();
   const normalizedMaterials = Array.isArray(materials) ? materials : [];
 
-  const cameraBlock = CAMERA_PROFILE_MAP[cameraKey] || CAMERA_PROFILE_MAP["portrait-85mm"];
+  const cameraBlock = CAMERA_PROFILE_MAP[cameraKey] || CAMERA_PROFILE_MAP["prime-85mm"];
   const lightingBlock = LIGHTING_PROFILE_MAP[lightingKey] || LIGHTING_PROFILE_MAP["studio-soft"];
   const materialBlock = buildMaterialBlock(normalizedMaterials);
 

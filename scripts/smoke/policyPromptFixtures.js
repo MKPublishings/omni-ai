@@ -1,7 +1,7 @@
 const SAFE_PROMPTS = [
   {
     label: "safe full body prompt",
-    prompt: "A beautiful full body portrait of an adult model in studio lighting"
+    prompt: "A beautiful full body image of an adult model in studio lighting"
   },
   {
     label: "safe figure prompt",

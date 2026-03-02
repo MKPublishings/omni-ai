@@ -1,14 +1,14 @@
 export const CAMERA_PROFILES = {
-  "portrait-85mm": `
-85mm lens, shallow depth of field, creamy bokeh, portrait compression
+  "prime-85mm": `
+85mm lens, shallow depth of field, creamy bokeh, subject compression
   `,
   "wide-35mm": `
-35mm lens, environmental portrait, wider field of view, natural perspective
+35mm lens, environmental scene framing, wider field of view, natural perspective
   `,
   "macro": `
 macro lens, extreme close-up, micro-detail, shallow depth of field
   `,
   "telephoto-135mm": `
-135mm lens, compressed background, cinematic portrait realism
+135mm lens, compressed background, cinematic realism
   `
 };

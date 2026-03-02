@@ -105,7 +105,7 @@ def _infer_style_profile(prompt: str) -> tuple[str, str, str]:
     camera = "standard"
     if re.search(r"\b(aerial|drone|overhead|bird'?s\s*eye)\b", lower):
         camera = "aerial"
-    elif re.search(r"\b(close\s*up|macro|portrait)\b", lower):
+    elif re.search(r"\b(close\s*up|macro|headshot)\b", lower):
         camera = "close-up"
     elif re.search(r"\b(wide|landscape|establishing\s*shot)\b", lower):
         camera = "wide"

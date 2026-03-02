@@ -15,7 +15,7 @@ function normalizeText(value: unknown): string {
 
 function chooseComposition(text: string): string {
   if (/\b(city|street|architecture|landscape|environment)\b/i.test(text)) return "wide environmental framing";
-  if (/\b(portrait|character|face|person|hero)\b/i.test(text)) return "subject-centric portrait framing";
+  if (/\b(character|face|person|hero)\b/i.test(text)) return "subject-centric framing";
   if (/\b(product|object|item|artifact)\b/i.test(text)) return "clean product composition";
   return "balanced cinematic composition";
 }
@@ -24,7 +24,7 @@ function chooseCamera(text: string): string {
   if (/\b(macro|close up|close-up|micro)\b/i.test(text)) return "macro";
   if (/\b(wide|landscape|environmental|street)\b/i.test(text)) return "wide-35mm";
   if (/\b(telephoto|compressed)\b/i.test(text)) return "telephoto-135mm";
-  return "portrait-85mm";
+  return "prime-85mm";
 }
 
 function chooseLighting(text: string): string {
@@ -52,7 +52,7 @@ function chooseMaterial(text: string): string {
   if (/\b(metal|chrome|steel|robot|armor)\b/i.test(text)) return "metallic microtexture emphasis";
   if (/\b(cloth|fabric|fashion|garment)\b/i.test(text)) return "fabric weave and fold detail";
   if (/\b(glass|crystal|transparent|bottle)\b/i.test(text)) return "glass refraction and edge clarity";
-  if (/\b(skin|portrait|face)\b/i.test(text)) return "natural skin detail with soft microcontrast";
+  if (/\b(skin|face)\b/i.test(text)) return "natural skin detail with soft microcontrast";
   return "balanced surface realism";
 }
 

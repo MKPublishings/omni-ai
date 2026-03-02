@@ -1,7 +1,7 @@
 export const LIGHTING_PROFILES = {
   "studio-soft": `
 soft studio lighting, diffused shadows, controlled highlights,
-even illumination, professional portrait lighting
+even illumination, professional studio lighting
   `,
   "studio-hard": `
 hard studio lighting, sharp shadows, high contrast, dramatic highlights

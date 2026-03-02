@@ -13,7 +13,7 @@ def main() -> None:
         id=str(uuid.uuid4()),
         modality="image",
         mode="default",
-        prompt="A cinematic portrait of a futuristic city architect at dusk",
+        prompt="A cinematic scene of a futuristic city architect at dusk",
         params=GenerationParams(width=1024, height=1024, num_images=1, num_inference_steps=30),
         return_format="base64",
     )
