@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Omni Ai – Settings</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
   <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2" />
@@ -255,6 +256,17 @@
 
           <div class="setting-item">
             <div class="setting-info">
+              <label class="setting-label">Mobile Compact Mode</label>
+              <span class="setting-description">Use tighter message spacing on small screens only</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="mobile-compact-mode" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
               <label class="setting-label">High Contrast Mode</label>
               <span class="setting-description">Increase text and border contrast across pages</span>
             </div>
@@ -471,7 +483,7 @@
     </main>
   </div>
 
-  <script src="/scripts/settings.js"></script>
+  <script src="/scripts/settings.js?v=20260302-1"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>
 </body>

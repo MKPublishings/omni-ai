@@ -30,7 +30,7 @@ export default {
       return handleGenerate(request, env);
     }
 
-    return new Response("Omni AI Images worker online.");
+    return new Response("Omni Ai Images worker online.");
   }
 };
 

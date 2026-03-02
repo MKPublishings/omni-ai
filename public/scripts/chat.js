@@ -62,6 +62,7 @@
     SOUND: "omni-sound",
     SHOW_TIMESTAMPS: "omni-show-timestamps",
     COMPACT_MODE: "omni-compact-mode",
+    MOBILE_COMPACT_MODE: "omni-mobile-compact-mode",
     SEND_WITH_ENTER: "omni-send-with-enter",
     SHOW_ASSISTANT_BADGES: "omni-show-assistant-badges",
     AUTO_DETECT_MODE: "omni-auto-detect-mode",
@@ -101,6 +102,7 @@
     soundEnabled: false,
     showTimestamps: false,
     compactMode: false,
+    mobileCompactMode: false,
     sendWithEnter: true,
     showAssistantBadges: true,
     autoDetectMode: true,
@@ -136,6 +138,7 @@
       soundEnabled: getSettingBool(SETTINGS_KEYS.SOUND, false),
       showTimestamps: getSettingBool(SETTINGS_KEYS.SHOW_TIMESTAMPS, false),
       compactMode: getSettingBool(SETTINGS_KEYS.COMPACT_MODE, false),
+      mobileCompactMode: getSettingBool(SETTINGS_KEYS.MOBILE_COMPACT_MODE, false),
       sendWithEnter: getSettingBool(SETTINGS_KEYS.SEND_WITH_ENTER, true),
       showAssistantBadges: getSettingBool(SETTINGS_KEYS.SHOW_ASSISTANT_BADGES, true),
       autoDetectMode: getSettingBool(SETTINGS_KEYS.AUTO_DETECT_MODE, true),
@@ -154,7 +157,12 @@
   function applyRuntimeSettings() {
     if (!messagesEl) return;
 
-    messagesEl.classList.toggle("chat-compact", !!runtimeSettings.compactMode);
+    const mobileViewport = window.matchMedia
+      ? window.matchMedia("(max-width: 640px)").matches
+      : (window.innerWidth || 0) <= 640;
+    const compactEnabled = Boolean(runtimeSettings.compactMode || (runtimeSettings.mobileCompactMode && mobileViewport));
+
+    messagesEl.classList.toggle("chat-compact", compactEnabled);
     messagesEl.classList.toggle("chat-font-small", runtimeSettings.fontSize === "small");
     messagesEl.classList.toggle("chat-font-medium", runtimeSettings.fontSize === "medium");
     messagesEl.classList.toggle("chat-font-large", runtimeSettings.fontSize === "large");
@@ -936,29 +944,144 @@
     renderSimulationLog(session);
   }
 
-  function detectModeFromContent(content) {
+  function summarizeHintText(value, maxLen = 180) {
+    const compact = String(value || "").replace(/\s+/g, " ").trim();
+    if (!compact) return "";
+    return compact.length > maxLen ? `${compact.slice(0, maxLen - 3)}...` : compact;
+  }
+
+  function getRecentUserMessages(session, limit = 3) {
+    const history = Array.isArray(session?.messages) ? session.messages : [];
+    return history
+      .filter((message) => message?.role === "user")
+      .slice(-limit)
+      .map((message) => summarizeHintText(message?.content || ""))
+      .filter(Boolean);
+  }
+
+  function scoreModeSignals(text) {
+    const lower = String(text || "").toLowerCase();
+    if (!lower) {
+      return {
+        architect: 0,
+        analyst: 0,
+        visual: 0,
+        lore: 0,
+        simulation: 0,
+        coding: 0,
+        knowledge: 0,
+        reasoning: 0,
+        "system-knowledge": 0
+      };
+    }
+
+    const weightedSignals = {
+      architect: [
+        { pattern: /\b(architecture|system\s+design|schema|database|api\s+contract|pipeline|module|component)\b/g, weight: 2 },
+        { pattern: /\b(design|structure|framework|build\s+plan)\b/g, weight: 1 }
+      ],
+      analyst: [
+        { pattern: /\b(analyze|analysis|evaluate|compare|breakdown|root\s+cause|trade-?off)\b/g, weight: 2 },
+        { pattern: /\b(trend|pattern|report|insight|metrics?)\b/g, weight: 1 }
+      ],
+      visual: [
+        { pattern: /\b(image|visual|illustration|render|draw|paint|cinematic|composition|aesthetic)\b/g, weight: 2 },
+        { pattern: /\b(scene|style|color\s+palette|lighting)\b/g, weight: 1 }
+      ],
+      lore: [
+        { pattern: /\b(story|lore|narrative|worldbuild|character\s+arc|mythology|legend)\b/g, weight: 2 },
+        { pattern: /\b(tale|fiction|backstory|history)\b/g, weight: 1 }
+      ],
+      simulation: [
+        { pattern: /\b(simulate|simulation|state\s+transition|run\s+scenario|sandbox|what\s+if)\b/g, weight: 2 },
+        { pattern: /\b(rules:|system-state|agent-based|scenario)\b/g, weight: 1 }
+      ],
+      coding: [
+        { pattern: /\b(code|coding|refactor|typescript|javascript|python|bug|stack\s+trace|compile|lint|test)\b/g, weight: 2 },
+        { pattern: /\b(function|class|api\s+route|implementation|patch)\b/g, weight: 1 }
+      ],
+      knowledge: [
+        { pattern: /\b(explain|what\s+is|teach|overview|reference|facts?|background)\b/g, weight: 1 },
+        { pattern: /\b(source|citation|docs?|documentation)\b/g, weight: 1 }
+      ],
+      reasoning: [
+        { pattern: /\b(reason|reasoning|logic|prove|deduce|step\s*-?by\s*-?step|chain\s+of\s+thought)\b/g, weight: 2 },
+        { pattern: /\bwhy|because|inference\b/g, weight: 1 }
+      ],
+      "system-knowledge": [
+        { pattern: /\b(system\s+knowledge|internal\s+module|runtime\s+internals|worker\s+topology|orchestrator)\b/g, weight: 2 },
+        { pattern: /\barchitecture\s+doc|codex|governance|module\s+map\b/g, weight: 1 }
+      ]
+    };
+
+    const scores = {};
+    for (const [mode, signals] of Object.entries(weightedSignals)) {
+      let score = 0;
+      for (const signal of signals) {
+        const matches = lower.match(signal.pattern);
+        if (matches?.length) {
+          score += matches.length * signal.weight;
+        }
+      }
+      scores[mode] = score;
+    }
+
+    return scores;
+  }
+
+  function detectModeFromContent(content, session = null) {
     if (!content) return null;
-    const lower = content.trim().toLowerCase();
-    
-    const architectKeywords = ["design", "architecture", "structure", "system", "api", "schema", "database", "pipeline", "build", "framework", "component", "module"];
-    const analystKeywords = ["analyze", "analysis", "data", "research", "report", "trend", "pattern", "insight", "breakdown", "summary", "compare", "evaluate"];
-    const visualKeywords = ["image", "visual", "scene", "visual art", "describe", "paint", "draw", "cinematic", "composition", "artistic", "aesthetic"];
-    const loreKeywords = ["story", "lore", "narrative", "fiction", "worldbuild", "character", "background", "history", "mythology", "tales", "legend"];
-    const simulationKeywords = ["simulate", "simulation", "system-state", "state transition", "run scenario", "sandbox", "rules:", "/simulation"];
-    
-    const architectScore = architectKeywords.filter(k => lower.includes(k)).length;
-    const analystScore = analystKeywords.filter(k => lower.includes(k)).length;
-    const visualScore = visualKeywords.filter(k => lower.includes(k)).length;
-    const loreScore = loreKeywords.filter(k => lower.includes(k)).length;
-    const simulationScore = simulationKeywords.filter(k => lower.includes(k)).length;
-    
-    const scores = { architect: architectScore, analyst: analystScore, visual: visualScore, lore: loreScore, simulation: simulationScore };
-    const maxScore = Math.max(...Object.values(scores));
-    
-    if (maxScore === 0) return null;
-    
-    const detectedMode = Object.keys(scores).find(k => scores[k] === maxScore);
-    return detectedMode || null;
+    const latest = String(content || "").trim();
+    const recent = getRecentUserMessages(session, 2).join(" ");
+    const aggregate = `${latest} ${recent}`.trim();
+    if (!aggregate) return null;
+
+    const scores = scoreModeSignals(aggregate);
+    const ranked = Object.entries(scores)
+      .sort((a, b) => b[1] - a[1]);
+
+    const [topMode, topScore] = ranked[0] || [];
+    const secondScore = ranked[1]?.[1] || 0;
+    if (!topMode || !Number.isFinite(topScore)) return null;
+
+    const margin = topScore - secondScore;
+    if (topScore < 2 || margin < 1) {
+      return null;
+    }
+
+    const confidence = Math.max(0.35, Math.min(0.98, topScore / (topScore + secondScore + 1)));
+    return {
+      mode: topMode,
+      confidence
+    };
+  }
+
+  function inferRequestedOutputStyle(text) {
+    const lower = String(text || "").toLowerCase();
+    if (!lower) return "general";
+    if (/\b(table|csv|json|yaml|xml)\b/.test(lower)) return "structured-data";
+    if (/\b(step\s*-?by\s*-?step|plan|checklist|roadmap)\b/.test(lower)) return "procedural";
+    if (/\b(brief|short|tldr|concise)\b/.test(lower)) return "concise";
+    if (/\b(detailed|deep\s*dive|comprehensive|long\s*form)\b/.test(lower)) return "detailed";
+    if (/\b(code|typescript|javascript|python|sql|bash|powershell)\b/.test(lower)) return "code";
+    return "general";
+  }
+
+  function buildConversationHints(session, effectiveMode, latestInput) {
+    const recentUserFocus = getRecentUserMessages(session, 3);
+    const recentAssistantCommitments = (Array.isArray(session?.messages) ? session.messages : [])
+      .filter((message) => message?.role === "assistant")
+      .slice(-2)
+      .map((message) => summarizeHintText(message?.content || ""))
+      .filter(Boolean);
+
+    return {
+      inferredMode: normalizeMode(effectiveMode) || "auto",
+      latestUserIntent: summarizeHintText(latestInput || ""),
+      recentUserFocus,
+      recentAssistantCommitments,
+      requestedOutput: inferRequestedOutputStyle(latestInput)
+    };
   }
 
   function getSelectedModeFromSettings() {
@@ -1835,14 +1958,112 @@
     return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
   }
 
-  async function streamOmniResponse(session, onChunk, onMeta, safetyProfile = null) {
-    const activeMode = getActiveMode(session);
+  function isLikelyMobileViewport() {
+    try {
+      if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return true;
+      return Math.min(window.innerWidth || 9999, window.innerHeight || 9999) <= 900;
+    } catch {
+      return false;
+    }
+  }
+
+  function focusInputIfAppropriate() {
+    if (!inputEl) return;
+    if (isLikelyMobileViewport()) return;
+    inputEl.focus();
+  }
+
+  function updateMobileViewportMetrics() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const viewportHeight = Number(window.visualViewport?.height || window.innerHeight || 0);
+    if (viewportHeight > 0) {
+      root.style.setProperty("--omni-vvh", `${viewportHeight}px`);
+    }
+
+    const baselineHeight = Number(window.innerHeight || viewportHeight || 0);
+    const keyboardOpen = baselineHeight > 0 && viewportHeight > 0 && baselineHeight - viewportHeight > 120;
+    document.body.classList.toggle("mobile-keyboard-open", Boolean(keyboardOpen));
+    applyRuntimeSettings();
+  }
+
+  function installMobileViewportHandlers() {
+    updateMobileViewportMetrics();
+
+    const focusSelector = "input, textarea, [contenteditable='true']";
+    document.addEventListener("focusin", (event) => {
+      if (event.target && event.target.matches && event.target.matches(focusSelector)) {
+        document.body.classList.add("mobile-input-active");
+        updateMobileViewportMetrics();
+      }
+    });
+
+    document.addEventListener("focusout", (event) => {
+      if (event.target && event.target.matches && event.target.matches(focusSelector)) {
+        setTimeout(() => {
+          const active = document.activeElement;
+          const stillEditing = active && active.matches && active.matches(focusSelector);
+          if (!stillEditing) {
+            document.body.classList.remove("mobile-input-active");
+          }
+          updateMobileViewportMetrics();
+        }, 80);
+      }
+    });
+
+    window.addEventListener("resize", updateMobileViewportMetrics);
+    window.addEventListener("orientationchange", updateMobileViewportMetrics);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateMobileViewportMetrics);
+      window.visualViewport.addEventListener("scroll", updateMobileViewportMetrics);
+    }
+  }
+
+  function buildNetworkMessages(session, maxMessages = 24, maxChars = 22000) {
+    const history = Array.isArray(session?.messages) ? session.messages : [];
+    if (!history.length) return [];
+
+    const compact = [];
+    let totalChars = 0;
+
+    for (let index = history.length - 1; index >= 0; index -= 1) {
+      const item = history[index] || {};
+      const role = String(item.role || "").toLowerCase() === "assistant" ? "assistant" : "user";
+      const content = String(item.content || "").trim();
+      if (!content) continue;
+
+      const wouldExceedChars = totalChars + content.length > maxChars;
+      if (wouldExceedChars && compact.length >= 6) {
+        break;
+      }
+
+      compact.push({ role, content });
+      totalChars += content.length;
+
+      if (compact.length >= maxMessages) {
+        break;
+      }
+    }
+
+    return compact.reverse();
+  }
+
+  async function streamOmniResponse(session, onChunk, onMeta, safetyProfile = null, modeOverride = "", conversationHints = null) {
+    const activeMode = normalizeMode(modeOverride) || getActiveMode(session);
+    const outboundMessages = buildNetworkMessages(session);
     const payload = {
-      messages: session.messages,
+      messages: outboundMessages,
       model: session.model || "auto",
       mode: activeMode,
-      safetyProfile: safetyProfile || buildSafetyProfile()
+      safetyProfile: safetyProfile || buildSafetyProfile(),
+      conversationHints: conversationHints && typeof conversationHints === "object" ? conversationHints : undefined
     };
+
+    const requestHeaders = { "Content-Type": "application/json" };
+    if (session?.id) {
+      requestHeaders["x-omni-session-id"] = String(session.id);
+    }
 
     const controller = new AbortController();
     currentAbortController = controller;
@@ -1866,7 +2087,7 @@
         try {
           res = await fetch(getApiEndpoint(), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: requestHeaders,
             body: JSON.stringify(payload),
             signal: controller.signal
           });
@@ -2212,7 +2433,7 @@
 
       if (inputEl) {
         inputEl.value = "";
-        inputEl.focus();
+        focusInputIfAppropriate();
       }
       return;
     }
@@ -2245,7 +2466,7 @@
 
       if (inputEl) {
         inputEl.value = "";
-        inputEl.focus();
+        focusInputIfAppropriate();
       }
       return;
     }
@@ -2261,16 +2482,14 @@
     
     // Auto-detect mode based on user content
     if (activeMode === "auto" && runtimeSettings.autoDetectMode) {
-      const detectedMode = detectModeFromContent(trimmed);
-      if (detectedMode) {
-        activeMode = detectedMode;
-        session.mode = activeMode;
-        saveState();
-        updateModeButton(activeMode);
-        updateModeIndicator(activeMode);
-        setActiveDropdownItem(modeMenu, activeMode);
+      const detected = detectModeFromContent(trimmed, session);
+      if (detected?.mode) {
+        activeMode = normalizeMode(detected.mode) || "auto";
+        updateModelInspector(session.model || "auto", `auto-mode:${activeMode}`);
       }
     }
+
+    const conversationHints = buildConversationHints(session, activeMode, trimmed);
 
     if (activeMode === "simulation") {
       const simulation = ensureSimulationState(session);
@@ -2366,7 +2585,7 @@
         if (sendBtn) sendBtn.disabled = false;
         if (inputEl) inputEl.disabled = false;
         if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-        if (inputEl) inputEl.focus();
+        focusInputIfAppropriate();
       }
 
       return;
@@ -2434,9 +2653,12 @@
         }
       } catch (err) {
         console.error("Omni image generation error:", err);
+        const reason = String(err?.message || "").trim();
         updateAssistantMessageBody(
           assistantBodyEl,
-          "[Error] Image generation failed. Try a different image prompt."
+          reason
+            ? `[Error] Image generation failed: ${reason}`
+            : "[Error] Image generation failed. Try a different image prompt."
         );
         playNotificationSound("error");
       } finally {
@@ -2445,7 +2667,7 @@
         if (sendBtn) sendBtn.disabled = false;
         if (inputEl) inputEl.disabled = false;
         if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-        if (inputEl) inputEl.focus();
+        focusInputIfAppropriate();
       }
 
       return;
@@ -2465,6 +2687,12 @@
     if (typingIndicatorEl) typingIndicatorEl.style.display = "block";
 
     session._streamingAssistantText = "";
+    let streamingRenderFrameId = 0;
+
+    const flushStreamingRender = () => {
+      streamingRenderFrameId = 0;
+      updateAssistantMessageBody(assistantBodyEl, session._streamingAssistantText || "", { highlight: false });
+    };
 
     try {
       await streamOmniResponse(
@@ -2493,7 +2721,10 @@
               chunk
             );
           }
-          updateAssistantMessageBody(assistantBodyEl, session._streamingAssistantText || "", { highlight: false });
+
+          if (!streamingRenderFrameId) {
+            streamingRenderFrameId = requestAnimationFrame(flushStreamingRender);
+          }
         },
         (meta) => {
           updateModelInspector(meta?.modelUsed || session.model || "auto", meta?.routeReason || "");
@@ -2509,8 +2740,15 @@
             updateSimulationUI(session);
           }
         },
-        safetyProfile
+        safetyProfile,
+        activeMode,
+        conversationHints
       );
+
+      if (streamingRenderFrameId) {
+        cancelAnimationFrame(streamingRenderFrameId);
+        flushStreamingRender();
+      }
 
       const finalText = (session._streamingAssistantText || "").trim();
       const safeText = finalText || "[No response received]";
@@ -2559,6 +2797,10 @@
         renderActiveSessionMessages();
       }
     } catch (err) {
+      if (streamingRenderFrameId) {
+        cancelAnimationFrame(streamingRenderFrameId);
+        streamingRenderFrameId = 0;
+      }
       console.error("Omni streaming error:", err);
       updateAssistantMessageBody(
         assistantBodyEl,
@@ -2571,7 +2813,7 @@
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.disabled = false;
       if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-      if (inputEl) inputEl.focus();
+      focusInputIfAppropriate();
     }
   }
 
@@ -2822,6 +3064,7 @@
   // 10. INIT
   // =========================
   function init() {
+    installMobileViewportHandlers();
     loadRuntimeSettings();
     applyRuntimeSettings();
     loadState();
@@ -2859,6 +3102,7 @@
         e.key === SETTINGS_KEYS.SOUND ||
         e.key === SETTINGS_KEYS.SHOW_TIMESTAMPS ||
         e.key === SETTINGS_KEYS.COMPACT_MODE ||
+        e.key === SETTINGS_KEYS.MOBILE_COMPACT_MODE ||
         e.key === SETTINGS_KEYS.REQUEST_TIMEOUT
       ) {
         loadRuntimeSettings();
@@ -2911,6 +3155,7 @@
         key === SETTINGS_KEYS.SOUND ||
         key === SETTINGS_KEYS.SHOW_TIMESTAMPS ||
         key === SETTINGS_KEYS.COMPACT_MODE ||
+        key === SETTINGS_KEYS.MOBILE_COMPACT_MODE ||
         key === SETTINGS_KEYS.SEND_WITH_ENTER ||
         key === SETTINGS_KEYS.SHOW_ASSISTANT_BADGES ||
         key === SETTINGS_KEYS.AUTO_DETECT_MODE ||

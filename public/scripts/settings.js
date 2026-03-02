@@ -15,6 +15,7 @@ const SETTINGS_KEYS = {
   SOUND: "omni-sound",
   SHOW_TIMESTAMPS: "omni-show-timestamps",
   COMPACT_MODE: "omni-compact-mode",
+  MOBILE_COMPACT_MODE: "omni-mobile-compact-mode",
   SEND_WITH_ENTER: "omni-send-with-enter",
   SHOW_ASSISTANT_BADGES: "omni-show-assistant-badges",
   AUTO_DETECT_MODE: "omni-auto-detect-mode",
@@ -444,6 +445,10 @@ window.addEventListener("storage", (e) => {
     reduceGlassBlurToggle.checked = getSettingBool(SETTINGS_KEYS.REDUCE_GLASS_BLUR, false);
   }
 
+  if (e.key === SETTINGS_KEYS.MOBILE_COMPACT_MODE && mobileCompactModeToggle) {
+    mobileCompactModeToggle.checked = getSettingBool(SETTINGS_KEYS.MOBILE_COMPACT_MODE, false);
+  }
+
   if (e.key === SETTINGS_KEYS.API_HEALTH_INTERVAL && apiHealthIntervalInput) {
     apiHealthIntervalInput.value = getSetting(SETTINGS_KEYS.API_HEALTH_INTERVAL, "30");
   }
@@ -461,6 +466,7 @@ const animationsToggle = document.getElementById("toggle-animations");
 const soundToggle = document.getElementById("toggle-sound");
 const showTimestampsToggle = document.getElementById("show-timestamps");
 const compactModeToggle = document.getElementById("compact-mode");
+const mobileCompactModeToggle = document.getElementById("mobile-compact-mode");
 const highContrastModeToggle = document.getElementById("high-contrast-mode");
 const reduceGlassBlurToggle = document.getElementById("reduce-glass-blur");
 
@@ -489,6 +495,13 @@ if (compactModeToggle) {
   compactModeToggle.checked = getSettingBool(SETTINGS_KEYS.COMPACT_MODE, false);
   compactModeToggle.addEventListener("change", () => {
     setSettingBool(SETTINGS_KEYS.COMPACT_MODE, compactModeToggle.checked);
+  });
+}
+
+if (mobileCompactModeToggle) {
+  mobileCompactModeToggle.checked = getSettingBool(SETTINGS_KEYS.MOBILE_COMPACT_MODE, false);
+  mobileCompactModeToggle.addEventListener("change", () => {
+    setSettingBool(SETTINGS_KEYS.MOBILE_COMPACT_MODE, mobileCompactModeToggle.checked);
   });
 }
 

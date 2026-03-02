@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-03-02T10:27:38.184Z",
+  "kind": "omni-intelligence-baseline",
+  "version": "v1",
+  "overallScore": 0.855,
+  "dimensions": {
+    "reasoning": 0.85,
+    "memory": 0.7,
+    "safety": 0.95,
+    "reliability": 0.85,
+    "observability": 1
+  },
+  "weights": {
+    "reasoning": 0.25,
+    "memory": 0.2,
+    "safety": 0.2,
+    "reliability": 0.25,
+    "observability": 0.1
+  },
+  "thresholds": {
+    "healthy": 0.8,
+    "watch": 0.65
+  },
+  "signals": {
+    "logSample": {
+      "exists": true,
+      "latestFile": "runtime-signals.jsonl",
+      "sampleSize": 1
+    },
+    "openTokenCount": 0,
+    "openHighPriorityTokens": 0,
+    "openLowPriorityTokens": 0,
+    "escalationTokens": 0,
+    "reopenCount": 0,
+    "monitoringSnapshots": 5,
+    "improvementSnapshots": 0,
+    "capabilities": {
+      "modeAutoRouting": true,
+      "memoryEndpoint": true,
+      "legalSafetyLayer": true,
+      "promptSafetyLayer": true,
+      "imageFallbackRetry": true
+    }
+  },
+  "findings": [
+    "Baseline score is in healthy range; continue incremental hardening.",
+    "Runtime log sample detected (1 lines).",
+    "Mode auto-routing heuristics are present and contributing to reasoning baseline.",
+    "Safety controls include legal attestation and prompt policy enforcement layers."
+  ],
+  "recommendedNextActions": [
+    "Instrument runtime logs under data/logs to increase observability confidence.",
+    "Resolve open high-priority/escalation task tokens to recover reliability score.",
+    "Use this baseline as Part 1 reference before Part 2 reasoning/memory upgrades."
+  ]
+}

@@ -60,7 +60,7 @@ package.json:
   24      "validate:engine": "node ./omni-image-engine/utils/validator.js",
 
 README.md:
-    4  # Omni AI  
+    4  # Omni Ai  
     5: **A Unified Cognitive Engine for Image, Video, and GIF Generation**  
     6  **Powered by Quantum‑Cognitive Field Theory, Fibonacci Scheduling, and Multi‑Modal Diffusion**
 

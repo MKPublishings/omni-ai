@@ -89,6 +89,13 @@ type OmniRequestBody = {
   mode?: string;
   model?: string;
   messages?: Array<{ role?: string; content?: string }>;
+  conversationHints?: {
+    inferredMode?: string;
+    latestUserIntent?: string;
+    recentUserFocus?: string[];
+    recentAssistantCommitments?: string[];
+    requestedOutput?: string;
+  };
   safetyProfile?: {
     ageTier?: string;
     humanVerified?: boolean;
@@ -561,6 +568,102 @@ function getLatestUserText(messages: OmniMessage[]): string {
   }
 
   return "";
+}
+
+function summarizeConversationSnippet(value: string, maxLen = 200): string {
+  const compact = sanitizePromptText(String(value || "")).trim();
+  if (!compact) return "";
+  if (compact.length <= maxLen) return compact;
+  return `${compact.slice(0, Math.max(0, maxLen - 3))}...`;
+}
+
+function normalizeConversationHints(raw: OmniRequestBody["conversationHints"]): {
+  inferredMode: string;
+  latestUserIntent: string;
+  recentUserFocus: string[];
+  recentAssistantCommitments: string[];
+  requestedOutput: string;
+} {
+  const inferredMode = sanitizePromptText(String(raw?.inferredMode || "")).trim().toLowerCase();
+  const latestUserIntent = summarizeConversationSnippet(String(raw?.latestUserIntent || ""), 220);
+  const requestedOutput = summarizeConversationSnippet(String(raw?.requestedOutput || "general"), 48).toLowerCase();
+
+  const recentUserFocus = Array.isArray(raw?.recentUserFocus)
+    ? raw.recentUserFocus
+        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
+        .filter(Boolean)
+        .slice(0, 4)
+    : [];
+
+  const recentAssistantCommitments = Array.isArray(raw?.recentAssistantCommitments)
+    ? raw.recentAssistantCommitments
+        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
+        .filter(Boolean)
+        .slice(0, 3)
+    : [];
+
+  return {
+    inferredMode,
+    latestUserIntent,
+    recentUserFocus,
+    recentAssistantCommitments,
+    requestedOutput: requestedOutput || "general"
+  };
+}
+
+function buildConversationDigest(messages: OmniMessage[], limit = 6): string {
+  const turns = (messages || [])
+    .filter((message) => message?.role === "user" || message?.role === "assistant")
+    .slice(-Math.max(2, limit));
+
+  if (!turns.length) return "";
+
+  return turns
+    .map((turn, index) => {
+      const role = String(turn.role || "user").toUpperCase();
+      const content = summarizeConversationSnippet(String(turn.content || ""), 170);
+      return `${index + 1}. [${role}] ${content}`;
+    })
+    .join("\n");
+}
+
+function buildReasoningPlannerPrompt(input: {
+  mode: string;
+  latestUserText: string;
+  conversationDigest: string;
+  conversationHints: ReturnType<typeof normalizeConversationHints>;
+}): string {
+  const mode = sanitizePromptText(String(input.mode || "auto")).trim().toLowerCase() || "auto";
+  const latestUserText = summarizeConversationSnippet(String(input.latestUserText || ""), 260);
+  const digest = String(input.conversationDigest || "").trim();
+  const hints = input.conversationHints;
+
+  const hintBlock = [
+    `Inferred mode: ${hints.inferredMode || mode}`,
+    `Requested output style: ${hints.requestedOutput || "general"}`,
+    hints.latestUserIntent ? `Latest intent: ${hints.latestUserIntent}` : "",
+    hints.recentUserFocus.length ? `Recent user focus: ${hints.recentUserFocus.map((item, idx) => `(${idx + 1}) ${item}`).join(" | ")}` : "",
+    hints.recentAssistantCommitments.length
+      ? `Recent assistant commitments: ${hints.recentAssistantCommitments.map((item, idx) => `(${idx + 1}) ${item}`).join(" | ")}`
+      : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return [
+    "Reasoning plan before answering:",
+    "1) Identify the exact task and required output format.",
+    "2) Prefer user-provided context, memory, and retrieved evidence over assumptions.",
+    "3) Keep response mode-consistent and avoid drift into unrelated domains.",
+    "4) Before finalizing, run a short self-check for contradictions and missing constraints.",
+    "",
+    `Mode context: ${mode}`,
+    latestUserText ? `Latest user text: ${latestUserText}` : "",
+    hintBlock ? `Conversation hints:\n${hintBlock}` : "",
+    digest ? `Recent conversation digest:\n${digest}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function parseDepartment(value: unknown): Department | null {
@@ -2989,7 +3092,7 @@ export default {
       ) {
         return new Response(
           JSON.stringify({
-            error: "Video generation is temporarily disabled in Omni AI.",
+            error: "Video generation is temporarily disabled in Omni Ai.",
             code: "video-generation-disabled"
           }),
           {
@@ -4206,6 +4309,8 @@ export default {
         const requestCountryCode = getRequestCountryCode(request);
 
         const latestUserText = getLatestUserText(ctx.messages);
+        const conversationHints = normalizeConversationHints(body?.conversationHints);
+        const conversationDigest = buildConversationDigest(ctx.messages, 6);
         const safetyDecision = evaluateSexualSafetyPrompt(latestUserText, safetyProfile);
         if (safetyDecision.blocked) {
           return new Response(
@@ -4295,6 +4400,17 @@ export default {
               userEmotion: emotionalResonance.userEmotion,
               omniTone: emotionalResonance.omniTone,
               route: orchestratorDecision.route
+            })
+          )
+        );
+        promptSystemMessages.push(
+          makeContextSystemMessage(
+            "Reasoning Planner",
+            buildReasoningPlannerPrompt({
+              mode: normalizedMode,
+              latestUserText,
+              conversationDigest,
+              conversationHints
             })
           )
         );

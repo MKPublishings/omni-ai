@@ -243,7 +243,7 @@ export default {
       return handleServeVideo(url, env);
     }
 
-    return new Response("Omni AI Media worker online.");
+    return new Response("Omni Ai Media worker online.");
   }
 };
 

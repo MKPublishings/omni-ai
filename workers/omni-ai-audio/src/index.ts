@@ -38,7 +38,7 @@ export default {
       return handleGenerate(request, env);
     }
 
-    return new Response("Omni AI Audio worker online.");
+    return new Response("Omni Ai Audio worker online.");
   }
 };
 

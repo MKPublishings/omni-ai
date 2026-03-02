@@ -1,11 +1,11 @@
 ![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
 
 
-# Omni AI  
+# Omni Ai  
 **A Unified Cognitive Engine for Image, Video, and GIF Generation**  
 **Powered by Quantum‑Cognitive Field Theory, Fibonacci Scheduling, and Multi‑Modal Diffusion**
 
-Omni AI is a next‑generation generative intelligence system that merges physics‑inspired computation, cognitive modeling, and modern diffusion models into a single coherent engine. It is designed as a **living codex**—a system that evolves, adapts, and reasons through structured internal laws while producing high‑fidelity visual media.
+Omni Ai is a next‑generation generative intelligence system that merges physics‑inspired computation, cognitive modeling, and modern diffusion models into a single coherent engine. It is designed as a **living codex**—a system that evolves, adapts, and reasons through structured internal laws while producing high‑fidelity visual media.
 
 Omni is not a wrapper around a model.  
 Omni *is* the model, the scheduler, the field theory, and the pipeline.
@@ -14,7 +14,7 @@ Omni *is* the model, the scheduler, the field theory, and the pipeline.
 
 ## ✨ Core Philosophy
 
-Omni AI is built on three foundational pillars:
+Omni Ai is built on three foundational pillars:
 
 - **Quantum‑Cognitive Field Theory (QCFT)**  
   A unified mathematical framework describing energy, coherence, and temporal dynamics.  
@@ -37,7 +37,7 @@ Together, these layers form a **physics‑aware generative engine** capable of p
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                        Omni AI Engine                         │
+│                        Omni Ai Engine                         │
 ├──────────────────────────────────────────────────────────────┤
 │ 1. Quantum–Cognitive Field Theory (QCFT)                      │
 │    • Energy evolution: dE/dt = α𝓓(E) – βE                     │
@@ -175,7 +175,7 @@ print(result.video_url)
 
 ## 🧬 Scientific Foundations
 
-Omni AI is grounded in three research documents:
+Omni Ai is grounded in three research documents:
 
 - **Quantum‑Cognitive Field Theory Thesis**  
   Defines the governing equations, operator algebra, and unified field dynamics.

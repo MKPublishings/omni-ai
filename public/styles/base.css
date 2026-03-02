@@ -23,6 +23,14 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+@media (max-width: 960px) {
+  html,
+  body {
+    overflow: auto;
+    min-height: 100dvh;
+  }
+}
+
 /* ---------- VARIABLES (DARK DEFAULT) ---------- */
 :root {
   --bg: #05070c;

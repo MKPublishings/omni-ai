@@ -452,7 +452,7 @@ export default {
       return forward(request, env.EMBED_SERVICE, env.EMBED_URL, "/generate");
     }
 
-    return new Response("Omni AI orchestrator online.");
+    return new Response("Omni Ai orchestrator online.");
   }
 };
 

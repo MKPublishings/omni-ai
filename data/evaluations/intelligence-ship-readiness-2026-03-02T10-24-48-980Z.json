@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-03-02T10:24:48.980Z",
+  "kind": "omni-intelligence-ship-readiness",
+  "version": "v1",
+  "baselineRef": "data/evaluations/intelligence-baseline.latest.json",
+  "baselineGeneratedAt": "2026-03-02T10:22:58.492Z",
+  "baselineDimensions": {
+    "reasoning": 0.85,
+    "memory": 0.67,
+    "safety": 0.93,
+    "reliability": 0.53,
+    "observability": 0.4
+  },
+  "risks": {
+    "openTokenCount": 3,
+    "highPriorityOpen": 1,
+    "inProgressOpen": 0,
+    "escalations": 1,
+    "reopenCount": 4
+  },
+  "readiness": {
+    "status": "red",
+    "baselineScore": 0.705,
+    "adjustedScore": 0.345,
+    "riskPenalty": 0.36,
+    "thresholds": {
+      "healthy": 0.8,
+      "watch": 0.65
+    },
+    "blockers": [
+      "1 open high-priority token(s)",
+      "1 escalation token(s)",
+      "observability below target (runtime log coverage too low)",
+      "reliability below watch threshold"
+    ],
+    "recommendations": [
+      "Clear high-priority and escalation tokens before production ship.",
+      "Increase runtime telemetry depth to improve observability confidence.",
+      "Re-run `npm run mind:baseline` after fixes and verify readiness score trend."
+    ]
+  },
+  "strict": true
+}
