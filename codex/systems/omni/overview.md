@@ -4,7 +4,7 @@ title: Omni System Overview
 type: system
 category: systems/omni
 tags: [omni, system, orchestrator]
-links: [system.omni.intelligence-lineage, system.omni.image-engine, system.omni.video-engine]
+links: [system.omni.intelligence-lineage, system.omni.image-engine]
 lineage: [system.mind-os.overview]
 ---
 

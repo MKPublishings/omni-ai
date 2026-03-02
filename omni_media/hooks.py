@@ -29,10 +29,6 @@ class DefaultMediaHooks:
                 f"{media_type} output exceeds max bytes ({self.max_output_bytes})"
             )
 
-        strict = str(safety_level or "default").lower() in {"strict", "high"}
-        if strict and media_type == "video" and len(data) > 32 * 1024 * 1024:
-            raise MediaPolicyError("video output blocked by strict safety size policy")
-
     def apply_watermark(
         self,
         media_type: str,
@@ -44,7 +40,7 @@ class DefaultMediaHooks:
             metadata["watermark_applied"] = False
             return data, metadata
 
-        if media_type in {"image", "gif"}:
+        if media_type == "image":
             watermarked = self._overlay_text_watermark(data)
             if watermarked is not None:
                 metadata["watermark_applied"] = True

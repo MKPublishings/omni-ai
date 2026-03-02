@@ -561,8 +561,7 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
-.generated-video-preview,
-.generated-gif-preview {
+.generated-media-viewer {
   width: 100%;
   display: block;
   max-height: 420px;
@@ -755,31 +754,6 @@
   animation: rainbow-shift 50s linear infinite;
 }
 
-#video-quick-btn {
-  height: 44px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  background: linear-gradient(135deg, rgba(15, 82, 186, 0.24) 0%, rgba(9, 22, 44, 0.26) 54%, rgba(0, 0, 0, 0.3) 100%);
-  color: var(--text);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
-  animation: rainbow-shift 50s linear infinite;
-}
-
-#video-quick-btn:hover {
-  border-color: rgba(15, 82, 186, 0.58);
-  background: linear-gradient(135deg, rgba(15, 82, 186, 0.3) 0%, rgba(9, 22, 44, 0.32) 54%, rgba(0, 0, 0, 0.34) 100%);
-  transform: translateY(-1px);
-}
-
-#video-quick-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-}
-
 #send-btn:hover {
   filter: brightness(1.04);
   transform: translateY(-1px);
@@ -968,8 +942,7 @@
     font-size: 16px;
   }
 
-  #send-btn,
-  #video-quick-btn {
+  #send-btn {
     height: 44px;
     font-size: 14px;
     padding: 0 14px;
@@ -1000,8 +973,7 @@
     padding: 8px;
   }
 
-  #send-btn,
-  #video-quick-btn {
+  #send-btn {
     min-width: 82px;
   }
 }
@@ -1059,8 +1031,7 @@
     padding: 8px 12px;
   }
 
-  #send-btn,
-  #video-quick-btn {
+  #send-btn {
     height: 42px;
     min-width: 72px;
     font-size: 12px;

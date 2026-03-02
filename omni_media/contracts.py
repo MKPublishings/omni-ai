@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-MediaType = Literal["image", "video", "gif"]
+MediaType = Literal["image"]
 StatusType = Literal["completed", "failed"]
 
 
@@ -11,8 +11,6 @@ StatusType = Literal["completed", "failed"]
 class GenerationParams:
     width: int | None = None
     height: int | None = None
-    num_frames: int | None = None
-    fps: int | None = None
     seed: int | None = None
     guidance_scale: float | None = None
     num_inference_steps: int | None = None
@@ -39,16 +37,6 @@ class ImageObject:
     mime_type: str = "image/png"
     width: int | None = None
     height: int | None = None
-
-
-@dataclass(slots=True)
-class VideoObject:
-    frames: list[ImageObject]
-    fps: int
-    duration_sec: float
-    width: int
-    height: int
-    mp4_bytes: bytes | None = None
 
 
 @dataclass(slots=True)

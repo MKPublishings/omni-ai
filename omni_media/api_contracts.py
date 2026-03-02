@@ -17,7 +17,7 @@ class GenerateBody:
 
 @dataclass(slots=True)
 class OutputItem:
-    type: Literal["image", "video", "gif"]
+    type: Literal["image"]
     url: str | None = None
     data: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)

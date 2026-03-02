@@ -80,7 +80,7 @@
         title: "Media Pipeline Fabric",
         type: "integration",
         category: "integrations/workers",
-        tags: ["media", "pipeline", "image", "video"],
+        tags: ["media", "pipeline", "image"],
         links: ["system.omni.overview", "governance.safety.attestation-flow"],
         autoLinks: []
       }

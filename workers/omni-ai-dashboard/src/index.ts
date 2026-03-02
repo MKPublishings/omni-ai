@@ -1,6 +1,5 @@
 interface Env {
   ORCHESTRATOR_URL: string;
-  MEDIA_URL: string;
   IMAGES_URL: string;
   AUDIO_URL: string;
   EMBEDDINGS_URL: string;
@@ -29,7 +28,6 @@ function normalizeBaseUrl(value: unknown): string {
 function buildTargets(env: Env): WorkerTarget[] {
   return [
     { name: "orchestrator", baseUrl: normalizeBaseUrl(env.ORCHESTRATOR_URL) },
-    { name: "media", baseUrl: normalizeBaseUrl(env.MEDIA_URL) },
     { name: "images", baseUrl: normalizeBaseUrl(env.IMAGES_URL) },
     { name: "audio", baseUrl: normalizeBaseUrl(env.AUDIO_URL) },
     { name: "embeddings", baseUrl: normalizeBaseUrl(env.EMBEDDINGS_URL) },

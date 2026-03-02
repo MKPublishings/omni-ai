@@ -6,14 +6,9 @@ compatibility_date = "2024-12-01"
 binding = "AI"
 
 [vars]
-MEDIA_URL = "https://omni-ai-media.omni-ai.workers.dev"
 IMAGES_URL = "https://omni-ai-images.omni-ai.workers.dev"
 AUDIO_URL = "https://omni-ai-audio.omni-ai.workers.dev"
 EMBED_URL = "https://omni-ai-embeddings.omni-ai.workers.dev"
-
-[[services]]
-binding = "MEDIA_SERVICE"
-service = "omni-ai-media"
 
 [[services]]
 binding = "IMAGES_SERVICE"

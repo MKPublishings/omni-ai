@@ -113,12 +113,6 @@ def load_rate_limits_from_env() -> dict[str, tuple[int, int]]:
     image_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_IMAGE", str(default_limit)))
     image_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_IMAGE", str(default_window)))
 
-    video_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_VIDEO", "10"))
-    video_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_VIDEO", "60"))
-
-    gif_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_GIF", "20"))
-    gif_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_GIF", "60"))
-
     jobs_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_JOBS", "30"))
     jobs_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_JOBS", "60"))
 
@@ -127,8 +121,6 @@ def load_rate_limits_from_env() -> dict[str, tuple[int, int]]:
 
     return {
         "image": (image_limit, image_window),
-        "video": (video_limit, video_window),
-        "gif": (gif_limit, gif_window),
         "jobs": (jobs_limit, jobs_window),
         "admin": (admin_limit, admin_window),
         "default": (default_limit, default_window),

@@ -12,8 +12,8 @@ Mode keys:
 - system-knowledge
 
 Router defaults:
-- coding => gpt-4o
-- math => deepseek
+- coding => omni
+- math => omni
 - creative => omni
 - general => omni
 

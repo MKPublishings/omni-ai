@@ -2,7 +2,7 @@
 
 
 # Omni Ai  
-**A Unified Cognitive Engine for Image, Video, and GIF Generation**  
+**A Unified Cognitive Engine for Image Generation**  
 **Powered by Quantum‑Cognitive Field Theory, Fibonacci Scheduling, and Multi‑Modal Diffusion**
 
 Omni Ai is a next‑generation generative intelligence system that merges physics‑inspired computation, cognitive modeling, and modern diffusion models into a single coherent engine. It is designed as a **living codex**—a system that evolves, adapts, and reasons through structured internal laws while producing high‑fidelity visual media.
@@ -57,8 +57,8 @@ Together, these layers form a **physics‑aware generative engine** capable of p
 │    • Sleep quality → softness                                 │
 ├──────────────────────────────────────────────────────────────┤
 │ 4. Omni Diffusion Backend                                     │
-│    • Image, video, and GIF generation                         │
-│    • Multi‑modal prompt conditioning                          │
+│    • High-resolution image generation                         │
+│    • Prompt-aware conditioning                                │
 │    • High‑resolution frame synthesis                          │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -70,9 +70,6 @@ Together, these layers form a **physics‑aware generative engine** capable of p
 Omni supports:
 
 - **Text → Image**
-- **Text → Video**
-- **Image → Video**
-- **Video → GIF**
 - **Image → Image (transformations, style shifts, refinements)**
 
 Each modality is routed through the same physics‑aware pipeline, ensuring consistent behavior across formats.
@@ -110,9 +107,8 @@ These laws act as “emotional parameters” for the engine.
 Omni integrates with modern diffusion models for:
 
 - high‑resolution image synthesis  
-- multi‑frame video generation  
-- temporal consistency  
-- prompt‑grounded motion  
+- visual consistency  
+- prompt-grounded composition control  
 
 ---
 
@@ -150,25 +146,20 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Usage Example (Video Generation)
+## 🚀 Usage Example (Image Generation)
 
 ```python
 from omni import OmniClient
 
 client = OmniClient()
 
-result = client.generate_video(
-    prompt="sunlight drifting across a wooden table, dust particles floating",
-    duration=2.0,
-    fps=12,
-    physics_profile={
-        "heart_rate": 65,
-        "sleep_duration": 7.5,
-        "stress_level": 0.3
-    }
+result = client.generate_image(
+     prompt="sunlight drifting across a wooden table, dust particles floating",
+     ratio="9:16",
+     resolution="4k"
 )
 
-print(result.video_url)
+print(result.image_url)
 ```
 
 ---

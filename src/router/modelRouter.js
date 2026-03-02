@@ -19,12 +19,8 @@ function classifyTask(userInput = "", mode = "architect") {
 
 export function routeModel({ userInput = "", mode = "architect", complexity = 0 } = {}) {
   const task = classifyTask(userInput, mode);
-  let model = rules?.routes?.[task] || rules?.routes?.default || "omni";
-
-  const codingEscalation = Number(rules?.complexityEscalation?.coding ?? 0.7);
-  if (task === "coding" && Number(complexity) > codingEscalation) {
-    model = "gpt-4o";
-  }
+  void complexity;
+  const model = rules?.routes?.[task] || rules?.routes?.default || "omni";
 
   return {
     task,

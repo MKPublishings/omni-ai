@@ -8,32 +8,15 @@ binding = "AI"
 
 [vars]
 OMNI_ENV = "production"
-OMNI_MEDIA_API_BASE_URL = "https://omni-ai-media.omni-ai.workers.dev"
-OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://omni-ai-media.omni-ai.workers.dev/generate"
 
-# Optional model aliases for omni runtime routing.
-# Uncomment and set these to provider model IDs available in your account.
+# Optional Omni model alias.
 # MODEL_OMNI = "@cf/meta/llama-3.1-8b-instruct"
-# MODEL_GPT_4O = "@cf/openai/gpt-4o"
-# MODEL_GPT_4O_MINI = "@cf/openai/gpt-4o-mini"
-# MODEL_DEEPSEEK = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
 # MODEL_IMAGE = "@cf/black-forest-labs/flux-1-schnell"
-# OPENAI_API_KEY = "your-openai-key"
-# DEEPSEEK_API_KEY = "your-deepseek-key"
 # OMNI_SIMULATION_PATHS = "2" # integer 2..4
 # OMNI_MEMORY_RETENTION_DAYS = "45"
 # OMNI_SESSION_MAX_AGE_HOURS = "72"
 # OMNI_AUTONOMY_LEVEL = "balanced" # conservative | balanced | aggressive
 # OMNI_ADMIN_KEY = "replace-with-strong-secret"
-# For local dev override in .dev.vars (example uses http://127.0.0.1:8788)
-# OMNI_MEDIA_API_KEY = "replace-with-omni-media-key"
-# OMNI_MEDIA_API_TIMEOUT_MS = "45000" # clamped 5000..120000
-# External provider endpoint for fallback only (must NOT be your omni-ai-media worker URL).
-# For self-hosted setup, this should target your media worker generate route.
-# OMNI_MEDIA_PROVIDER_VIDEO_URL = "https://omni-ai-media.omni-ai.workers.dev/generate"
-# OMNI_MEDIA_PROVIDER_API_KEY = "replace-with-provider-key"
-# OMNI_MEDIA_PROVIDER_API_KEY_HEADER = "x-api-key"
-# OMNI_MEDIA_FALLBACK_VIDEO_URL = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
 # OMNI_RESPONSE_MIN_CHARS = "2000"
 # OMNI_RESPONSE_BASE_CHARS = "4500"
 # OMNI_RESPONSE_MAX_CHARS = "50000"

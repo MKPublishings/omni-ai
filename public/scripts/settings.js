@@ -412,7 +412,7 @@ window.addEventListener("storage", (e) => {
   if (e.key === SETTINGS_KEYS.DEFAULT_MODEL) {
     const val = getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "omni");
     if (defaultModelDropdown) defaultModelDropdown.setActive(val);
-    if (defaultModelBtn) defaultModelBtn.textContent = val === "gpt-4o-mini" ? "GPT‑4o Mini" : val === "gpt-4o" ? "GPT‑4o" : val === "deepseek" ? "DeepSeek" : "Omni";
+    if (defaultModelBtn) defaultModelBtn.textContent = "Omni";
   }
 
   if (e.key === SETTINGS_KEYS.RESPONSE_LENGTH) {

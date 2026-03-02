@@ -1,12 +1,7 @@
 interface Env {
-  MEDIA_URL: string;
   IMAGES_URL: string;
   AUDIO_URL: string;
   EMBED_URL: string;
-  OMNI_MEDIA_PROVIDER_VIDEO_URL?: string;
-  OMNI_MEDIA_PROVIDER_API_KEY?: string;
-  OMNI_MEDIA_PROVIDER_API_KEY_HEADER?: string;
-  MEDIA_SERVICE?: Fetcher;
   IMAGES_SERVICE?: Fetcher;
   AUDIO_SERVICE?: Fetcher;
   EMBED_SERVICE?: Fetcher;
@@ -421,23 +416,6 @@ export default {
           { status: 500 }
         );
       }
-    }
-
-    if (url.pathname.startsWith("/api/video")) {
-      const providerHeaders: Record<string, string> = {};
-      const providerUrl = String(env.OMNI_MEDIA_PROVIDER_VIDEO_URL || "").trim();
-      const providerKey = String(env.OMNI_MEDIA_PROVIDER_API_KEY || "").trim();
-      const providerKeyHeader = String(env.OMNI_MEDIA_PROVIDER_API_KEY_HEADER || "x-api-key").trim() || "x-api-key";
-
-      if (providerUrl) {
-        providerHeaders["x-omni-provider-url"] = providerUrl;
-      }
-      if (providerKey) {
-        providerHeaders["x-omni-provider-key"] = providerKey;
-        providerHeaders["x-omni-provider-key-header"] = providerKeyHeader;
-      }
-
-      return forward(request, env.MEDIA_SERVICE, env.MEDIA_URL, "/generate", providerHeaders);
     }
 
     if (url.pathname.startsWith("/api/image")) {

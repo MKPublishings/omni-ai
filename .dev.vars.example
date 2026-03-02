@@ -8,33 +8,12 @@ OMNI_ENV="development"
 OMNI_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
 OMNI_MEDIA_API_KEY="replace-with-omni-media-key"
 OMNI_MEDIA_API_TIMEOUT_MS="45000"
-OMNI_MEDIA_FALLBACK_VIDEO_URL="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO="false"
-OMNI_MEDIA_PLACEHOLDER_ONLY="false"
-
-# Optional provider path used by Omni worker.
-# For self-hosted mode, point this to your omni-ai-media worker /generate route.
-# Example: OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
-OMNI_MEDIA_PROVIDER_VIDEO_URL="https://omni-ai-media.omni-ai.workers.dev/generate"
-OMNI_MEDIA_PROVIDER_API_KEY="replace-with-provider-key"
-OMNI_MEDIA_PROVIDER_API_KEY_HEADER="x-api-key"
-OMNI_MEDIA_PROVIDER_TIMEOUT_SEC="90"
-OMNI_MEDIA_PROVIDER_HEALTH_URL=""
 
 # Optional admin protection for maintenance endpoints.
-# Optional tuning knobs for 4K SVD-SR profile
-# These can be overridden per-request via params.sr_steps / params.sr_strength
-OMNI_VIDEO_4K_STEPS="25"
-OMNI_VIDEO_4K_STRENGTH="0.7"
-OMNI_VIDEO_4K_TILE_SIZE="512"
-OMNI_VIDEO_4K_TILE_OVERLAP="32"
 OMNI_ADMIN_KEY="replace-with-strong-secret"
 
 # Optional model aliases.
 MODEL_OMNI="@cf/meta/llama-3.1-8b-instruct"
-MODEL_GPT_4O="@cf/openai/gpt-4o"
-MODEL_GPT_4O_MINI="@cf/openai/gpt-4o-mini"
-MODEL_DEEPSEEK="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
 
 # ===== Omni media service (Python process) =====
 # Use the same key as OMNI_MEDIA_API_KEY when API key auth is enabled.

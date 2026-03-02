@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 import threading
-import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -11,64 +10,8 @@ from .api_contracts import GenerateApiResponse, GenerateBody, OutputItem
 from .contracts import GenerateRequest, GenerationParams, MediaOutput
 from .hooks import DefaultMediaHooks
 from .pipeline import OmniMediaPipeline
-from .provider_adapter import ExternalVideoProviderAdapter
-from .provider_video_pipeline import generate_prompt_video_export
 from .storage import LocalFileStorageAdapter, StorageAdapter
-from .video_prompt_planner import compile_video_generation_spec
 from .worker import InMemoryJobQueue, Job, OmniMediaWorker
-
-
-def _parse_optional_bool_env(value: str | None) -> bool | None:
-    text = str(value or "").strip().lower()
-    if not text:
-        return None
-    if text in {"1", "true", "yes", "on"}:
-        return True
-    if text in {"0", "false", "no", "off"}:
-        return False
-    return None
-
-
-def _is_placeholder_video_allowed() -> bool:
-    return False
-
-
-def _select_prompt_aware_fallback_url(prompt_text: str, default_url: str) -> str:
-    prompt = str(prompt_text or "").lower()
-    catalog: list[tuple[str, list[str]]] = [
-        (
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-            ["nature", "forest", "wildlife", "outdoor", "mountain", "rain"],
-        ),
-        (
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            ["cinematic", "dramatic", "action", "epic", "slow", "moody"],
-        ),
-        (
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-            ["bright", "day", "fun", "travel", "colorful"],
-        ),
-        (
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-            ["city", "urban", "street", "night", "driving", "neon"],
-        ),
-        (
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-            ["road", "terrain", "outdoor", "wide", "drone", "landscape"],
-        ),
-    ]
-
-    best_url = default_url
-    best_score = -1
-    for url, tags in catalog:
-        score = sum(1 for tag in tags if tag in prompt)
-        if score > best_score:
-            best_score = score
-            best_url = url
-
-    if best_score > 0:
-        return best_url
-    return best_url or catalog[0][0]
 
 
 def _infer_extension(media_type: str, metadata: dict[str, Any]) -> str:
@@ -79,10 +22,6 @@ def _infer_extension(media_type: str, metadata: dict[str, Any]) -> str:
         if "webp" in mime:
             return "webp"
         return "png"
-    if media_type == "gif":
-        return "gif"
-    if media_type == "video":
-        return "mp4"
     return "bin"
 
 
@@ -137,42 +76,23 @@ class OmniMediaService:
         with self._stats_lock:
             self._stats[key] = int(self._stats.get(key, 0)) + int(value)
 
-    def get_video_backend_health(self) -> dict[str, Any]:
-        allow_placeholder = _is_placeholder_video_allowed()
-
-        engine = getattr(self.pipeline, "engine", None)
-        probe = engine.probe_backend() if engine and hasattr(engine, "probe_backend") else {
-            "real_video_backend_ready": False,
-            "backend": "unknown",
-            "import_ok": False,
-            "omni_class_ok": False,
-            "error": "engine probe not available",
-        }
-
-        provider = ExternalVideoProviderAdapter.from_env()
-        provider_probe = provider.probe()
-        real_ready = bool(probe.get("real_video_backend_ready")) or bool(provider_probe.get("provider_ready"))
-
+    def get_backend_health(self) -> dict[str, Any]:
         return {
-            **probe,
-            **provider_probe,
-            "real_video_backend_ready": real_ready,
-            "placeholder_mode_enabled": allow_placeholder,
-            "strict_prompt_generation": not allow_placeholder,
+            "image_backend_ready": True,
+            "backend": "omni-image",
+            "video_backend_removed": True,
         }
 
     def _to_generate_request(self, modality: str, body: GenerateBody, request_id: str) -> GenerateRequest:
         params = GenerationParams(
             width=body.params.get("width"),
             height=body.params.get("height"),
-            num_frames=body.params.get("num_frames"),
-            fps=body.params.get("fps"),
             seed=body.params.get("seed"),
             guidance_scale=body.params.get("guidance_scale"),
             num_inference_steps=body.params.get("num_inference_steps"),
             num_images=body.params.get("num_images"),
             extra={k: v for k, v in body.params.items() if k not in {
-                "width", "height", "num_frames", "fps", "seed", "guidance_scale", "num_inference_steps", "num_images"
+                "width", "height", "seed", "guidance_scale", "num_inference_steps", "num_images"
             }},
         )
 
@@ -238,134 +158,6 @@ class OmniMediaService:
         request_id = str(uuid.uuid4())
         request = self._to_generate_request(modality, body, request_id)
         response = self.pipeline.run(request)
-
-        if modality == "video" and response.status != "completed":
-            provider = ExternalVideoProviderAdapter.from_env()
-            if provider.is_configured():
-                try:
-                    video_spec = compile_video_generation_spec(request.prompt)
-                    provider_url = str(getattr(provider, "video_url", "") or "").strip().lower()
-                    provider_params = {
-                        "width": request.params.width or 768,
-                        "height": request.params.height or 432,
-                        "num_frames": request.params.num_frames or video_spec.num_frames,
-                        "fps": request.params.fps or video_spec.fps,
-                        "style_preset": video_spec.style_preset,
-                        "motion_profile": video_spec.motion_profile,
-                        "camera_profile": video_spec.camera_profile,
-                    }
-
-                    if provider_url.endswith("/omni_video_exports"):
-                        local_result = generate_prompt_video_export(video_spec.prompt, provider_params)
-                        provider_result = {
-                            "url": str(local_result.get("video_url") or "").strip(),
-                            "raw": local_result,
-                        }
-                    else:
-                        provider_result = provider.generate_video_url(
-                            prompt=video_spec.prompt,
-                            mode=request.mode,
-                            params=provider_params,
-                            negative_prompt=request.negative_prompt,
-                            metadata=video_spec.metadata,
-                        )
-                    response.status = "completed"
-                    response.error = None
-                    response.outputs = [
-                        MediaOutput(
-                            type="video",
-                            url=str(provider_result.get("url") or "").strip(),
-                            data=None,
-                            metadata={
-                                "provider": True,
-                                "provider_backend": "external",
-                                "prompt_aware": True,
-                                "style_preset": video_spec.style_preset,
-                                "motion_profile": video_spec.motion_profile,
-                                "camera_profile": video_spec.camera_profile,
-                                "scene_count": video_spec.metadata.get("scene_count"),
-                                "duration_sec": video_spec.metadata.get("duration_sec"),
-                                "scene_plan": video_spec.metadata.get("scene_plan"),
-                            },
-                        )
-                    ]
-                    response.metadata = {
-                        **(response.metadata or {}),
-                        "provider": True,
-                        "provider_backend": "external",
-                        "prompt_aware": True,
-                    }
-                except Exception as provider_exc:
-                    response.metadata = {
-                        **(response.metadata or {}),
-                        "provider_attempted": True,
-                        "provider_error": str(provider_exc),
-                    }
-
-        if (
-            modality == "video"
-            and response.status != "completed"
-            and "vllm_omni is not installed or unavailable" in str(response.error or "")
-        ):
-            allow_placeholder = _is_placeholder_video_allowed()
-            if not allow_placeholder:
-                response.error = (
-                    "Prompt-grounded video backend is unavailable (vllm_omni missing). "
-                    "Install/enable the video model backend."
-                )
-                return GenerateApiResponse(
-                    id=response.id,
-                    status=response.status,
-                    outputs=[],
-                    error=response.error,
-                    metadata={
-                        **(response.metadata or {}),
-                        "placeholder_allowed": False,
-                    },
-                )
-
-            configured_fallback_url = str(
-                os.getenv(
-                    "OMNI_MEDIA_FALLBACK_VIDEO_URL",
-                    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-                )
-            ).strip()
-            video_spec = compile_video_generation_spec(request.prompt)
-            fallback_url = _select_prompt_aware_fallback_url(request.prompt, configured_fallback_url)
-            if fallback_url:
-                response.status = "completed"
-                response.error = None
-                response.outputs = [
-                    MediaOutput(
-                        type="video",
-                        url=fallback_url,
-                        data=None,
-                        metadata={
-                            "fallback": True,
-                            "fallback_reason": "omni-runtime-unavailable",
-                            "source": "OMNI_MEDIA_FALLBACK_VIDEO_URL",
-                            "style_preset": video_spec.style_preset,
-                            "motion_profile": video_spec.motion_profile,
-                            "camera_profile": video_spec.camera_profile,
-                            "scene_count": video_spec.metadata.get("scene_count"),
-                            "duration_sec": video_spec.metadata.get("duration_sec"),
-                            "scene_plan": video_spec.metadata.get("scene_plan"),
-                            "prompt_aware": True,
-                        },
-                    )
-                ]
-                response.metadata = {
-                    **(response.metadata or {}),
-                    "fallback": True,
-                    "fallback_reason": "omni-runtime-unavailable",
-                    "style_preset": video_spec.style_preset,
-                    "motion_profile": video_spec.motion_profile,
-                    "camera_profile": video_spec.camera_profile,
-                    "scene_count": video_spec.metadata.get("scene_count"),
-                    "duration_sec": video_spec.metadata.get("duration_sec"),
-                    "scene_plan": video_spec.metadata.get("scene_plan"),
-                    "prompt_aware": True,
-                }
 
         outputs = self._persist_outputs(response, request=request)
         if response.status == "completed":

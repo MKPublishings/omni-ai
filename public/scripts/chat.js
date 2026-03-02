@@ -71,7 +71,7 @@
     API_HEALTH_INTERVAL: "omni-api-health-interval",
     API_RETRIES: "omni-api-retries"
   };
-  const KNOWN_MODELS = ["auto", "omni", "gpt-4o-mini", "gpt-4o", "deepseek"];
+  const KNOWN_MODELS = ["auto", "omni"];
   const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "simulation"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
@@ -499,7 +499,7 @@
     if (!hasVerifiedAgeProfile()) {
       return {
         ok: false,
-        message: "Age verification is required before generating images or videos. Complete the age gate and try again."
+        message: "Age verification is required before generating images. Complete the age gate and try again."
       };
     }
 
@@ -514,10 +514,6 @@
     return { ok: true };
   }
 
-  function isVideoGenerationEnabled() {
-    return false;
-  }
-
   function detectAutoMediaIntent(text) {
     const raw = String(text || "").trim();
     const value = raw.toLowerCase();
@@ -527,18 +523,7 @@
       return { kind: "command", prompt: raw };
     }
 
-    if (value.startsWith("/video")) {
-      return { kind: "chat", prompt: raw };
-    }
-
-    const asksVideo = /\b(video|clip|animation|animate|cinematic\s+shot|motion)\b/i.test(value);
-    const asksGif = /\b(gif|loop|animated\s+gif)\b/i.test(value);
-
     const asksImage = /\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i.test(value);
-
-    if (isVideoGenerationEnabled() && (asksVideo || asksGif)) {
-      return { kind: "video", prompt: extractVideoPrompt(raw) };
-    }
 
     if (isImageGenerationRequest(raw)) {
       return { kind: "image", prompt: extractImagePrompt(raw) };
@@ -551,55 +536,6 @@
     return { kind: "chat", prompt: raw };
   }
 
-  function extractVideoPrompt(text) {
-    const raw = String(text || "").trim();
-    if (!raw) return "";
-
-    if (raw.toLowerCase().startsWith("/video")) {
-      return raw.slice(6).trim();
-    }
-
-    return raw
-      .replace(/^\s*(please\s+)?(generate|create|make|render|animate|produce)\s+(a\s+)?(gif|video|clip|animation)\s*(of|for)?\s*/i, "")
-      .replace(/\b(as\s+a\s+gif|as\s+gif|in\s+video\s+form)\b/gi, "")
-      .trim() || raw;
-  }
-
-  function deriveVideoStyleProfile(promptText) {
-    const prompt = String(promptText || "").toLowerCase();
-
-    let stylePreset = "natural";
-    if (/\b(cinematic|film|movie|dramatic|epic|anamorphic)\b/i.test(prompt)) {
-      stylePreset = "cinematic";
-    } else if (/\b(anime|cartoon|pixar|stylized|illustrated)\b/i.test(prompt)) {
-      stylePreset = "stylized";
-    } else if (/\b(noir|black\s*and\s*white|monochrome|gritty)\b/i.test(prompt)) {
-      stylePreset = "noir";
-    } else if (/\b(neon|cyberpunk|sci[-\s]?fi|futuristic)\b/i.test(prompt)) {
-      stylePreset = "neon";
-    }
-
-    const motion = /\b(slow\s*motion|slow-mo|dramatic\s*slow)\b/i.test(prompt)
-      ? "slow"
-      : /\b(fast|action|chase|dynamic|high\s*energy)\b/i.test(prompt)
-      ? "fast"
-      : "normal";
-
-    const camera = /\b(aerial|drone|overhead|bird'?s\s*eye)\b/i.test(prompt)
-      ? "aerial"
-      : /\b(close\s*up|macro|headshot)\b/i.test(prompt)
-      ? "close-up"
-      : /\b(wide|landscape|establishing\s*shot)\b/i.test(prompt)
-      ? "wide"
-      : "standard";
-
-    return {
-      stylePreset,
-      motion,
-      camera,
-      promptAware: true
-    };
-  }
 
   function parseStyleCommand(content) {
     const text = String(content || "").trim();
@@ -820,9 +756,6 @@
   function toModelLabel(model) {
     const normalized = normalizeModel(model) || "auto";
     if (normalized === "auto") return "Auto Router";
-    if (normalized === "gpt-4o-mini") return "GPT‑4o Mini";
-    if (normalized === "gpt-4o") return "GPT‑4o";
-    if (normalized === "deepseek") return "DeepSeek";
     return "Omni";
   }
 
@@ -1301,7 +1234,7 @@
   }
 
   function createGeneratedMediaCard(meta = {}) {
-    return createGeneratedImageCard(meta) || createGeneratedVideoCard(meta);
+    return createGeneratedImageCard(meta);
   }
 
   function syncSelectorsFromSession() {
@@ -1453,57 +1386,6 @@
     return card;
   }
 
-  function createGeneratedVideoCard(meta = {}) {
-    const videoUrl = String(meta.videoUrl || "").trim();
-    if (!videoUrl) {
-      return null;
-    }
-
-    const generatedAt = Number(meta.generatedAt || Date.now());
-    const prompt = String(meta.videoPrompt || "Generated video").trim() || "Generated video";
-    const createdLabel = formatGeneratedTimestamp(generatedAt);
-    const stylePreset = String(meta.videoStylePreset || "").trim();
-    const motionProfile = String(meta.videoMotionProfile || "").trim();
-    const cameraProfile = String(meta.videoCameraProfile || "").trim();
-    const fallbackTag = Boolean(meta.videoFallback) ? "Fallback" : "";
-
-    const card = document.createElement("div");
-    card.className = "generated-image-card";
-
-    const video = document.createElement("video");
-    video.className = "generated-image-preview";
-    video.src = videoUrl;
-    video.controls = true;
-    video.playsInline = true;
-    video.preload = "metadata";
-
-    const actions = document.createElement("div");
-    actions.className = "generated-image-actions";
-
-    const download = document.createElement("a");
-    download.className = "generated-image-download";
-    download.href = videoUrl;
-    download.download = buildOmniExportFilename("video", "mp4", generatedAt, prompt);
-    download.textContent = "Download video";
-    actions.appendChild(download);
-
-    if (createdLabel || stylePreset || motionProfile || cameraProfile || fallbackTag) {
-      const info = document.createElement("div");
-      info.className = "generated-image-meta";
-      info.textContent = [
-        stylePreset ? `Style: ${stylePreset}` : "",
-        motionProfile ? `Motion: ${motionProfile}` : "",
-        cameraProfile ? `Camera: ${cameraProfile}` : "",
-        fallbackTag,
-        createdLabel ? `Created: ${createdLabel}` : ""
-      ].filter(Boolean).join(" • ");
-      actions.appendChild(info);
-    }
-
-    card.appendChild(video);
-    card.appendChild(actions);
-    return card;
-  }
 
   function createMessageElement(role, content, meta = {}) {
     const wrapper = document.createElement("div");
@@ -1557,16 +1439,6 @@
       body.appendChild(imageCard);
     }
 
-    const videoCard = createGeneratedVideoCard(meta);
-    if (videoCard) {
-      if ((content || "").trim() || imageCard) {
-        const spacer = document.createElement("div");
-        spacer.className = "generated-image-spacer";
-        body.appendChild(spacer);
-      }
-      body.appendChild(videoCard);
-    }
-
     inner.appendChild(header);
     inner.appendChild(body);
     wrapper.appendChild(inner);
@@ -1615,13 +1487,7 @@
         imageFilename: msg.imageFilename || "",
         imagePrompt: msg.imagePrompt || "",
         imageResolution: msg.imageResolution || "",
-        imageStyleId: msg.imageStyleId || "",
-        videoUrl: msg.videoUrl || "",
-        videoPrompt: msg.videoPrompt || "",
-        videoStylePreset: msg.videoStylePreset || "",
-        videoMotionProfile: msg.videoMotionProfile || "",
-        videoCameraProfile: msg.videoCameraProfile || "",
-        videoFallback: Boolean(msg.videoFallback)
+        imageStyleId: msg.imageStyleId || ""
       });
     }
   }
@@ -1670,27 +1536,6 @@
       return url.toString();
     } catch {
       return "/api/image";
-    }
-  }
-
-  function getVideoEndpoint() {
-    const chatEndpoint = getApiEndpoint();
-    try {
-      const url = new URL(chatEndpoint, window.location.origin);
-      if (/\/api\/omni$/i.test(url.pathname)) {
-        url.pathname = url.pathname.replace(/\/api\/omni$/i, "/api/video/generate");
-      } else {
-        url.pathname = "/api/video/generate";
-      }
-      url.search = "";
-
-      if (url.origin === window.location.origin) {
-        return url.pathname;
-      }
-
-      return url.toString();
-    } catch {
-      return "/api/video/generate";
     }
   }
 
@@ -1830,106 +1675,6 @@
       filename: String(data?.filename || "generated-image.png").trim() || "generated-image.png",
       metadata: data?.metadata || {},
       modelUsed: String(res.headers.get("X-Omni-Image-Model") || data?.metadata?.model || "").trim()
-    };
-  }
-
-  async function requestGeneratedVideo(session, prompt, safetyProfile = null) {
-    const preflight = preflightMediaGenerationCheck(prompt, "video");
-    if (!preflight.ok) {
-      throw new Error(preflight.message);
-    }
-
-    const styleProfile = deriveVideoStyleProfile(prompt);
-    const payload = {
-      prompt,
-      mode: styleProfile.stylePreset,
-      params: {
-        width: 768,
-        height: 432,
-        num_frames: 24,
-        fps: styleProfile.motion === "slow" ? 10 : styleProfile.motion === "fast" ? 16 : 12,
-        num_inference_steps: 30,
-        guidance_scale: styleProfile.stylePreset === "cinematic" ? 8 : 7.5,
-        style_preset: styleProfile.stylePreset,
-        motion_profile: styleProfile.motion,
-        camera_profile: styleProfile.camera
-      },
-      safety_level: safetyProfile?.explicitAllowed ? "default" : "strict",
-      watermark: true,
-      return_format: "url",
-      safetyProfile: safetyProfile || buildSafetyProfile(),
-      sessionId: session?.id || ""
-    };
-
-    const headers = { "Content-Type": "application/json" };
-    try {
-      const key = String(localStorage.getItem("omni-media-api-key") || "").trim();
-      if (key) {
-        headers["x-api-key"] = key;
-      }
-    } catch {
-      // ignore localStorage access errors
-    }
-
-    let res;
-    const videoEndpoint = getVideoEndpoint();
-    try {
-      res = await fetch(videoEndpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload)
-      });
-    } catch (error) {
-      const detail = String(error?.message || "network error").trim();
-      throw new Error(`Unable to reach video backend (${videoEndpoint}): ${detail}`);
-    }
-
-    let data = null;
-    let rawText = "";
-    try {
-      rawText = await res.text();
-      data = rawText ? JSON.parse(rawText) : null;
-    } catch {
-      data = null;
-    }
-
-    if (!res.ok) {
-      const reason = extractBackendErrorReason(data, rawText, "Video backend returned an error");
-      throw new Error(reason || "Video generation failed");
-    }
-
-    const outputs = Array.isArray(data?.outputs) ? data.outputs : [];
-    const videoOut = outputs.find((item) => String(item?.type || "").toLowerCase() === "video") || outputs[0] || null;
-    const videoUrl = String(
-      videoOut?.url ||
-      data?.url ||
-      data?.video_url ||
-      data?.output_url ||
-      data?.result?.url ||
-      data?.result?.video_url ||
-      ""
-    ).trim();
-    if (!videoUrl) {
-      throw new Error("Video response did not include a playable URL");
-    }
-
-    const responseMetadata =
-      videoOut?.metadata && typeof videoOut.metadata === "object"
-        ? videoOut.metadata
-        : data?.metadata && typeof data.metadata === "object"
-        ? data.metadata
-        : {};
-
-    return {
-      videoUrl,
-      metadata: {
-        ...responseMetadata,
-        style_preset: String(videoOut?.metadata?.style_preset || styleProfile.stylePreset),
-        motion_profile: String(videoOut?.metadata?.motion_profile || styleProfile.motion),
-        camera_profile: String(videoOut?.metadata?.camera_profile || styleProfile.camera),
-        prompt_aware: true
-      },
-      requestId: String(data?.id || "")
     };
   }
 
@@ -2532,82 +2277,6 @@
     if (inputEl) inputEl.value = "";
 
     const mediaIntent = detectAutoMediaIntent(trimmed);
-
-    const shouldGenerateVideo = isVideoGenerationEnabled() && mediaIntent.kind === "video";
-    if (shouldGenerateVideo) {
-      const assistantMessage = appendMessage("assistant", "Generating video...", {
-        model: session.model || "auto",
-        mode: activeMode
-      });
-      const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
-
-      isStreaming = true;
-      if (sendBtn) sendBtn.disabled = true;
-      if (inputEl) inputEl.disabled = true;
-      if (typingIndicatorEl) typingIndicatorEl.style.display = "block";
-
-      try {
-        const videoPrompt = String(mediaIntent.prompt || extractVideoPrompt(trimmed) || trimmed).trim();
-        const videoResult = await requestGeneratedVideo(session, videoPrompt, safetyProfile);
-        const generatedAt = Date.now();
-
-        if (assistantBodyEl) {
-          assistantBodyEl.innerHTML = renderMarkdown(`Generated video for: **${videoPrompt}**`);
-          const videoCard = createGeneratedVideoCard({
-            videoUrl: videoResult.videoUrl,
-            videoPrompt,
-            videoStylePreset: String(videoResult?.metadata?.style_preset || "").trim(),
-            videoMotionProfile: String(videoResult?.metadata?.motion_profile || "").trim(),
-            videoCameraProfile: String(videoResult?.metadata?.camera_profile || "").trim(),
-            videoFallback: Boolean(videoResult?.metadata?.fallback),
-            generatedAt
-          });
-          if (videoCard) {
-            const spacer = document.createElement("div");
-            spacer.className = "generated-image-spacer";
-            assistantBodyEl.appendChild(spacer);
-            assistantBodyEl.appendChild(videoCard);
-          }
-          smoothScrollToBottom(true);
-        }
-
-        session.messages.push({
-          role: "assistant",
-          content: `Generated video for: ${videoPrompt}`,
-          type: "video",
-          videoUrl: videoResult.videoUrl,
-          videoPrompt,
-          videoStylePreset: String(videoResult?.metadata?.style_preset || "").trim(),
-          videoMotionProfile: String(videoResult?.metadata?.motion_profile || "").trim(),
-          videoCameraProfile: String(videoResult?.metadata?.camera_profile || "").trim(),
-          videoFallback: Boolean(videoResult?.metadata?.fallback),
-          generatedAt,
-          timestamp: Date.now()
-        });
-        updateSessionMetaFromMessages(session);
-        saveState();
-        playNotificationSound("assistant");
-      } catch (err) {
-        console.error("Omni video generation error:", err);
-        const reason = String(err?.message || "").trim();
-        updateAssistantMessageBody(
-          assistantBodyEl,
-          reason
-            ? `[Error] Video generation failed: ${reason}`
-            : "[Error] Video generation failed. Check backend availability and try again."
-        );
-        playNotificationSound("error");
-      } finally {
-        isStreaming = false;
-        updateJumpToLatestVisibility();
-        if (sendBtn) sendBtn.disabled = false;
-        if (inputEl) inputEl.disabled = false;
-        if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-        focusInputIfAppropriate();
-      }
-
-      return;
-    }
 
     const shouldGenerateImage = mediaIntent.kind === "image";
     if (shouldGenerateImage) {

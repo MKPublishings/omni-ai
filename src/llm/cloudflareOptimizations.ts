@@ -212,15 +212,8 @@ export function getConnectionStats() {
  * Warm up connections to external APIs during Worker initialization
  */
 export async function warmupConnections(env: any): Promise<void> {
+  void env;
   const warmupUrls: string[] = [];
-
-  // Add API endpoints that need warming
-  if (env?.OPENAI_API_KEY) {
-    warmupUrls.push("https://api.openai.com/v1/models");
-  }
-  if (env?.DEEPSEEK_API_KEY) {
-    warmupUrls.push("https://api.deepseek.com/v1/models");
-  }
 
   // Fire warmup requests (don't await, just initiate)
   warmupUrls.forEach(url => {

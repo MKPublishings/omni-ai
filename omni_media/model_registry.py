@@ -10,7 +10,7 @@ class ModelProfile:
     precision: str
     max_width: int
     max_height: int
-    max_frames: int
+    max_frames: int = 1
     scheduler: dict[str, str] = field(default_factory=dict)
     lora_hooks: list[str] = field(default_factory=list)
 
@@ -36,28 +36,6 @@ class ModelRegistry:
                 max_frames=1,
                 scheduler={"name": "quality"},
             ),
-            # Default short-form video profile (root: omni-ai)
-            "video_default": ModelProfile(
-                key="video_default",
-                omni_model_id="omni/video-default",  # must match your deployed video model id
-                precision="fp16",
-            ),
-            # Longer clips / extended duration profile (root: omni-ai)
-            "video_long": ModelProfile(
-                key="video_long",
-                omni_model_id="omni/video-long",  # must match your deployed long-form video model id
-                precision="fp16",
-            ),
-            # 4K super-resolution profile (CogVideoX base + SVD-SR refinement)
-            "video_4k": ModelProfile(
-                key="video_4k",
-                omni_model_id="omni/video-4k",
-                precision="fp16",
-                max_width=3840,
-                max_height=2160,
-                max_frames=64,
-                scheduler={"name": "4k-sr"},
-            ),
         }
 
     def get(self, key: str) -> ModelProfile:
@@ -71,10 +49,5 @@ class ModelRegistry:
 
         if normalized_modality == "image":
             return self.get("image_hd" if normalized_mode in {"hd", "quality"} else "image_default")
-
-        if normalized_modality in {"video", "gif"}:
-            if normalized_mode in {"4k", "ultra", "highres"}:
-                return self.get("video_4k")
-            return self.get("video_long" if normalized_mode in {"long", "extended"} else "video_default")
 
         raise ValueError(f"Unsupported modality: {modality}")

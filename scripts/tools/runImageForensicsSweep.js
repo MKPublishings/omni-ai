@@ -95,8 +95,7 @@ const IMAGE_RELEVANT_ROOTS = [
   "src/index.ts",
   "public/scripts/chat.js",
   "scripts/smoke/image",
-  "omni_media/",
-  "omni-video-engine/"
+  "omni_media/"
 ];
 
 const STRICT_IMAGE_RELEVANT_ROOTS = [

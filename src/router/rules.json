@@ -1,7 +1,7 @@
 {
   "routes": {
-    "coding": "gpt-4o",
-    "math": "deepseek",
+    "coding": "omni",
+    "math": "omni",
     "creative": "omni",
     "system": "omni",
     "default": "omni"
@@ -17,5 +17,5 @@
     "coding": 0.7,
     "default": 0.85
   },
-  "fallbackOrder": ["omni", "gpt-4o", "deepseek"]
+  "fallbackOrder": ["omni"]
 }

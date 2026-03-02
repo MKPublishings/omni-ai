@@ -1,7 +1,5 @@
 // This file defines the logic for selecting and routing to different LLM models based on the provided model ID.
 import { omniAdapter } from "./omniAdapter";
-import { openaiAdapter } from "./openaiAdapter";
-import { deepseekAdapter } from "./deepseekAdapter";
 
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 type ModelAdapter = { generate: (env: any, messages: ChatMessage[]) => Promise<{ text: string }> };
@@ -29,32 +27,8 @@ export async function routeModel(body: any, env: any) {
 }
 
 export function selectModel(modelId: string, mode = "Architect"): ModelAdapter {
-  const normalized = String(modelId || "omni").toLowerCase();
-
-  switch (normalized) {
-    case "omni":
-      return {
-        generate: (env, messages) => omniAdapter(messages, mode, env)
-      };
-
-    case "gpt-4o":
-      return {
-        generate: (env, messages) => openaiAdapter(messages, "gpt-4o", env)
-      };
-
-    case "gpt-4o-mini":
-      return {
-        generate: (env, messages) => openaiAdapter(messages, "gpt-4o-mini", env)
-      };
-
-    case "deepseek":
-      return {
-        generate: (env, messages) => deepseekAdapter(messages, env)
-      };
-
-    default:
-      return {
-        generate: (env, messages) => omniAdapter(messages, mode, env)
-      };
-  }
+  void modelId;
+  return {
+    generate: (env, messages) => omniAdapter(messages, mode, env)
+  };
 }

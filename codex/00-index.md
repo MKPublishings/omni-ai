@@ -25,7 +25,6 @@ The Omni Codex is a living, evolving knowledge graph tracking the architecture, 
 
 - systems/omni/overview.md — Omni System Overview
 - systems/omni/image-engine.md — Image Engine Chamber
-- systems/omni/video-engine.md — Video Engine Chamber
 - systems/omni/intelligence-lineage.md — Intelligence Lineage
 - mythic/checkpoints/2026-omni-ascension.md — Omni Ascension Checkpoint
 - mythic/checkpoints/2026-mkp-tri-closure.md — MKP TRI Closure

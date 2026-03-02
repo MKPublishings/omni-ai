@@ -17,7 +17,6 @@ from .security import (
     create_rate_limiter_from_env,
     load_rate_limits_from_env,
 )
-from .provider_video_pipeline import generate_prompt_video_export
 from .service import OmniMediaService
 
 
@@ -29,10 +28,7 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
 
     FastAPI = getattr(fastapi_module, "FastAPI")
     HTTPException = getattr(fastapi_module, "HTTPException")
-    StaticFiles = getattr(importlib.import_module("fastapi.staticfiles"), "StaticFiles")
-
     app = FastAPI(title="Omni Media API", version="1.0.0")
-    app.mount("/omni_video_exports", StaticFiles(directory="omni_video_exports"), name="omni_video_exports")
     media_service = service or OmniMediaService()
     auth = ApiKeyAuth()
     limiter = create_rate_limiter_from_env()
@@ -130,121 +126,6 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
             )
             raise
 
-    @app.post("/v1/generate/video")
-    async def generate_video(payload: dict[str, Any], request: Request):
-        request_id = str(uuid.uuid4())
-        started = time.perf_counter()
-        requester = None
-        try:
-            requester = enforce_access(request, "video")
-            body = parse_body(payload)
-            result = media_service.generate_sync("video", body)
-            code = 200 if result.status == "completed" else 500
-            write_audit(
-                request_id=request_id,
-                route="/v1/generate/video",
-                bucket="video",
-                requester=requester,
-                status_code=code,
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=result.status == "completed",
-                error=result.error,
-            )
-            return fastapi_module.responses.JSONResponse(content=asdict(result), status_code=code)
-        except HTTPException as exc:
-            write_audit(
-                request_id=request_id,
-                route="/v1/generate/video",
-                bucket="video",
-                requester=requester,
-                status_code=int(getattr(exc, "status_code", 500)),
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=False,
-                error=str(getattr(exc, "detail", exc)),
-            )
-            raise
-
-    @app.post("/v1/generate/gif")
-    async def generate_gif(payload: dict[str, Any], request: Request):
-        request_id = str(uuid.uuid4())
-        started = time.perf_counter()
-        requester = None
-        try:
-            requester = enforce_access(request, "gif")
-            body = parse_body(payload)
-            result = media_service.generate_sync("gif", body)
-            code = 200 if result.status == "completed" else 500
-            write_audit(
-                request_id=request_id,
-                route="/v1/generate/gif",
-                bucket="gif",
-                requester=requester,
-                status_code=code,
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=result.status == "completed",
-                error=result.error,
-            )
-            return fastapi_module.responses.JSONResponse(content=asdict(result), status_code=code)
-        except HTTPException as exc:
-            write_audit(
-                request_id=request_id,
-                route="/v1/generate/gif",
-                bucket="gif",
-                requester=requester,
-                status_code=int(getattr(exc, "status_code", 500)),
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=False,
-                error=str(getattr(exc, "detail", exc)),
-            )
-            raise
-
-    @app.post("/omni_video_exports")
-    async def generate_provider_video(payload: dict[str, Any], request: Request):
-        request_id = str(uuid.uuid4())
-        started = time.perf_counter()
-        requester = None
-        try:
-            requester = enforce_access(request, "video")
-            prompt = str(payload.get("prompt", "")).strip()
-            if not prompt:
-                raise HTTPException(status_code=400, detail="Prompt is required")
-            params = dict(payload.get("params") or {})
-            result = generate_prompt_video_export(prompt, params)
-            write_audit(
-                request_id=request_id,
-                route="/omni_video_exports",
-                bucket="video",
-                requester=requester,
-                status_code=200,
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=True,
-            )
-            return result
-        except HTTPException as exc:
-            write_audit(
-                request_id=request_id,
-                route="/omni_video_exports",
-                bucket="video",
-                requester=requester,
-                status_code=int(getattr(exc, "status_code", 500)),
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=False,
-                error=str(getattr(exc, "detail", exc)),
-            )
-            raise
-        except Exception as exc:
-            write_audit(
-                request_id=request_id,
-                route="/omni_video_exports",
-                bucket="video",
-                requester=requester,
-                status_code=500,
-                latency_ms=(time.perf_counter() - started) * 1000,
-                success=False,
-                error=str(exc),
-            )
-            raise HTTPException(status_code=500, detail=f"Provider video generation failed: {exc}")
-
     @app.post("/v1/jobs/{modality}")
     async def enqueue_job(modality: str, payload: dict[str, Any], request: Request):
         request_id = str(uuid.uuid4())
@@ -253,7 +134,7 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
         try:
             requester = enforce_access(request, "jobs")
             mod = modality.strip().lower()
-            if mod not in {"image", "video", "gif"}:
+            if mod not in {"image"}:
                 raise HTTPException(status_code=400, detail=f"Unsupported modality: {modality}")
 
             body = parse_body(payload)
@@ -317,13 +198,12 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
     @app.get("/v1/health")
     async def health():
         health_probe = (
-            media_service.get_video_backend_health()
-            if hasattr(media_service, "get_video_backend_health")
+            media_service.get_backend_health()
+            if hasattr(media_service, "get_backend_health")
             else {
-                "real_video_backend_ready": False,
+                "image_backend_ready": False,
                 "backend": "unknown",
-                "placeholder_mode_enabled": False,
-                "strict_prompt_generation": True,
+                "video_backend_removed": True,
             }
         )
 
@@ -331,7 +211,7 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
             "ok": True,
             "service": "omni-media",
             "version": "1.0.0",
-            "video_backend": health_probe,
+            "backend": health_probe,
         }
 
     @app.get("/v1/admin/security")

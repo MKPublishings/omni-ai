@@ -4,8 +4,6 @@ type WorkerEnv = {
   ASSETS?: Fetcher;
   MEMORY?: KVNamespace;
   MODEL_OMNI?: string;
-  MODEL_GPT_4O?: string;
-  MODEL_DEEPSEEK?: string;
 };
 
 export interface IndexedDocument {
@@ -330,9 +328,9 @@ export function chooseModelForTask(requestedModel: string, latestUserText: strin
   const taskType = inferTaskType(latestUserText, mode);
   const normalizedMode = normalizeText(mode).toLowerCase();
 
-  if (normalized !== "auto") {
+  if (normalized !== "auto" && normalized === "omni") {
     return {
-      selectedModel: normalized,
+      selectedModel: "omni",
       taskType,
       reason: "manual-model-selection"
     };
@@ -343,11 +341,11 @@ export function chooseModelForTask(requestedModel: string, latestUserText: strin
   }
 
   if (taskType === "coding") {
-    return { selectedModel: "gpt-4o", taskType, reason: "auto-route:coding" };
+    return { selectedModel: "omni", taskType, reason: "auto-route:coding" };
   }
 
   if (taskType === "math") {
-    return { selectedModel: "deepseek", taskType, reason: "auto-route:math" };
+    return { selectedModel: "omni", taskType, reason: "auto-route:math" };
   }
 
   if (taskType === "creative") {

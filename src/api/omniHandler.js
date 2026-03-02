@@ -6,8 +6,6 @@ import { formatResponse } from "../utils/responseFormatter.js";
 import { routeModel, fallbackModel, getRoutingThresholds } from "../router/modelRouter.js";
 import { runTieredRetrieval } from "../retrieval/multiSourceRAG.js";
 import { get as getMemory, pushTopic } from "../memory/memoryManager.js";
-import { openaiHandler } from "./openaiHandler.js";
-import { deepseekHandler } from "./deepseekHandler.js";
 import { runOmniEngine } from "../core/omniEngine.js";
 import { scoreConfidence } from "../core/confidence.js";
 import { selectModelByConfidence } from "../router/confidenceRouter.js";
@@ -40,8 +38,8 @@ function selectModuleByQuery(userInput = "", mode = "") {
  * @returns {Promise<ModelResponse>}
  */
 async function runModel({ model, prompt, env }) {
-  if (model === "gpt-4o") return openaiHandler({ prompt, model, env });
-  if (model === "deepseek") return deepseekHandler({ prompt, model, env });
+  void env;
+  void model;
 
   return {
     model: "omni",

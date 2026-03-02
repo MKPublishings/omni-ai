@@ -3,7 +3,7 @@
 Omni Ai is a Cloudflare Worker-based cognitive runtime with streaming responses.
 
 ## Core Capabilities
-- Multi-model routing across Omni, GPT-4o, GPT-4o-mini, and DeepSeek.
+- Omni-native routing and response generation.
 - Mode-aware behavior with specialized interaction styles.
 - Safety sanitization on input and output paths.
 - Memory integration for user preferences.

@@ -21,7 +21,7 @@ export function selectModelByConfidence({ preferredModel = "omni", task = "defau
     };
   }
 
-  const escalatedModel = task === "math" ? "deepseek" : "gpt-4o";
+  const escalatedModel = "omni";
   return {
     model: escalatedModel,
     escalated: true,

@@ -20,7 +20,7 @@ class FakeService:
             status="completed",
             outputs=[
                 OutputItem(
-                    type=modality if modality in {"image", "video", "gif"} else "image",
+                    type="image",
                     url="https://example.test/media",
                     metadata={"model_profile": "test"},
                 )

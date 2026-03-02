@@ -26,41 +26,18 @@ type OmniRuntimeEnv = {
   MIND?: KVNamespace;
   MEMORY?: KVNamespace;
   MODEL_OMNI?: string;
-  MODEL_GPT_4O?: string;
-  MODEL_GPT_4O_MINI?: string;
-  MODEL_DEEPSEEK?: string;
   OMNI_SIMULATION_PATHS?: string;
 };
 
 function normalizeModelId(model: string): string {
   const value = String(model || "omni").trim().toLowerCase();
-
-  if (value === "gpt4o") return "gpt-4o";
-  if (value === "gpt4o-mini" || value === "gpt-4o mini") return "gpt-4o-mini";
-  if (value === "deepseek-r1" || value === "deepseek r1") return "deepseek";
-  return value;
+  return value === "omni" ? "omni" : "omni";
 }
 
 function resolveProviderModel(model: string, env: OmniRuntimeEnv): string {
-  const normalized = normalizeModelId(model);
   const omniFallback = env.MODEL_OMNI || "@cf/meta/llama-3.1-8b-instruct";
-
-  switch (normalized) {
-    case "omni":
-      return omniFallback;
-
-    case "gpt-4o":
-      return env.MODEL_GPT_4O || omniFallback;
-
-    case "gpt-4o-mini":
-      return env.MODEL_GPT_4O_MINI || omniFallback;
-
-    case "deepseek":
-      return env.MODEL_DEEPSEEK || omniFallback;
-
-    default:
-      return model || omniFallback;
-  }
+  void model;
+  return omniFallback;
 }
 
 function extractResponseText(raw: any): string {

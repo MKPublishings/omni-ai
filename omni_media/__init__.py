@@ -2,7 +2,6 @@ from .contracts import (
     GenerateRequest,
     GenerateResponse,
     MediaOutput,
-    VideoObject,
     ImageObject,
 )
 from .model_registry import ModelRegistry, ModelProfile
@@ -27,7 +26,6 @@ __all__ = [
     "GenerateRequest",
     "GenerateResponse",
     "MediaOutput",
-    "VideoObject",
     "ImageObject",
     "ModelRegistry",
     "ModelProfile",
