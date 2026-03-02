@@ -12,12 +12,10 @@ interface ImageRequest {
 
 const MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 const QUALITY_PROFILE = "legacy-restored";
+const FORCED_WIDTH = 2160;
+const FORCED_HEIGHT = 3840;
 const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
 const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
-const DEFAULT_DIMENSION = 1536;
-const MIN_DIMENSION = 1024;
-const MAX_DIMENSION = 8192;
-const DIMENSION_STEP = 64;
 const MAX_GENERATION_ATTEMPTS = 10;
 
 type NormalizedDimensions = { width: number; height: number; source: string };
@@ -31,19 +29,6 @@ type GenerationPayload = {
   num_steps?: number;
   guidance?: number;
 };
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-function roundToModelStep(value: number): number {
-  const rounded = Math.round(value / DIMENSION_STEP) * DIMENSION_STEP;
-  return Math.max(DIMENSION_STEP, rounded);
-}
-
-function normalizeDimension(value: number): number {
-  return roundToModelStep(clamp(value, MIN_DIMENSION, MAX_DIMENSION));
-}
 
 function parseResolutionFromPrompt(prompt: string): { width: number; height: number; source: string } | null {
   const lower = prompt.toLowerCase();
@@ -70,18 +55,11 @@ function parseResolutionFromPrompt(prompt: string): { width: number; height: num
   return null;
 }
 
-function resolveDimensions(body: ImageRequest): NormalizedDimensions {
-  const requested = parseResolutionFromPrompt(body.prompt || "");
-  const explicitWidth = Number.isFinite(body.width) ? Number(body.width) : null;
-  const explicitHeight = Number.isFinite(body.height) ? Number(body.height) : null;
-
-  const width = normalizeDimension(explicitWidth ?? requested?.width ?? DEFAULT_DIMENSION);
-  const height = normalizeDimension(explicitHeight ?? requested?.height ?? DEFAULT_DIMENSION);
-
+function resolveDimensions(_body: ImageRequest): NormalizedDimensions {
   return {
-    width,
-    height,
-    source: explicitWidth || explicitHeight ? "request-body" : requested?.source || "default"
+    width: FORCED_WIDTH,
+    height: FORCED_HEIGHT,
+    source: "forced-4k-portrait"
   };
 }
 
@@ -99,13 +77,6 @@ function mergeNegativePrompt(baseNegativePrompt?: string): string {
 
 function toUint8Array(value: Uint8Array | ArrayBuffer): Uint8Array {
   return value instanceof Uint8Array ? value : new Uint8Array(value);
-}
-
-function nextScaledDimensions(width: number, height: number, scale: number): { width: number; height: number } {
-  return {
-    width: normalizeDimension(Math.max(MIN_DIMENSION, width * scale)),
-    height: normalizeDimension(Math.max(MIN_DIMENSION, height * scale))
-  };
 }
 
 function sizeStatus(bytes: number): "under" | "within" | "over" {
@@ -162,12 +133,6 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
       });
     } catch (error: any) {
       lastError = String(error?.message || "unknown error");
-      const fallback = nextScaledDimensions(width, height, 0.75);
-      if (fallback.width === width && fallback.height === height) {
-        continue;
-      }
-      width = fallback.width;
-      height = fallback.height;
       continue;
     }
 
@@ -200,20 +165,7 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
       };
     }
 
-    if (status === "over") {
-      const scale = Math.max(0.8, Math.sqrt(MAX_EXPORT_BYTES / bytes) * 0.99);
-      const next = nextScaledDimensions(width, height, scale);
-      if (next.width === width && next.height === height) break;
-      width = next.width;
-      height = next.height;
-      continue;
-    }
-
-    const scale = Math.min(1.45, Math.sqrt(MIN_EXPORT_BYTES / Math.max(1, bytes)) * 1.06);
-    const next = nextScaledDimensions(width, height, scale);
-    if (next.width === width && next.height === height) break;
-    width = next.width;
-    height = next.height;
+    continue;
   }
 
   if (!bestImage) {
@@ -268,6 +220,30 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   try {
     const generated = await generateWithinSizeRange(env, body);
 
+    if (generated.width !== FORCED_WIDTH || generated.height !== FORCED_HEIGHT) {
+      return Response.json(
+        {
+          success: false,
+          error: `Generated image dimensions must be ${FORCED_WIDTH}x${FORCED_HEIGHT}`,
+          details: {
+            width: generated.width,
+            height: generated.height,
+            expectedWidth: FORCED_WIDTH,
+            expectedHeight: FORCED_HEIGHT,
+            dimensionSource: generated.dimensionSource
+          }
+        },
+        {
+          status: 500,
+          headers: {
+            "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
+            "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
+            "X-Omni-Image-Dimension-Lock": "strict"
+          }
+        }
+      );
+    }
+
     if (generated.status !== "within") {
       return Response.json(
         {
@@ -293,6 +269,9 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
         "X-Omni-Image-Size-Status": generated.status,
         "X-Omni-Image-Width": String(generated.width),
         "X-Omni-Image-Height": String(generated.height),
+        "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
+        "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
+        "X-Omni-Image-Dimension-Lock": "strict",
         "X-Omni-Image-Attempts": String(generated.attempts),
         "X-Omni-Image-Dimension-Source": generated.dimensionSource,
         "X-Omni-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`,

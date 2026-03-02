@@ -105,7 +105,7 @@ async function run() {
     width: 4096,
     height: 2304
   });
-  expect(resolved.width === 4096 && resolved.height === 2304, "explicit request width/height should win over prompt parsing");
+  expect(resolved.width === 2160 && resolved.height === 3840, "worker should force 2160x3840 dimensions");
 
   const env = makeMockEnv();
   const generated = await generateWithinSizeRange(env, {
@@ -131,9 +131,15 @@ async function run() {
 
   const byteHeader = Number(response.headers.get("X-Omni-Image-Bytes") || 0);
   const statusHeader = String(response.headers.get("X-Omni-Image-Size-Status") || "");
+  const forcedWidthHeader = Number(response.headers.get("X-Omni-Image-Forced-Width") || 0);
+  const forcedHeightHeader = Number(response.headers.get("X-Omni-Image-Forced-Height") || 0);
+  const dimensionLockHeader = String(response.headers.get("X-Omni-Image-Dimension-Lock") || "");
 
   expect(byteHeader >= 1_048_576 && byteHeader <= 12_582_912, `response header bytes out of range: ${byteHeader}`);
   expect(statusHeader === "within", `response size status should be 'within', got '${statusHeader}'`);
+  expect(forcedWidthHeader === 2160, `forced width header should be 2160, got ${forcedWidthHeader}`);
+  expect(forcedHeightHeader === 3840, `forced height header should be 3840, got ${forcedHeightHeader}`);
+  expect(dimensionLockHeader === "strict", `dimension lock header should be 'strict', got '${dimensionLockHeader}'`);
 
   console.log("✓ handleGenerate response headers report 1-12MB in-range export");
 
