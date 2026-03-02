@@ -1,5 +1,6 @@
 .codex-main {
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
 }
 
@@ -349,6 +350,10 @@
   .codex-main {
     display: grid;
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   .codex-header {
@@ -367,6 +372,8 @@
   .codex-chamber-sidebar,
   .codex-stat-card {
     padding: 14px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .codex-layout,
@@ -381,6 +388,22 @@
     max-height: none;
     overflow: visible;
     padding-right: 0;
+  }
+
+  .codex-panel p,
+  .codex-panel li,
+  .codex-panel code,
+  .codex-entry-meta,
+  .codex-entry-title,
+  .codex-tag,
+  .codex-result-count {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .codex-panel pre {
+    white-space: pre-wrap;
+    overflow-x: hidden;
   }
 }
 

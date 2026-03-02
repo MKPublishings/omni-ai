@@ -204,6 +204,46 @@
   #main,
   #main.docs-main {
     padding: 14px 12px;
+    overflow-y: visible;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  #sidebar {
+    position: relative;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  #sidebar::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 40px;
+    width: 20px;
+    height: 40px;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(5, 7, 12, 0), rgba(5, 7, 12, 0.72));
+  }
+
+  .nav-link {
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
 }
 
