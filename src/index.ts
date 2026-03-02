@@ -51,6 +51,7 @@ export interface Env {
   MODEL_DEEPSEEK?: string;
   MODEL_IMAGE?: string;
   OPENAI_API_KEY?: string;
+  STABILITY_API_KEY?: string;
   DEEPSEEK_API_KEY?: string;
   OMNI_RESPONSE_MIN_CHARS?: string;
   OMNI_RESPONSE_BASE_CHARS?: string;
@@ -76,6 +77,57 @@ export interface Env {
   OMNI_MEDIA_PROVIDER_API_KEY_HEADER?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
+}
+
+function hasRuntimeSecret(value: unknown): boolean {
+  return String(value || "").trim().length > 0;
+}
+
+function getProviderStatusSnapshot(env: Env): Record<string, unknown> {
+  const openaiEnabled = hasRuntimeSecret(env.OPENAI_API_KEY);
+  const stabilityEnabled = hasRuntimeSecret((env as any).STABILITY_API_KEY);
+  const externalVideoProvider = hasRuntimeSecret(env.OMNI_MEDIA_PROVIDER_VIDEO_URL);
+
+  const imageProvider = openaiEnabled
+    ? "openai"
+    : stabilityEnabled
+      ? "stability"
+      : "internal-fallback";
+
+  const textProvider = openaiEnabled ? "openai" : "internal-fallback";
+
+  return {
+    ok: true,
+    generatedAt: Date.now(),
+    providers: {
+      text: {
+        active: textProvider,
+        openai_live: openaiEnabled,
+        fallback_active: !openaiEnabled,
+        models: openaiEnabled ? ["gpt-4o", "gpt-4o-mini"] : []
+      },
+      image: {
+        active: imageProvider,
+        openai_live: openaiEnabled,
+        stability_live: stabilityEnabled,
+        fallback_active: !openaiEnabled && !stabilityEnabled,
+        model_hint: openaiEnabled ? "gpt-image-1" : stabilityEnabled ? "stable-image-core" : "internal"
+      },
+      video: {
+        route_enabled: false,
+        reason: "video-generation-disabled",
+        external_provider_configured: externalVideoProvider
+      },
+      audio: {
+        openai_live: openaiEnabled
+      }
+    },
+    runtime: {
+      OPENAI_API_KEY_present: openaiEnabled,
+      STABILITY_API_KEY_present: stabilityEnabled,
+      OMNI_MEDIA_PROVIDER_VIDEO_URL_present: externalVideoProvider
+    }
+  };
 }
 
 type OmniRole = "system" | "user" | "assistant";
@@ -1581,6 +1633,7 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
     endpoints: {
       omni: "/api/omni",
       image: "/api/image",
+      providerStatus: "/api/provider/status",
       mindShardGenerate: "/api/mind/shards/generate",
       maintenanceStatus: "/api/maintenance/status",
       maintenanceRun: "/api/maintenance/run",
@@ -2245,8 +2298,12 @@ function isReadableByteStream(value: unknown): value is ReadableStream {
 }
 
 function base64ToBytes(base64: string): Uint8Array {
-  const normalized = String(base64 || "").replace(/\s+/g, "");
-  const binary = atob(normalized);
+  const normalized = String(base64 || "")
+    .replace(/\s+/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
@@ -2274,7 +2331,8 @@ async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; 
   }
 
   if (ArrayBuffer.isView(raw)) {
-    return { bytes: new Uint8Array(raw.buffer), mimeType: "image/png" };
+    const view = raw as ArrayBufferView;
+    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
   }
 
   if (isReadableByteStream(raw)) {
@@ -2284,13 +2342,26 @@ async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; 
 
   const candidate =
     (raw as any)?.image ??
+    (raw as any)?.result?.bytes ??
     (raw as any)?.result?.image ??
     (raw as any)?.data?.[0]?.b64_json ??
     (raw as any)?.output?.[0]?.image;
 
+  if (candidate instanceof ArrayBuffer) {
+    return { bytes: new Uint8Array(candidate), mimeType: "image/png" };
+  }
+
+  if (ArrayBuffer.isView(candidate)) {
+    const view = candidate as ArrayBufferView;
+    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
+  }
+
   if (typeof candidate === "string") {
     if (candidate.startsWith("data:image/")) {
       const commaIndex = candidate.indexOf(",");
+      if (commaIndex <= 0) {
+        throw new Error("Image response included malformed data URL");
+      }
       const header = candidate.slice(5, commaIndex);
       const payload = candidate.slice(commaIndex + 1);
       const mimeType = header.split(";")[0] || "image/png";
@@ -2496,6 +2567,7 @@ export default {
       const isApiRoute =
         url.pathname === "/api/omni" ||
         url.pathname === "/api/image" ||
+        url.pathname === "/api/provider/status" ||
         url.pathname === "/api/video/generate" ||
         url.pathname === "/omni_video_exports" ||
         url.pathname === "/api/video/health" ||
@@ -2882,6 +2954,15 @@ export default {
         return withCors(await apiPing());
       }
 
+      if (url.pathname === "/api/provider/status" && request.method === "GET") {
+        return new Response(JSON.stringify(getProviderStatusSnapshot(env)), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
       if (url.pathname === "/api/modes" && request.method === "GET") {
         const includeDetails = String(url.searchParams.get("details") || "").toLowerCase() === "true";
         return withCors(includeDetails ? await listModeDetails() : await listModes());
@@ -3176,6 +3257,16 @@ export default {
       }
 
       if (url.pathname === "/api/ping" && request.method !== "GET") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            ...CORS_HEADERS,
+            "Allow": "GET, OPTIONS"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/provider/status" && request.method !== "GET") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {

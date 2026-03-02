@@ -188,6 +188,34 @@ function getApiKey(options, fallbackEnvName) {
     return "";
 }
 
+function toNonEmptyBuffer(value, sourceLabel) {
+    if (Buffer.isBuffer(value)) {
+        if (value.length === 0) {
+            throw new Error(`${sourceLabel} returned an empty image payload`);
+        }
+        return value;
+    }
+
+    if (value instanceof ArrayBuffer) {
+        const normalized = Buffer.from(value);
+        if (normalized.length === 0) {
+            throw new Error(`${sourceLabel} returned an empty image payload`);
+        }
+        return normalized;
+    }
+
+    if (ArrayBuffer.isView(value)) {
+        const view = value;
+        const normalized = Buffer.from(view.buffer, view.byteOffset, view.byteLength);
+        if (normalized.length === 0) {
+            throw new Error(`${sourceLabel} returned an empty image payload`);
+        }
+        return normalized;
+    }
+
+    throw new Error(`${sourceLabel} returned an unsupported image payload type`);
+}
+
 async function callOpenAIImages(prompt, options) {
     const endpoint = options.endpoint || "https://api.openai.com/v1/images/generations";
     const apiKey = getApiKey(options, "OPENAI_API_KEY");
@@ -228,7 +256,8 @@ async function callOpenAIImages(prompt, options) {
         throw new Error("OpenAI response did not include image data");
     }
 
-    return Buffer.from(b64, "base64");
+    const buffer = Buffer.from(b64, "base64");
+    return toNonEmptyBuffer(buffer, "OpenAI");
 }
 
 async function callStabilityImages(prompt, options) {
@@ -268,11 +297,12 @@ async function callStabilityImages(prompt, options) {
         if (!b64) {
             throw new Error("Stability response did not include image data");
         }
-        return Buffer.from(b64, "base64");
+        const buffer = Buffer.from(b64, "base64");
+        return toNonEmptyBuffer(buffer, "Stability");
     }
 
     const bytes = await res.arrayBuffer();
-    return Buffer.from(bytes);
+    return toNonEmptyBuffer(bytes, "Stability");
 }
 
 async function callUnderlyingModel(prompt, options) {
