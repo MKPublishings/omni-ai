@@ -231,8 +231,8 @@ type InternetSearchProfile = {
 type ImageModelConfig = {
   model: string;
   styleId: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   ratio: string;
   resolution: string;
 };
@@ -1810,14 +1810,7 @@ const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
 };
 
 const OMNI_QUALITY_DEFAULT = [
-  "8k resolution",
-  "ultra detailed",
-  "sharp focus",
-  "global illumination",
-  "subsurface scattering",
-  "film grain",
-  "depth of field",
-  "HDR"
+  "high detail"
 ];
 
 const OMNI_NEGATIVE_BASE = [
@@ -1901,7 +1894,7 @@ function buildTimeDirective(intent: TimeIntent): string {
     return "interior lighting setup, practical lights, no night sky elements unless requested";
   }
 
-  return "neutral natural lighting, balanced exposure";
+  return "";
 }
 
 function getStylePack(name: string): { name: string; tags: string[] } {
@@ -1962,6 +1955,10 @@ function inferStyleFromPrompt(prompt: string): string {
 function inferCameraFromPrompt(prompt: string): string {
   const lower = String(prompt || "").toLowerCase();
   if (!lower) return "";
+
+  if (/\b(full[-\s]?body|full[-\s]?length|head[-\s]?to[-\s]?toe|whole\s+body|entire\s+figure|standing\s+pose|body\s+shot)\b/i.test(lower)) {
+    return "wide-35mm";
+  }
 
   if (/\b(85mm|portrait lens|portrait shot|headshot|bokeh portrait)\b/i.test(lower)) return "portrait-85mm";
   if (/\b(35mm|wide angle|wide-angle|environmental portrait|street photo)\b/i.test(lower)) return "wide-35mm";
@@ -2038,31 +2035,11 @@ function orchestrateOmniImagePrompt(userPrompt: string, options: OmniImageOption
 function refineOmniImagePrompt(promptData: OmniImagePromptData, options: OmniImageOptions): { data: OmniImagePromptData; finalOptions: OmniImageOptions } {
   const data: OmniImagePromptData = { ...promptData };
 
-  data.technicalTags = [...(data.technicalTags || []), ...OMNI_QUALITY_DEFAULT];
-
-  const lowerPrompt = data.userPrompt.toLowerCase();
-  const timeIntent = inferTimeIntent(data.userPrompt);
-  const explicitlyRequestsNight = timeIntent === "night";
-  const includesPeople = promptRequestsPeople(data.userPrompt);
-  const negativeTags = [...(data.negativeTags || []), ...OMNI_NEGATIVE_BASE];
-  if (!lowerPrompt.includes("ocean") && !lowerPrompt.includes("sea") && !lowerPrompt.includes("beach")) {
-    negativeTags.push(...OMNI_NEGATIVE_NO_OCEAN);
+  if (String(options?.quality || "").trim()) {
+    data.technicalTags = [...(data.technicalTags || []), ...OMNI_QUALITY_DEFAULT];
   }
 
-  if (!explicitlyRequestsNight && !lowerPrompt.includes("night")) {
-    negativeTags.push("no starry sky", "no nighttime atmosphere unless requested");
-  }
-
-  if (!includesPeople) {
-    negativeTags.push(
-      "no people",
-      "no characters",
-      "no human subjects",
-      "no portraits",
-      "no crowd"
-    );
-  }
-  data.negativeTags = [...new Set(negativeTags)];
+  data.negativeTags = [...new Set(data.negativeTags || [])];
 
   const tags = [
     data.semanticExpansion,
@@ -2182,22 +2159,57 @@ function selectImageModelConfig(
   requestedWidth?: number,
   requestedHeight?: number
 ): ImageModelConfig {
-  const safeQuality = String(quality || "ultra").toLowerCase();
-  const computed = deriveDimensionsFromRatio(requestedRatio || "1:1", requestedResolution || "", safeQuality);
   const explicitWidth = Number(requestedWidth);
   const explicitHeight = Number(requestedHeight);
+  const safeQuality = String(quality || "").toLowerCase();
 
-  const width = Number.isFinite(explicitWidth) ? clamp(Math.floor(explicitWidth), 256, 8192) : computed.width;
-  const height = Number.isFinite(explicitHeight) ? clamp(Math.floor(explicitHeight), 256, 8192) : computed.height;
+  let width: number | undefined;
+  let height: number | undefined;
+
+  if (Number.isFinite(explicitWidth)) {
+    width = clamp(Math.floor(explicitWidth), 256, 8192);
+  }
+  if (Number.isFinite(explicitHeight)) {
+    height = clamp(Math.floor(explicitHeight), 256, 8192);
+  }
+
+  const hasExplicitSize = Number.isFinite(width) && Number.isFinite(height);
+  const hasRatioOrResolution = Boolean(String(requestedRatio || "").trim() || String(requestedResolution || "").trim());
+  if (!hasExplicitSize && hasRatioOrResolution) {
+    const computed = deriveDimensionsFromRatio(requestedRatio || "1:1", requestedResolution || "", safeQuality || "default");
+    width = computed.width;
+    height = computed.height;
+  }
+
+  const ratioLabel = String(requestedRatio || "").trim();
+  const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
+    ? `${width}x${height}`
+    : (String(requestedResolution || "").trim() || "provider-default");
 
   return {
     model: env.MODEL_IMAGE || "@cf/black-forest-labs/flux-1-schnell",
-    styleId: styleId || "mythic_cinematic",
+    styleId: styleId || "auto",
     width,
     height,
-    ratio: requestedRatio || computed.ratio,
-    resolution: `${width}x${height}`
+    ratio: ratioLabel || "provider-default",
+    resolution: resolutionLabel
   };
+}
+
+function buildImageRunPayload(prompt: string, modelConfig: ImageModelConfig, seed?: number): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    prompt,
+    seed
+  };
+
+  if (Number.isFinite(modelConfig.width)) {
+    payload.width = modelConfig.width;
+  }
+  if (Number.isFinite(modelConfig.height)) {
+    payload.height = modelConfig.height;
+  }
+
+  return payload;
 }
 
 function isReadableByteStream(value: unknown): value is ReadableStream {
@@ -2302,7 +2314,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
         .filter((law) => Boolean(law.id))
     : [];
 
-  const requestedQuality = sanitizePromptText(String(options?.quality || "ultra")).toLowerCase() || "ultra";
+  const requestedQuality = sanitizePromptText(String(options?.quality || "")).toLowerCase();
   const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
   const visualReasoning = runVisualReasoning(promptText);
   const promptInferredCamera = inferCameraFromPrompt(promptText) || visualReasoning.cameraIntent;
@@ -2315,17 +2327,15 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
   const requestedMaterials = Array.isArray(options?.materials)
     ? options.materials.map((item) => sanitizePromptText(String(item || "")).toLowerCase()).filter(Boolean)
     : [];
-  const effectiveCamera = promptInferredCamera || requestedCameraRaw || "portrait-85mm";
-  const effectiveLighting = promptInferredLighting || requestedLightingRaw || "studio-soft";
+  const effectiveCamera = promptInferredCamera || requestedCameraRaw;
+  const effectiveLighting = promptInferredLighting || requestedLightingRaw;
   const effectiveMaterials = promptInferredMaterials.length
     ? promptInferredMaterials
     : requestedMaterials.length
       ? requestedMaterials
-      : resolvedRenderingStyle === "hyper-real"
-        ? ["skin"]
-        : [];
+      : [];
 
-  const requestedRatio = sanitizePromptText(String(options?.ratio || "1:1")) || "1:1";
+  const requestedRatio = sanitizePromptText(String(options?.ratio || ""));
   const requestedResolution = sanitizePromptText(String(options?.resolution || ""));
   const requestedWidth = Number(options?.width);
   const requestedHeight = Number(options?.height);
@@ -2368,12 +2378,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     requestedHeight
   );
 
-  const rawImage = await env.AI.run(modelConfig.model, {
-    prompt: refined.data.finalPrompt,
-    width: modelConfig.width,
-    height: modelConfig.height,
-    seed: refined.finalOptions.seed
-  });
+  const rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(refined.data.finalPrompt, modelConfig, refined.finalOptions.seed));
 
   const normalized = await normalizeImageOutput(rawImage);
   const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
@@ -3354,7 +3359,7 @@ export default {
                 })
                 .filter((law) => Boolean(law.id))
             : [];
-          const requestedQuality = sanitizePromptText(String(body?.quality || "ultra")).toLowerCase() || "ultra";
+          const requestedQuality = sanitizePromptText(String(body?.quality || "")).toLowerCase();
           const requestedMode = sanitizePromptText(String(body?.mode || "simple")).toLowerCase() || "simple";
           const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
           const promptInferredCamera = inferCameraFromPrompt(promptText);
@@ -3367,16 +3372,14 @@ export default {
           const requestedMaterials = Array.isArray(body?.materials)
             ? body.materials.map((item) => sanitizePromptText(String(item || "")).toLowerCase()).filter(Boolean)
             : [];
-          const effectiveCamera = promptInferredCamera || requestedCameraRaw || "portrait-85mm";
-          const effectiveLighting = promptInferredLighting || requestedLightingRaw || "studio-soft";
+          const effectiveCamera = promptInferredCamera || requestedCameraRaw;
+          const effectiveLighting = promptInferredLighting || requestedLightingRaw;
           const effectiveMaterials = promptInferredMaterials.length
             ? promptInferredMaterials
             : requestedMaterials.length
               ? requestedMaterials
-              : resolvedRenderingStyle === "hyper-real"
-                ? ["skin"]
-                : [];
-          const requestedRatio = sanitizePromptText(String(body?.ratio || "1:1")) || "1:1";
+              : [];
+          const requestedRatio = sanitizePromptText(String(body?.ratio || ""));
           const requestedResolution = sanitizePromptText(String(body?.resolution || ""));
           const requestedWidth = Number(body?.width);
           const requestedHeight = Number(body?.height);
@@ -3464,12 +3467,7 @@ export default {
 
           let rawImage: any;
           try {
-            rawImage = await env.AI.run(modelConfig.model, {
-              prompt: primaryPrompt,
-              width: modelConfig.width,
-              height: modelConfig.height,
-              seed: refined.finalOptions.seed
-            });
+            rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(primaryPrompt, modelConfig, refined.finalOptions.seed));
           } catch (primaryErr: any) {
             const normalizedPrimaryError = normalizeImageGenerationError(primaryErr);
             const shouldRetryCompactPrompt =
@@ -3483,12 +3481,7 @@ export default {
 
             fallbackUsed = true;
             fallbackReason = normalizedPrimaryError.code;
-            rawImage = await env.AI.run(modelConfig.model, {
-              prompt: compactPrompt,
-              width: modelConfig.width,
-              height: modelConfig.height,
-              seed: refined.finalOptions.seed
-            });
+            rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(compactPrompt, modelConfig, refined.finalOptions.seed));
           }
 
           const normalized = await normalizeImageOutput(rawImage);
@@ -3509,11 +3502,11 @@ export default {
               rendering_style: resolvedRenderingStyle,
               rendering_style_source: promptInferredStyle ? "prompt" : (requestedStylePack ? "session-or-request" : "auto"),
               camera: effectiveCamera,
-              camera_source: promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "default"),
+              camera_source: promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "none"),
               lighting: effectiveLighting,
-              lighting_source: promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "default"),
+              lighting_source: promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "none"),
               materials: effectiveMaterials,
-              materials_source: promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : (resolvedRenderingStyle === "hyper-real" ? "hyper-real-default" : "default")),
+              materials_source: promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : "none"),
               seed: refined.finalOptions.seed,
               feedbackApplied: Boolean(feedback),
               prompt: {

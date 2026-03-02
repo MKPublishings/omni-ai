@@ -241,11 +241,11 @@
   }
 
   function getActiveCameraProfile(session = getActiveSession()) {
-    return normalizeCameraProfile(session?.imageCamera) || "portrait-85mm";
+    return normalizeCameraProfile(session?.imageCamera);
   }
 
   function getActiveLightingProfile(session = getActiveSession()) {
-    return normalizeLightingProfile(session?.imageLighting) || "studio-soft";
+    return normalizeLightingProfile(session?.imageLighting);
   }
 
   function normalizeMaterialName(material) {
@@ -267,7 +267,7 @@
   function getActiveMaterials(session = getActiveSession()) {
     const materials = normalizeMaterialList(session?.imageMaterials);
     if (materials.length) return materials;
-    return ["skin"];
+    return [];
   }
 
   function getAgeProfile() {
@@ -629,7 +629,7 @@
 
     const requested = parts.slice(1).join(" ").trim().toLowerCase();
     if (requested === "reset" || requested === "default" || requested === "auto") {
-      return { action: "set", camera: "portrait-85mm" };
+      return { action: "set", camera: "" };
     }
 
     return { action: "set", camera: normalizeCameraProfile(requested) };
@@ -646,7 +646,7 @@
 
     const requested = parts.slice(1).join(" ").trim().toLowerCase();
     if (requested === "reset" || requested === "default" || requested === "auto") {
-      return { action: "set", lighting: "studio-soft" };
+      return { action: "set", lighting: "" };
     }
 
     return { action: "set", lighting: normalizeLightingProfile(requested) };
@@ -666,7 +666,7 @@
     const requested = parts.slice(1).join(" ").trim();
     const requestedLower = requested.toLowerCase();
     if (requestedLower === "reset" || requestedLower === "default" || requestedLower === "auto") {
-      return { action: "set", materials: ["skin"] };
+      return { action: "set", materials: [] };
     }
 
     return { action: "set", materials: normalizeMaterialList(requested) };
@@ -723,7 +723,7 @@
     const lighting = getActiveLightingProfile(session);
     const materials = getActiveMaterials(session);
     const styleText = active ? `Current style: **${active}**.` : "Current style: **auto** (no forced style).";
-    return `${styleText}\nCamera: **${camera}**\nLighting: **${lighting}**\nMaterials: **${materials.join(", ")}**\n\nUse \`/style <name>\`, \`/camera <profile>\`, \`/light <profile>\`, \`/materials a,b,c\`.\nStyles: ${formatAvailableStyles()}\nCameras: ${formatAvailableCameras()}\nLighting: ${formatAvailableLighting()}\nMaterials: ${formatAvailableMaterials()}`;
+    return `${styleText}\nCamera: **${camera || "auto"}**\nLighting: **${lighting || "auto"}**\nMaterials: **${materials.length ? materials.join(", ") : "auto"}**\n\nUse \`/style <name>\`, \`/camera <profile>\`, \`/light <profile>\`, \`/materials a,b,c\`.\nStyles: ${formatAvailableStyles()}\nCameras: ${formatAvailableCameras()}\nLighting: ${formatAvailableLighting()}\nMaterials: ${formatAvailableMaterials()}`;
   }
 
   async function requestInternetSearch(query, mode) {
@@ -1774,11 +1774,18 @@
       prompt,
       feedback: "",
       stylePack: selectedStyle || "",
-      camera: selectedCamera,
-      lighting: selectedLighting,
-      materials: selectedStyle === "hyper-real" ? selectedMaterials : [],
       safetyProfile: safetyProfile || buildSafetyProfile()
     };
+
+    if (selectedCamera) {
+      payload.camera = selectedCamera;
+    }
+    if (selectedLighting) {
+      payload.lighting = selectedLighting;
+    }
+    if (selectedMaterials.length) {
+      payload.materials = selectedMaterials;
+    }
 
     const res = await fetch(getImageEndpoint(), {
       method: "POST",
