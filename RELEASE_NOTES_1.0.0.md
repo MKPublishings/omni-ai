@@ -1,4 +1,4 @@
-# Omni Ai v1.0.0 — Release Notes
+## Omni Ai v1.0.0 — Release Notes
 
 **Release Date:** 2026-02-26  
 **Codename:** Omni Ai Public Intelligence Release
