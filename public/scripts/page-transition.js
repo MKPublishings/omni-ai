@@ -23,7 +23,45 @@
     page.classList.toggle("page-reduce-glass", getSettingBool(SETTINGS_KEYS.REDUCE_GLASS_BLUR, false));
   }
 
+  function normalizePath(pathname) {
+    if (!pathname) return "/index.html";
+    const cleaned = pathname.replace(/\/+$/, "") || "/";
+    if (cleaned === "/") return "/index.html";
+    return cleaned;
+  }
+
+  function syncActiveNavLink() {
+    const navLinks = Array.from(document.querySelectorAll(".nav .nav-link[href]"));
+    if (navLinks.length === 0) return;
+
+    const currentPath = normalizePath(window.location.pathname);
+    let matched = false;
+
+    navLinks.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href) {
+        link.classList.remove("active");
+        return;
+      }
+
+      const linkPath = normalizePath(new URL(href, window.location.origin).pathname);
+      const isActive = linkPath === currentPath;
+
+      link.classList.toggle("active", isActive);
+      if (isActive) matched = true;
+    });
+
+    if (!matched) {
+      navLinks.forEach((link) => {
+        if (link.getAttribute("href") === "/index.html") {
+          link.classList.add("active");
+        }
+      });
+    }
+  }
+
   applyInterfaceFlags();
+  syncActiveNavLink();
 
   window.addEventListener("storage", (event) => {
     if (
