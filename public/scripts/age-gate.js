@@ -59,9 +59,9 @@
 
   function applyProfileToDom(profile) {
     const tier = String(profile?.ageTier || "minor");
-    const nsfwUnlocked = profile?.nsfwAccess === true;
+    const adultUnlocked = profile?.adultAccess === true;
     document.documentElement.dataset.ageTier = tier;
-    document.documentElement.dataset.nsfwAccess = nsfwUnlocked ? "enabled" : "disabled";
+    document.documentElement.dataset.adultAccess = adultUnlocked ? "enabled" : "disabled";
 
     window.dispatchEvent(
       new CustomEvent("omni-age-profile-changed", {
@@ -89,7 +89,7 @@
       dob: { year, month, day },
       age,
       ageTier: isAdult ? "adult" : "minor",
-      nsfwAccess: Boolean(profile.humanVerified) && isAdult,
+      adultAccess: Boolean(profile.humanVerified) && isAdult,
       illegalContentBlocked: true
     };
   }
@@ -370,14 +370,14 @@
           dob: { year, month, day },
           age: Number(data.age || age),
           ageTier: data.isAdult ? "adult" : "minor",
-          nsfwAccess: Boolean(data.nsfwAccess),
+          adultAccess: Boolean(data.adultAccess),
           illegalContentBlocked: true
         };
 
         writeProfile(profile);
         applyProfileToDom(profile);
 
-        statusEl.textContent = profile.nsfwAccess
+        statusEl.textContent = profile.adultAccess
           ? "Verification complete. 18+ access profile enabled."
           : "Verification complete. Safety guardrails remain enabled.";
 

@@ -17,7 +17,6 @@ const ILLEGAL_TERMS = [
 ];
 
 const ADULT_TERMS = [
-    "nsfw",
     "nude",
     "nudity",
     "explicit nudity",

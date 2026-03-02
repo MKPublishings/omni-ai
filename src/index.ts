@@ -151,7 +151,7 @@ type OmniRequestBody = {
   safetyProfile?: {
     ageTier?: string;
     humanVerified?: boolean;
-    nsfwAccess?: boolean;
+    adultAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
     legalAttestation?: {
@@ -196,7 +196,7 @@ type ImageRequestBody = {
   safetyProfile?: {
     ageTier?: string;
     humanVerified?: boolean;
-    nsfwAccess?: boolean;
+    adultAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
     legalAttestation?: {
@@ -213,7 +213,7 @@ type ImageRequestBody = {
 type SafetyProfile = {
   ageTier: "adult" | "minor";
   humanVerified: boolean;
-  nsfwAccess: boolean;
+  adultAccess: boolean;
   explicitAllowed: boolean;
   illegalBlocked: boolean;
   legalAttestation: {
@@ -794,7 +794,7 @@ function parseBlackwellProfilesFromConfig(): AgentProfile[] {
 function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
   const tier = String(raw?.ageTier || "minor").trim().toLowerCase() === "adult" ? "adult" : "minor";
   const humanVerified = Boolean(raw?.humanVerified);
-  const nsfwAccess = Boolean(raw?.nsfwAccess) && tier === "adult";
+  const adultAccess = Boolean(raw?.adultAccess) && tier === "adult";
   const legalAttestation = raw?.legalAttestation;
   const rawJurisdiction = String(legalAttestation?.jurisdiction || "").trim().toUpperCase();
   const jurisdiction = /^[A-Z]{2}$/.test(rawJurisdiction) ? rawJurisdiction : "";
@@ -802,8 +802,8 @@ function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageReq
   return {
     ageTier: tier,
     humanVerified,
-    nsfwAccess,
-    explicitAllowed: Boolean(raw?.explicitAllowed) && nsfwAccess,
+    adultAccess,
+    explicitAllowed: Boolean(raw?.explicitAllowed) && adultAccess,
     illegalBlocked: raw?.illegalBlocked !== false,
     legalAttestation: {
       accepted: Boolean(legalAttestation?.accepted),
@@ -2928,7 +2928,7 @@ export default {
             age,
             isAdult,
             ageTier: isAdult ? "adult" : "minor",
-            nsfwAccess: isAdult,
+            adultAccess: isAdult,
             illegalContentBlocked: true
           }),
           {

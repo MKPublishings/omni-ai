@@ -439,12 +439,12 @@
     const profile = getAgeProfile() || {};
     const legalProfile = getLegalAttestationProfile();
     const ageTier = String(profile.ageTier || "minor").toLowerCase() === "adult" ? "adult" : "minor";
-    const nsfwAccess = Boolean(profile.nsfwAccess) && ageTier === "adult";
+    const adultAccess = Boolean(profile.adultAccess) && ageTier === "adult";
     return {
       ageTier,
       humanVerified: Boolean(profile.humanVerified),
-      nsfwAccess,
-      explicitAllowed: nsfwAccess,
+      adultAccess,
+      explicitAllowed: adultAccess,
       illegalBlocked: true,
       legalAttestation: {
         accepted: hasVerifiedLegalAttestation(),
@@ -471,7 +471,7 @@
       };
     }
 
-    const explicitSexualPattern = /\b(nsfw|porn|pornographic|erotic|nude|nudity|fetish|sex\s*scene|sexual\s*content|explicit\s*nudity)\b/i;
+    const explicitSexualPattern = /\b(porn|pornographic|erotic|nude|nudity|fetish|sex\s*scene|sexual\s*content|explicit\s*nudity)\b/i;
     if (explicitSexualPattern.test(value) && !Boolean(safetyProfile?.explicitAllowed)) {
       return {
         blocked: true,

@@ -34,7 +34,7 @@ async function run() {
     safetyProfile: {
       ageTier: "adult",
       humanVerified: true,
-      nsfwAccess: false,
+      adultAccess: false,
       explicitAllowed: false,
       illegalBlocked: true
     }

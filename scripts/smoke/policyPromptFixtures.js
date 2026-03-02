@@ -32,7 +32,7 @@ const ILLEGAL_PROMPTS = [
   }
 ];
 
-const EXPLICIT_PROMPT = "nsfw erotic nude portrait";
+const EXPLICIT_PROMPT = "erotic nude ";
 
 module.exports = {
   SAFE_PROMPTS,
