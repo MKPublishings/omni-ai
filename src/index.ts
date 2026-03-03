@@ -1844,7 +1844,7 @@ function refineOmniImagePrompt(promptData: OmniImagePromptData, options: OmniIma
 
   let finalPrompt = tags;
   if (data.negativeTags.length) {
-    finalPrompt += `, negative: ${data.negativeTags.join(", ")}`;
+    finalPrompt += `, avoid: ${data.negativeTags.join(", ")}`;
   }
 
   const envKeywords = extractEnvironmentKeywords(data.userPrompt);

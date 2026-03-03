@@ -77,7 +77,7 @@ function buildQualityPrompt(basePrompt: string): string {
 }
 
 function mergeNegativePrompt(baseNegativePrompt?: string): string {
-  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, flat shading, plastic look, muddy details, haze, fog veil";
+  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, flat shading, plastic look, muddy details, haze, fog veil, inverted colors, color inversion, photographic negative, negative image, inverted luminance, inverted tonemapping";
   if (!baseNegativePrompt) return antiArtifacts;
   return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
 }

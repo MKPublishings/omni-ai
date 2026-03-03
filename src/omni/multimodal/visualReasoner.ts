@@ -79,7 +79,7 @@ export function runVisualReasoning(inputPrompt: string): VisualReasoningOutput {
     `palette: ${paletteIntent}`,
     `mood: ${moodIntent}`,
     `material: ${materialIntent}`,
-    `negative: ${negativeIntent}`
+    `artifact_avoidance: ${negativeIntent}`
   ].join(", ");
 
   return {

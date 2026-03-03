@@ -72,6 +72,12 @@ function expectAttestedImageSuccess(result, label) {
   expect(modelHeader.length > 0, `${label}: expected X-Omni-Image-Model header`);
 }
 
+function expectPromptDoesNotUseNegativeLabel(result, label) {
+  const finalPrompt = String(result?.data?.metadata?.prompt?.finalPrompt || "");
+  expect(finalPrompt.length > 0, `${label}: expected metadata.prompt.finalPrompt`);
+  expect(!/\bnegative\s*:/i.test(finalPrompt), `${label}: finalPrompt must not include 'negative:' label`);
+}
+
 async function run() {
   const commonPayload = {
     userId: "smoke-orchestrator-attestation",
@@ -103,6 +109,7 @@ async function run() {
   });
 
   expectAttestedImageSuccess(attested, "attested baseline prompt");
+  expectPromptDoesNotUseNegativeLabel(attested, "attested baseline prompt");
   console.log("✓ orchestrator /api/image returns attested image payload with metadata");
 
   const dogRegression = await postJson("/api/image", {
@@ -113,6 +120,7 @@ async function run() {
   });
 
   expectAttestedImageSuccess(dogRegression, "dog regression prompt");
+  expectPromptDoesNotUseNegativeLabel(dogRegression, "dog regression prompt");
   console.log("✓ dog regression prompt no longer fails on false NSFW block");
 
   const warriorRegression = await postJson("/api/image", {
@@ -123,7 +131,9 @@ async function run() {
   });
 
   expectAttestedImageSuccess(warriorRegression, "warrior regression prompt");
+  expectPromptDoesNotUseNegativeLabel(warriorRegression, "warrior regression prompt");
   console.log("✓ warrior regression prompt no longer fails on false NSFW block");
+  console.log("✓ assembled prompt no longer emits 'negative:' label");
   console.log("Orchestrator image attestation smoke test passed.");
 }
 
