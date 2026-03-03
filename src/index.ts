@@ -1577,6 +1577,9 @@ const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
 const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
 const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
 const OMNI_IMAGE_DIMENSION_LOCK = "strict";
+const OMNI_IMAGE_MODEL_MAX_EDGE = 2048;
+const OMNI_IMAGE_MODEL_MIN_EDGE = 256;
+const OMNI_IMAGE_MODEL_DIMENSION_STEP = 64;
 const OMNI_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 
 const OMNI_QUALITY_DEFAULT = [
@@ -1944,6 +1947,32 @@ function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: s
   };
 }
 
+function snapModelDimension(value: number): number {
+  const clamped = clamp(Math.floor(value), OMNI_IMAGE_MODEL_MIN_EDGE, OMNI_IMAGE_MODEL_MAX_EDGE);
+  const snapped = Math.floor(clamped / OMNI_IMAGE_MODEL_DIMENSION_STEP) * OMNI_IMAGE_MODEL_DIMENSION_STEP;
+  return Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, snapped || OMNI_IMAGE_MODEL_MIN_EDGE);
+}
+
+function normalizeModelRenderDimensions(width: number, height: number): { width: number; height: number } {
+  let safeWidth = clamp(Math.floor(width), OMNI_IMAGE_MODEL_MIN_EDGE, 8192);
+  let safeHeight = clamp(Math.floor(height), OMNI_IMAGE_MODEL_MIN_EDGE, 8192);
+
+  const maxEdge = Math.max(safeWidth, safeHeight);
+  if (maxEdge > OMNI_IMAGE_MODEL_MAX_EDGE) {
+    const scale = OMNI_IMAGE_MODEL_MAX_EDGE / maxEdge;
+    safeWidth = Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, Math.floor(safeWidth * scale));
+    safeHeight = Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, Math.floor(safeHeight * scale));
+  }
+
+  safeWidth = snapModelDimension(safeWidth);
+  safeHeight = snapModelDimension(safeHeight);
+
+  return {
+    width: safeWidth,
+    height: safeHeight
+  };
+}
+
 function selectImageModelConfig(
   styleId: string,
   quality: string | undefined,
@@ -1983,6 +2012,13 @@ function selectImageModelConfig(
     width = OMNI_IMAGE_DEFAULT_WIDTH;
     height = OMNI_IMAGE_DEFAULT_HEIGHT;
   }
+
+  const normalizedRenderDimensions = normalizeModelRenderDimensions(
+    Number(width || OMNI_IMAGE_DEFAULT_WIDTH),
+    Number(height || OMNI_IMAGE_DEFAULT_HEIGHT)
+  );
+  width = normalizedRenderDimensions.width;
+  height = normalizedRenderDimensions.height;
 
   const ratioLabel = String(requestedRatio || "").trim();
   const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
