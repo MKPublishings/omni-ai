@@ -503,7 +503,7 @@
       };
     }
 
-    const promptLimit = 1600;
+    const promptLimit = 10000;
     if (prompt.length > promptLimit) {
       return {
         ok: false,

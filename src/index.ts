@@ -1577,6 +1577,7 @@ const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
 const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
 const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
 const OMNI_IMAGE_DIMENSION_LOCK = "strict";
+const OMNI_IMAGE_PROMPT_MAX_CHARS = 10000;
 const OMNI_IMAGE_MODEL_MAX_EDGE = 2048;
 const OMNI_IMAGE_MODEL_MIN_EDGE = 256;
 const OMNI_IMAGE_MODEL_DIMENSION_STEP = 64;
@@ -2148,6 +2149,9 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
   const promptText = sanitizePromptText(String(userPrompt || ""));
   if (!promptText) {
     throw new Error("Prompt is required");
+  }
+  if (promptText.length > OMNI_IMAGE_PROMPT_MAX_CHARS) {
+    throw new Error(`Prompt is too long. Keep it under ${OMNI_IMAGE_PROMPT_MAX_CHARS} characters.`);
   }
 
   const feedback = sanitizePromptText(String(options?.feedback || ""));
@@ -3238,6 +3242,22 @@ export default {
                 "Content-Type": "application/json"
               }
             });
+          }
+
+          if (promptText.length > OMNI_IMAGE_PROMPT_MAX_CHARS) {
+            return new Response(
+              JSON.stringify({
+                error: `Prompt is too long for image generation. Please keep it under ${OMNI_IMAGE_PROMPT_MAX_CHARS} characters.`,
+                code: "prompt-too-long"
+              }),
+              {
+                status: 400,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
           }
 
           const safetyDecision = evaluateSexualSafetyPrompt(promptText, safetyProfile);

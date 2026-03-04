@@ -1,4 +1,5 @@
 const { normalizePromptLanguage } = require("../core/promptNormalizer");
+const MAX_PROMPT_CHARS = 10000;
 
 function ensureType(value, fallback = "image") {
     const normalized = String(value || fallback).toLowerCase();
@@ -30,6 +31,12 @@ function validatePromptForGeneration(prompt, options = {}) {
     const promptNormalization = normalizePromptLanguage(prompt);
     let normalizedPrompt = applyGenerationToken(promptNormalization.cleanedPrompt, resolvedType);
     normalizedPrompt = normalizeStillPromptLanguage(normalizedPrompt);
+
+    if (normalizedPrompt.length > MAX_PROMPT_CHARS) {
+        const error = new Error(`Prompt is too long for image generation. Please keep it under ${MAX_PROMPT_CHARS} characters.`);
+        error.code = "prompt-too-long";
+        throw error;
+    }
 
     return {
         requestedType,

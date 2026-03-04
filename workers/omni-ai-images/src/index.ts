@@ -23,6 +23,7 @@ const MODEL_RENDER_RESOLUTION = `${MODEL_RENDER_WIDTH}x${MODEL_RENDER_HEIGHT}`;
 const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
 const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
 const MAX_GENERATION_ATTEMPTS = 10;
+const MAX_PROMPT_CHARS = 10000;
 
 type NormalizedDimensions = { width: number; height: number; source: string };
 
@@ -406,6 +407,23 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   if (!body.prompt || typeof body.prompt !== "string") {
     return Response.json({ success: false, error: "Field 'prompt' is required" }, { status: 400 });
   }
+
+  const normalizedPrompt = String(body.prompt || "").trim();
+  if (normalizedPrompt.length > MAX_PROMPT_CHARS) {
+    return Response.json(
+      {
+        success: false,
+        error: `Prompt is too long for image generation. Please keep it under ${MAX_PROMPT_CHARS} characters.`,
+        code: "prompt-too-long"
+      },
+      { status: 400 }
+    );
+  }
+
+  body = {
+    ...body,
+    prompt: normalizedPrompt
+  };
 
   try {
     const generated = await generateWithinSizeRange(env, body);
