@@ -36,6 +36,7 @@
     "mind:tokens:next": "node ./scripts/tools/printNextTaskToken.js",
     "mind:tokens:next:claim": "node ./scripts/tools/printNextTaskToken.js --claim",
     "mind:tokens:maintain": "node ./scripts/tools/runTaskTokenMaintenance.js",
+    "sim:quantum:export": ".\\.venv\\Scripts\\python.exe ./omni_media/quantum_cognitive_sim.py --csv-out ./data/evaluations/quantum_cognitive_sim_latest.csv --json-out ./data/evaluations/quantum_cognitive_sim_latest.json",
     "codex:reindex": "node ./scripts/codex/reindex.js",
     "codex:register": "node ./scripts/codex/registerArtifact.js",
     "codex:watch": "node ./scripts/codex/watch.js"
