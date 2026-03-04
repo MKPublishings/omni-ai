@@ -80,7 +80,14 @@ Each modality is routed through the same physics‑aware pipeline, ensuring cons
 
 ### Quantum‑Driven Generation
 Every frame is influenced by a dynamic energy field derived from QCFT, giving Omni a sense of temporal coherence and internal “momentum.”
-
+### Quantum-Cognitive Stress Simulation (NEW)
+Multi-microcolumn avalanche modeling for neural E-I balance under stress:
+- **QuTiP-based open quantum systems** with ZPF-glutamate coupling
+- **Stress modulation** via decoherence rates (gamma parameter)
+- **Scale-free Laws graph** (103 nodes, Barabási-Albert) for criticality
+- **Automatic solver fallback** (mesolve → mcsolve) for large Hilbert spaces
+- **Export pipeline** with JSON traces and comparison visualization
+- See: `omni_media/quantum_cognitive_sim.py`, codex entry `systems/omni/quantum-cognitive-sim.md`
 ### Fibonacci‑Structured Motion
 The Q.F.S.T.D.S scheduler determines:
 
@@ -161,6 +168,42 @@ result = client.generate_image(
 
 print(result.image_url)
 ```
+
+---
+
+## 🧪 Usage Example (Quantum-Cognitive Simulation)
+
+```bash
+# Run avalanche stress simulation
+python omni_media/quantum_cognitive_sim.py \
+  --mode avalanche \
+  --levels 20 \
+  --num-cols 3 \
+  --gamma 0.1 \
+  --ntraj 24 \
+  --points 50 \
+  --t-end 1e-12 \
+  --json-out omni_image_exports/stress_run.json
+
+# Visualize single-run traces
+python omni_media/plot_avalanche.py \
+  --input-json omni_image_exports/stress_run.json
+
+# Compare gamma sweep (0.1, 0.5, 1.0)
+python omni_media/plot_avalanche_compare.py \
+  --input-json omni_image_exports/run_gamma_01.json \
+               omni_image_exports/run_gamma_05.json \
+               omni_image_exports/run_gamma_10.json \
+  --labels gamma_0.1 gamma_0.5 gamma_1.0 \
+  --output-png omni_image_exports/gamma_sweep.png
+```
+
+**Key Parameters:**
+- `--gamma` — Stress/decoherence rate (0.0-10.0)
+- `--num-cols` — Coupled microcolumns (1-10)
+- `--ntraj` — Monte Carlo trajectories for large systems (12-500)
+
+**Output:** JSON traces with ZPF occupancy, glutamate excitation, coherence oscillations + PNG visualizations
 
 ---
 

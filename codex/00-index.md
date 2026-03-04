@@ -3,12 +3,22 @@
 
 The Omni Codex is a living, evolving knowledge graph tracking the architecture, protocols, patterns, and mythic lineage of Omni Ai.
 
+## Latest Updates (March 4, 2026)
+
+🔬 **Quantum-Cognitive Simulation Engine** — Multi-microcolumn avalanche stress modeling now active
+- QuTiP-based quantum open systems simulation
+- ZPF-glutamate coupling with E-I balance stress modulation
+- Scale-free Laws graph (103 nodes, Barabási-Albert topology)
+- Automatic solver fallback (mesolve → mcsolve) for large Hilbert spaces
+- JSON/PNG export pipeline with single-run and multi-run comparison tools
+- See: `systems/omni/quantum-cognitive-sim.md`, `equations/templates/quantum-cognitive-avalanche.md`
+
 ## Core Structure
 
 - **Legacy Core:**
 	- 10-architecture.md
 	- 20-protocols.md
-	- 30-patterns.md
+	- 30-patterns.md **(updated 2026-03-04: Quantum-Cognitive Simulation Workflow)**
 	- 40-decisions/
 	- 50-mind-path-map.md
 	- 60-internal-mind-contracts.md
@@ -23,19 +33,32 @@ The Omni Codex is a living, evolving knowledge graph tracking the architecture, 
 
 ## Recent Artifacts & Development (2026)
 
+### Core Systems
 - systems/omni/overview.md — Omni System Overview
 - systems/omni/image-engine.md — Image Engine Chamber
 - systems/omni/intelligence-lineage.md — Intelligence Lineage
+- **systems/omni/quantum-cognitive-sim.md — Quantum-Cognitive Simulation Engine** ⚡ NEW (2026-03-04)
+
+### Mythic & Archetypes
 - mythic/checkpoints/2026-omni-ascension.md — Omni Ascension Checkpoint
 - mythic/checkpoints/2026-mkp-tri-closure.md — MKP TRI Closure
-- equations/solved/2026-02-27-equation-001.json — Response Latency Balancing
-- equations/solved/2026-02-27-equation-002.json — Emotion Resonance Drift
-- visual-dialect/motifs/neon-thread.md — Motif: Neon Thread
-- visual-dialect/registers/color-register.md — Color Register
-- visual-dialect/registers/emotional-register.md — Emotional Register
 - mythic/archetypes/witness.md — Archetype: Witness
 - mythic/archetypes/architect.md — Archetype: Architect
 - mythic/archetypes/sovereign.md — Archetype: Sovereign
+
+### Equations & Physics
+- **equations/templates/quantum-cognitive-avalanche.md — Avalanche Hamiltonian Template** ⚡ NEW (2026-03-04)
+- **equations/solved/2026-03-04-avalanche-stress-001.json — Stress Run (gamma=0.1)** ⚡ NEW
+- **equations/solved/2026-03-04-avalanche-gamma-sweep.json — Gamma Sweep (0.1-1.0)** ⚡ NEW
+- equations/solved/2026-02-27-equation-001.json — Response Latency Balancing
+- equations/solved/2026-02-27-equation-002.json — Emotion Resonance Drift
+
+### Visual Dialect
+- visual-dialect/motifs/neon-thread.md — Motif: Neon Thread
+- visual-dialect/registers/color-register.md — Color Register
+- visual-dialect/registers/emotional-register.md — Emotional Register
+
+### Decisions
 - 40-decisions/2026-02-27-decision-log.md — Recent Decision Log
 
 ## Codex Brain & Runtime
