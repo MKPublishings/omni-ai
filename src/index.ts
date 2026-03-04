@@ -804,7 +804,9 @@ function normalizeImageGenerationError(err: any): {
     value.includes("too long") ||
     value.includes("context length") ||
     value.includes("max tokens") ||
-    value.includes("input is too large")
+    value.includes("input is too large") ||
+    value.includes("length of '/prompt'") ||
+    (/must be\s*<=\s*\d+/.test(value) && value.includes("prompt"))
   ) {
     return {
       status: 400,
@@ -1578,6 +1580,7 @@ const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
 const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
 const OMNI_IMAGE_DIMENSION_LOCK = "strict";
 const OMNI_IMAGE_PROMPT_MAX_CHARS = 10000;
+const OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS = 2048;
 const OMNI_IMAGE_MODEL_MAX_EDGE = 2048;
 const OMNI_IMAGE_MODEL_MIN_EDGE = 256;
 const OMNI_IMAGE_MODEL_DIMENSION_STEP = 64;
@@ -2037,8 +2040,12 @@ function selectImageModelConfig(
 }
 
 function buildImageRunPayload(prompt: string, modelConfig: ImageModelConfig, seed?: number): Record<string, unknown> {
+  const normalizedPrompt = sanitizePromptText(String(prompt || "")).trim();
+  const providerPrompt = normalizedPrompt.length > OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS
+    ? normalizedPrompt.slice(0, OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS)
+    : normalizedPrompt;
   const payload: Record<string, unknown> = {
-    prompt,
+    prompt: providerPrompt,
     seed
   };
 

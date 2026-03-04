@@ -24,6 +24,7 @@ const MIN_EXPORT_BYTES = 1 * 1024 * 1024;
 const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
 const MAX_GENERATION_ATTEMPTS = 10;
 const MAX_PROMPT_CHARS = 10000;
+const MODEL_PROMPT_MAX_CHARS = 2048;
 
 type NormalizedDimensions = { width: number; height: number; source: string };
 
@@ -153,7 +154,14 @@ function sizeStatus(bytes: number): "under" | "within" | "over" {
 }
 
 async function runImageModel(env: Env, payload: GenerationPayload): Promise<Uint8Array> {
-  const result = await env.AI.run(MODEL, payload);
+  const normalizedPrompt = String(payload.prompt || "").trim();
+  const safePrompt = normalizedPrompt.length > MODEL_PROMPT_MAX_CHARS
+    ? normalizedPrompt.slice(0, MODEL_PROMPT_MAX_CHARS)
+    : normalizedPrompt;
+  const result = await env.AI.run(MODEL, {
+    ...payload,
+    prompt: safePrompt
+  });
   const imageBytes = await toImageBytes(result);
   if (!imageBytes) {
     throw new Error(`Image model returned unsupported output format (${describeOutputShape(result)})`);

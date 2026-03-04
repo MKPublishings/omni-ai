@@ -2,6 +2,9 @@ const ORCHESTRATOR_URL =
   String(process.env.OMNI_ORCHESTRATOR_URL || "https://omni-ai.omni-ai.workers.dev").replace(/\/+$/, "");
 
 const REQUEST_TIMEOUT_MS = Number(process.env.OMNI_SMOKE_TIMEOUT_MS || 90_000);
+const RUN_LONG_PROMPT_CLAMP_CHECK = ["1", "true", "yes"].includes(
+  String(process.env.OMNI_SMOKE_LONG_PROMPT || "").trim().toLowerCase()
+);
 
 function expect(condition, message) {
   if (!condition) throw new Error(message);
@@ -111,6 +114,22 @@ async function run() {
   expectAttestedImageSuccess(attested, "attested baseline prompt");
   expectPromptDoesNotUseNegativeLabel(attested, "attested baseline prompt");
   console.log("✓ orchestrator /api/image returns attested image payload with metadata");
+
+  if (RUN_LONG_PROMPT_CLAMP_CHECK) {
+    const longPrompt = `Photorealistic portrait of a smiling astronaut in a white suit standing in a bright botanical greenhouse, vertical 9:16, 4k, high detail. ${"highly detailed textures, physically plausible lighting, realistic skin detail, cinematic composition, ultra crisp focus, depth-rich environment, high dynamic range, careful material response, atmospheric perspective, premium color grading, ".repeat(20)}`;
+    const longPromptResult = await postJson("/api/image", {
+      ...commonPayload,
+      userId: "smoke-orchestrator-attestation-long-prompt",
+      prompt: longPrompt,
+      safetyProfile: buildAttestedSafetyProfile()
+    });
+
+    expectAttestedImageSuccess(longPromptResult, "long prompt clamp regression");
+    expectPromptDoesNotUseNegativeLabel(longPromptResult, "long prompt clamp regression");
+    console.log("✓ orchestrator /api/image accepts long prompt and succeeds via provider-safe prompt handling");
+  } else {
+    console.log("• long prompt clamp regression check skipped (set OMNI_SMOKE_LONG_PROMPT=1 to enable)");
+  }
 
   const dogRegression = await postJson("/api/image", {
     ...commonPayload,

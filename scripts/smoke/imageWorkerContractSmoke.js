@@ -91,6 +91,20 @@ function makeAlwaysLargeEnv() {
   };
 }
 
+function makeProviderLimitedEnv() {
+  return {
+    AI: {
+      async run(_model, payload) {
+        const promptLength = String(payload?.prompt || "").length;
+        if (promptLength > 2048) {
+          throw new Error(`Length of '/prompt' must be <= 2048. got ${promptLength}`);
+        }
+        return makePseudoPng(1_600_000);
+      }
+    }
+  };
+}
+
 async function run() {
   const worker = loadImageWorkerExports();
   const {
@@ -196,6 +210,18 @@ async function run() {
   );
   expect(oversizedBody?.details?.status === "over", "expected details.status to be 'over'");
   console.log("✓ handleGenerate returns 422 with details when output remains oversized");
+
+  const longPromptRequest = new Request("https://example.com/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: `create a cinematic portrait with intricate details ${"x".repeat(5000)}`
+    })
+  });
+
+  const longPromptResponse = await handleGenerate(longPromptRequest, makeProviderLimitedEnv());
+  expect(longPromptResponse.status === 200, `expected 200 for long prompt clamp path, got ${longPromptResponse.status}`);
+  console.log("✓ handleGenerate clamps long prompts to provider-safe payload length");
 
   console.log("Image worker contract smoke test passed.");
 }
