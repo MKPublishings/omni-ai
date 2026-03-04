@@ -523,13 +523,7 @@
       return { kind: "command", prompt: raw };
     }
 
-    const asksImage = /\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i.test(value);
-
     if (isImageGenerationRequest(raw)) {
-      return { kind: "image", prompt: extractImagePrompt(raw) };
-    }
-
-    if (asksImage) {
       return { kind: "image", prompt: extractImagePrompt(raw) };
     }
 
@@ -1544,9 +1538,8 @@
     if (!value) return false;
     if (value.startsWith("/image ") || value === "/image") return true;
 
-    const directIntent = /\b(generate|create|make|render|draw|imagine|design)\b[\s\S]{0,80}\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i;
-    const quickIntent = /\b(image of|picture of|illustration of|art of)\b/i;
-    return directIntent.test(value) || quickIntent.test(value);
+    const explicitImageIntent = /\b(create|generate|make|imagine)\s+(?:an?\s+)?image\b/i;
+    return explicitImageIntent.test(value);
   }
 
   function extractImagePrompt(text) {
@@ -1558,7 +1551,7 @@
     }
 
     return raw
-      .replace(/^\s*(please\s+)?(generate|create|make|render|draw|imagine|design)\s+(an?\s+)?(image|picture|illustration|art|photo|logo|poster|wallpaper)\s*(of|for)?\s*/i, "")
+      .replace(/^\s*(please\s+)?(create|generate|make|imagine)\s+(an?\s+)?image\s*(of|for)?\s*/i, "")
       .trim() || raw;
   }
 

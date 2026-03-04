@@ -164,6 +164,22 @@ print(result.image_url)
 
 ---
 
+## 💬 Chat Image Intent Routing
+
+In Omni chat mode, image generation starts only on explicit image intent. Generic conversational use of words like "create" remains normal chat.
+
+Supported explicit image triggers:
+
+- `/image ...`
+- `create an image ...`
+- `generate an image ...`
+- `make an image ...`
+- `imagine an image ...`
+
+If these phrases are not present, Omni treats the message as conversation and does not start image generation.
+
+---
+
 ## 🧬 Scientific Foundations
 
 Omni Ai is grounded in three research documents:
