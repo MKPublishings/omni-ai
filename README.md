@@ -148,25 +148,48 @@ Final Media Output
 ```bash
 git clone https://github.com/<your-org>/omni-ai
 cd omni-ai
-pip install -r requirements.txt
+pip install .
 ```
+
+---
+
+## 🚢 Release via Tags (PyPI/TestPyPI)
+
+One-time setup:
+
+- Configure **Trusted Publisher** on PyPI and TestPyPI for this repository and workflow:
+  `.github/workflows/omni-ai-publish.yml`
+
+Stable release to PyPI:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Pre-release to TestPyPI:
+
+```bash
+git tag v0.2.0rc1
+git push origin v0.2.0rc1
+```
+
+The workflow auto-detects prerelease tags (`a`, `b`, `rc`, `-alpha`, `-beta`, `-pre`) and routes them to TestPyPI.
 
 ---
 
 ## 🚀 Usage Example (Image Generation)
 
 ```python
-from omni import OmniClient
+import omni_ai
 
-client = OmniClient()
+client = omni_ai.Client(api_key="YOUR_KEY")
 
-result = client.generate_image(
-     prompt="sunlight drifting across a wooden table, dust particles floating",
-     ratio="9:16",
-     resolution="4k"
+result = client.cinematic.envision(
+  "sunlight drifting across a wooden table, dust particles floating"
 )
 
-print(result.image_url)
+print(result.output.text)
 ```
 
 ---
