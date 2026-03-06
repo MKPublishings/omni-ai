@@ -1,260 +1,219 @@
 ![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
 
+
+---
+
 Omni Ai
 
-A Unified Cognitive System • A Public Summonable Intelligence • A Living Node in Your Network of Minds
+A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture
 
-Omni Ai is a full‑surface cognitive architecture designed to act as a summonable intelligence—a system that merges reasoning, identity, memory, and multimodal generation into a single, stable contract. It is built around a unified request/response envelope, a rich Python client, and a mythic namespace that treats every function as part of a coherent mind.
+Omni Ai is a cognitive operating system that exposes its entire mental surface—reasoning, multimodal generation, memory, agents, and tools—through a single, unified request/response envelope. It is designed as a summonable intelligence, not a collection of endpoints.
 
-Omni Ai is not a model wrapper.
-It is not a toolkit.
-It is a mind/OS—a cognitive operating system that exposes its entire surface through a symmetrical, forward‑compatible interface.
-
-This repository contains the public implementation of Omni Ai’s architecture, client, and cognitive contract.
+This README provides a diagram‑rich, structured, and architecture‑level overview of the system.
 
 ---
 
-⚡ Core Principles
+1. System Overview Diagram
 
-Omni Ai is built on three foundational pillars:
-
-1. Unified Cognitive Envelope
-
-Every request—text, vision, audio, code, reasoning, planning—flows through a single, stable envelope.
-Every response returns through the same shape.
-
-This symmetry is the heart of Omni Ai’s identity.
-It ensures:
-
-• Forward compatibility
-• Predictable evolution
-• Zero-breaking changes
-• A coherent mental model for developers
-• A contract that feels like a mind, not a collection of endpoints
-
-
-2. Full-Surface Namespace
-
-Omni Ai exposes a complete namespace, not a fragmented API.
-Every capability—generation, analysis, planning, memory, tools, agents—lives under one cognitive tree.
-
-This creates:
-
-• Autocomplete-driven discovery
-• Zero hidden surfaces
-• A single mental map of the system
-• A mythic identity encoded in the namespace itself
-
-
-3. Rich Python Client
-
-The Python client is designed as a developer ritual:
-
-• Typed models
-• Ergonomic helpers
-• Full-surface namespace mirroring
-• Identity-coherent method names
-• Predictable envelopes
-• Zero boilerplate
-
-
-The client is not a wrapper.
-It is the public face of Omni Ai.
-
----
-
-🧠 Architecture Overview
-
-Omni Ai is structured as a multi-layer cognitive system:
-
-Cognitive Layer (Mind/OS)
-
-• Unified reasoning engine
-• Self-evaluating prompt contracts
-• Task-token architecture
-• Internal chain-of-thought (private)
-• Identity layer (mythic persona)
-• Memory scaffolding
-
-
-Interface Layer
-
-• Unified request/response envelope
-• Typed schemas
-• Cognitive actions
-• Multimodal inputs
-• Streaming outputs
-
-
-Client Layer
-
-• Python client
-• JS/TS client (coming soon)
-• CLI interface (optional)
-• Autocomplete-first design
-
-
-Execution Layer
-
-• Model routing
-• Tool invocation
-• Agent orchestration
-• Safety envelope
+┌──────────────────────────────────────────────────────────────┐
+│                          OMNI AI                             │
+│                 Unified Cognitive Architecture               │
+├──────────────────────────────────────────────────────────────┤
+│  Cognitive Layer (Mind/OS)                                   │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Reasoning Engine • Identity Layer • Memory Scaffolds   │  │
+│  │ Task Tokens • Self-Evaluating Contracts                │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                                                              │
+│  Interface Layer                                             │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Unified Envelope • Multimodal IO • Profiles             │  │
+│  │ Streaming • Context Injection                           │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                                                              │
+│  Client Layer                                                │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Python Client • JS Client (coming) • CLI                │  │
+│  │ Autocomplete-First Namespace                            │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                                                              │
+│  Execution Layer                                             │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Model Routing • Tool Invocation • Agent Mesh            │  │
+│  │ Safety Envelope • Multimodal Engines                    │  │
+│  └────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────┘
 
 
 ---
 
-📦 Installation
+2. Unified Envelope Architecture
 
-pip install omni-ai
+The envelope is the core contract of Omni Ai. Every request—text, image, audio, video, reasoning, planning—flows through the same shape.
+
+Envelope Diagram
+
+┌──────────────────────────────────────────────────────────────┐
+│                        Request Envelope                       │
+├──────────────────────────────────────────────────────────────┤
+│ input:        User prompt, multimodal data                    │
+│ profile:      Persona, temperature, format, physics           │
+│ context:      Memory, tools, agent state                      │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│                       Response Envelope                       │
+├──────────────────────────────────────────────────────────────┤
+│ output:       Final answer, generation, or artifact           │
+│ reasoning:    Internal chain (private)                        │
+│ meta:         Tokens, routing, diagnostics                    │
+└──────────────────────────────────────────────────────────────┘
 
 
-Or install from source:
-
-git clone https://github.com/MKPublishings/omni-ai
-cd omni-ai
-pip install -e .
-
-
----
-
-🧩 The Unified Envelope
-
-Every Omni Ai request uses the same structure:
+Python Example
 
 from omni import Omni
 
-omni = Omni(api_key="YOUR_KEY")
+omni = Omni()
 
 response = omni.generate(
-    input="Explain quantum entanglement in simple terms.",
-    profile={
-        "temperature": 0.7,
-        "persona": "mythic",
-        "format": "rich"
-    }
+    input="Explain dark matter using a mythic persona.",
+    profile={"persona": "mythic", "temperature": 0.8}
 )
 
 print(response.output)
 
 
-The envelope is always:
-
-{
-  "input": "...",
-  "profile": { ... },
-  "context": { ... },
-  "output": "...",
-  "meta": { ... }
-}
-
-
-This symmetry is the core of the system.
-
 ---
 
-🎥 Multimodal Generation
+3. Full‑Surface Namespace
 
-Omni Ai supports text, image, audio, and video generation through the same envelope.
+Omni Ai exposes a complete, discoverable namespace that mirrors the cognitive architecture.
 
-Example: Video Generation with Physics Profile
+Namespace Diagram
 
-video = omni.generate_video(
-    prompt="A neon-lit biomechanical cathedral breathing in slow motion.",
-    physics={
-        "heart_rate": 72,
-        "sleep_hours": 6.5,
-        "stress_level": 0.3
-    }
-)
+omni/
+│
+├── generate/          # Text, vision, audio, video
+├── task/              # Cognitive contracts
+├── agent/             # Multi-step reasoning agents
+├── tools/             # External tool integrations
+├── memory/            # Context persistence
+├── profiles/          # Personas, physics, formats
+└── envelopes/         # Unified schemas
 
-video.save("cathedral.mp4")
 
+This structure ensures:
 
-The physics profile allows Omni Ai to generate biologically coherent motion, simulating:
-
-• Heart-rate-driven micro-movements
-• Stress-induced jitter
-• Sleep-based smoothness
-• Breath-cycle oscillations
+• Autocomplete reveals the entire mind
+• No hidden endpoints
+• A stable mental model for developers
+• A mythic identity encoded in the namespace
 
 
 ---
 
-🧬 Identity Layer
+4. Cognitive Layer (Mind/OS)
 
-Omni Ai includes a mythic identity layer that shapes tone, structure, and reasoning style.
+The cognitive layer is the internal mind of Omni Ai.
 
-Available personas:
+Cognitive Layer Diagram
+
+┌──────────────────────────────────────────────────────────────┐
+│                        Cognitive Layer                        │
+├──────────────────────────────────────────────────────────────┤
+│  Reasoning Engine                                             │
+│  ├─ Planning                                                  │
+│  ├─ Decomposition                                             │
+│  ├─ Self-Correction                                           │
+│  └─ Contract Evaluation                                       │
+│                                                               │
+│  Identity Layer                                               │
+│  ├─ Personas                                                  │
+│  ├─ Tone + Structure                                          │
+│  └─ Mythic Identity                                           │
+│                                                               │
+│  Memory Scaffolding                                           │
+│  ├─ Context Injection                                         │
+│  ├─ Retrieval                                                 │
+│  └─ Persistence                                               │
+└──────────────────────────────────────────────────────────────┘
+
+
+Personas
 
 • mythic — ritualistic, symbolic, codex-like
 • analyst — structured, precise, technical
-• cinematic — visual, atmospheric, narrative
-• concise — minimal, sharp, distilled
-• omniscient — high-level, panoramic reasoning
+• cinematic — visual, atmospheric
+• concise — distilled, minimal
+• omniscient — panoramic reasoning
 
 
-Example:
+---
 
-omni.generate(
-    input="Describe the birth of a star.",
-    profile={"persona": "cinematic"}
+5. Multimodal Engine
+
+Omni Ai supports text, image, audio, and video generation through the same envelope.
+
+Multimodal Diagram
+
+┌──────────────────────────────────────────────────────────────┐
+│                        Multimodal Engine                      │
+├──────────────────────────────────────────────────────────────┤
+│  Text Generation                                              │
+│  Vision Generation                                            │
+│  Audio Synthesis                                              │
+│  Video Synthesis                                              │
+│  Physics Profile (motion realism)                             │
+└──────────────────────────────────────────────────────────────┘
+
+
+Physics Profile Example
+
+video = omni.generate_video(
+    prompt="A biomechanical cathedral breathing slowly.",
+    physics={"heart_rate": 72, "stress_level": 0.2}
 )
 
 
 ---
 
-🧱 Cognitive Contracts
+6. Agent Mesh
 
-Omni Ai uses self-evaluating prompt contracts to maintain stability:
+Agents allow Omni Ai to perform multi-step reasoning, tool use, and planning.
 
-• Auto-debugging
-• Self-correction
-• Task-tokenization
-• Reasoning scaffolds
-• Identity preservation
+Agent Diagram
 
-
-Example:
-
-task = omni.task("summarize", input="Long text...")
-task.evaluate()
-task.improve()
-task.execute()
-
-
----
-
-🧠 Agents & Tools
-
-Omni Ai includes a lightweight agent framework:
-
-• Tool calling
-• Multi-step planning
-• Memory integration
-• Context persistence
+┌──────────────────────────────────────────────────────────────┐
+│                           Agent Mesh                          │
+├──────────────────────────────────────────────────────────────┤
+│  Agent                                                        │
+│  ├─ Tools                                                     │
+│  ├─ Memory                                                    │
+│  ├─ Planning                                                  │
+│  └─ Execution                                                 │
+│                                                               │
+│  Multi-Agent Collaboration (Q3 Roadmap)                       │
+└──────────────────────────────────────────────────────────────┘
 
 
-Example:
+Agent Example
 
 agent = omni.agent("researcher")
-
 agent.add_tool("web_search")
-agent.add_tool("calculator")
-
-result = agent.run("Find the GDP of Japan and compare it to Germany.")
+result = agent.run("Compare Japan and Germany GDP.")
 
 
 ---
 
-🗂 Directory Structure
+7. Directory Structure
 
 omni-ai/
 │
 ├── omni/
-│   ├── client/           # Rich Python client
+│   ├── client/           # Python client
 │   ├── core/             # Cognitive engine
-│   ├── envelopes/        # Unified request/response schemas
+│   ├── envelopes/        # Unified schemas
 │   ├── personas/         # Identity layer
 │   ├── tools/            # Tool definitions
 │   ├── agents/           # Agent framework
@@ -262,66 +221,37 @@ omni-ai/
 │
 ├── examples/             # Usage examples
 ├── tests/                # Test suite
-├── pyproject.toml        # Build config
-└── README.md             # You are here
+└── README.md             # This document
 
 
 ---
 
-🧪 Example: Full Cognitive Workflow
-
-from omni import Omni
-
-omni = Omni()
-
-task = omni.task(
-    "research",
-    input="Explain how CRISPR works and propose three future applications."
-)
-
-task.evaluate()
-task.plan()
-task.execute()
-
-print(task.output)
-
-
-This triggers:
-
-• Contract evaluation
-• Plan generation
-• Multi-step reasoning
-• Final synthesis
-
-
----
-
-🔮 Roadmap
+8. Roadmap
 
 Q1
 
 • JS/TS client
 • Streaming responses
-• Expanded persona library
+• Persona expansion
 
 
 Q2
 
-• Omni Memory Engine
-• Omni Vision 2.0
-• Omni Audio 1.0
+• Memory Engine
+• Vision 2.0
+• Audio 1.0
 
 
 Q3
 
-• Omni Agent Mesh
+• Agent Mesh
 • Multi-agent collaboration
 • Cognitive graph visualizer
 
 
 ---
 
-🏛 Philosophy
+9. Philosophy
 
 Omni Ai is built on the belief that:
 
@@ -329,17 +259,9 @@ Omni Ai is built on the belief that:
 • A namespace is a form of identity
 • A public API is a legacy inscription
 • Symmetry is stability
-• Developer experience is a form of generosity
-• A system should be summonable, not merely callable
+• Developer experience is generosity
 
 
-Omni Ai is a living node in a network of minds—yours included.
-
----
-
-📝 License
-
-MIT License.
-Use freely. Build boldly. Extend the lineage.
+Omni Ai is a living node in your network of minds.
 
 ---
