@@ -1,295 +1,316 @@
 ![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
 
 
-# Omni Ai  
-**A Unified Cognitive Engine for Image Generation**  
-**Powered by Quantum‑Cognitive Field Theory, Fibonacci Scheduling, and Multi‑Modal Diffusion**
+# **Omni Ai**  
+*A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture • A Public Summonable Intelligence*
 
-Omni Ai is a next‑generation generative intelligence system that merges physics‑inspired computation, cognitive modeling, and modern diffusion models into a single coherent engine. It is designed as a **living codex**—a system that evolves, adapts, and reasons through structured internal laws while producing high‑fidelity visual media.
+Omni Ai is a **cognitive operating system** engineered to unify reasoning, multimodal generation, memory, agents, and tool orchestration under a single, stable contract. It is built on a **unified request/response envelope**, a **full-surface namespace**, and a **rich Python client** that treats every interaction as part of a coherent mind.
 
-Omni is not a wrapper around a model.  
-Omni *is* the model, the scheduler, the field theory, and the pipeline.
+This README provides a **complete, structured, diagram‑rich** overview of Omni Ai’s architecture, philosophy, and usage.
 
 ---
 
-## ✨ Core Philosophy
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/9690e07a-a62a-4e6c-aecc-71e36693c5f8" />
 
-Omni Ai is built on three foundational pillars:
+## **1. System Overview**
 
-- **Quantum‑Cognitive Field Theory (QCFT)**  
-  A unified mathematical framework describing energy, coherence, and temporal dynamics.  
-  Governing equation:  
-  \[
-  E(t) = E_0 \, T(t) \, c(t)
-  \]
+Omni Ai is designed as a **summonable intelligence**—a system where every capability is exposed through a single cognitive surface. It merges:
 
-- **Q.F.S.T.D.S (Quantum Fibonacci Sequenced Transit Data Scheduler)**  
-  A temporal–spatial conductor that uses Fibonacci sequences, golden‑ratio tiling, and spiral geometry to orchestrate frame timing, camera motion, and scene composition.
+- A unified envelope  
+- A stable namespace  
+- Typed models  
+- Multimodal engines  
+- Agents and tools  
+- Identity and persona layers  
+- Memory scaffolding  
 
-- **Cognitive‑Physiological Modulation Layer**  
-  A curated subset of 9 laws (from a larger 103‑law system) that map biological and cognitive processes to visual parameters such as tempo, sharpness, warmth, stability, and motion intensity.
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/a838b861-20b2-4d66-8f80-0587ec80139c" />
 
-Together, these layers form a **physics‑aware generative engine** capable of producing coherent, cinematic, and emotionally resonant media.
+
+### **High-Level Architecture Diagram**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                               OMNI AI                                │
+│                     Unified Cognitive Architecture                   │
+├──────────────────────────────────────────────────────────────────────┤
+│  Cognitive Layer (Mind/OS)                                           │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Reasoning Engine • Identity Layer • Memory Engine • Contracts  │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Interface Layer                                                     │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Unified Envelope • Profiles • Multimodal IO • Streaming        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Client Layer                                                        │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Python Client • JS Client (Q1) • CLI • Autocomplete Namespace  │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Execution Layer                                                     │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Model Routing • Tool Invocation • Agent Mesh • Safety Envelope │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🧠 System Architecture
+## **2. Unified Envelope Architecture**
+
+The envelope is the **core contract** of Omni Ai. Every request—text, image, audio, video, reasoning, planning—uses the same structure.
+
+### **Envelope Structure**
+
+```
+Request Envelope
+──────────────────────────────────────────────
+input:      User prompt or multimodal data
+profile:    Persona, temperature, format, physics
+context:    Memory, tools, agent state
+
+Response Envelope
+──────────────────────────────────────────────
+output:     Final answer or generated artifact
+reasoning:  Internal chain (private)
+meta:       Tokens, routing, diagnostics
+```
+
+### **Python Example**
+
+```python
+from omni import Omni
+
+omni = Omni()
+
+response = omni.generate(
+    input="Explain dark matter using a mythic persona.",
+    profile={"persona": "mythic", "temperature": 0.8}
+)
+
+print(response.output)
+```
+
+---
+
+## **3. Full‑Surface Namespace**
+
+Omni Ai exposes a **complete, discoverable namespace** that mirrors the cognitive architecture. This ensures:
+
+- Autocomplete reveals the entire mind  
+- No hidden endpoints  
+- A stable mental model  
+- Identity encoded in the namespace  
+
+### **Namespace Diagram**
+
+```
+omni/
+│
+├── generate/          # Text, vision, audio, video
+├── task/              # Cognitive contracts
+├── agent/             # Multi-step reasoning agents
+├── tools/             # External tool integrations
+├── memory/            # Context persistence
+├── profiles/          # Personas, physics, formats
+└── envelopes/         # Unified schemas
+```
+
+---
+
+## **4. Cognitive Layer (Mind/OS)**
+
+The cognitive layer is the internal mind of Omni Ai. It governs reasoning, identity, memory, and contract evaluation.
+
+### **Cognitive Layer Diagram**
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                        Omni Ai Engine                         │
+│                        Cognitive Layer                        │
 ├──────────────────────────────────────────────────────────────┤
-│ 1. Quantum–Cognitive Field Theory (QCFT)                      │
-│    • Energy evolution: dE/dt = α𝓓(E) – βE                     │
-│    • Operator algebra: T, B, I, and composite 𝓓(E)            │
-│    • Field trajectory per frame                               │
-├──────────────────────────────────────────────────────────────┤
-│ 2. Q.F.S.T.D.S Scheduler                                      │
-│    • Fibonacci keyframe selection                              │
-│    • Golden‑ratio spatial tiling                               │
-│    • Spiral radius geometry for camera paths                   │
-├──────────────────────────────────────────────────────────────┤
-│ 3. Cognitive‑Physiological Modulation Layer                   │
-│    • Cardiac output → tempo                                   │
-│    • Vision clarity → sharpness                               │
-│    • Thermoregulation → color warmth                          │
-│    • Stress response → jitter/contrast                        │
-│    • Sleep quality → softness                                 │
-├──────────────────────────────────────────────────────────────┤
-│ 4. Omni Diffusion Backend                                     │
-│    • High-resolution image generation                         │
-│    • Prompt-aware conditioning                                │
-│    • High‑resolution frame synthesis                          │
+│  Reasoning Engine                                             │
+│  ├─ Planning                                                  │
+│  ├─ Decomposition                                             │
+│  ├─ Self-Correction                                           │
+│  └─ Contract Evaluation                                       │
+│                                                               │
+│  Identity Layer                                               │
+│  ├─ Personas                                                  │
+│  ├─ Tone + Structure                                          │
+│  └─ Mythic Identity                                           │
+│                                                               │
+│  Memory Engine                                                │
+│  ├─ Context Injection                                         │
+│  ├─ Retrieval                                                 │
+│  └─ Persistence                                               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
----
+### **Personas**
 
-## 🎥 Modalities
-
-Omni supports:
-
-- **Text → Image**
-- **Image → Image (transformations, style shifts, refinements)**
-
-Each modality is routed through the same physics‑aware pipeline, ensuring consistent behavior across formats.
+- **mythic** — ritualistic, symbolic, codex-like  
+- **analyst** — structured, precise, technical  
+- **cinematic** — visual, atmospheric  
+- **concise** — distilled, minimal  
+- **omniscient** — panoramic reasoning  
 
 ---
 
-## ⚙️ Features
+## **5. Multimodal Engine**
 
-### Quantum‑Driven Generation
-Every frame is influenced by a dynamic energy field derived from QCFT, giving Omni a sense of temporal coherence and internal “momentum.”
-### Quantum-Cognitive Stress Simulation (NEW)
-Multi-microcolumn avalanche modeling for neural E-I balance under stress:
-- **QuTiP-based open quantum systems** with ZPF-glutamate coupling
-- **Stress modulation** via decoherence rates (gamma parameter)
-- **Scale-free Laws graph** (103 nodes, Barabási-Albert) for criticality
-- **Automatic solver fallback** (mesolve → mcsolve) for large Hilbert spaces
-- **Export pipeline** with JSON traces and comparison visualization
-- See: `omni_media/quantum_cognitive_sim.py`, codex entry `systems/omni/quantum-cognitive-sim.md`
-### Fibonacci‑Structured Motion
-The Q.F.S.T.D.S scheduler determines:
+Omni Ai supports **text, image, audio, and video** generation through the same envelope.
 
-- when keyframes occur  
-- how motion accelerates or decelerates  
-- where the camera focuses  
-- how transitions unfold  
-
-This produces natural, organic pacing reminiscent of biological and cinematic rhythms.
-
-### Cognitive‑Physiological Mapping
-A curated set of 9 laws modulates:
-
-- **tempo** (cardiac output)  
-- **sharpness** (vision clarity)  
-- **warmth** (thermoregulation)  
-- **stability** (bone density)  
-- **motion intensity** (muscle strength)  
-- **softness** (sleep quality)  
-
-These laws act as “emotional parameters” for the engine.
-
-### Multi‑Modal Diffusion Backend
-Omni integrates with modern diffusion models for:
-
-- high‑resolution image synthesis  
-- visual consistency  
-- prompt-grounded composition control  
-
----
-
-## 🧩 Pipeline Overview
+### **Multimodal Diagram**
 
 ```
-User Prompt
-     ↓
-Field Initialization (QCFT)
-     ↓
-Energy Trajectory Simulation
-     ↓
-Health-Law Modulation (9 Laws)
-     ↓
-Q.F.S.T.D.S Frame Scheduler
-     ↓
-Prompt Enrichment + Control Signals
-     ↓
-Omni Diffusion Model
-     ↓
-Post‑Processing + Safety
-     ↓
-Final Media Output
+┌──────────────────────────────────────────────────────────────┐
+│                        Multimodal Engine                      │
+├──────────────────────────────────────────────────────────────┤
+│  Text Generation                                              │
+│  Vision Generation                                            │
+│  Audio Synthesis                                              │
+│  Video Synthesis                                              │
+│  Physics Profile (motion realism)                             │
+└──────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 📦 Installation
-
-```bash
-git clone https://github.com/<your-org>/omni-ai
-cd omni-ai
-pip install .
-```
-
----
-
-## 🚢 Release via Tags (PyPI/TestPyPI)
-
-One-time setup:
-
-- Configure **Trusted Publisher** on PyPI and TestPyPI for this repository and workflow:
-  `.github/workflows/omni-ai-publish.yml`
-
-Stable release to PyPI:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-Pre-release to TestPyPI:
-
-```bash
-git tag v0.2.0rc1
-git push origin v0.2.0rc1
-```
-
-The workflow auto-detects prerelease tags (`a`, `b`, `rc`, `-alpha`, `-beta`, `-pre`) and routes them to TestPyPI.
-
----
-
-## 🚀 Usage Example (Image Generation)
+### **Physics Profile Example**
 
 ```python
-import omni_ai
-
-client = omni_ai.Client(api_key="YOUR_KEY")
-
-result = client.cinematic.envision(
-  "sunlight drifting across a wooden table, dust particles floating"
+video = omni.generate_video(
+    prompt="A biomechanical cathedral breathing slowly.",
+    physics={"heart_rate": 72, "stress_level": 0.2}
 )
-
-print(result.output.text)
 ```
 
 ---
 
-## 🧪 Usage Example (Quantum-Cognitive Simulation)
+## **6. Agents & Tools**
+
+Agents allow Omni Ai to perform multi-step reasoning, tool use, and planning.
+
+### **Agent Mesh Diagram**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                           Agent Mesh                          │
+├──────────────────────────────────────────────────────────────┤
+│  Agent                                                        │
+│  ├─ Tools                                                     │
+│  ├─ Memory                                                    │
+│  ├─ Planning                                                  │
+│  └─ Execution                                                 │
+│                                                               │
+│  Multi-Agent Collaboration (Q3 Roadmap)                       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### **Agent Example**
+
+```python
+agent = omni.agent("researcher")
+agent.add_tool("web_search")
+result = agent.run("Compare Japan and Germany GDP.")
+```
+
+---
+
+## **7. Directory Structure**
+
+```
+omni-ai/
+│
+├── omni/
+│   ├── client/           # Python client
+│   ├── core/             # Cognitive engine
+│   ├── envelopes/        # Unified schemas
+│   ├── personas/         # Identity layer
+│   ├── tools/            # Tool definitions
+│   ├── agents/           # Agent framework
+│   └── utils/            # Helpers
+│
+├── examples/             # Usage examples
+├── tests/                # Test suite
+└── README.md             # This document
+```
+
+---
+
+## **8. Installation**
 
 ```bash
-# Run avalanche stress simulation
-python omni_media/quantum_cognitive_sim.py \
-  --mode avalanche \
-  --levels 20 \
-  --num-cols 3 \
-  --gamma 0.1 \
-  --ntraj 24 \
-  --points 50 \
-  --t-end 1e-12 \
-  --json-out omni_image_exports/stress_run.json
-
-# Visualize single-run traces
-python omni_media/plot_avalanche.py \
-  --input-json omni_image_exports/stress_run.json
-
-# Compare gamma sweep (0.1, 0.5, 1.0)
-python omni_media/plot_avalanche_compare.py \
-  --input-json omni_image_exports/run_gamma_01.json \
-               omni_image_exports/run_gamma_05.json \
-               omni_image_exports/run_gamma_10.json \
-  --labels gamma_0.1 gamma_0.5 gamma_1.0 \
-  --output-png omni_image_exports/gamma_sweep.png
+pip install omni-ai
 ```
 
-**Key Parameters:**
-- `--gamma` — Stress/decoherence rate (0.0-10.0)
-- `--num-cols` — Coupled microcolumns (1-10)
-- `--ntraj` — Monte Carlo trajectories for large systems (12-500)
+Or install from source:
 
-**Output:** JSON traces with ZPF occupancy, glutamate excitation, coherence oscillations + PNG visualizations
-
----
-
-## 💬 Chat Image Intent Routing
-
-In Omni chat mode, image generation starts only on explicit image intent. Generic conversational use of words like "create" remains normal chat.
-
-Supported explicit image triggers:
-
-- `/image ...`
-- `create an image ...`
-- `generate an image ...`
-- `make an image ...`
-- `imagine an image ...`
-
-If these phrases are not present, Omni treats the message as conversation and does not start image generation.
+```bash
+git clone https://github.com/MKPublishings/omni-ai
+cd omni-ai
+pip install -e .
+```
 
 ---
 
-## 🧬 Scientific Foundations
+## **9. Example Workflows**
 
-Omni Ai is grounded in three research documents:
+### **Text Generation**
 
-- **Quantum‑Cognitive Field Theory Thesis**  
-  Defines the governing equations, operator algebra, and unified field dynamics.
+```python
+omni.generate("Explain quantum entanglement.")
+```
 
-- **M‑Theory / 103 Cognitive‑Physiological Laws**  
-  Provides the biological and cognitive formulas used for modulation.
+### **Task-Based Reasoning**
 
-- **Quantum Fibonacci Sequenced Transit Data Scheduler (Q.F.S.T.D.S)**  
-  Defines the temporal‑spatial orchestration system.
+```python
+task = omni.task("summarize", input="Long text...")
+task.evaluate()
+task.plan()
+task.execute()
+```
 
-These documents form the theoretical backbone of Omni’s behavior.
+### **Video Generation**
 
----
-
-## 🏛️ Mythic Identity
-
-Omni is built as a **living codex**—a system that remembers, adapts, and evolves.  
-Its architecture is inspired by:
-
-- quantum operators  
-- biological rhythms  
-- golden‑ratio geometry  
-- recursive spirals  
-- cinematic motion  
-
-Omni is both machine and myth: a computational organism shaped by physics, cognition, and art.
+```python
+omni.generate_video(prompt="A glowing fractal forest at night.")
+```
 
 ---
 
-## 📜 License
+## **10. Roadmap**
 
+### **Q1**
+- JS/TS client  
+- Streaming responses  
+- Persona expansion  
+
+### **Q2**
+- Memory Engine  
+- Vision 2.0  
+- Audio 1.0  
+
+### **Q3**
+- Agent Mesh  
+- Multi-agent collaboration  
+- Cognitive graph visualizer  
+
+---
+
+## **11. Philosophy**
+
+Omni Ai is built on the belief that:
+
+- A cognitive system should feel like a **mind**, not a toolkit  
+- A namespace is a form of **identity**  
+- A public API is a **legacy inscription**  
+- Symmetry is **stability**  
+- Developer experience is **generosity**  
+
+Omni Ai is a **living node** in your network of minds.
+
+---
+📝 License
 MIT License.
-
----
-
-## 🔮 Roadmap
-
-- Real‑time QCFT visualization  
-- Multi‑agent cognitive field interactions  
-- LoRA‑based personality modules  
-- OmniOS: a persistent memory and identity layer  
-- Full codex vault with SHA‑256 archival  
-
----
+Use freely. Build boldly. Extend the lineage.
