@@ -20,13 +20,15 @@ def run_with_pytest() -> int:
         "tests/test_head_basic.py",
         "tests/test_head_unittest.py",
         "tests/test_head_neck_trace_unittest.py",
+        "tests/test_torso_envelope_unittest.py",
+        "tests/test_body_routing_unittest.py",
     ]
     return subprocess.call(cmd)
 
 
 def run_with_unittest() -> int:
     tests_dir = Path(__file__).parent
-    suite = unittest.defaultTestLoader.discover(str(tests_dir), pattern="test_head*_unittest.py")
+    suite = unittest.defaultTestLoader.discover(str(tests_dir), pattern="test*_unittest.py")
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1
 
