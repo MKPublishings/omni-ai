@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import unittest
 
+from omni_ai.anatomy.arms import BilateralArms
 from omni_ai.anatomy.body import Body
+from omni_ai.anatomy.body import BodyLimbRequest, BodyLimbState
+from omni_ai.anatomy.legs import BilateralLegs
 from omni_ai.anatomy.routing import (
     CirculatoryRouter,
     MetabolicRouter,
@@ -126,6 +129,77 @@ class BodyRoutingTests(unittest.TestCase):
         self.assertIn("metabolic", result.routing)
         self.assertGreater(result.routing["neural"]["spinal"]["latency_ms"], 0.0)
         self.assertAlmostEqual(result.routing["state"]["torso"].circulatory.heart_rate_bpm, 90.0)
+
+    def test_body_tick_accepts_typed_bilateral_limb_request(self) -> None:
+        torso = build_test_torso()
+
+        def fake_head_envelope(_request: object) -> dict:
+            return {"status": "ok", "focus": "tracking"}
+
+        envelope_registry = EnvelopeRegistry(
+            head=fake_head_envelope,
+            torso=torso,
+            arms=BilateralArms(),
+            legs=BilateralLegs(),
+        )
+
+        routing = RoutingEngine(
+            neural=NeuralRouter(conduction_velocity_m_s=60.0, synaptic_delay_ms=1.5),
+            circulatory=CirculatoryRouter(arterial_resistance=0.08, venous_resistance=0.1),
+            metabolic=MetabolicRouter(distribution_efficiency=0.92),
+            state=StateRouter(),
+        )
+
+        spine = Spine(
+            vertebrae=Vertebrae(
+                cervical_count=7,
+                thoracic_count=12,
+                lumbar_count=5,
+                curvature_profile="cervical-thoracic-lumbar",
+                load_capacity_newton=6000.0,
+            ),
+            spinal_cord=SpinalCord(conduction_velocity_m_s=58.0, reflex_latency_ms=3.2),
+            coupling=SpinalCoupling(nerve_branch_points=6, vascular_branch_points=8),
+        )
+
+        body = Body(envelope_registry=envelope_registry, routing=routing, spine=spine)
+
+        torso_request = TorsoRequest(
+            heart_rate_bpm=88.0,
+            breaths_per_minute=17.0,
+            effort_level=0.6,
+            total_energy_kcal=1550.0,
+            glucose_level_mg_dl=101.0,
+            lactate_level=1.4,
+            organ_loads={
+                "heart": OrganLoadModel(oxygen_demand=0.8, nutrient_demand=0.7, waste_level=0.2),
+            },
+        )
+
+        arm_request = BodyLimbRequest(
+            left={"elbow": {"flexion": 40.0}, "contraction_intensity": 0.5},
+            right={"elbow": {"flexion": 65.0}, "contraction_intensity": 0.7},
+        )
+        leg_request = BodyLimbRequest(
+            left={"load_newton": 500.0, "contraction_intensity": 0.4},
+            right={"load_newton": 650.0, "contraction_intensity": 0.6},
+        )
+
+        result = body.tick(
+            head_request={"query": "stabilize"},
+            torso_request=torso_request,
+            arm_request=arm_request,
+            leg_request=leg_request,
+            posture_angle_deg=5.5,
+            spinal_load_newton=1180.0,
+            signal_strength=0.8,
+        )
+
+        self.assertIsInstance(result.arms, BodyLimbState)
+        self.assertIsInstance(result.legs, BodyLimbState)
+        self.assertGreater(result.arms.force_output_newton, 0.0)
+        self.assertGreater(result.legs.force_output_newton, 0.0)
+        self.assertIn("state", result.routing)
 
 
 if __name__ == "__main__":
