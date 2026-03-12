@@ -190,8 +190,16 @@ export function shouldUseKnowledgeRetrieval(input: string, mode: string): boolea
   return /\b(what is|who is|when did|where is|fact|facts|docs|document|policy|reference|manual|spec|api)\b/i.test(text);
 }
 
-export function shouldUseSystemKnowledge(mode: string): boolean {
-  return normalizeText(mode).toLowerCase() === "system-knowledge";
+export function shouldUseSystemKnowledge(mode: string, input = ""): boolean {
+  const normalizedMode = normalizeText(mode).toLowerCase();
+  if (normalizedMode === "system-knowledge" || normalizedMode === "anatomy") {
+    return true;
+  }
+
+  const text = normalizeText(input).toLowerCase();
+  if (!text) return false;
+
+  return /\b(anatomy|anatomical|physiology|human\s+body|cranial\s+nerve|skeletal|muscle|organ|head\s+api|simulation\s+engine)\b/i.test(text);
 }
 
 export interface PromptTemplateOptions {
@@ -272,6 +280,15 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
       "Model a contained environment with explicit state transitions and rule adherence.",
       "Return output with: current state, transitions executed, and concise simulation log entries.",
       "If rules are missing, ask for constraints before broad assumptions."
+    ].join("\n");
+  }
+
+  if (mode === "anatomy") {
+    return [
+      "Anatomy Mode is active.",
+      "Prioritize Omni's human anatomy and integration modules as authoritative context.",
+      "Map user requests to concrete subsystems (head, neck, torso, arms, legs, spine, routing).",
+      "When possible, provide operation-oriented guidance (subsystem + operation + payload shape)."
     ].join("\n");
   }
 

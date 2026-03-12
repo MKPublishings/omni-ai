@@ -15,6 +15,7 @@ const MODE_INFOS: ModeInfo[] = [
   { id: "coding", label: "Coding", summary: "Implementation, refactor, and debugging assistance.", aliases: ["dev", "programming"] },
   { id: "knowledge", label: "Knowledge", summary: "Reference-driven responses from indexed sources.", aliases: ["retrieval"] },
   { id: "system-knowledge", label: "System Knowledge", summary: "Internal module/protocol-aware responses.", aliases: ["system knowledge"] },
+  { id: "anatomy", label: "Anatomy", summary: "Human anatomy and subsystem integration from Omni internals.", aliases: ["human", "bio"] },
   { id: "simulation", label: "Simulation", summary: "Stateful simulation and controlled scenario exploration.", aliases: ["sim"] }
 ];
 

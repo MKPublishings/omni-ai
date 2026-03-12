@@ -72,7 +72,7 @@
     API_RETRIES: "omni-api-retries"
   };
   const KNOWN_MODELS = ["omni"];
-  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "simulation"];
+  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "anatomy", "simulation"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
     "3d",
@@ -756,6 +756,7 @@
   function toModeLabel(mode) {
     const normalized = normalizeMode(mode) || "auto";
     if (normalized === "system-knowledge") return "System Knowledge";
+    if (normalized === "anatomy") return "Anatomy";
     if (normalized === "simulation") return "Simulation";
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
@@ -898,6 +899,7 @@
         coding: 0,
         knowledge: 0,
         reasoning: 0,
+        anatomy: 0,
         "system-knowledge": 0
       };
     }
@@ -930,6 +932,10 @@
       knowledge: [
         { pattern: /\b(explain|what\s+is|teach|overview|reference|facts?|background)\b/g, weight: 1 },
         { pattern: /\b(source|citation|docs?|documentation)\b/g, weight: 1 }
+      ],
+      anatomy: [
+        { pattern: /\b(anatomy|anatomical|physiology|human\s+body|organ\s+system|skeletal|muscular|cranial\s+nerve|circulatory|respiratory)\b/g, weight: 2 },
+        { pattern: /\b(head\s+api|subsystem|head|neck|torso|spine|limb|routing)\b/g, weight: 1 }
       ],
       reasoning: [
         { pattern: /\b(reason|reasoning|logic|prove|deduce|step\s*-?by\s*-?step|chain\s+of\s+thought)\b/g, weight: 2 },

@@ -852,6 +852,7 @@ const INTERNET_MODE_PROFILES: Record<string, InternetSearchProfile> = {
   coding: { queryPrefix: "developer docs", querySuffix: "implementation", limit: 5 },
   knowledge: { queryPrefix: "reference", querySuffix: "facts", limit: 5 },
   "system-knowledge": { queryPrefix: "systems engineering", querySuffix: "best practices", limit: 5 },
+  anatomy: { queryPrefix: "human anatomy systems", querySuffix: "integration", limit: 4 },
   simulation: { queryPrefix: "simulation methods", querySuffix: "models", limit: 3 }
 };
 
@@ -3732,7 +3733,7 @@ export default {
           }
         }
 
-        if (shouldUseSystemKnowledge(normalizedMode)) {
+        if (shouldUseSystemKnowledge(normalizedMode, latestUserText)) {
           const moduleHits = await searchModules(env, request, latestUserText || "system modules", 3);
           if (moduleHits.length) {
             const moduleContext = moduleHits
