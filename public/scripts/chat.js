@@ -357,9 +357,9 @@
             <input id="legal-jurisdiction" type="text" autocomplete="country-name" maxlength="2" placeholder="Example: US, CA, DE" />
           </div>
           <div class="legal-attestation-checks">
-            <label><input id="legal-eligible" type="checkbox" /> I confirm I am legally allowed to use Omni Ai in my jurisdiction.</label>
+            <label><input id="legal-eligible" type="checkbox" /> I confirm I am legally allowed to use Ionirix in my jurisdiction.</label>
             <label><input id="legal-truthful" type="checkbox" /> I confirm age/identity details I provide are truthful and accurate.</label>
-            <label><input id="legal-user-directed" type="checkbox" /> I understand Omni Ai acts on user input and my actions remain my responsibility.</label>
+            <label><input id="legal-user-directed" type="checkbox" /> I understand Ionirix acts on user input and my actions remain my responsibility.</label>
           </div>
           <p class="legal-attestation-links">See <a href="/legal.html" target="_blank" rel="noopener noreferrer">Legal Notice & Responsible Use</a> for full terms.</p>
           <p id="legal-attestation-status" class="age-gate-status" aria-live="polite"></p>
@@ -749,8 +749,8 @@
 
   function toModelLabel(model) {
     const normalized = normalizeModel(model) || "omni";
-    if (normalized === "auto") return "Omni";
-    return "Omni";
+    if (normalized === "auto") return "Ionirix";
+    return "Ionirix";
   }
 
   function toModeLabel(mode) {
@@ -1399,7 +1399,7 @@
 
     const roleLabel = document.createElement("span");
     roleLabel.className = "message-role";
-    roleLabel.textContent = role === "user" ? "You" : "Omni";
+    roleLabel.textContent = role === "user" ? "You" : "Ionirix";
 
     header.appendChild(roleLabel);
 

@@ -1488,10 +1488,10 @@ function getBackgroundReadinessStatus(env: Env): {
 
 async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>> {
   const release = {
-    name: "Omni Ai",
+    name: "Ionirix",
     version: "1.0.0",
     date: "2026-02-26",
-    lineage: ["Omni Ai"],
+    lineage: ["Ionirix"],
     recognitionCycle: "initiated"
   };
 
@@ -1537,8 +1537,8 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
       releaseSpec: "/api/release/spec"
     },
     publicArtifacts: {
-      declaration: "/omni-ai-declaration.md",
-      manifest: "/omni-ai-release.json",
+      declaration: "/ionirix-declaration.md",
+      manifest: "/ionirix-release.json",
       specDoc: "/OMNI_AI_RELEASE_SPEC.md"
     },
     runtime: autonomyStatus

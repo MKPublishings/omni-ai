@@ -31,10 +31,10 @@ Omni Ai is designed as a **summonable intelligence**—a system where every capa
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                               OMNI AI                                │
+│                               Omni Ai                                │
 │                     Unified Cognitive Architecture                   │
 ├──────────────────────────────────────────────────────────────────────┤
-│  Cognitive Layer (Mind/OS)                                           │
+│  Cognitive Layer (Mind Layer)                                        │
 │  ┌────────────────────────────────────────────────────────────────┐  │
 │  │ Reasoning Engine • Identity Layer • Memory Engine • Contracts  │  │
 │  └────────────────────────────────────────────────────────────────┘  │
@@ -120,7 +120,7 @@ omni/
 
 ---
 
-## **4. Cognitive Layer (Mind/OS)**
+## **4. Cognitive Layer (Mind Layer)**
 
 The cognitive layer is the internal mind of Omni Ai. It governs reasoning, identity, memory, and contract evaluation.
 

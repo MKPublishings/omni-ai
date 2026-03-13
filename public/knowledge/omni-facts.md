@@ -1,9 +1,9 @@
-# Omni Facts
+# Ionirix Facts
 
-Omni Ai is a Cloudflare Worker-based cognitive runtime with streaming responses.
+Ionirix is a Cloudflare Worker-based cognitive runtime with streaming responses.
 
 ## Core Capabilities
-- Omni-native routing and response generation.
+- Ionirix routing and response generation.
 - Mode-aware behavior with specialized interaction styles.
 - Safety sanitization on input and output paths.
 - Memory integration for user preferences.

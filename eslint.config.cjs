@@ -6,6 +6,7 @@ module.exports = [
   {
     ignores: [
       "node_modules/**",
+      ".venv/**",
       "dist/**",
       "coverage/**",
       "omni_image_exports/**",

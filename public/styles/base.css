@@ -91,6 +91,39 @@ p {
   color: var(--text-secondary);
 }
 
+.site-footer {
+  margin-top: 40px;
+  padding: 24px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.site-footer-content {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.site-footer-content p {
+  margin: 0 0 10px;
+}
+
+.site-footer-content p:last-child {
+  margin-bottom: 0;
+}
+
+.site-footer-rights {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.site-footer a {
+  color: var(--text-primary);
+}
+
 /* ------------------------------
    CHAT-SPECIFIC STYLES
 ---------------- */
@@ -167,6 +200,7 @@ p {
 .mode-content h4,
 .tech-item strong,
 .home-footer a,
+.site-footer a,
 .feature-spec-text,
 .use-case-tag,
 .setting-label,
@@ -182,6 +216,7 @@ p {
 .home-intro,
 .modes-footer,
 .home-footer,
+.site-footer,
 #chat-area,
 #sidebar,
 .chat-dropdown,
@@ -219,6 +254,7 @@ body.page-high-contrast .feature-spec,
 body.page-high-contrast .home-intro,
 body.page-high-contrast .modes-footer,
 body.page-high-contrast .home-footer,
+body.page-high-contrast .site-footer,
 body.page-high-contrast #chat-area,
 body.page-high-contrast #sidebar,
 body.page-high-contrast .chat-dropdown,
@@ -233,6 +269,7 @@ body.page-reduce-glass .feature-spec,
 body.page-reduce-glass .home-intro,
 body.page-reduce-glass .modes-footer,
 body.page-reduce-glass .home-footer,
+body.page-reduce-glass .site-footer,
 body.page-reduce-glass #chat-area,
 body.page-reduce-glass #sidebar,
 body.page-reduce-glass .chat-dropdown,

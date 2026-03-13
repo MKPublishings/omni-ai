@@ -1,6 +1,6 @@
-# Omni Simulation Capabilities
+# Ionirix Simulation Capabilities
 
-Omni AI includes a dedicated simulation stack under `omni_ai/simulation/` with layered orchestrators.
+Ionirix includes a dedicated simulation stack under `omni_ai/simulation/` with layered orchestrators.
 
 ## Public orchestrators
 

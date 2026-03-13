@@ -1,6 +1,6 @@
-# Omni Anatomy Capabilities
+# Ionirix Anatomy Capabilities
 
-Omni AI includes a human anatomy stack in `omni_ai/` with subsystem boundaries that can be reasoned about in chat.
+Ionirix includes a human anatomy stack in `omni_ai/` with subsystem boundaries that can be reasoned about in chat.
 
 ## Top-level modules
 
