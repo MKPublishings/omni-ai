@@ -3566,8 +3566,8 @@ export default {
           );
         }
 
-        const personaProfile = await resolvePersonaProfile(env, normalizedMode);
-        const emotionalResonance = await getEmotionalResonance(
+        const personaProfilePromise = resolvePersonaProfile(env, normalizedMode);
+        const emotionalResonancePromise = getEmotionalResonance(
           env,
           sessionId,
           latestUserText,
@@ -3583,6 +3583,8 @@ export default {
         let internetProfileUsed: InternetSearchProfile | null = null;
         let internetHitCount = 0;
         const savedMemory = normalizedMode === "simulation" ? {} : await getPreferences(env);
+        const personaProfile = await personaProfilePromise;
+        const emotionalResonance = await emotionalResonancePromise;
         if (normalizedMode !== "simulation" && savedMemory && Object.keys(savedMemory).length > 0) {
           promptSystemMessages.push(
             makeContextSystemMessage("User Memory", JSON.stringify(savedMemory, null, 2))
@@ -3650,6 +3652,33 @@ export default {
           )
         );
 
+        const shouldLoadMemoryArc = normalizedMode !== "simulation";
+        const shouldLoadInternetLearning = true;
+        const shouldLoadWeather = shouldUseWeatherContext(latestUserText);
+        const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
+        const shouldUseKnowledge = shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
+        const shouldLoadSystemModules = shouldUseSystemKnowledge(normalizedMode, latestUserText);
+        const shouldLoadInternetSearch = shouldUseInternetSearch(latestUserText, normalizedMode);
+
+        const memoryArcPromise = shouldLoadMemoryArc
+          ? getRecentMemoryArc(env, sessionId, 3)
+          : Promise.resolve([]);
+        const internetLearningPromise = shouldLoadInternetLearning
+          ? getInternetLearningContext(env, normalizedMode, latestUserText, 4)
+          : Promise.resolve("");
+        const weatherPromise = shouldLoadWeather
+          ? fetchWeatherForLocation(weatherLocation)
+          : Promise.resolve(null);
+        const knowledgePromise = shouldUseKnowledge
+          ? searchKnowledge(env, request, latestUserText, 4)
+          : Promise.resolve([]);
+        const modulePromise = shouldLoadSystemModules
+          ? searchModules(env, request, latestUserText || "system modules", 3)
+          : Promise.resolve([]);
+        const internetSearchPromise = shouldLoadInternetSearch
+          ? performModeAwareInternetSearch(normalizedMode, latestUserText)
+          : Promise.resolve(null);
+
         if (normalizedMode !== "simulation") {
           const workingMemoryPrompt = formatWorkingMemoryPrompt(workingMemory);
           if (workingMemoryPrompt) {
@@ -3658,7 +3687,7 @@ export default {
             );
           }
 
-          const memoryArc = await getRecentMemoryArc(env, sessionId, 3);
+          const memoryArc = await memoryArcPromise;
           if (memoryArc.length) {
             const arcPrompt = memoryArc
               .map((entry, index) => {
@@ -3681,7 +3710,7 @@ export default {
           promptSystemMessages.push(makeContextSystemMessage("Mode Template", modeTemplate));
         }
 
-        const internetLearningContext = await getInternetLearningContext(env, normalizedMode, latestUserText, 4);
+        const internetLearningContext = await internetLearningPromise;
         if (internetLearningContext) {
           promptSystemMessages.push(
             makeContextSystemMessage(
@@ -3696,9 +3725,8 @@ export default {
           );
         }
 
-        if (shouldUseWeatherContext(latestUserText)) {
-          const weatherLocation = inferWeatherLocation(latestUserText, request);
-          const weather = await fetchWeatherForLocation(weatherLocation);
+        if (shouldLoadWeather) {
+          const weather = await weatherPromise;
           if (weather) {
             promptSystemMessages.push(
               makeContextSystemMessage(
@@ -3717,9 +3745,8 @@ export default {
           }
         }
 
-        const shouldUseKnowledge = shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
         if (shouldUseKnowledge) {
-          const hits = await searchKnowledge(env, request, latestUserText, 4);
+          const hits = await knowledgePromise;
           if (hits.length) {
             const context = hits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3733,8 +3760,8 @@ export default {
           }
         }
 
-        if (shouldUseSystemKnowledge(normalizedMode, latestUserText)) {
-          const moduleHits = await searchModules(env, request, latestUserText || "system modules", 3);
+        if (shouldLoadSystemModules) {
+          const moduleHits = await modulePromise;
           if (moduleHits.length) {
             const moduleContext = moduleHits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3748,9 +3775,15 @@ export default {
           }
         }
 
-        if (shouldUseInternetSearch(latestUserText, normalizedMode)) {
-          const internet = await performModeAwareInternetSearch(normalizedMode, latestUserText);
-          await recordInternetLearning(env, normalizedMode, latestUserText, internet.hits);
+        if (shouldLoadInternetSearch) {
+          const internet = await internetSearchPromise;
+          if (internet) {
+            void recordInternetLearning(env, normalizedMode, latestUserText, internet.hits).catch((internetErr) => {
+              logger.log("internet_learning_record_failed", {
+                mode: normalizedMode,
+                message: String((internetErr as Error)?.message || internetErr || "unknown error")
+              });
+            });
           internetProfileUsed = internet.profile;
           internetHitCount = internet.hits.length;
           if (internet.hits.length) {
@@ -3771,6 +3804,7 @@ export default {
                 ].join("\n")
               )
             );
+          }
           }
         }
 
@@ -3862,13 +3896,26 @@ export default {
             });
             const finalResponse = OmniSafety.safeGuardResponse(adapted, responseLimit);
             const encoder = new TextEncoder();
+            const responseChunks = finalResponse
+              .match(/.{1,220}(?:\s+|$)/g)
+              ?.map((chunk) => chunk)
+              .filter((chunk) => chunk.length > 0) || [finalResponse];
             const stream = new ReadableStream({
               start(controller) {
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({ content: finalResponse, route: orchestratorDecision.route, ...multimodalPayload })}\n\n`
-                  )
-                );
+                if (responseChunks.length > 0) {
+                  controller.enqueue(
+                    encoder.encode(
+                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload })}\n\n`
+                    )
+                  );
+                  for (let index = 1; index < responseChunks.length; index += 1) {
+                    controller.enqueue(
+                      encoder.encode(
+                        `data: ${JSON.stringify({ content: responseChunks[index] })}\n\n`
+                      )
+                    );
+                  }
+                }
                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                 controller.close();
               }

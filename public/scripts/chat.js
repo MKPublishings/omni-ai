@@ -749,8 +749,8 @@
 
   function toModelLabel(model) {
     const normalized = normalizeModel(model) || "omni";
-    if (normalized === "auto") return "Ionirix";
-    return "Ionirix";
+    if (normalized === "auto") return "Ion";
+    return "Ion";
   }
 
   function toModeLabel(mode) {
@@ -1399,7 +1399,7 @@
 
     const roleLabel = document.createElement("span");
     roleLabel.className = "message-role";
-    roleLabel.textContent = role === "user" ? "You" : "Ionirix";
+    roleLabel.textContent = role === "user" ? "You" : "Ion";
 
     header.appendChild(roleLabel);
 
@@ -1414,9 +1414,8 @@
       const badge = document.createElement("span");
       badge.className = "message-badge";
       
-      // Format model name (capitalize first letter)
-      const modelName = meta.model ? 
-        meta.model.charAt(0).toUpperCase() + meta.model.slice(1) : null;
+      // Use user-facing alias while keeping the internal model key unchanged.
+      const modelName = meta.model ? toModelLabel(meta.model) : null;
       
       // Format mode name using toModeLabel for consistent capitalization
       const modeName = meta.mode ? toModeLabel(meta.mode) : null;
@@ -1782,7 +1781,7 @@
     }
   }
 
-  function buildNetworkMessages(session, maxMessages = 24, maxChars = 22000) {
+  function buildNetworkMessages(session, maxMessages = 16, maxChars = 12000) {
     const history = Array.isArray(session?.messages) ? session.messages : [];
     if (!history.length) return [];
 
@@ -1876,7 +1875,7 @@
       if (lastError) {
         throw lastError;
       }
-      throw new Error("Bad response from Omni backend");
+      throw new Error("Bad response from Ion backend");
     }
 
     if (typeof onMeta === "function") {
