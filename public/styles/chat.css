@@ -860,8 +860,35 @@
 }
 
 @media (max-width: 960px) {
+  html,
+  body {
+    height: var(--omni-vvh, 100dvh);
+    min-height: var(--omni-vvh, 100dvh);
+    overflow: hidden;
+  }
+
+  #layout {
+    height: var(--omni-vvh, 100dvh);
+    min-height: var(--omni-vvh, 100dvh);
+    overflow: hidden;
+  }
+
+  #main.chat-main {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 10px;
+  }
+
   .chat-main {
     min-height: var(--omni-vvh, 100dvh);
+  }
+
+  .chat-main > .site-footer {
+    display: none;
   }
 
   .chat-header h2,
@@ -908,10 +935,14 @@
   #chat-area {
     border-radius: 10px;
     min-height: 0;
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
   }
 
   #chat-container,
   #chat-messages {
+    flex: 1 1 auto;
     padding: 14px;
     gap: 12px;
   }
