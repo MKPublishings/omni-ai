@@ -1734,6 +1734,27 @@
     inputEl.focus();
   }
 
+  let mobileKeyboardWasOpen = false;
+
+  function alignMobileViewportToTop() {
+    if (!isLikelyMobileViewport()) return;
+
+    const forceTop = () => {
+      const scrollingEl = document.scrollingElement || document.documentElement;
+      if (scrollingEl) {
+        scrollingEl.scrollTop = 0;
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+
+    forceTop();
+    requestAnimationFrame(forceTop);
+    setTimeout(forceTop, 60);
+    setTimeout(forceTop, 180);
+  }
+
   function updateMobileViewportMetrics() {
     const root = document.documentElement;
     if (!root) return;
@@ -1746,6 +1767,14 @@
     const baselineHeight = Number(window.innerHeight || viewportHeight || 0);
     const keyboardOpen = baselineHeight > 0 && viewportHeight > 0 && baselineHeight - viewportHeight > 120;
     document.body.classList.toggle("mobile-keyboard-open", Boolean(keyboardOpen));
+
+    const activeEl = document.activeElement;
+    const composerFocused = Boolean(inputEl && activeEl === inputEl);
+    if (keyboardOpen && composerFocused && !mobileKeyboardWasOpen) {
+      alignMobileViewportToTop();
+    }
+    mobileKeyboardWasOpen = Boolean(keyboardOpen);
+
     applyRuntimeSettings();
   }
 
@@ -1756,6 +1785,9 @@
     document.addEventListener("focusin", (event) => {
       if (event.target && event.target.matches && event.target.matches(focusSelector)) {
         document.body.classList.add("mobile-input-active");
+        if (inputEl && event.target === inputEl) {
+          alignMobileViewportToTop();
+        }
         updateMobileViewportMetrics();
       }
     });
