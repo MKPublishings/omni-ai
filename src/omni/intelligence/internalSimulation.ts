@@ -1,5 +1,5 @@
-import type { OmniIdentityKernel } from "./identityKernel";
-import { runReasoningStack, type OmniReasoningMessage } from "./reasoningStack";
+import type { OmniIdentityKernel } from "./identityKernel.ts";
+import { runReasoningStack, type OmniReasoningMessage } from "./reasoningStack.ts";
 import type { KVNamespace } from "@cloudflare/workers-types";
 
 type SimulationEnv = {

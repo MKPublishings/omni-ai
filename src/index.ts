@@ -1,6 +1,6 @@
 import { OmniLogger } from "./logging/logger";
 import { OmniSafety } from "./stability/safety";
-import { omniBrainLoop } from "./api/omni/runtime/loop";
+import { omniBrainLoop } from "./runtime/loop";
 import { ping as apiPing } from "./api/ping";
 import { listModes, listModeDetails, getModeDetails } from "./api/modes";
 import { getMemory as getMemoryApi, setMemory as setMemoryApi, deleteMemory as deleteMemoryApi } from "./api/memory";
@@ -3831,7 +3831,8 @@ export default {
           ...ctx,
           model: routeSelection.selectedModel,
           messages: enrichedMessages,
-          maxOutputTokens: outputTokenLimit
+          maxOutputTokens: outputTokenLimit,
+          simulationContext
         };
 
         try {

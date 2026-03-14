@@ -1,5 +1,5 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { OmniIdentityKernel } from "./identityKernel";
+import type { OmniIdentityKernel } from "./identityKernel.ts";
 
 type OmniRole = "system" | "user" | "assistant";
 

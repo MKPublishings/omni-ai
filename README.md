@@ -4,7 +4,7 @@
 # **Omni Ai**  
 *A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture • A Public Summonable Intelligence*
 
-Omni Ai is a **cognitive operating system** engineered to unify reasoning, multimodal generation, memory, agents, and tool orchestration under a single, stable contract. It is built on a **unified request/response envelope**, a **full-surface namespace**, and a **rich Python client** that treats every interaction as part of a coherent mind.
+Omni Ai is a **cognitive operating system** in active unification. The current north star is a **single TypeScript-first Cloudflare Worker runtime** with one authoritative cognitive loop, one routing policy layer, unified memory services, and an embedded simulation substrate that can optionally call into deeper Python-origin logic when warranted.
 
 This README provides a **complete, structured, diagram‑rich** overview of Omni Ai’s architecture, philosophy, and usage.
 
@@ -222,14 +222,19 @@ result = agent.run("Compare Japan and Germany GDP.")
 ```
 omni-ai/
 │
-├── omni/
-│   ├── client/           # Python client
-│   ├── core/             # Cognitive engine
-│   ├── envelopes/        # Unified schemas
-│   ├── personas/         # Identity layer
-│   ├── tools/            # Tool definitions
-│   ├── agents/           # Agent framework
-│   └── utils/            # Helpers
+├── src/
+│   ├── index.ts          # Authoritative Worker entrypoint
+│   ├── runtime/          # Unified loop, routing, retrieval
+│   ├── simulation/       # TS-first object-oriented simulation core
+│   ├── memory/           # Working and long-term memory services
+│   ├── omni/             # Identity, behavior, rendering, multimodal subsystems
+│   └── tools/            # Tool execution and registries
+│
+├── omni_ai/
+│   ├── client.py         # Python client surface
+│   ├── simulation/       # High-fidelity Python depth retained during migration
+│   ├── anatomy/          # Specialized anatomy models
+│   └── human/            # Human/environment/decision modeling
 │
 ├── examples/             # Usage examples
 ├── tests/                # Test suite

@@ -1,4 +1,10 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import {
+  SimulationEngine,
+  summarizeWorld,
+  type ExternalSimulationInput,
+  type SimulationWorldSnapshot
+} from "../../simulation/index.ts";
 
 type SimulationStatus = "active" | "paused";
 
@@ -14,6 +20,7 @@ export type SimulationState = {
   stepsExecuted: number;
   rules: string[];
   memoryUsageBytes: number;
+  world: SimulationWorldSnapshot;
   logs: SimulationLogEntry[];
   updatedAt: number;
 };
@@ -35,6 +42,7 @@ export type SimulationContext = {
 
 const SIMULATION_MEMORY_KEY = "omni:simulation:state";
 const MAX_LOG_ENTRIES = 24;
+const SIMULATION_ENGINE = new SimulationEngine();
 const DEFAULT_RULES = [
   "domain: system-state",
   "time: linear",
@@ -60,6 +68,25 @@ function parseRuleLines(raw: string): string[] {
     .map((line) => line.replace(/^[-*]\s*/, "").trim())
     .filter(Boolean)
     .slice(0, 32);
+}
+
+function buildExternalInput(messages: SimulationMessage[]): ExternalSimulationInput {
+  const latestUserMessage = [...(messages || [])]
+    .reverse()
+    .find((message) => String(message?.role || "").toLowerCase() === "user");
+
+  const userIntent = normalizeText(latestUserMessage?.content);
+  const directives = extractRulesFromMessages(messages);
+  const injectedEvents = [
+    ...(userIntent ? [userIntent] : [])
+  ].slice(0, 2);
+
+  return {
+    userIntent,
+    directives,
+    injectedEvents,
+    mode: "simulation"
+  };
 }
 
 function extractRulesFromMessages(messages: SimulationMessage[]): string[] {
@@ -88,11 +115,13 @@ function estimateMemoryUsageBytes(state: Omit<SimulationState, "memoryUsageBytes
 }
 
 function makeInitialState(): SimulationState {
+  const world = SIMULATION_ENGINE.serialize(SIMULATION_ENGINE.bootstrapWorld({ rules: DEFAULT_RULES }));
   const base: Omit<SimulationState, "memoryUsageBytes"> = {
     simulationId: `sim_${nowTs()}`,
     status: "active",
     stepsExecuted: 0,
     rules: [...DEFAULT_RULES],
+    world,
     logs: [{ ts: nowTs(), level: "info", message: "Simulation initialized" }],
     updatedAt: nowTs()
   };
@@ -121,6 +150,9 @@ async function loadState(env: SimulationEnv): Promise<SimulationState> {
         ? state.rules.map((rule) => normalizeText(rule)).filter(Boolean).slice(0, 32)
         : [...DEFAULT_RULES],
       memoryUsageBytes: Number.isFinite(state.memoryUsageBytes) ? Math.max(0, Number(state.memoryUsageBytes)) : 0,
+      world: typeof state.world === "object" && state.world
+        ? SIMULATION_ENGINE.serialize(SIMULATION_ENGINE.deserialize(state.world as Partial<SimulationWorldSnapshot>))
+        : SIMULATION_ENGINE.serialize(SIMULATION_ENGINE.bootstrapWorld({ rules: [...DEFAULT_RULES] })),
       logs: Array.isArray(state.logs)
         ? state.logs
             .map((log) => ({
@@ -139,6 +171,7 @@ async function loadState(env: SimulationEnv): Promise<SimulationState> {
       status: normalized.status,
       stepsExecuted: normalized.stepsExecuted,
       rules: normalized.rules,
+      world: normalized.world,
       logs: normalized.logs,
       updatedAt: normalized.updatedAt
     });
@@ -184,6 +217,7 @@ function buildSystemPrompt(state: SimulationState): string {
     `Simulation ID: ${state.simulationId}`,
     `Status: ${state.status}`,
     `Steps Executed: ${state.stepsExecuted}`,
+    `World Snapshot: ${summarizeWorld(state.world)}`,
     "Rules:",
     ...state.rules.map((rule, index) => `${index + 1}. ${rule}`)
   ].join("\n");
@@ -206,6 +240,7 @@ export async function advanceSimulationState(env: SimulationEnv, messages: Simul
   const incomingRules = extractRulesFromMessages(messages);
   if (incomingRules.length) {
     state.rules = incomingRules;
+    state.world.environment.rules = [...incomingRules];
     appendLog(state, "info", `Rules updated (${incomingRules.length})`);
   }
 
@@ -215,6 +250,7 @@ export async function advanceSimulationState(env: SimulationEnv, messages: Simul
     state.status = "active";
     state.stepsExecuted = 0;
     state.rules = incomingRules.length ? incomingRules : [...DEFAULT_RULES];
+    state.world = SIMULATION_ENGINE.serialize(SIMULATION_ENGINE.bootstrapWorld({ rules: state.rules }));
     state.logs = [];
     appendLog(state, "warn", "Simulation reset from command");
   } else if (action === "pause") {
@@ -226,8 +262,11 @@ export async function advanceSimulationState(env: SimulationEnv, messages: Simul
   }
 
   if (state.status === "active") {
-    state.stepsExecuted += 1;
-    appendLog(state, "info", `Executed step ${state.stepsExecuted}`);
+    const world = SIMULATION_ENGINE.deserialize(state.world);
+    const nextWorld = SIMULATION_ENGINE.runStep(world, buildExternalInput(messages));
+    state.world = SIMULATION_ENGINE.serialize(nextWorld);
+    state.stepsExecuted = nextWorld.tick;
+    appendLog(state, "info", `Executed step ${state.stepsExecuted}: ${nextWorld.history.at(-1)?.summary || "no summary"}`);
   }
 
   state.updatedAt = nowTs();
@@ -236,6 +275,7 @@ export async function advanceSimulationState(env: SimulationEnv, messages: Simul
     status: state.status,
     stepsExecuted: state.stepsExecuted,
     rules: state.rules,
+    world: state.world,
     logs: state.logs,
     updatedAt: state.updatedAt
   });
