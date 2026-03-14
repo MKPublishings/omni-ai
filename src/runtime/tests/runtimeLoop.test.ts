@@ -44,3 +44,41 @@ test("omniBrainLoop attaches simulation context for simulation mode", async () =
   assert.equal(result.modelUsed, "simulation-model");
   assert.ok(result.diagnostics.some((entry) => entry.startsWith("simulation:")));
 });
+
+test("omniBrainLoop recovers from prompt budget overflow for long user input", async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  const longPrompt = `${"This is a long planning paragraph with multiple constraints and dependencies. ".repeat(220)}Final objective: provide an answer.`;
+
+  const result = await omniBrainLoop(
+    {
+      AI: {
+        run: async (_model: string, input: any) => {
+          const totalChars = Array.isArray(input?.messages)
+            ? input.messages.reduce((sum: number, message: any) => sum + String(message?.content || "").length, 0)
+            : 0;
+
+          if (totalChars > 9000) {
+            throw new Error("prompt too long: context length exceeded");
+          }
+
+          return { response: "Recovered response after compaction." };
+        }
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      MODEL_OMNI: "primary-model"
+    },
+    {
+      mode: "analysis",
+      model: "omni",
+      messages: [{ role: "user", content: longPrompt }],
+      maxOutputTokens: 512
+    }
+  );
+
+  assert.equal(result.response, "Recovered response after compaction.");
+  assert.ok(result.diagnostics.includes("runtime:prompt-budget-retry"));
+  assert.ok(result.diagnostics.includes("runtime:compact-retry-succeeded"));
+});

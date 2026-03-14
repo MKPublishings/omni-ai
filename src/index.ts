@@ -4023,7 +4023,11 @@ export default {
           const encoder = new TextEncoder();
           const errorStream = new ReadableStream({
             start(controller) {
-              controller.enqueue(encoder.encode("data: Runtime loop failed.\\n\\n"));
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ content: "Runtime loop failed. Please try again.", error: true })}\\n\\n`
+                )
+              );
               controller.enqueue(encoder.encode("data: [DONE]\\n\\n"));
               controller.close();
             }
