@@ -218,7 +218,8 @@ const modeColors = {
   simulation: { primary: "15, 82, 186", name: "Simulation" },
   coding: { primary: "99, 102, 241", name: "Coding" },
   knowledge: { primary: "234, 179, 8", name: "Knowledge" },
-  "system-knowledge": { primary: "148, 163, 184", name: "System Knowledge" }
+  "system-knowledge": { primary: "148, 163, 184", name: "System Knowledge" },
+  anatomy: { primary: "14, 165, 233", name: "Anatomy" }
 };
 
 modeSections.forEach((section) => {
