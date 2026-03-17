@@ -64,6 +64,8 @@ export interface Env {
   OMNI_MEDIA_PORT?: string;
   OMNI_MEDIA_API_KEY?: string;
   OMNI_MEDIA_API_TIMEOUT_MS?: string;
+  OMNI_FAST_CHAT?: string;
+  OMNI_NATIVE_STREAMING?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -111,6 +113,7 @@ type OmniMessage = {
 type OmniRequestBody = {
   mode?: string;
   model?: string;
+  fastMode?: boolean;
   messages?: Array<{ role?: string; content?: string }>;
   conversationHints?: {
     inferredMode?: string;
@@ -361,6 +364,11 @@ function isNonProduction(request: Request, env: Env): boolean {
 
   const host = new URL(request.url).hostname.toLowerCase();
   return host === "localhost" || host === "127.0.0.1" || host.endsWith(".workers.dev");
+}
+
+function isEnabledFlag(value: unknown): boolean {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 const CORS_HEADERS = {
@@ -991,13 +999,116 @@ function shouldUseInternetSearch(userText: string, mode: string): boolean {
   if (!value) return false;
   if (normalizeInternetMode(mode) === "simulation") return false;
   const intentPattern = /\b(latest|current|today|news|recent|what is|how to|documentation|docs|guide|compare|vs\.?|benchmark|release|update)\b/i;
-  return intentPattern.test(value) || value.length > 24;
+  return intentPattern.test(value);
 }
 
 function shouldUseWeatherContext(userText: string): boolean {
   const value = String(userText || "").trim().toLowerCase();
   if (!value) return false;
   return /\b(weather|temperature|forecast|rain|snow|humidity|wind|climate)\b/i.test(value);
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timeoutId = setTimeout(() => resolve(fallback), timeoutMs);
+      })
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function extractProviderToken(rawLine: string): string {
+  const line = String(rawLine || "").trim();
+  if (!line || line === "[DONE]") return "";
+
+  try {
+    const parsed = JSON.parse(line) as any;
+    const fromChoices = parsed?.choices?.[0];
+    const value =
+      parsed?.response ??
+      parsed?.output_text ??
+      parsed?.text ??
+      parsed?.content ??
+      fromChoices?.delta?.content ??
+      fromChoices?.message?.content ??
+      "";
+    return typeof value === "string" ? value : "";
+  } catch {
+    return line;
+  }
+}
+
+function createOmniSseFromProviderStream(options: {
+  providerStream: ReadableStream;
+  route: string;
+  multimodalPayload?: Record<string, unknown> | null;
+  onComplete?: (fullText: string) => void;
+}): ReadableStream {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const reader = options.providerStream.getReader();
+
+  return new ReadableStream({
+    async start(controller) {
+      let pending = "";
+      let firstChunkSent = false;
+      let fullText = "";
+
+      const emitChunk = (content: string) => {
+        if (!content) return;
+        fullText += content;
+        const payload = firstChunkSent
+          ? { content }
+          : { content, route: options.route, ...(options.multimodalPayload || {}) };
+        firstChunkSent = true;
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+      };
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          pending += decoder.decode(value, { stream: true });
+          const lines = pending.split(/\r?\n/);
+          pending = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = String(line || "").trim();
+            if (!trimmed) continue;
+            const payload = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+            emitChunk(extractProviderToken(payload));
+          }
+        }
+
+        const trailing = pending.trim();
+        if (trailing) {
+          const payload = trailing.startsWith("data:") ? trailing.slice(5).trim() : trailing;
+          emitChunk(extractProviderToken(payload));
+        }
+      } catch {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ content: "Streaming interrupted. Continuing with partial output." })}\n\n`)
+        );
+      } finally {
+        options.onComplete?.(fullText);
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      }
+    },
+    cancel() {
+      void reader.cancel();
+    }
+  });
 }
 
 function inferWeatherLocation(userText: string, request: Request): string {
@@ -3501,6 +3612,7 @@ export default {
       }
 
       if (url.pathname === "/api/omni" && request.method === "POST") {
+        const requestStartedAt = Date.now();
         await ensureOmniMemorySchema(env);
         const body = (await request.json()) as OmniRequestBody;
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
@@ -3527,7 +3639,7 @@ export default {
         }
 
         const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
-        const ctx = {
+        const requestCtx = {
           mode: normalizedMode,
           model: "omni",
           messages: (body.messages || []).map((m) => ({
@@ -3537,15 +3649,20 @@ export default {
         };
 
         const simulationContext = normalizedMode === "simulation"
-          ? await advanceSimulationState(env, ctx.messages)
+          ? await advanceSimulationState(env, requestCtx.messages)
           : null;
         const sessionId = resolveSessionId(request);
         const workingMemory = await loadWorkingMemory(env, sessionId);
         const requestCountryCode = getRequestCountryCode(request);
+        const fastChatEnabled =
+          isEnabledFlag(env.OMNI_FAST_CHAT) ||
+          body?.fastMode === true ||
+          String(url.searchParams.get("fast") || "").toLowerCase() === "true";
+        const nativeStreamingEnabled = isEnabledFlag(env.OMNI_NATIVE_STREAMING) || fastChatEnabled;
 
-        const latestUserText = getLatestUserText(ctx.messages);
+        const latestUserText = getLatestUserText(requestCtx.messages);
         const conversationHints = normalizeConversationHints(body?.conversationHints);
-        const conversationDigest = buildConversationDigest(ctx.messages, 6);
+        const conversationDigest = buildConversationDigest(requestCtx.messages, 6);
         const safetyDecision = evaluateSexualSafetyPrompt(latestUserText, safetyProfile);
         if (safetyDecision.blocked) {
           return new Response(
@@ -3652,13 +3769,13 @@ export default {
           )
         );
 
-        const shouldLoadMemoryArc = normalizedMode !== "simulation";
-        const shouldLoadInternetLearning = true;
-        const shouldLoadWeather = shouldUseWeatherContext(latestUserText);
+        const shouldLoadMemoryArc = normalizedMode !== "simulation" && !fastChatEnabled;
+        const shouldLoadInternetLearning = !fastChatEnabled;
+        const shouldLoadWeather = !fastChatEnabled && shouldUseWeatherContext(latestUserText);
         const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
-        const shouldUseKnowledge = shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
-        const shouldLoadSystemModules = shouldUseSystemKnowledge(normalizedMode, latestUserText);
-        const shouldLoadInternetSearch = shouldUseInternetSearch(latestUserText, normalizedMode);
+        const shouldUseKnowledge = !fastChatEnabled && shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
+        const shouldLoadSystemModules = !fastChatEnabled && shouldUseSystemKnowledge(normalizedMode, latestUserText);
+        const shouldLoadInternetSearch = !fastChatEnabled && shouldUseInternetSearch(latestUserText, normalizedMode);
 
         const memoryArcPromise = shouldLoadMemoryArc
           ? getRecentMemoryArc(env, sessionId, 3)
@@ -3710,7 +3827,7 @@ export default {
           promptSystemMessages.push(makeContextSystemMessage("Mode Template", modeTemplate));
         }
 
-        const internetLearningContext = await internetLearningPromise;
+        const internetLearningContext = await withTimeout(internetLearningPromise, 250, "");
         if (internetLearningContext) {
           promptSystemMessages.push(
             makeContextSystemMessage(
@@ -3726,7 +3843,7 @@ export default {
         }
 
         if (shouldLoadWeather) {
-          const weather = await weatherPromise;
+          const weather = await withTimeout(weatherPromise, 800, null);
           if (weather) {
             promptSystemMessages.push(
               makeContextSystemMessage(
@@ -3746,7 +3863,7 @@ export default {
         }
 
         if (shouldUseKnowledge) {
-          const hits = await knowledgePromise;
+          const hits = await withTimeout(knowledgePromise, 500, []);
           if (hits.length) {
             const context = hits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3761,7 +3878,7 @@ export default {
         }
 
         if (shouldLoadSystemModules) {
-          const moduleHits = await modulePromise;
+          const moduleHits = await withTimeout(modulePromise, 500, []);
           if (moduleHits.length) {
             const moduleContext = moduleHits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3776,7 +3893,7 @@ export default {
         }
 
         if (shouldLoadInternetSearch) {
-          const internet = await internetSearchPromise;
+          const internet = await withTimeout(internetSearchPromise, 1100, null);
           if (internet) {
             void recordInternetLearning(env, normalizedMode, latestUserText, internet.hits).catch((internetErr) => {
               logger.log("internet_learning_record_failed", {
@@ -3808,14 +3925,14 @@ export default {
           }
         }
 
-        const enrichedMessages: OmniMessage[] = [...promptSystemMessages, ...ctx.messages];
+        const enrichedMessages: OmniMessage[] = [...promptSystemMessages, ...requestCtx.messages];
 
-        const responseLimit = computeAdaptiveResponseMax(ctx.messages, env);
+        const responseLimit = computeAdaptiveResponseMax(requestCtx.messages, env);
         const outputTokenLimit = computeAdaptiveOutputTokens(responseLimit, env);
         const debugEnabled = isNonProduction(request, env);
 
         logger.log("incoming_request", {
-          ...ctx,
+          ...requestCtx,
           orchestratorRoute: orchestratorDecision.route,
           orchestratorReason: orchestratorDecision.reason,
           modelSelected: routeSelection.selectedModel,
@@ -3828,11 +3945,12 @@ export default {
         });
 
         const runtimeCtx = {
-          ...ctx,
+          ...requestCtx,
           model: routeSelection.selectedModel,
           messages: enrichedMessages,
           maxOutputTokens: outputTokenLimit,
-          simulationContext
+          simulationContext,
+          preferStreaming: nativeStreamingEnabled
         };
 
         try {
@@ -3884,6 +4002,93 @@ export default {
           }
 
           if (result) {
+            const nativeProviderStream = (result as any)?.stream;
+            if (isReadableByteStream(nativeProviderStream)) {
+              const latestUserTurn = getLatestUserText(requestCtx.messages);
+              const stream = createOmniSseFromProviderStream({
+                providerStream: nativeProviderStream,
+                route: orchestratorDecision.route,
+                multimodalPayload,
+                onComplete: (fullText) => {
+                  if (normalizedMode !== "simulation" && latestUserTurn && fullText) {
+                    ctx.waitUntil(
+                      Promise.all([
+                        persistEmotionalResonance(env, emotionalResonance),
+                        updateWorkingMemoryFromTurn(env, {
+                          sessionId,
+                          mode: normalizedMode,
+                          userText: latestUserTurn,
+                          assistantText: fullText,
+                          emotionalTone: emotionalResonance.omniTone
+                        }),
+                        saveMemoryTurn(env, {
+                          sessionId,
+                          mode: normalizedMode,
+                          userText: latestUserTurn,
+                          assistantText: fullText,
+                          emotionalTone: emotionalResonance.omniTone
+                        })
+                      ]).catch((memoryErr) => {
+                        logger.log("memory_persist_deferred_failed", {
+                          message: String((memoryErr as Error)?.message || memoryErr || "unknown error")
+                        });
+                      })
+                    );
+                  }
+                }
+              });
+
+              const exposeHeaders = [
+                "X-Omni-Model-Used",
+                "X-Omni-Route-Reason",
+                "X-Omni-Orchestrator-Route",
+                "X-Omni-Orchestrator-Reason",
+                "X-Omni-Persona-Tone",
+                "X-Omni-Emotion-User",
+                "X-Omni-Emotion-Omni",
+                "X-Omni-Internet-Mode",
+                "X-Omni-Internet-Profile",
+                "X-Omni-Internet-Count",
+                "X-Omni-Fast-Chat",
+                "X-Omni-Prestream-Latency-Ms"
+              ];
+
+              if (simulationContext) {
+                exposeHeaders.push("X-Omni-Simulation-Id", "X-Omni-Simulation-Status", "X-Omni-Simulation-Steps");
+              }
+
+              return new Response(stream, {
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "text/event-stream",
+                  "Cache-Control": "no-cache",
+                  "Connection": "keep-alive",
+                  "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                  "X-Omni-Route-Reason": routeSelection.reason,
+                  "X-Omni-Orchestrator-Route": orchestratorDecision.route,
+                  "X-Omni-Orchestrator-Reason": orchestratorDecision.reason,
+                  "X-Omni-Persona-Tone": personaProfile.tone,
+                  "X-Omni-Emotion-User": emotionalResonance.userEmotion,
+                  "X-Omni-Emotion-Omni": emotionalResonance.omniTone,
+                  "X-Omni-Internet-Mode": normalizeInternetMode(normalizedMode),
+                  "X-Omni-Internet-Profile": internetProfileUsed
+                    ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
+                    : "none",
+                  "X-Omni-Internet-Count": String(internetHitCount),
+                  "X-Omni-Fast-Chat": String(fastChatEnabled),
+                  "X-Omni-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
+                  ...(simulationContext
+                    ? {
+                        "X-Omni-Simulation-Id": simulationContext.state.simulationId,
+                        "X-Omni-Simulation-Status": simulationContext.state.status,
+                        "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                      }
+                    : {}),
+                  "Access-Control-Expose-Headers": exposeHeaders.join(", ")
+                }
+              });
+            }
+
             const parsedResult =
               typeof result === "string"
                 ? { response: result }
@@ -3922,25 +4127,31 @@ export default {
               }
             });
 
-            const latestUserTurn = getLatestUserText(ctx.messages);
+            const latestUserTurn = getLatestUserText(requestCtx.messages);
             if (normalizedMode !== "simulation" && latestUserTurn && finalResponse) {
-              await persistEmotionalResonance(env, emotionalResonance);
-
-              await updateWorkingMemoryFromTurn(env, {
-                sessionId,
-                mode: normalizedMode,
-                userText: latestUserTurn,
-                assistantText: finalResponse,
-                emotionalTone: emotionalResonance.omniTone
-              });
-
-              await saveMemoryTurn(env, {
-                sessionId,
-                mode: normalizedMode,
-                userText: latestUserTurn,
-                assistantText: finalResponse,
-                emotionalTone: emotionalResonance.omniTone
-              });
+              ctx.waitUntil(
+                Promise.all([
+                  persistEmotionalResonance(env, emotionalResonance),
+                  updateWorkingMemoryFromTurn(env, {
+                    sessionId,
+                    mode: normalizedMode,
+                    userText: latestUserTurn,
+                    assistantText: finalResponse,
+                    emotionalTone: emotionalResonance.omniTone
+                  }),
+                  saveMemoryTurn(env, {
+                    sessionId,
+                    mode: normalizedMode,
+                    userText: latestUserTurn,
+                    assistantText: finalResponse,
+                    emotionalTone: emotionalResonance.omniTone
+                  })
+                ]).catch((memoryErr) => {
+                  logger.log("memory_persist_deferred_failed", {
+                    message: String((memoryErr as Error)?.message || memoryErr || "unknown error")
+                  });
+                })
+              );
             }
 
             const exposeHeaders = [
@@ -3953,7 +4164,9 @@ export default {
               "X-Omni-Emotion-Omni",
               "X-Omni-Internet-Mode",
               "X-Omni-Internet-Profile",
-              "X-Omni-Internet-Count"
+              "X-Omni-Internet-Count",
+              "X-Omni-Fast-Chat",
+              "X-Omni-Prestream-Latency-Ms"
             ];
 
             if (simulationContext) {
@@ -3982,6 +4195,8 @@ export default {
                   ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
                   : "none",
                 "X-Omni-Internet-Count": String(internetHitCount),
+                "X-Omni-Fast-Chat": String(fastChatEnabled),
+                "X-Omni-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
                 ...(simulationContext
                   ? {
                       "X-Omni-Simulation-Id": simulationContext.state.simulationId,

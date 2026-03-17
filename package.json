@@ -22,6 +22,7 @@
     "smoke:image:orchestrator-attestation": "node ./scripts/smoke/orchestratorImageAttestationSmoke.js",
     "smoke:chat-policy": "node ./scripts/smoke/chatPromptPolicySmoke.js",
     "smoke:chat-image-intent": "node ./scripts/smoke/chatImageIntentSmoke.js",
+    "bench:chat-latency": "node ./scripts/bench/chatLatency.js",
     "smoke:policy-lockstep": "node ./scripts/smoke/policyLockstepSmoke.js",
     "validate:engine": "node ./omni-image-engine/utils/validator.js",
     "mind:loop": "node ./scripts/mind/runOnRecentLogs.js",

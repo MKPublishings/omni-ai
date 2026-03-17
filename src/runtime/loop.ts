@@ -17,6 +17,7 @@ export interface OmniLoopContext {
   messages: OmniLoopMessage[];
   maxOutputTokens?: number;
   simulationContext?: SimulationContext | null;
+  preferStreaming?: boolean;
 }
 
 export interface OmniLoopResult {
@@ -25,6 +26,7 @@ export interface OmniLoopResult {
   fallbackUsed: boolean;
   diagnostics: string[];
   simulationUsed: boolean;
+  stream?: ReadableStream;
 }
 
 type OmniRuntimeEnv = {
@@ -155,6 +157,10 @@ function makeSystemMessage(content: string): OmniReasoningMessage {
   return { role: "system", content };
 }
 
+function isReadableByteStream(value: unknown): value is ReadableStream {
+  return !!value && typeof (value as any).getReader === "function";
+}
+
 export async function omniBrainLoop(
   env: OmniRuntimeEnv,
   ctx: OmniLoopContext
@@ -245,6 +251,30 @@ export async function omniBrainLoop(
     let fallbackUsed = false;
     let reasoning;
     const primaryContext = compactContextMessages([...systemMessages, ...safeMessages]);
+
+    if (ctx.preferStreaming) {
+      const streamInput = {
+        messages: primaryContext,
+        max_tokens: maxOutputTokens,
+        maxTokens: maxOutputTokens,
+        stream: true
+      };
+
+      const rawStream = await env.AI.run(route.selectedModel, streamInput);
+      if (isReadableByteStream(rawStream)) {
+        diagnostics.push("streaming:native");
+        return {
+          response: "",
+          modelUsed,
+          fallbackUsed,
+          diagnostics,
+          simulationUsed: Boolean(simulationContext),
+          stream: rawStream
+        };
+      }
+
+      diagnostics.push("streaming:native-unavailable");
+    }
 
     try {
       reasoning = await runInternalSimulation({

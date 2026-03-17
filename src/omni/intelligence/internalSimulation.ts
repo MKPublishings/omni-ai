@@ -54,9 +54,9 @@ function scoreResponse(text: string): number {
 }
 
 function resolvePathCount(env: SimulationEnv): number {
-  const requested = Number(env.OMNI_SIMULATION_PATHS || 2);
-  if (!Number.isFinite(requested)) return 2;
-  return clamp(Math.floor(requested), 2, 4);
+  const requested = Number(env.OMNI_SIMULATION_PATHS || 1);
+  if (!Number.isFinite(requested)) return 1;
+  return clamp(Math.floor(requested), 1, 4);
 }
 
 export async function runInternalSimulation(input: InternalSimulationInput): Promise<InternalSimulationResult> {

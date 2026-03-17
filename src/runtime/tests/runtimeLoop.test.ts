@@ -82,3 +82,38 @@ test("omniBrainLoop recovers from prompt budget overflow for long user input", a
   assert.ok(result.diagnostics.includes("runtime:prompt-budget-retry"));
   assert.ok(result.diagnostics.includes("runtime:compact-retry-succeeded"));
 });
+
+test("omniBrainLoop returns native stream when preferStreaming is enabled", async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+  const encoder = new TextEncoder();
+
+  const modelStream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode("data: {\"response\":\"stream-token\"}\n\n"));
+      controller.close();
+    }
+  });
+
+  const result = await omniBrainLoop(
+    {
+      AI: {
+        run: async () => modelStream
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      MODEL_OMNI: "primary-model"
+    },
+    {
+      mode: "auto",
+      model: "omni",
+      messages: [{ role: "user", content: "Respond fast." }],
+      maxOutputTokens: 256,
+      preferStreaming: true
+    }
+  );
+
+  assert.ok(result.stream);
+  assert.equal(result.response, "");
+  assert.ok(result.diagnostics.includes("streaming:native"));
+});

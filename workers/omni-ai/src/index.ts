@@ -490,11 +490,8 @@ async function forward(
     );
   }
 
-  const text = await upstreamResponse.text();
-  return new Response(text, {
+  return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
-    headers: {
-      "Content-Type": upstreamResponse.headers.get("Content-Type") || "application/json"
-    }
+    headers: upstreamResponse.headers
   });
 }
