@@ -223,6 +223,7 @@ function formatModeLabel(value = "") {
   const normalized = String(value || "").trim().toLowerCase();
   if (!normalized) return "Architect";
   if (normalized === "system-knowledge") return "System Knowledge";
+  if (normalized === "environment") return "Environment";
   if (normalized === "auto") return "Auto";
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
