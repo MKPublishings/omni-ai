@@ -47,15 +47,11 @@
 
 .mode-card[data-mode="environment"] .mode-card-title,
 .mode-card[data-mode="environment"] .mode-card__title {
-  color: var(--env-primary);
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
   margin: 0.25rem 0;
 }
 
 .mode-card[data-mode="environment"] .mode-card-desc,
 .mode-card[data-mode="environment"] .mode-card__description {
-  color: var(--text-dim);
   margin: 0.25rem 0 0.75rem 0;
 }
 
