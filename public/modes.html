@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/styles/layout.css?v=20260302-2" />
   <link rel="stylesheet" href="/styles/components.css?v=20260302-1" />
   <link rel="stylesheet" href="/styles/modes.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/environment-mode-styles.css?v=20260320-1" />
 </head>
 <body class="page">
   <div id="layout">
@@ -952,6 +953,239 @@ rules:
             <a href="/chat.html" class="use-case-tag">Try in Chat</a>
             <a href="/codex.html#simulation-lineage" class="use-case-tag">View Codex</a>
           </div>
+        </div>
+      </section>
+
+      <section id="environment" class="mode-section env-section">
+        <div class="mode-section__container">
+
+          <div class="env-section__header">
+            <div class="env-section__icon-wrap">
+              <span class="env-section__icon" aria-hidden="true">🌍</span>
+            </div>
+            <div class="env-section__title-group">
+              <h2 class="env-section__title">Environment Mode</h2>
+              <div class="env-section__badges">
+                <span class="env-badge env-badge--primary">Mode #12</span>
+                <span class="env-badge env-badge--accent">Planetary Scale</span>
+                <span class="env-badge env-badge--outline">v1.0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="env-section__overview">
+            <p>
+              Environment Mode transforms Ionirix into a full-scope planetary
+              simulation engine. It models Earth across <strong>seven spatial
+              scales</strong> - from individual villages (1 km2) to the
+              entire planet (510 million km2) - using
+              <strong>ten coupled subsystems</strong> that exchange data every tick.
+            </p>
+            <p>
+              Seeded with real-world geography, demographics, climate zones, tectonic
+              plates, and ocean currents, the simulation produces emergent behavior:
+              droughts cascade into migration, trade disruptions ripple through
+              economies, and governance adapts under pressure. Every layer is
+              deterministic and reproducible via configurable RNG seeds.
+            </p>
+          </div>
+
+          <div class="env-feature-grid">
+            <div class="env-feature-card">
+              <div class="env-feature-card__icon">🔬</div>
+              <h3 class="env-feature-card__title">Multi-Scale Resolution</h3>
+              <p class="env-feature-card__text">
+                Seven discrete scale levels (L0 Planet → L6 Village) with
+                automatic cell generation, cross-scale propagation, and seamless
+                zoom navigation.
+              </p>
+            </div>
+
+            <div class="env-feature-card">
+              <div class="env-feature-card__icon">🔗</div>
+              <h3 class="env-feature-card__title">Coupled Subsystems</h3>
+              <p class="env-feature-card__text">
+                Ten simulation systems execute in dependency-sorted order each tick.
+                Climate drives hydrology; ecology feeds population; energy powers
+                economy - fully connected.
+              </p>
+            </div>
+
+            <div class="env-feature-card">
+              <div class="env-feature-card__icon">🌐</div>
+              <h3 class="env-feature-card__title">Earth Seed Initialization</h3>
+              <p class="env-feature-card__text">
+                Pre-loaded with 7 continents, 10 countries, 50+ cities,
+                16 tectonic plates, 20 climate zones, and
+                10 ocean currents - all from real-world data.
+              </p>
+            </div>
+
+            <div class="env-feature-card">
+              <div class="env-feature-card__icon">⏩</div>
+              <h3 class="env-feature-card__title">Time Acceleration</h3>
+              <p class="env-feature-card__text">
+                Run simulations at 1x, 10x, 100x, or 1000x speed. Snapshot and
+                rollback to any prior state. Deterministic replay with identical seeds.
+              </p>
+            </div>
+          </div>
+
+          <div class="env-tech-table-wrap">
+            <h3 class="env-section__subtitle">Technical Specifications</h3>
+            <table class="env-tech-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Scale Levels</td><td>7 (L0 Planet to L6 Village)</td></tr>
+                <tr><td>Cell Size Range</td><td>1 km2 - 100,000 km2</td></tr>
+                <tr><td>Time Step Range</td><td>15 min - 720 hours</td></tr>
+                <tr><td>Subsystems</td><td>10 coupled engines</td></tr>
+                <tr><td>Seed Data</td><td>Real-world Earth constants and geography</td></tr>
+                <tr><td>RNG</td><td>Seeded LCG (deterministic, reproducible)</td></tr>
+                <tr><td>Snapshot System</td><td>Full state capture and rollback</td></tr>
+                <tr><td>Architecture</td><td>TypeScript strict, Cloudflare Workers</td></tr>
+                <tr><td>Mode Order</td><td>#12</td></tr>
+                <tr><td>Primary / Accent</td><td>#0ea5e9 / #22c55e</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="env-subsystems">
+            <h3 class="env-section__subtitle">Simulation Subsystems</h3>
+            <div class="env-subsystem-grid">
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">🌡️</span>
+                <h4>Climate</h4>
+                <p>Atmospheric modeling, seasonal cycles, ENSO oscillation, Koppen zone classification, and stochastic weather event generation.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">💧</span>
+                <h4>Hydrology</h4>
+                <p>Water cycle simulation, watershed management, aquifer tracking, ocean currents, tidal modeling, glacier melt, and sea level rise.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">🌿</span>
+                <h4>Ecology</h4>
+                <p>Biome distribution, Lotka-Volterra population dynamics, food web modeling, Shannon biodiversity index, carbon sequestration, and deforestation tracking.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">⛰️</span>
+                <h4>Geology</h4>
+                <p>Tectonic plate movement, Gutenberg-Richter seismic modeling, volcanic activity with VEI scaling, soil orders, and erosion processes.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">🏗️</span>
+                <h4>Infrastructure</h4>
+                <p>Road, rail, airport, seaport, pipeline, power grid, water, waste, and telecom networks with condition-based degradation and maintenance cycles.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">👥</span>
+                <h4>Population</h4>
+                <p>Demographics, settlement hierarchy (hamlet to ecumenopolis), migration flows with push/pull factors, disease modeling with R0 transmission.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">⚡</span>
+                <h4>Energy</h4>
+                <p>16 energy source types, merit-order dispatch, storage with cycle degradation, energy markets with carbon pricing, and transition state tracking.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">📈</span>
+                <h4>Economy</h4>
+                <p>Solow growth model, 20 economic sectors, 28 trade commodities, macroeconomic indicators (GDP, inflation, debt-to-GDP, PMI), and credit ratings.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">🏛️</span>
+                <h4>Governance</h4>
+                <p>15 government types, 8 electoral systems, 4-axis political parties, diplomatic relations, treaties, sanctions, military state, and coup risk modeling.</p>
+              </div>
+
+              <div class="env-subsystem-card">
+                <span class="env-subsystem-card__icon">🚢</span>
+                <h4>Transport</h4>
+                <p>24 transport modes, maritime chokepoints (9 real-world), aviation networks, logistics hubs, modal share analysis, congestion, and emissions tracking.</p>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="env-scale-viz">
+            <h3 class="env-section__subtitle">Scale Hierarchy</h3>
+            <div class="env-scale-ladder">
+              <div class="env-scale-rung" data-level="0">
+                <span class="env-scale-rung__level">L0</span>
+                <span class="env-scale-rung__name">Planet</span>
+                <span class="env-scale-rung__cell">100,000 km2</span>
+                <span class="env-scale-rung__step">720 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="1">
+                <span class="env-scale-rung__level">L1</span>
+                <span class="env-scale-rung__name">Continent</span>
+                <span class="env-scale-rung__cell">50,000 km2</span>
+                <span class="env-scale-rung__step">168 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="2">
+                <span class="env-scale-rung__level">L2</span>
+                <span class="env-scale-rung__name">Country</span>
+                <span class="env-scale-rung__cell">10,000 km2</span>
+                <span class="env-scale-rung__step">24 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="3">
+                <span class="env-scale-rung__level">L3</span>
+                <span class="env-scale-rung__name">State / Province</span>
+                <span class="env-scale-rung__cell">1,000 km2</span>
+                <span class="env-scale-rung__step">6 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="4">
+                <span class="env-scale-rung__level">L4</span>
+                <span class="env-scale-rung__name">Metro Area</span>
+                <span class="env-scale-rung__cell">100 km2</span>
+                <span class="env-scale-rung__step">1 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="5">
+                <span class="env-scale-rung__level">L5</span>
+                <span class="env-scale-rung__name">City</span>
+                <span class="env-scale-rung__cell">10 km2</span>
+                <span class="env-scale-rung__step">0.5 h</span>
+              </div>
+              <div class="env-scale-rung" data-level="6">
+                <span class="env-scale-rung__level">L6</span>
+                <span class="env-scale-rung__name">Village</span>
+                <span class="env-scale-rung__cell">1 km2</span>
+                <span class="env-scale-rung__step">0.25 h</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="env-invocations">
+            <h3 class="env-section__subtitle">Quick Commands</h3>
+            <div class="env-invocation-list">
+              <code>environment start</code>
+              <code>environment zoom into North America</code>
+              <code>environment status climate</code>
+              <code>environment snapshot</code>
+              <code>environment speed 100</code>
+              <code>environment query population Brazil</code>
+              <code>environment inject earthquake magnitude 7.2</code>
+              <code>environment rollback</code>
+              <code>environment export</code>
+              <code>environment stop</code>
+            </div>
+          </div>
+
         </div>
       </section>
 

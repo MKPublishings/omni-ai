@@ -1,0 +1,116 @@
+<!-- ============================================================
+     IONIRIX - Environment Mode Codex Entry
+     Insert into codex.html / lineage section
+     (c) 2026 MK Publishing
+     ============================================================ -->
+<div class="env-codex-entry" id="codex-environment">
+
+  <!-- Lineage Chain -->
+  <h3 class="env-section__subtitle" style="margin-top: 0;">Environment Mode - Lineage</h3>
+  <div class="env-lineage-chain">
+    <span class="env-lineage-chain__node">Simulation Mode</span>
+    <span class="env-lineage-chain__arrow">→</span>
+    <span class="env-lineage-chain__node">City Scale</span>
+    <span class="env-lineage-chain__arrow">→</span>
+    <span class="env-lineage-chain__node">Country Scale</span>
+    <span class="env-lineage-chain__arrow">→</span>
+    <span class="env-lineage-chain__node env-lineage-chain__node--current">Planetary Scale</span>
+  </div>
+
+  <!-- Module Registry -->
+  <h4 style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 1.5rem 0 0.75rem 0;">Module Registry</h4>
+  <div style="overflow-x: auto;">
+    <table class="env-registry-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Path</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>types</td>
+          <td>modes/environment/types/environment.types.ts</td>
+          <td>Complete type system, enums, interfaces, SeededRandom</td>
+        </tr>
+        <tr>
+          <td>scale-manager</td>
+          <td>modes/environment/core/scale-manager.ts</td>
+          <td>7-level spatial hierarchy, cell generation, propagation</td>
+        </tr>
+        <tr>
+          <td>engine</td>
+          <td>modes/environment/core/environment-engine.ts</td>
+          <td>Central orchestrator, tick execution, snapshot/rollback</td>
+        </tr>
+        <tr>
+          <td>earth-init</td>
+          <td>modes/environment/core/earth-initializer.ts</td>
+          <td>Real-world seed data, region hierarchy builder</td>
+        </tr>
+        <tr>
+          <td>mode-handler</td>
+          <td>modes/environment/core/mode-handler.ts</td>
+          <td>NLP command parser, 25 actions, ~40 aliases</td>
+        </tr>
+        <tr>
+          <td>index</td>
+          <td>modes/environment/index.ts</td>
+          <td>Barrel re-export of all modules</td>
+        </tr>
+        <tr>
+          <td>climate</td>
+          <td>modes/environment/systems/climate-system.ts</td>
+          <td>Atmospheric modeling, ENSO, Koppen, weather events</td>
+        </tr>
+        <tr>
+          <td>hydrology</td>
+          <td>modes/environment/systems/hydrology-system.ts</td>
+          <td>Water cycle, watersheds, aquifers, ocean currents</td>
+        </tr>
+        <tr>
+          <td>ecology</td>
+          <td>modes/environment/systems/ecology-system.ts</td>
+          <td>Biomes, Lotka-Volterra, food webs, biodiversity</td>
+        </tr>
+        <tr>
+          <td>geology</td>
+          <td>modes/environment/systems/geology-system.ts</td>
+          <td>Tectonics, Gutenberg-Richter seismics, volcanism, soils</td>
+        </tr>
+        <tr>
+          <td>infrastructure</td>
+          <td>modes/environment/systems/infrastructure-system.ts</td>
+          <td>Road, rail, air, port, grid, water, waste, telecom</td>
+        </tr>
+        <tr>
+          <td>population</td>
+          <td>modes/environment/systems/population-system.ts</td>
+          <td>Demographics, settlements, migration, disease modeling</td>
+        </tr>
+        <tr>
+          <td>energy</td>
+          <td>modes/environment/systems/energy-system.ts</td>
+          <td>16 sources, merit-order dispatch, storage, markets</td>
+        </tr>
+        <tr>
+          <td>economy</td>
+          <td>modes/environment/systems/economy-system.ts</td>
+          <td>Solow growth, 20 sectors, 28 commodities, macro state</td>
+        </tr>
+        <tr>
+          <td>governance</td>
+          <td>modes/environment/systems/governance-system.ts</td>
+          <td>15 gov types, elections, diplomacy, treaties, military</td>
+        </tr>
+        <tr>
+          <td>transport</td>
+          <td>modes/environment/systems/transport-system.ts</td>
+          <td>24 modes, chokepoints, aviation, logistics, emissions</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
