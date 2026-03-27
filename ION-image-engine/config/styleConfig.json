@@ -1,0 +1,175 @@
+{
+  "packs": {
+    "mythic_cinematic": {
+      "name": "Mythic Cinematic",
+      "tags": [
+        "cinematic lighting",
+        "dramatic contrast",
+        "symbolic composition",
+        "high detail",
+        "emotional depth"
+      ],
+      "keywords": [
+        "mythic",
+        "epic",
+        "legend",
+        "heroic",
+        "godlike",
+        "mythology"
+      ]
+    },
+    "os_cinematic": {
+      "name": "OS Cinematic",
+      "tags": [
+        "futuristic UI",
+        "holographic overlays",
+        "clean interface",
+        "glowing panels"
+      ],
+      "keywords": [
+        "interface",
+        "ui",
+        "hud",
+        "dashboard",
+        "holographic",
+        "operating system"
+      ]
+    },
+    "noir_tech": {
+      "name": "Noir Tech",
+      "tags": [
+        "high contrast",
+        "dark palette",
+        "moody lighting",
+        "cyberpunk atmosphere"
+      ],
+      "keywords": [
+        "noir",
+        "cyberpunk",
+        "neon",
+        "rainy street",
+        "moody",
+        "detective"
+      ]
+    },
+    "anime_illustration": {
+      "name": "Anime Illustration",
+      "tags": [
+        "anime art style",
+        "clean linework",
+        "cel shaded rendering",
+        "vibrant color blocks"
+      ],
+      "keywords": [
+        "anime",
+        "manga",
+        "cel shading",
+        "shonen",
+        "kawaii",
+        "character art"
+      ]
+    },
+    "watercolor_storybook": {
+      "name": "Watercolor Storybook",
+      "tags": [
+        "watercolor wash",
+        "soft edges",
+        "storybook illustration",
+        "paper texture"
+      ],
+      "keywords": [
+        "watercolor",
+        "storybook",
+        "children book",
+        "whimsical",
+        "painted",
+        "ink and wash"
+      ]
+    },
+    "photoreal_editorial": {
+      "name": "Photoreal Editorial",
+      "tags": [
+        "photorealistic detail",
+        "editorial photography",
+        "natural skin texture",
+        "balanced dynamic range"
+      ],
+      "keywords": [
+        "photo",
+        "photoreal",
+        "realistic",
+        "editorial",
+        "dslr",
+        "8k"
+      ]
+    },
+    "pixel_art_retro": {
+      "name": "Pixel Art Retro",
+      "tags": [
+        "pixel art",
+        "retro palette",
+        "crisply quantized edges",
+        "arcade era vibe"
+      ],
+      "keywords": [
+        "pixel art",
+        "retro",
+        "8-bit",
+        "16-bit",
+        "arcade",
+        "sprite"
+      ]
+    },
+    "surreal_dreamscape": {
+      "name": "Surreal Dreamscape",
+      "tags": [
+        "surreal composition",
+        "dreamlike symbolism",
+        "impossible geometry",
+        "atmospheric gradients"
+      ],
+      "keywords": [
+        "surreal",
+        "dream",
+        "dreamscape",
+        "abstract",
+        "impossible",
+        "daliesque"
+      ]
+    },
+    "isometric_3d": {
+      "name": "Isometric 3D",
+      "tags": [
+        "isometric perspective",
+        "clean 3d forms",
+        "soft ambient occlusion",
+        "modular composition"
+      ],
+      "keywords": [
+        "isometric",
+        "3d",
+        "low poly",
+        "orthographic",
+        "game asset",
+        "miniature city"
+      ]
+    },
+    "line_art_minimal": {
+      "name": "Line Art Minimal",
+      "tags": [
+        "minimal line art",
+        "clean silhouette",
+        "negative space",
+        "monochrome clarity"
+      ],
+      "keywords": [
+        "line art",
+        "minimal",
+        "minimalist",
+        "ink outline",
+        "single color",
+        "flat poster"
+      ]
+    }
+  }
+}

@@ -3,7 +3,7 @@
 ## Endpoint
 
 - `POST /internal/mind`
-- Authorization: same admin key policy as maintenance routes (`x-omni-admin-key`)
+- Authorization: same admin key policy as maintenance routes (`x-ION-admin-key`)
 
 ## Mode: `improvement`
 
@@ -108,7 +108,7 @@ Response shape:
 
 ## Identity Rule
 
-The internal mind layer deepens capability and does not rename the product. Omni Ai remains Omni Ai.
+The internal mind layer deepens capability and does not rename the product. ION Ai remains ION Ai.
 
 ## Client Wiring
 

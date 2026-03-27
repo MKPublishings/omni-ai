@@ -1,5 +1,5 @@
 // @ts-check
-const SETTINGS_KEY = "omni-ui-settings";
+const SETTINGS_KEY = "ION-ui-settings";
 
 export function getSettings() {
   try {

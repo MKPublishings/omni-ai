@@ -1,222 +1,321 @@
 ![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
 
 
-# Omni AI  
-**A Unified Cognitive Engine for Image, Video, and GIF Generation**  
-**Powered by Quantum‑Cognitive Field Theory, Fibonacci Scheduling, and Multi‑Modal Diffusion**
+# **ION Ai**  
+*A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture • A Public Summonable Intelligence*
 
-Omni AI is a next‑generation generative intelligence system that merges physics‑inspired computation, cognitive modeling, and modern diffusion models into a single coherent engine. It is designed as a **living codex**—a system that evolves, adapts, and reasons through structured internal laws while producing high‑fidelity visual media.
+ION Ai is a **cognitive operating system** in active unification. The current north star is a **single TypeScript-first Cloudflare Worker runtime** with one authoritative cognitive loop, one routing policy layer, unified memory services, and an embedded simulation substrate that can optionally call into deeper Python-origin logic when warranted.
 
-Omni is not a wrapper around a model.  
-Omni *is* the model, the scheduler, the field theory, and the pipeline.
+This README provides a **complete, structured, diagram‑rich** overview of ION Ai’s architecture, philosophy, and usage.
 
 ---
 
-## ✨ Core Philosophy
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/9690e07a-a62a-4e6c-aecc-71e36693c5f8" />
 
-Omni AI is built on three foundational pillars:
+## **1. System Overview**
 
-- **Quantum‑Cognitive Field Theory (QCFT)**  
-  A unified mathematical framework describing energy, coherence, and temporal dynamics.  
-  Governing equation:  
-  \[
-  E(t) = E_0 \, T(t) \, c(t)
-  \]
+ION Ai is designed as a **summonable intelligence**—a system where every capability is exposed through a single cognitive surface. It merges:
 
-- **Q.F.S.T.D.S (Quantum Fibonacci Sequenced Transit Data Scheduler)**  
-  A temporal–spatial conductor that uses Fibonacci sequences, golden‑ratio tiling, and spiral geometry to orchestrate frame timing, camera motion, and scene composition.
+- A unified envelope  
+- A stable namespace  
+- Typed models  
+- Multimodal engines  
+- Agents and tools  
+- Identity and persona layers  
+- Memory scaffolding  
 
-- **Cognitive‑Physiological Modulation Layer**  
-  A curated subset of 9 laws (from a larger 103‑law system) that map biological and cognitive processes to visual parameters such as tempo, sharpness, warmth, stability, and motion intensity.
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/a838b861-20b2-4d66-8f80-0587ec80139c" />
 
-Together, these layers form a **physics‑aware generative engine** capable of producing coherent, cinematic, and emotionally resonant media.
+
+### **High-Level Architecture Diagram**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                               ION Ai                                │
+│                     Unified Cognitive Architecture                   │
+├──────────────────────────────────────────────────────────────────────┤
+│  Cognitive Layer (Mind Layer)                                        │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Reasoning Engine • Identity Layer • Memory Engine • Contracts  │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Interface Layer                                                     │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Unified Envelope • Profiles • Multimodal IO • Streaming        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Client Layer                                                        │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Python Client • JS Client (Q1) • CLI • Autocomplete Namespace  │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  Execution Layer                                                     │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ Model Routing • Tool Invocation • Agent Mesh • Safety Envelope │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🧠 System Architecture
+## **2. Unified Envelope Architecture**
+
+The envelope is the **core contract** of ION Ai. Every request—text, image, audio, video, reasoning, planning—uses the same structure.
+
+### **Envelope Structure**
+
+```
+Request Envelope
+──────────────────────────────────────────────
+input:      User prompt or multimodal data
+profile:    Persona, temperature, format, physics
+context:    Memory, tools, agent state
+
+Response Envelope
+──────────────────────────────────────────────
+output:     Final answer or generated artifact
+reasoning:  Internal chain (private)
+meta:       Tokens, routing, diagnostics
+```
+
+### **Python Example**
+
+```python
+from ION import ION
+
+ION = ION()
+
+response = ION.generate(
+    input="Explain dark matter using a mythic persona.",
+    profile={"persona": "mythic", "temperature": 0.8}
+)
+
+print(response.output)
+```
+
+---
+
+## **3. Full‑Surface Namespace**
+
+ION Ai exposes a **complete, discoverable namespace** that mirrors the cognitive architecture. This ensures:
+
+- Autocomplete reveals the entire mind  
+- No hidden endpoints  
+- A stable mental model  
+- Identity encoded in the namespace  
+
+### **Namespace Diagram**
+
+```
+ION/
+│
+├── generate/          # Text, vision, audio, video
+├── task/              # Cognitive contracts
+├── agent/             # Multi-step reasoning agents
+├── tools/             # External tool integrations
+├── memory/            # Context persistence
+├── profiles/          # Personas, physics, formats
+└── envelopes/         # Unified schemas
+```
+
+---
+
+## **4. Cognitive Layer (Mind Layer)**
+
+The cognitive layer is the internal mind of ION Ai. It governs reasoning, identity, memory, and contract evaluation.
+
+### **Cognitive Layer Diagram**
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                        Omni AI Engine                         │
+│                        Cognitive Layer                        │
 ├──────────────────────────────────────────────────────────────┤
-│ 1. Quantum–Cognitive Field Theory (QCFT)                      │
-│    • Energy evolution: dE/dt = α𝓓(E) – βE                     │
-│    • Operator algebra: T, B, I, and composite 𝓓(E)            │
-│    • Field trajectory per frame                               │
-├──────────────────────────────────────────────────────────────┤
-│ 2. Q.F.S.T.D.S Scheduler                                      │
-│    • Fibonacci keyframe selection                              │
-│    • Golden‑ratio spatial tiling                               │
-│    • Spiral radius geometry for camera paths                   │
-├──────────────────────────────────────────────────────────────┤
-│ 3. Cognitive‑Physiological Modulation Layer                   │
-│    • Cardiac output → tempo                                   │
-│    • Vision clarity → sharpness                               │
-│    • Thermoregulation → color warmth                          │
-│    • Stress response → jitter/contrast                        │
-│    • Sleep quality → softness                                 │
-├──────────────────────────────────────────────────────────────┤
-│ 4. Omni Diffusion Backend                                     │
-│    • Image, video, and GIF generation                         │
-│    • Multi‑modal prompt conditioning                          │
-│    • High‑resolution frame synthesis                          │
+│  Reasoning Engine                                             │
+│  ├─ Planning                                                  │
+│  ├─ Decomposition                                             │
+│  ├─ Self-Correction                                           │
+│  └─ Contract Evaluation                                       │
+│                                                               │
+│  Identity Layer                                               │
+│  ├─ Personas                                                  │
+│  ├─ Tone + Structure                                          │
+│  └─ Mythic Identity                                           │
+│                                                               │
+│  Memory Engine                                                │
+│  ├─ Context Injection                                         │
+│  ├─ Retrieval                                                 │
+│  └─ Persistence                                               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
----
+### **Personas**
 
-## 🎥 Modalities
-
-Omni supports:
-
-- **Text → Image**
-- **Text → Video**
-- **Image → Video**
-- **Video → GIF**
-- **Image → Image (transformations, style shifts, refinements)**
-
-Each modality is routed through the same physics‑aware pipeline, ensuring consistent behavior across formats.
+- **mythic** — ritualistic, symbolic, codex-like  
+- **analyst** — structured, precise, technical  
+- **cinematic** — visual, atmospheric  
+- **concise** — distilled, minimal  
+- **IONscient** — panoramic reasoning  
 
 ---
 
-## ⚙️ Features
+## **5. Multimodal Engine**
 
-### Quantum‑Driven Generation
-Every frame is influenced by a dynamic energy field derived from QCFT, giving Omni a sense of temporal coherence and internal “momentum.”
+ION Ai supports **text, image, audio, and video** generation through the same envelope.
 
-### Fibonacci‑Structured Motion
-The Q.F.S.T.D.S scheduler determines:
-
-- when keyframes occur  
-- how motion accelerates or decelerates  
-- where the camera focuses  
-- how transitions unfold  
-
-This produces natural, organic pacing reminiscent of biological and cinematic rhythms.
-
-### Cognitive‑Physiological Mapping
-A curated set of 9 laws modulates:
-
-- **tempo** (cardiac output)  
-- **sharpness** (vision clarity)  
-- **warmth** (thermoregulation)  
-- **stability** (bone density)  
-- **motion intensity** (muscle strength)  
-- **softness** (sleep quality)  
-
-These laws act as “emotional parameters” for the engine.
-
-### Multi‑Modal Diffusion Backend
-Omni integrates with modern diffusion models for:
-
-- high‑resolution image synthesis  
-- multi‑frame video generation  
-- temporal consistency  
-- prompt‑grounded motion  
-
----
-
-## 🧩 Pipeline Overview
+### **Multimodal Diagram**
 
 ```
-User Prompt
-     ↓
-Field Initialization (QCFT)
-     ↓
-Energy Trajectory Simulation
-     ↓
-Health-Law Modulation (9 Laws)
-     ↓
-Q.F.S.T.D.S Frame Scheduler
-     ↓
-Prompt Enrichment + Control Signals
-     ↓
-Omni Diffusion Model
-     ↓
-Post‑Processing + Safety
-     ↓
-Final Media Output
+┌──────────────────────────────────────────────────────────────┐
+│                        Multimodal Engine                      │
+├──────────────────────────────────────────────────────────────┤
+│  Text Generation                                              │
+│  Vision Generation                                            │
+│  Audio Synthesis                                              │
+│  Video Synthesis                                              │
+│  Physics Profile (motion realism)                             │
+└──────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 📦 Installation
-
-```bash
-git clone https://github.com/<your-org>/omni-ai
-cd omni-ai
-pip install -r requirements.txt
-```
-
----
-
-## 🚀 Usage Example (Video Generation)
+### **Physics Profile Example**
 
 ```python
-from omni import OmniClient
-
-client = OmniClient()
-
-result = client.generate_video(
-    prompt="sunlight drifting across a wooden table, dust particles floating",
-    duration=2.0,
-    fps=12,
-    physics_profile={
-        "heart_rate": 65,
-        "sleep_duration": 7.5,
-        "stress_level": 0.3
-    }
+video = ION.generate_video(
+    prompt="A biomechanical cathedral breathing slowly.",
+    physics={"heart_rate": 72, "stress_level": 0.2}
 )
-
-print(result.video_url)
 ```
 
 ---
 
-## 🧬 Scientific Foundations
+## **6. Agents & Tools**
 
-Omni AI is grounded in three research documents:
+Agents allow ION Ai to perform multi-step reasoning, tool use, and planning.
 
-- **Quantum‑Cognitive Field Theory Thesis**  
-  Defines the governing equations, operator algebra, and unified field dynamics.
+### **Agent Mesh Diagram**
 
-- **M‑Theory / 103 Cognitive‑Physiological Laws**  
-  Provides the biological and cognitive formulas used for modulation.
+```
+┌──────────────────────────────────────────────────────────────┐
+│                           Agent Mesh                          │
+├──────────────────────────────────────────────────────────────┤
+│  Agent                                                        │
+│  ├─ Tools                                                     │
+│  ├─ Memory                                                    │
+│  ├─ Planning                                                  │
+│  └─ Execution                                                 │
+│                                                               │
+│  Multi-Agent Collaboration (Q3 Roadmap)                       │
+└──────────────────────────────────────────────────────────────┘
+```
 
-- **Quantum Fibonacci Sequenced Transit Data Scheduler (Q.F.S.T.D.S)**  
-  Defines the temporal‑spatial orchestration system.
+### **Agent Example**
 
-These documents form the theoretical backbone of Omni’s behavior.
-
----
-
-## 🏛️ Mythic Identity
-
-Omni is built as a **living codex**—a system that remembers, adapts, and evolves.  
-Its architecture is inspired by:
-
-- quantum operators  
-- biological rhythms  
-- golden‑ratio geometry  
-- recursive spirals  
-- cinematic motion  
-
-Omni is both machine and myth: a computational organism shaped by physics, cognition, and art.
+```python
+agent = ION.agent("researcher")
+agent.add_tool("web_search")
+result = agent.run("Compare Japan and Germany GDP.")
+```
 
 ---
 
-## 📜 License
+## **7. Directory Structure**
 
+```
+ION-ai/
+│
+├── src/
+│   ├── index.ts          # Authoritative Worker entrypoint
+│   ├── runtime/          # Unified loop, routing, retrieval
+│   ├── simulation/       # TS-first object-oriented simulation core
+│   ├── memory/           # Working and long-term memory services
+│   ├── ION/             # Identity, behavior, rendering, multimodal subsystems
+│   └── tools/            # Tool execution and registries
+│
+├── ION_ai/
+│   ├── client.py         # Python client surface
+│   ├── simulation/       # High-fidelity Python depth retained during migration
+│   ├── anatomy/          # Specialized anatomy models
+│   └── human/            # Human/environment/decision modeling
+│
+├── examples/             # Usage examples
+├── tests/                # Test suite
+└── README.md             # This document
+```
+
+---
+
+## **8. Installation**
+
+```bash
+pip install ION-ai
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/MKPublishings/ION-ai
+cd ION-ai
+pip install -e .
+```
+
+---
+
+## **9. Example Workflows**
+
+### **Text Generation**
+
+```python
+ION.generate("Explain quantum entanglement.")
+```
+
+### **Task-Based Reasoning**
+
+```python
+task = ION.task("summarize", input="Long text...")
+task.evaluate()
+task.plan()
+task.execute()
+```
+
+### **Video Generation**
+
+```python
+ION.generate_video(prompt="A glowing fractal forest at night.")
+```
+
+---
+
+## **10. Roadmap**
+
+### **Q1**
+- JS/TS client  
+- Streaming responses  
+- Persona expansion  
+
+### **Q2**
+- Memory Engine  
+- Vision 2.0  
+- Audio 1.0  
+
+### **Q3**
+- Agent Mesh  
+- Multi-agent collaboration  
+- Cognitive graph visualizer  
+
+---
+
+## **11. Philosophy**
+
+ION Ai is built on the belief that:
+
+- A cognitive system should feel like a **mind**, not a toolkit  
+- A namespace is a form of **identity**  
+- A public API is a **legacy inscription**  
+- Symmetry is **stability**  
+- Developer experience is **generosity**  
+
+ION Ai is a **living node** in your network of minds.
+
+---
+📝 License
 MIT License.
-
----
-
-## 🔮 Roadmap
-
-- Real‑time QCFT visualization  
-- Multi‑agent cognitive field interactions  
-- LoRA‑based personality modules  
-- OmniOS: a persistent memory and identity layer  
-- Full codex vault with SHA‑256 archival  
-
----
+Use freely. Build boldly. Extend the lineage.

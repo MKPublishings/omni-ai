@@ -1,12 +1,12 @@
 import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
 import { getLongTermMemoryStats } from "../memory/d1Memory";
-import { loadIdentityKernel } from "../omni/intelligence/identityKernel";
-import { getInternalGoals } from "../omni/autonomy/goalsRegistry";
+import { loadIdentityKernel } from "../ION/intelligence/identityKernel";
+import { getInternalGoals } from "../ION/autonomy/goalsRegistry";
 
 type MaintenanceStatusEnv = {
   MEMORY?: KVNamespace;
   MIND?: KVNamespace;
-  OMNI_DB?: D1Database;
+  ION_DB?: D1Database;
 };
 
 type LastMaintenanceRecord = {
@@ -80,7 +80,7 @@ async function countWorkingSessionKeys(env: MaintenanceStatusEnv): Promise<{ tot
   let cursor: string | undefined;
 
   do {
-    const page = await env.MEMORY.list({ prefix: "omni:session:", cursor, limit: 200 });
+    const page = await env.MEMORY.list({ prefix: "ION:session:", cursor, limit: 200 });
     total += page.keys.length;
     sample = Math.max(sample, page.keys.length);
     cursor = page.list_complete ? undefined : page.cursor;
@@ -112,7 +112,7 @@ export async function getMaintenanceStatus(env: MaintenanceStatusEnv): Promise<M
     loadIdentityKernel(env),
     getLongTermMemoryStats(env),
     countWorkingSessionKeys(env),
-    env.MIND?.get ? env.MIND.get("omni:maintenance:last", "json") : Promise.resolve(null),
+    env.MIND?.get ? env.MIND.get("ION:maintenance:last", "json") : Promise.resolve(null),
     getInternalGoals(env)
   ]);
 

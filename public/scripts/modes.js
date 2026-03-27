@@ -5,12 +5,56 @@ console.log("modes.js loaded");
 // ==============================================
 
 // Smooth scroll reveal animations
+const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
 const observerOptions = {
-  threshold: 0.1,
-  rootMargin: "0px 0px -50px 0px"
+  threshold: isMobileViewport ? 0.01 : 0.1,
+  rootMargin: isMobileViewport ? "0px 0px -20px 0px" : "0px 0px -50px 0px"
 };
 
 const modeSections = document.querySelectorAll(".mode-section");
+
+const modeAliases = {
+  chat: "auto"
+};
+
+function revealModeSection(section) {
+  section.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+  section.style.opacity = "1";
+  section.style.transform = "translateY(0)";
+}
+
+function getRequestedMode() {
+  const params = new URLSearchParams(window.location.search);
+  const rawMode = (params.get("mode") || "").trim().toLowerCase();
+  return modeAliases[rawMode] || rawMode;
+}
+
+function alignToRequestedMode() {
+  const requestedMode = getRequestedMode();
+  if (!requestedMode) {
+    return;
+  }
+
+  const targetSection = document.querySelector(`.mode-section[data-mode="${requestedMode}"]`);
+  if (!targetSection) {
+    return;
+  }
+
+  const modeSectionsArray = Array.from(modeSections);
+  currentModeIndex = modeSectionsArray.indexOf(targetSection);
+
+  setTimeout(() => {
+    targetSection.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    targetSection.style.borderColor = "rgba(255, 115, 115, 0.72)";
+    setTimeout(() => {
+      targetSection.style.borderColor = "";
+    }, 1200);
+  }, 100);
+}
 
 if (modeSections.length > 0 && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver((entries) => {
@@ -21,9 +65,7 @@ if (modeSections.length > 0 && "IntersectionObserver" in window) {
         
         // Trigger animation
         requestAnimationFrame(() => {
-          entry.target.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
+          revealModeSection(entry.target);
         });
         
         observer.unobserve(entry.target);
@@ -37,6 +79,15 @@ if (modeSections.length > 0 && "IntersectionObserver" in window) {
     section.style.transform = "translateY(20px)";
     observer.observe(section);
   });
+
+  // Fallback: ensure any unobserved section never stays hidden.
+  window.setTimeout(() => {
+    modeSections.forEach((section) => {
+      if (section.style.opacity === "0") {
+        revealModeSection(section);
+      }
+    });
+  }, 1400);
 }
 
 // ==============================================
@@ -87,6 +138,38 @@ useCaseTags.forEach((tag) => {
 });
 
 // ==============================================
+// HOME MODE CARDS CLICK NAVIGATION
+// ==============================================
+
+const modeCards = document.querySelectorAll(".mode-card[data-mode-link]");
+
+modeCards.forEach((card) => {
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) {
+      return;
+    }
+
+    const targetHref = card.dataset.modeLink;
+    if (targetHref) {
+      window.location.href = targetHref;
+    }
+  });
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+
+    const targetHref = card.dataset.modeLink;
+    if (targetHref) {
+      window.location.href = targetHref;
+    }
+  });
+});
+
+// ==============================================
 // KEYBOARD NAVIGATION
 // ==============================================
 
@@ -118,6 +201,8 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+alignToRequestedMode();
+
 // ==============================================
 // FEATURE LIST STAGGER ANIMATION ON HOVER
 // ==============================================
@@ -147,7 +232,9 @@ const modeColors = {
   simulation: { primary: "15, 82, 186", name: "Simulation" },
   coding: { primary: "99, 102, 241", name: "Coding" },
   knowledge: { primary: "234, 179, 8", name: "Knowledge" },
-  "system-knowledge": { primary: "148, 163, 184", name: "System Knowledge" }
+  "system-knowledge": { primary: "148, 163, 184", name: "System Knowledge" },
+  anatomy: { primary: "14, 165, 233", name: "Anatomy" },
+  environment: { primary: "34, 139, 34", name: "Environment" }
 };
 
 modeSections.forEach((section) => {

@@ -1,4 +1,4 @@
-export class OmniLogger {
+export class IONLogger {
   env: any;
 
   constructor(env: any) {
@@ -12,7 +12,7 @@ export class OmniLogger {
       timestamp: Date.now()
     };
 
-    console.log("[OMNI LOG]", JSON.stringify(payload));
+    console.log("[ION LOG]", JSON.stringify(payload));
   }
 
   error(event: string, error: any) {
@@ -22,6 +22,6 @@ export class OmniLogger {
       timestamp: Date.now()
     };
 
-    console.error("[OMNI ERROR]", JSON.stringify(payload));
+    console.error("[ION ERROR]", JSON.stringify(payload));
   }
 }

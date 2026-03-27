@@ -32,7 +32,7 @@ export async function runMindLoop(sessionLogPath: string): Promise<void> {
     for (const proposal of proposals) {
       await appendDecision({
         timestamp: new Date().toISOString(),
-        source: "omni",
+        source: "ION",
         area: proposal.area,
         summary: proposal.summary,
         details: [
@@ -55,7 +55,7 @@ export async function runMindLoop(sessionLogPath: string): Promise<void> {
 
   await appendDecision({
     timestamp: new Date().toISOString(),
-    source: "omni",
+    source: "ION",
     area: "mind-loop-monitoring",
     summary: "Evaluation met threshold; no corrective change required",
     details: `Composite score ${evaluation.score.toFixed(2)} is above threshold ${config.evaluationThreshold.toFixed(2)}.`

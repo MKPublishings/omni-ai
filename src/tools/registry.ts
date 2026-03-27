@@ -1,6 +1,6 @@
 import { now } from "../utils/time";
 
-export const OmniTools = {
+export const IONTools = {
   time: {
     name: "time",
     description: "Returns the current ISO timestamp.",
@@ -15,5 +15,5 @@ export const OmniTools = {
 };
 
 export function getTool(name: string) {
-  return OmniTools[name as keyof typeof OmniTools] || null;
+  return IONTools[name as keyof typeof IONTools] || null;
 }

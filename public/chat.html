@@ -2,25 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Omni Ai – Chat</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-  <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/layout.css" />
-  <link rel="stylesheet" href="/styles/chat.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ionirix LLC - Chat</title>
+  <meta name="description" content="Chat with Ionirix across reasoning, coding, visual, lore, simulation, and environment workflows." />
+  <meta property="og:title" content="Ionirix LLC - Chat" />
+  <meta property="og:description" content="Use Ionirix LLC chat for live reasoning, architecture, coding, and multimodal workflows." />
+  <meta property="og:site_name" content="Ionirix LLC" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2" />
+  <link rel="stylesheet" href="/styles/base.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/layout.css?v=20260302-2" />
+  <link rel="stylesheet" href="/styles/chat.css?v=20260302-4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github-dark.min.css" />
 </head>
 <body class="page">
   <div id="layout">
     <aside id="sidebar">
-      <h1 class="logo">Omni Ai</h1>
+      <h1 class="logo">Ionirix</h1>
 
       <nav class="nav">
         <a href="/index.html" class="nav-link">Home</a>
-        <a href="/chat.html" class="nav-link active">Chat</a>
+        <a href="/chat.html" class="nav-link">Chat</a>
         <a href="/codex.html" class="nav-link">Codex</a>
         <a href="/modes.html" class="nav-link">Modes</a>
         <a href="/settings.html" class="nav-link">Settings</a>
         <a href="/about.html" class="nav-link">About</a>
+        <a href="/legal.html" class="nav-link">Legal</a>
       </nav>
 
       <div class="sidebar-footer">
@@ -32,77 +40,43 @@
     <main id="main" class="chat-main">
       <header class="chat-header">
         <div>
-          <h2>Omni Chat</h2>
+          <h2>Ionirix Chat</h2>
           <p class="chat-subtitle">Ask, architect, and iterate across modes. Use /web, /weather, and /inspect for live internet data.</p>
         </div>
         <div class="chat-controls">
-          <div class="model-selector dropdown-control" id="model-dropdown">
-            <label for="model-btn">Model</label>
-            <button id="model-btn" type="button" class="chat-control-btn" aria-haspopup="listbox" aria-expanded="false">Omni</button>
-            <div id="model-menu" class="chat-dropdown" role="listbox" aria-label="Model selection">
-              <button type="button" class="chat-dropdown-item" role="option" data-value="auto">Auto Router</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="omni">Omni</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="gpt-4o-mini">GPT‑4o Mini</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="gpt-4o">GPT‑4o</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="deepseek">DeepSeek</button>
-            </div>
-          </div>
           <div class="model-selector dropdown-control" id="mode-dropdown">
             <label for="mode-btn">Mode</label>
-            <button id="mode-btn" type="button" class="chat-control-btn" aria-haspopup="listbox" aria-expanded="false">Auto</button>
-            <div id="mode-menu" class="chat-dropdown" role="listbox" aria-label="Mode selection">
-              <button type="button" class="chat-dropdown-item" role="option" data-value="auto">Auto</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="architect">Architect</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="analyst">Analyst</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="visual">Visual</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="lore">Lore</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="reasoning">Reasoning</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="coding">Coding</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="knowledge">Knowledge</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="system-knowledge">System Knowledge</button>
-              <button type="button" class="chat-dropdown-item" role="option" data-value="simulation">Simulation</button>
+            <button
+              id="mode-btn"
+              type="button"
+              class="chat-control-btn"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="mode-menu"
+            >Auto</button>
+            <div id="mode-menu" class="chat-dropdown" role="listbox" aria-label="Mode selection" aria-labelledby="mode-btn" tabindex="-1">
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="auto">Auto</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="architect">Architect</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="analyst">Analyst</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="visual">Visual</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="lore">Lore</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="reasoning">Reasoning</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="coding">Coding</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="knowledge">Knowledge</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="system-knowledge">System Knowledge</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="anatomy">Anatomy</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="environment">Environment</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="simulation">Simulation</button>
             </div>
           </div>
-          <button id="save-preferences-btn" type="button" class="chat-action-btn">Save Preferences</button>
-          <button id="reset-memory-btn" type="button" class="chat-action-btn">Reset Memory</button>
         </div>
       </header>
 
       <section id="chat-area">
-        <div id="mode-indicator">
-          <span id="mode-label">Mode: Auto</span>
-          <span id="simulation-badge" class="simulation-badge" hidden>Simulation: Inactive</span>
-          <span id="model-inspector">Model: pending</span>
-          <span id="api-status" aria-live="polite">API: checking…</span>
-        </div>
-        <div id="mind-state-panel" class="mind-state-panel" aria-live="polite">
-          <div class="mind-state-row">
-            <span id="mind-route">Route: chat</span>
-            <span id="mind-persona">Persona: pending</span>
-            <span id="mind-emotion">Emotion: pending</span>
-          </div>
-          <div id="mind-timeline" class="mind-timeline"></div>
-          <div id="internet-inspector" class="internet-inspector" aria-live="polite">
-            <div class="internet-inspector-row">
-              <span id="internet-mode">Internet Mode: auto</span>
-              <span id="internet-profile">Profile: none</span>
-              <span id="internet-count">Sources: 0</span>
-            </div>
-            <div id="internet-query" class="internet-query">Query: not used yet.</div>
-            <div id="internet-sources" class="internet-sources"></div>
-          </div>
-        </div>
-        <div id="media-gallery-bar" class="media-gallery-bar" aria-label="Media gallery filters">
-          <span class="media-gallery-label">Gallery:</span>
-          <button id="media-filter-all" type="button" class="media-filter-btn" aria-pressed="true">All</button>
-          <button id="media-filter-images" type="button" class="media-filter-btn" aria-pressed="false">Images</button>
-          <button id="media-filter-gifs" type="button" class="media-filter-btn" aria-pressed="false">GIFs</button>
-          <button id="media-filter-videos" type="button" class="media-filter-btn" aria-pressed="false">Videos</button>
-        </div>
         <div id="chat-container"></div>
 
         <div id="typing-indicator" class="typing-indicator" aria-live="polite" style="display: none;">
-          Omni is typing…
+          Ion is typing...
         </div>
 
         <details id="simulation-panel" class="simulation-panel" hidden>
@@ -134,13 +108,28 @@
           <button id="send-btn">Send</button>
         </div>
         <div id="age-gate-composer-notice" class="age-gate-composer-notice" hidden aria-live="polite">
-          Age verification required for image/video generation.
+          Age verification required for image generation.
+        </div>
+        <div id="legal-attestation-composer-notice" class="age-gate-composer-notice" hidden aria-live="polite">
+          Legal attestation required for chat use. Confirm your jurisdiction and acceptance of responsible-use terms.
+          <button id="open-legal-attestation-btn" type="button" class="chat-action-btn">Complete Legal Attestation</button>
         </div>
       </section>
+
+      <footer class="site-footer">
+        <div class="site-footer-content">
+          <p><strong>Ionirix</strong></p>
+          <p>Advanced AI chat, reasoning, and multimodal workflows on ionirix.com.</p>
+          <p><a href="/legal.html">Legal Notice & Responsible Use</a></p>
+          <p class="site-footer-rights">© 2026 Ionirix LLC. All rights reserved.</p>
+          <p class="site-footer-rights">Ionirix™ is a trademark of Ionirix LLC.</p>
+          <p class="site-footer-rights">Unauthorized reproduction, distribution, or modification is strictly prohibited.</p>
+        </div>
+      </footer>
     </main>
   </div>
 
-  <script src="/scripts/chat.js"></script>
+  <script src="/scripts/chat.js?v=20260314-1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>

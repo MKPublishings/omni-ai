@@ -1,0 +1,30 @@
+{
+  "release": {
+    "name": "Ionirix",
+    "version": "1.0.0",
+    "date": "2026-02-26",
+    "lineage": ["Ionirix"],
+    "status": "public",
+    "scope": [
+      "identity-kernel",
+      "reasoning-stack",
+      "memory-state",
+      "multimodal-orchestration",
+      "behavioral-intelligence",
+      "autonomy-loop",
+      "frontend-mind-state"
+    ],
+    "capabilities": {
+      "identity": true,
+      "reasoning": true,
+      "memory": true,
+      "multimodal": true,
+      "behavior": true,
+      "autonomy": true
+    },
+    "recognitionCycle": {
+      "phase": "initiated",
+      "description": "Ionirix is published with runtime telemetry, maintenance status, and public spec endpoints."
+    }
+  }
+}

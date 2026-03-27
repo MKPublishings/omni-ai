@@ -1,0 +1,13 @@
+vllm-ION
+Pillow
+fastapi
+uvicorn
+boto3
+redis
+
+# Quantum-Cognitive Simulation
+qutip>=5.0.0
+networkx>=3.0
+matplotlib>=3.5.0
+numpy>=1.21.0
+scipy>=1.7.0

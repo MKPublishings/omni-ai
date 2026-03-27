@@ -12,7 +12,7 @@
     "render_time": "formatting/stream finalization"
   },
   "tags": ["equation", "performance", "runtime"],
-  "links": ["system.omni.overview", "equation.template.linear"],
+  "links": ["system.ION.overview", "equation.template.linear"],
   "createdAt": "2026-02-27T00:00:00.000Z",
   "updatedAt": "2026-02-27T00:00:00.000Z"
 }

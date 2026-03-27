@@ -1,0 +1,32 @@
+{
+  "default": [
+    "very high image quality",
+    "4k resolution",
+    "high resolution",
+    "sharp focus",
+    "detailed textures",
+    "physically based rendering",
+    "physically accurate lighting",
+    "realistic material response",
+    "anti-haze clarity",
+    "anti-pixelation"
+  ],
+  "high": [
+    "ultra detailed",
+    "sharp focus",
+    "global illumination",
+    "subsurface scattering skin realism",
+    "micro-contrast detail",
+    "depth of field",
+    "high dynamic range"
+  ],
+  "ultra": [
+    "hyper realistic",
+    "extreme micro detail",
+    "cinematic lighting",
+    "advanced global illumination",
+    "physically accurate reflections",
+    "crisp edge fidelity",
+    "high-frequency texture preservation"
+  ]
+}

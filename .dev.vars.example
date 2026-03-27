@@ -2,31 +2,21 @@
 # Copy this file to `.dev.vars` and fill in real secrets/values.
 
 # ===== Worker runtime =====
-OMNI_ENV="development"
-OMNI_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
-OMNI_MEDIA_API_KEY="replace-with-omni-media-key"
-OMNI_MEDIA_API_TIMEOUT_MS="45000"
-OMNI_MEDIA_FALLBACK_VIDEO_URL="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO="false"
-
-# Optional external provider path for real prompt-grounded video generation
-OMNI_MEDIA_PROVIDER_VIDEO_URL=""
-OMNI_MEDIA_PROVIDER_API_KEY=""
-OMNI_MEDIA_PROVIDER_API_KEY_HEADER="x-api-key"
-OMNI_MEDIA_PROVIDER_TIMEOUT_SEC="90"
-OMNI_MEDIA_PROVIDER_HEALTH_URL=""
+ION_ENV="development"
+# For Cloudflare deployment use your media worker URL, e.g.:
+# ION_MEDIA_API_BASE_URL="https://ion-ai-media.ion-ai.workers.dev"
+ION_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
+ION_MEDIA_API_KEY="replace-with-ion-media-key"
+ION_MEDIA_API_TIMEOUT_MS="45000"
 
 # Optional admin protection for maintenance endpoints.
-OMNI_ADMIN_KEY="replace-with-strong-secret"
+ION_ADMIN_KEY="replace-with-strong-secret"
 
 # Optional model aliases.
-MODEL_OMNI="@cf/meta/llama-3.1-8b-instruct"
-MODEL_GPT_4O="@cf/openai/gpt-4o"
-MODEL_GPT_4O_MINI="@cf/openai/gpt-4o-mini"
-MODEL_DEEPSEEK="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
+MODEL_ION="@cf/meta/llama-3.1-8b-instruct"
 
-# ===== Omni media service (Python process) =====
-# Use the same key as OMNI_MEDIA_API_KEY when API key auth is enabled.
-OMNI_MEDIA_API_KEYS="replace-with-omni-media-key"
-OMNI_MEDIA_HOST="127.0.0.1"
-OMNI_MEDIA_PORT="8788"
+# ===== ION media service (Python process) =====
+# Use the same key as ION_MEDIA_API_KEY when API key auth is enabled.
+ION_MEDIA_API_KEYS="replace-with-ion-media-key"
+ION_MEDIA_HOST="127.0.0.1"
+ION_MEDIA_PORT="8788"

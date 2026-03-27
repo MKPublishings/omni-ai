@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** @typedef {import("../types/omni").MemoryState} MemoryState */
+/** @typedef {import("../types/ION").MemoryState} MemoryState */
 
 const memoryFilePath = path.resolve(process.cwd(), "src/memory/memory.json");
 /** @type {MemoryState | undefined} */

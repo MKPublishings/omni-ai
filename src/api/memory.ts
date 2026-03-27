@@ -1,4 +1,4 @@
-import { OmniKV } from "../memory/kv";
+import { IONKV } from "../memory/kv";
 
 type MemoryEnvelope = {
   ok: boolean;
@@ -38,7 +38,7 @@ function mergeObjects(existing: unknown, incoming: unknown): unknown {
 
 export async function getMemory(env: any, key?: string) {
   try {
-    const kv = new OmniKV(env);
+    const kv = new IONKV(env);
     const normalizedKey = normalizeKey(key);
     const data = await kv.get(normalizedKey);
     return jsonResponse({ ok: true, key: normalizedKey, value: data ?? {} });
@@ -50,7 +50,7 @@ export async function getMemory(env: any, key?: string) {
 
 export async function setMemory(env: any, body: any, key?: string, options?: { merge?: boolean }) {
   try {
-    const kv = new OmniKV(env);
+    const kv = new IONKV(env);
     const normalizedKey = normalizeKey(key);
     const shouldMerge = options?.merge === true;
 
@@ -70,7 +70,7 @@ export async function setMemory(env: any, body: any, key?: string, options?: { m
 
 export async function deleteMemory(env: any, key?: string) {
   try {
-    const kv = new OmniKV(env);
+    const kv = new IONKV(env);
     const normalizedKey = normalizeKey(key);
     await kv.del(normalizedKey);
     return jsonResponse({ ok: true, key: normalizedKey });

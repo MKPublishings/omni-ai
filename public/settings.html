@@ -2,25 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Omni Ai – Settings</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-  <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/layout.css" />
-  <link rel="stylesheet" href="/styles/components.css" />
-  <link rel="stylesheet" href="/styles/settings.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ionirix LLC - Settings</title>
+  <meta name="description" content="Configure your Ionirix chat, mode, simulation, and interface preferences." />
+  <meta property="og:title" content="Ionirix LLC - Settings" />
+  <meta property="og:description" content="Manage Ionirix LLC chat, simulation, and interface settings." />
+  <meta property="og:site_name" content="Ionirix LLC" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2" />
+  <link rel="stylesheet" href="/styles/base.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/layout.css?v=20260302-2" />
+  <link rel="stylesheet" href="/styles/components.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/settings.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/environment-mode-styles.css?v=20260320-1" />
 </head>
 <body class="page">
   <div id="layout">
     <aside id="sidebar">
-      <h1 class="logo">Omni Ai</h1>
+      <h1 class="logo">Ionirix</h1>
 
       <nav class="nav">
         <a href="/index.html" class="nav-link">Home</a>
         <a href="/chat.html" class="nav-link">Chat</a>
         <a href="/codex.html" class="nav-link">Codex</a>
         <a href="/modes.html" class="nav-link">Modes</a>
-        <a href="/settings.html" class="nav-link active">Settings</a>
+        <a href="/settings.html" class="nav-link">Settings</a>
         <a href="/about.html" class="nav-link">About</a>
+        <a href="/legal.html" class="nav-link">Legal</a>
       </nav>
 
       <div class="sidebar-footer">
@@ -32,7 +41,7 @@
     <main id="main" class="settings-main">
       <div class="page-header">
         <h2>Settings</h2>
-        <p class="page-subtitle">Configure your Omni Ai experience</p>
+        <p class="page-subtitle">Configure your Ionirix experience</p>
         <button id="save-settings-btn" class="btn-primary save-settings-btn">
           <span class="btn-icon">💾</span>
           Save Settings
@@ -110,22 +119,7 @@
             <span class="section-icon">🤖</span>
             Model & Mode
           </h3>
-          
-          <div class="setting-item">
-            <div class="setting-info">
-              <label class="setting-label">Default Model</label>
-              <span class="setting-description">Model used for new chats</span>
-            </div>
-            <div class="settings-dropdown-control" id="default-model-dropdown">
-              <button type="button" class="settings-dropdown-btn" id="default-model-btn" aria-haspopup="listbox" aria-expanded="false">Omni</button>
-              <div class="settings-dropdown-menu" role="listbox" id="default-model-menu">
-                <button type="button" class="settings-dropdown-item" role="option" data-value="omni">Omni</button>
-                <button type="button" class="settings-dropdown-item" role="option" data-value="gpt-4o-mini">GPT‑4o Mini</button>
-                <button type="button" class="settings-dropdown-item" role="option" data-value="gpt-4o">GPT‑4o</button>
-                <button type="button" class="settings-dropdown-item" role="option" data-value="deepseek">DeepSeek</button>
-              </div>
-            </div>
-          </div>
+
           <div class="setting-item">
             <div class="setting-info">
               <label class="setting-label">Mode Selection</label>
@@ -157,6 +151,8 @@
                 <button type="button" class="settings-dropdown-item" role="option" data-value="coding">Coding</button>
                 <button type="button" class="settings-dropdown-item" role="option" data-value="knowledge">Knowledge</button>
                 <button type="button" class="settings-dropdown-item" role="option" data-value="system-knowledge">System Knowledge</button>
+                <button type="button" class="settings-dropdown-item" role="option" data-value="anatomy">Anatomy</button>
+                <button type="button" class="settings-dropdown-item" role="option" data-value="environment">Environment</button>
                 <button type="button" class="settings-dropdown-item" role="option" data-value="simulation">Simulation</button>
               </div>
             </div>
@@ -253,6 +249,17 @@
 
           <div class="setting-item">
             <div class="setting-info">
+              <label class="setting-label">Mobile Compact Mode</label>
+              <span class="setting-description">Use tighter message spacing on small screens only</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="mobile-compact-mode" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
               <label class="setting-label">High Contrast Mode</label>
               <span class="setting-description">Increase text and border contrast across pages</span>
             </div>
@@ -290,7 +297,7 @@
               type="text" 
               id="api-endpoint" 
               class="setting-input" 
-              placeholder="/api/omni/stream"
+              placeholder="/api/ION/stream"
             />
           </div>
 
@@ -423,6 +430,102 @@
         </section>
 
         <section class="settings-section">
+          <div class="env-settings-panel" id="settings-environment">
+            <div class="env-settings-panel__title">
+              <span>🌍</span> Environment Mode
+            </div>
+
+            <div class="env-toggle-row">
+              <div>
+                <div class="env-toggle-row__label">Enable Environment Mode</div>
+                <div class="env-toggle-row__desc">Activate planetary-scale environmental simulation</div>
+              </div>
+              <label class="env-toggle">
+                <input type="checkbox" id="env-toggle-main" checked />
+                <span class="env-toggle__slider"></span>
+              </label>
+            </div>
+
+            <div class="env-settings-sub" id="env-settings-sub">
+              <div class="env-select-row">
+                <span class="env-select-row__label">Default Scale Level</span>
+                <select class="env-select" id="env-default-scale">
+                  <option value="0">L0 - Planet</option>
+                  <option value="1">L1 - Continent</option>
+                  <option value="2" selected>L2 - Country</option>
+                  <option value="3">L3 - State / Province</option>
+                  <option value="4">L4 - Metro Area</option>
+                  <option value="5">L5 - City</option>
+                  <option value="6">L6 - Village</option>
+                </select>
+              </div>
+
+              <div class="env-toggle-row" style="flex-direction: column; align-items: flex-start;">
+                <div class="env-toggle-row__label" style="margin-bottom: 0.5rem;">Active Subsystems</div>
+                <div class="env-checkbox-grid">
+                  <label><input type="checkbox" checked value="climate" /> 🌡️ Climate</label>
+                  <label><input type="checkbox" checked value="hydrology" /> 💧 Hydrology</label>
+                  <label><input type="checkbox" checked value="ecology" /> 🌿 Ecology</label>
+                  <label><input type="checkbox" checked value="geology" /> ⛰️ Geology</label>
+                  <label><input type="checkbox" checked value="infrastructure" /> 🏗️ Infrastructure</label>
+                  <label><input type="checkbox" checked value="population" /> 👥 Population</label>
+                  <label><input type="checkbox" checked value="energy" /> ⚡ Energy</label>
+                  <label><input type="checkbox" checked value="economy" /> 📈 Economy</label>
+                  <label><input type="checkbox" checked value="governance" /> 🏛️ Governance</label>
+                  <label><input type="checkbox" checked value="transport" /> 🚢 Transport</label>
+                </div>
+              </div>
+
+              <div class="env-toggle-row">
+                <div>
+                  <div class="env-toggle-row__label">Cross-Scale Propagation</div>
+                  <div class="env-toggle-row__desc">Propagate state changes up and down the scale hierarchy</div>
+                </div>
+                <label class="env-toggle">
+                  <input type="checkbox" id="env-toggle-propagation" checked />
+                  <span class="env-toggle__slider"></span>
+                </label>
+              </div>
+
+              <div class="env-select-row">
+                <span class="env-select-row__label">Time Acceleration</span>
+                <select class="env-select" id="env-time-accel">
+                  <option value="1" selected>1x (Real-time)</option>
+                  <option value="10">10x</option>
+                  <option value="100">100x</option>
+                  <option value="1000">1000x</option>
+                </select>
+              </div>
+
+              <div class="env-select-row">
+                <span class="env-select-row__label">Snapshot Interval</span>
+                <select class="env-select" id="env-snapshot-interval">
+                  <option value="10">Every 10 ticks</option>
+                  <option value="50" selected>Every 50 ticks</option>
+                  <option value="100">Every 100 ticks</option>
+                  <option value="500">Every 500 ticks</option>
+                  <option value="0">Disabled</option>
+                </select>
+              </div>
+
+              <div class="env-select-row">
+                <span class="env-select-row__label">Log Verbosity</span>
+                <select class="env-select" id="env-log-verbosity">
+                  <option value="error">Error only</option>
+                  <option value="warn" selected>Warn</option>
+                  <option value="info">Info</option>
+                  <option value="debug">Debug</option>
+                </select>
+              </div>
+
+              <button class="env-btn-reset" id="env-reset-defaults" type="button">
+                Reset to Defaults
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
           <h3 class="section-title">
             <span class="section-icon">💾</span>
             Data Management
@@ -466,10 +569,48 @@
       <div class="settings-footer">
         <p>Changes save automatically • Use "Save Settings" to apply changes across all open tabs</p>
       </div>
+
+      <footer class="site-footer">
+        <div class="site-footer-content">
+          <p><strong>Ionirix Settings</strong></p>
+          <p>Manage how Ionirix behaves across chat, simulation, and interface workflows.</p>
+          <p><a href="/legal.html">Legal Notice & Responsible Use</a></p>
+          <p class="site-footer-rights">© 2026 Ionirix LLC. All rights reserved.</p>
+          <p class="site-footer-rights">Ionirix™ is a trademark of Ionirix LLC.</p>
+          <p class="site-footer-rights">Unauthorized reproduction, distribution, or modification is strictly prohibited.</p>
+        </div>
+      </footer>
     </main>
   </div>
 
-  <script src="/scripts/settings.js"></script>
+  <script>
+    document.getElementById('env-toggle-main')?.addEventListener('change', (e) => {
+      const sub = document.getElementById('env-settings-sub');
+      if (sub) {
+        sub.style.display = e.target.checked ? 'block' : 'none';
+      }
+    });
+
+    document.getElementById('env-reset-defaults')?.addEventListener('click', () => {
+      const defaultScale = document.getElementById('env-default-scale');
+      const timeAccel = document.getElementById('env-time-accel');
+      const snapshotInterval = document.getElementById('env-snapshot-interval');
+      const logVerbosity = document.getElementById('env-log-verbosity');
+      const propagation = document.getElementById('env-toggle-propagation');
+
+      if (defaultScale) defaultScale.value = '2';
+      if (timeAccel) timeAccel.value = '1';
+      if (snapshotInterval) snapshotInterval.value = '50';
+      if (logVerbosity) logVerbosity.value = 'warn';
+      if (propagation) propagation.checked = true;
+
+      document.querySelectorAll('.env-checkbox-grid input[type="checkbox"]').forEach((cb) => {
+        cb.checked = true;
+      });
+    });
+  </script>
+
+  <script src="/scripts/settings.js?v=20260302-1"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>
 </body>

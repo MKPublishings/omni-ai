@@ -59,4 +59,4 @@ jobs:
         run: npm run typecheck --if-present
 
       - name: Validate image engine
-        run: node ./omni-image-engine/utils/validator.js
+        run: node ./ION-image-engine/utils/validator.js

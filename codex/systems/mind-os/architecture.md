@@ -4,7 +4,7 @@ title: Mind-OS Architecture
 type: system
 category: systems/mind-os
 tags: [system, architecture, lineage]
-links: [system.mind-os.overview, system.omni.overview]
+links: [system.mind-os.overview, system.ION.overview]
 lineage: [legacy.codex.10-architecture]
 ---
 

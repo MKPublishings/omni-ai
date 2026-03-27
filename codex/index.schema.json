@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://omni.local/codex/index.schema.json",
-  "title": "Omni Living Codex Index",
+  "$id": "https://ION.local/codex/index.schema.json",
+  "title": "ION Living Codex Index",
   "type": "object",
   "required": ["meta", "categories", "entries", "crossLinks"],
   "properties": {

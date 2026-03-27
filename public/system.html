@@ -2,15 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Omni Ai – System</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-  <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/layout.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ionirix LLC - System</title>
+  <meta name="description" content="Inspect Ionirix infrastructure, worker status, memory services, and simulation runtime." />
+  <meta property="og:title" content="Ionirix LLC - System" />
+  <meta property="og:description" content="View public Ionirix LLC system architecture, runtime status, and operational services." />
+  <meta property="og:site_name" content="Ionirix LLC" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2" />
+  <link rel="stylesheet" href="/styles/base.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/layout.css?v=20260302-2" />
+  <link rel="stylesheet" href="/styles/components.css?v=20260302-1" />
 </head>
 <body class="page">
   <div id="layout">
     <aside id="sidebar">
-      <h1 class="logo">Omni Ai</h1>
+      <h1 class="logo">Ionirix</h1>
 
       <nav class="nav">
         <a href="/index.html" class="nav-link">Home</a>
@@ -19,7 +27,8 @@
         <a href="/modes.html" class="nav-link">Modes</a>
         <a href="/settings.html" class="nav-link">Settings</a>
         <a href="/about.html" class="nav-link">About</a>
-        <a href="/system.html" class="nav-link active">System</a>
+        <a href="/legal.html" class="nav-link">Legal</a>
+        <a href="/system.html" class="nav-link">System</a>
       </nav>
 
       <div class="sidebar-footer">
@@ -37,7 +46,7 @@
       <section class="system-section">
         <h3>Architecture Overview</h3>
         <p>
-          Omni Ai runs on a Cloudflare‑native stack:
+          Ionirix runs on a Cloudflare-native stack:
         </p>
         <ul>
           <li>Cloudflare Pages — static hosting + global CDN</li>
@@ -50,7 +59,7 @@
       <section class="system-section">
         <h3>Worker Status</h3>
         <div class="status-card">
-          <p><strong>Endpoint:</strong> <code>/api/omni</code></p>
+          <p><strong>Endpoint:</strong> <code>/api/ION</code></p>
           <p><strong>Region:</strong> Global Edge</p>
           <p><strong>Latency:</strong> <span id="latency">–</span> ms</p>
           <button id="ping-worker" class="btn">Ping Worker</button>
@@ -77,6 +86,17 @@
           <button id="terminate-simulation" class="btn danger">Terminate Simulation</button>
         </div>
       </section>
+
+      <footer class="site-footer">
+        <div class="site-footer-content">
+          <p><strong>Ionirix System</strong></p>
+          <p>Public infrastructure, worker status, and runtime visibility for Ionirix.</p>
+          <p><a href="/legal.html">Legal Notice & Responsible Use</a></p>
+          <p class="site-footer-rights">© 2026 Ionirix LLC. All rights reserved.</p>
+          <p class="site-footer-rights">Ionirix™ is a trademark of Ionirix LLC.</p>
+          <p class="site-footer-rights">Unauthorized reproduction, distribution, or modification is strictly prohibited.</p>
+        </div>
+      </footer>
     </main>
   </div>
 

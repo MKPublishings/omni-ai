@@ -4,7 +4,7 @@ title: Motif — Neon Thread
 type: visual-motif
 category: visual-dialect/motifs
 tags: [visual, motif, continuity]
-links: [visual.register.color, system.omni.image-engine]
+links: [visual.register.color, system.ION.image-engine]
 lineage: []
 ---
 

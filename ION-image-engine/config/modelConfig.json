@@ -1,0 +1,33 @@
+{
+  "minOutputSide": 256,
+  "maxOutputSide": 8192,
+  "defaultModel": "ION_stability",
+  "models": {
+    "ION_openai": {
+      "name": "ION OpenAI Image Generator",
+      "type": "image",
+      "provider": "openai",
+      "providerModel": "gpt-image-1",
+      "endpoint": "https://api.openai.com/v1/images/generations",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "fallbackModel": "ION_stability",
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
+      "defaultSteps": 30,
+      "defaultCfgScale": 7.5
+    },
+    "ION_stability": {
+      "name": "ION Stability Image Generator",
+      "type": "image",
+      "provider": "stability",
+      "providerModel": "stable-image-core",
+      "endpoint": "https://api.stability.ai/v2beta/stable-image/generate/core",
+      "apiKeyEnv": "STABILITY_API_KEY",
+      "fallbackModel": "ION_openai",
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
+      "defaultSteps": 30,
+      "defaultCfgScale": 7.5
+    }
+  }
+}

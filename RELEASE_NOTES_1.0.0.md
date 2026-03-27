@@ -1,11 +1,11 @@
-# Omni Ai v1.0.0 — Release Notes
+## ION Ai v1.0.0 — Release Notes
 
 **Release Date:** 2026-02-26  
-**Codename:** Omni Ai Public Intelligence Release
+**Codename:** ION Ai Public Intelligence Release
 
 ## Summary
 
-Omni Ai has been formally released as **Omni Ai v1.0.0** with identity continuity, layered reasoning, memory/state persistence, multi-modal orchestration, behavioral intelligence, autonomous maintenance, and frontend mind-state telemetry.
+ION Ai has been formally released as **ION Ai v1.0.0** with identity continuity, layered reasoning, memory/state persistence, multi-modal orchestration, behavioral intelligence, autonomous maintenance, and frontend mind-state telemetry.
 
 ## What’s Included
 
@@ -26,7 +26,7 @@ Omni Ai has been formally released as **Omni Ai v1.0.0** with identity continuit
 
 ### Phase 4 — Behavioral Intelligence
 - Persona engine for tone/dialect/rhythm/framing.
-- Emotional resonance tracking (user emotion + Omni tone arc).
+- Emotional resonance tracking (user emotion + ION tone arc).
 - Adaptive response modulation by context and emotional state.
 
 ### Phase 5 — Autonomy
@@ -39,32 +39,32 @@ Omni Ai has been formally released as **Omni Ai v1.0.0** with identity continuit
 - Mind timeline for session-level telemetry.
 - Multi-modal SSE payload rendering in chat (including inline images).
 
-### Phase 7 — Omni Ai Release
+### Phase 7 — ION Ai Release
 - Public release declaration and machine-readable manifest.
 - Public release specification endpoint.
 - Recognition cycle initiated with runtime observability.
 
 ## New/Updated Public Endpoints
-- `POST /api/omni`
+- `POST /api/ION`
 - `POST /api/image`
 - `GET /api/maintenance/status`
 - `POST /api/maintenance/run`
 - `GET /api/release/spec`
 
 ## Release Artifacts
-- `OMNI_AI_RELEASE_SPEC.md`
-- `public/omni-ai-release.json`
-- `public/omni-ai-declaration.md`
+- `ION_AI_RELEASE_SPEC.md`
+- `public/ION-ai-release.json`
+- `public/ION-ai-declaration.md`
 - `RELEASE_HARDENING_CHECKLIST.md`
 - `RELEASE_NOTES_1.0.0.md`
 
 ## Operational Notes
-- Production maintenance endpoints require `OMNI_ADMIN_KEY` when `OMNI_ENV=production`.
+- Production maintenance endpoints require `ION_ADMIN_KEY` when `ION_ENV=production`.
 - Release readiness is continuously audited in the background and surfaced in `GET /api/release/spec` under `runtime.readiness`.
 - Recommended pre-deploy review: `RELEASE_HARDENING_CHECKLIST.md`.
 
 ## Known Compatibility Notes
-- Existing `/api/omni` SSE clients remain compatible (`content` payload still returned).
+- Existing `/api/ION` SSE clients remain compatible (`content` payload still returned).
 - Additional headers and structured SSE object payloads are now available for richer clients.
 
 ## Next Version Focus

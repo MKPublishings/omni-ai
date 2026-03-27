@@ -3,9 +3,9 @@
   if (!page) return;
 
   const SETTINGS_KEYS = {
-    ANIMATIONS: "omni-animations",
-    HIGH_CONTRAST_MODE: "omni-high-contrast",
-    REDUCE_GLASS_BLUR: "omni-reduce-glass"
+    ANIMATIONS: "ION-animations",
+    HIGH_CONTRAST_MODE: "ION-high-contrast",
+    REDUCE_GLASS_BLUR: "ION-reduce-glass"
   };
 
   function getSettingBool(key, fallback = false) {
@@ -23,7 +23,56 @@
     page.classList.toggle("page-reduce-glass", getSettingBool(SETTINGS_KEYS.REDUCE_GLASS_BLUR, false));
   }
 
+  function normalizePath(pathname) {
+    if (!pathname) return "/index.html";
+    const cleaned = pathname.replace(/\/+$/, "") || "/";
+    if (cleaned === "/") return "/index.html";
+    return cleaned;
+  }
+
+  function toRouteKey(pathname) {
+    const normalized = normalizePath(pathname).toLowerCase();
+    const withoutHtml = normalized.replace(/\.html$/, "");
+    if (withoutHtml === "/" || withoutHtml === "/index") return "index";
+    const parts = withoutHtml.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "index";
+  }
+
+  function syncActiveNavLink() {
+    const navLinks = Array.from(document.querySelectorAll(".nav .nav-link[href]"));
+    if (navLinks.length === 0) return;
+
+    const currentRouteKey = toRouteKey(window.location.pathname);
+    let matched = false;
+
+    navLinks.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href) {
+        link.classList.remove("active");
+        return;
+      }
+
+      const linkPath = new URL(href, window.location.origin).pathname;
+      const isActive = toRouteKey(linkPath) === currentRouteKey;
+
+      link.classList.toggle("active", isActive);
+      if (isActive) matched = true;
+    });
+
+    if (!matched) {
+      navLinks.forEach((link) => {
+        if (toRouteKey(link.getAttribute("href") || "") === "index") {
+          link.classList.add("active");
+        }
+      });
+    }
+  }
+
   applyInterfaceFlags();
+  syncActiveNavLink();
+
+  window.addEventListener("popstate", syncActiveNavLink);
+  window.addEventListener("pageshow", syncActiveNavLink);
 
   window.addEventListener("storage", (event) => {
     if (
@@ -34,7 +83,7 @@
     }
   });
 
-  window.addEventListener("omni-settings-changed", (event) => {
+  window.addEventListener("ION-settings-changed", (event) => {
     const key = event?.detail?.key;
     if (key === SETTINGS_KEYS.HIGH_CONTRAST_MODE || key === SETTINGS_KEYS.REDUCE_GLASS_BLUR) {
       applyInterfaceFlags();

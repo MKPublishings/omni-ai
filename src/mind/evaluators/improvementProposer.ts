@@ -1,5 +1,5 @@
 import type { SessionEvaluation } from "./sessionEvaluator";
-import { buildImprovementPromptContract } from "./omniPromptContracts";
+import { buildImprovementPromptContract } from "./IONPromptContracts";
 import { requestMindImprovements } from "./internalMindClient";
 
 export interface ImprovementProposal {

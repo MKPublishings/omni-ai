@@ -1,0 +1,89 @@
+{
+  "id": "equation.solved.2026-03-04-avalanche-stress-001",
+  "title": "Avalanche Stress Run (gamma=0.1, N=20, cols=3)",
+  "template": "equation.quantum-cognitive-avalanche",
+  "version": "1.0.0",
+  "date": "2026-03-04",
+  "category": "equations/solved",
+  "status": "validated",
+  "tags": ["quantum", "avalanche", "stress", "solved", "mcsolve"],
+  "links": [
+    "system.ION.quantum-cognitive-sim",
+    "equation.quantum-cognitive-avalanche",
+    "law.quantum.02"
+  ],
+  "metadata": {
+    "solver": "mcsolve",
+    "runtime_seconds": 260.0,
+    "convergence": "successful"
+  },
+  "parameters": {
+    "levels": 20,
+    "num_cols": 3,
+    "gamma": 0.1,
+    "ntraj": 24,
+    "w_zpf": 4.90088e13,
+    "w_glu": 4.90088e13,
+    "g": 4.90088e11,
+    "coupling": 2.45044e11,
+    "t_start": 0.0,
+    "t_end": 1e-12,
+    "points": 50
+  },
+  "results": {
+    "initial_state": {
+      "zpf": 0.0,
+      "glutamate_exc": 0.0,
+      "coherence": 1.0
+    },
+    "final_state": {
+      "zpf": 0.1595,
+      "glutamate_exc": -0.3201,
+      "coherence": 0.2597
+    },
+    "observables": {
+      "avg_zpf": {
+        "min": 0.0,
+        "max": 0.1595,
+        "first_five": [0.0, 0.000143, 0.000337, 0.000663, 0.001308],
+        "last_five": [0.1379, 0.1425, 0.1483, 0.1547, 0.1595]
+      },
+      "avg_glutamate_exc": {
+        "min": -0.3201,
+        "max": 0.0,
+        "first_five": [0.0, -6.07e-05, -0.000582, -0.001376, -0.002219],
+        "last_five": [-0.2736, -0.2866, -0.2971, -0.3069, -0.3201]
+      },
+      "avg_glutamate_coh": {
+        "min": -0.9895,
+        "max": 1.0,
+        "first_five": [1.0, 0.5402, -0.4163, -0.9895, -0.6527],
+        "last_five": [0.4540, -0.3790, -0.8540, -0.5423, 0.2597]
+      }
+    },
+    "network": {
+      "laws_nodes": 103,
+      "laws_edges": 202,
+      "density": 0.0385,
+      "avg_degree": 3.922,
+      "topology": "barabasi-albert"
+    }
+  },
+  "interpretation": {
+    "zpf_buildup": "Network-wide avalanche amplification reaches ~0.16 quanta at t=1ps, representing 2x amplification vs single-column baseline.",
+    "excitation_cascade": "Glutamate excitation drops to -0.32 (E-I imbalance) propagating across columns via inter-column coupling.",
+    "coherence_decay": "Oscillations with damping envelope simulate synaptic efficiency loss and potential cognitive lapses (Law 23).",
+    "stress_regime": "Moderate stress (gamma=0.1) accelerates energy evolution toward instability, modeling physiological duress impact on quantum transformations.",
+    "laws_coupling": "Scale-free graph with hubs (Laws 1-21) drives avalanche cascades to cognitive extensions (Laws 22-103)."
+  },
+  "artifacts": {
+    "json_export": "ION_image_exports/avalanche_stress_run_20260304.json",
+    "trace_png": "ION_image_exports/avalanche_stress_run_20260304_traces.png"
+  },
+  "validation": {
+    "nan_count": 0,
+    "inf_count": 0,
+    "integration_status": "Integration successful.",
+    "solver_fallback": "mesolve → mcsolve (Liouville overflow)"
+  }
+}

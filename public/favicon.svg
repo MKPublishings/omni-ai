@@ -1,39 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Omni Ai Sapphire Brain Logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ionirix photon favicon">
   <defs>
-    <linearGradient id="brainStroke" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#8bbcff"/>
-      <stop offset="0.52" stop-color="#0F52BA"/>
-      <stop offset="1" stop-color="#0b2c69"/>
-    </linearGradient>
-    <filter id="brainGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="0" stdDeviation="1.8" flood-color="#0F52BA" flood-opacity="0.65"/>
+    <radialGradient id="photonHalo" cx="50%" cy="48%" r="60%">
+      <stop offset="0" stop-color="#dff3ff" stop-opacity="0.98"/>
+      <stop offset="0.24" stop-color="#8fc3ff" stop-opacity="0.92"/>
+      <stop offset="0.52" stop-color="#5e73ff" stop-opacity="0.66"/>
+      <stop offset="0.78" stop-color="#6b49db" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#120a37" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="photonCore" cx="42%" cy="38%" r="62%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.32" stop-color="#d7ebff"/>
+      <stop offset="0.66" stop-color="#8ab7ff"/>
+      <stop offset="1" stop-color="#4c67ff"/>
+    </radialGradient>
+    <radialGradient id="ionRing" cx="50%" cy="50%" r="50%">
+      <stop offset="0.7" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.86" stop-color="#9cb6ff" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#6f5bff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2"/>
     </filter>
   </defs>
 
-  <rect x="3" y="3" width="58" height="58" rx="15" fill="#04060B" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1.5"/>
-
-  <g fill="none" stroke="url(#brainStroke)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#brainGlow)">
-    <path d="M32 14c-5.8-5.2-14.6-2.8-17.9 3.8-3.7 7.5.2 15.6 5.8 18.9 1.7 1 2.8 2.7 3 4.7v2.2"/>
-    <path d="M32 14c5.8-5.2 14.6-2.8 17.9 3.8 3.7 7.5-.2 15.6-5.8 18.9-1.7 1-2.8 2.7-3 4.7v2.2"/>
-    <path d="M32 18v28"/>
-    <path d="M21 24h8"/>
-    <path d="M35 24h8"/>
-    <path d="M19 31h10"/>
-    <path d="M35 31h10"/>
-    <path d="M22 38h7"/>
-    <path d="M35 38h7"/>
-    <path d="M24 45h16"/>
-  </g>
-
-  <g fill="#FFFFFF">
-    <circle cx="21" cy="24" r="1.7"/>
-    <circle cx="43" cy="24" r="1.7"/>
-    <circle cx="19" cy="31" r="1.7"/>
-    <circle cx="45" cy="31" r="1.7"/>
-    <circle cx="24" cy="45" r="1.7"/>
-    <circle cx="40" cy="45" r="1.7"/>
-    <circle cx="32" cy="22" r="1.6"/>
-    <circle cx="32" cy="31" r="1.6"/>
-    <circle cx="32" cy="38" r="1.6"/>
-  </g>
+  <circle cx="32" cy="32" r="28" fill="url(#photonHalo)" filter="url(#softGlow)"/>
+  <circle cx="32" cy="32" r="18" fill="url(#ionRing)" opacity="0.9"/>
+  <circle cx="32" cy="32" r="13.5" fill="url(#photonCore)"/>
+  <circle cx="32" cy="32" r="8" fill="#edf5ff" opacity="0.72"/>
+  <circle cx="28.4" cy="27.8" r="3.2" fill="#ffffff" opacity="0.96"/>
 </svg>

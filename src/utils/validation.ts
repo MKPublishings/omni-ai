@@ -1,8 +1,8 @@
 // src/utils/validation.ts
 
-import { OmniRequest } from "../api/omni/index";
+import { IONRequest } from "../api/ION/index";
 
-export function validateMessages(body: OmniRequest): string | null {
+export function validateMessages(body: IONRequest): string | null {
   if (!body) return "Missing request body";
 
   if (!Array.isArray(body.messages)) {

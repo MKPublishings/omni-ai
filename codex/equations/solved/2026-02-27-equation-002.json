@@ -7,7 +7,7 @@
   "equation": "drift_rate = d(resonance)/dt",
   "variables": {
     "drift_rate": "rate of emotional mismatch over turns",
-    "resonance": "alignment between user state and omni state"
+    "resonance": "alignment between user state and ION state"
   },
   "tags": ["equation", "emotion", "behavior"],
   "links": ["law.cognitive.02", "equation.template.differential"],

@@ -6,10 +6,11 @@ module.exports = [
   {
     ignores: [
       "node_modules/**",
+      ".venv/**",
       "dist/**",
       "coverage/**",
-      "omni_image_exports/**",
-      "omni_video_exports/**",
+      "ION_image_exports/**",
+      "ION_video_exports/**",
       "worker-configuration.d.ts"
     ]
   },

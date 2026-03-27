@@ -23,10 +23,10 @@ function moduleCandidates(query = "") {
   const text = String(query || "").toLowerCase();
   const picks = [];
 
-  if (/\b(identity|omni|who are you)\b/.test(text)) picks.push("identity_layer.md");
+  if (/\b(identity|ION|who are you)\b/.test(text)) picks.push("identity_layer.md");
   if (/\b(rule|policy|system)\b/.test(text)) picks.push("system_rules.md");
   if (/\b(mode|architect|reasoning|coding|creative)\b/.test(text)) picks.push("modes_reference.md");
-  if (!picks.length) picks.push("omni_philosophy.md");
+  if (!picks.length) picks.push("ION_philosophy.md");
 
   return picks;
 }

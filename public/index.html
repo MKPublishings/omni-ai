@@ -2,12 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Omni Ai – Home</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-  <link rel="stylesheet" href="/styles/base.css" />
-  <link rel="stylesheet" href="/styles/layout.css" />
-  <link rel="stylesheet" href="/styles/components.css" />
-  <link rel="stylesheet" href="/styles/modes.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ionirix LLC</title>
+  <meta name="description" content="Ionirix LLC develops advanced AI systems, platforms, and digital services at ionirix.com." />
+  <meta property="og:title" content="Ionirix LLC" />
+  <meta property="og:description" content="Explore the Ionirix LLC platform for chat, modes, memory, tools, and system insight." />
+  <meta property="og:site_name" content="Ionirix LLC" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2" />
+  <link rel="stylesheet" href="/styles/base.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/layout.css?v=20260302-2" />
+  <link rel="stylesheet" href="/styles/components.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/modes.css?v=20260302-1" />
+  <link rel="stylesheet" href="/styles/environment-mode-styles.css?v=20260320-1" />
   <style>
     /* HOME PAGE SPECIFIC STYLES */
     .home-hero {
@@ -30,7 +38,7 @@
       padding-top: 370px;
     }
 
-    .home-omni-art {
+    .home-ION-art {
       position: fixed;
       inset: 0;
       z-index: 0;
@@ -47,7 +55,7 @@
       scroll-behavior: smooth;
     }
 
-    .modes-main > *:not(.home-omni-art) {
+    .modes-main > *:not(.home-ION-art) {
       position: relative;
       z-index: 2;
     }
@@ -73,7 +81,7 @@
       letter-spacing: 0.05em;
       text-transform: none;
       line-height: 0.92;
-      animation: omni-title-spectrum 14s linear infinite, omni-title-pulse 5.8s ease-in-out infinite;
+      animation: ION-title-spectrum 14s linear infinite, ION-title-pulse 5.8s ease-in-out infinite;
       position: absolute;
       left: 50%;
       top: 44%;
@@ -85,7 +93,7 @@
       filter: none;
     }
 
-    @keyframes omni-title-spectrum {
+    @keyframes ION-title-spectrum {
       0% {
         background-position: 0% 50%, 100% 50%;
       }
@@ -97,7 +105,7 @@
       }
     }
 
-    @keyframes omni-title-pulse {
+    @keyframes ION-title-pulse {
       0%,
       100% {
         text-shadow:
@@ -138,14 +146,14 @@
       z-index: 2;
     }
 
-    .home-omni-canvas {
+    .home-ION-canvas {
       width: 100%;
       height: 100%;
       display: block;
       filter: drop-shadow(0 0 26px rgba(59, 122, 255, 0.32));
     }
 
-    .home-omni-fallback {
+    .home-ION-fallback {
       position: absolute;
       opacity: 0;
       pointer-events: none;
@@ -250,6 +258,17 @@
       transform: translateY(-2px);
     }
 
+    .mode-card-clickable {
+      cursor: pointer;
+    }
+
+    .mode-card-clickable:focus-visible {
+      outline: 2px solid rgba(15, 82, 186, 0.9);
+      outline-offset: 2px;
+      border-color: rgba(15, 82, 186, 0.62);
+      box-shadow: 0 0 0 4px rgba(15, 82, 186, 0.22);
+    }
+
     .mode-card-icon {
       font-size: 48px;
       margin-bottom: 16px;
@@ -278,6 +297,13 @@
       display: inline-block;
       padding: 8px 14px;
       font-size: 12px;
+    }
+
+    .mode-card-link:focus-visible {
+      outline: 2px solid rgba(15, 82, 186, 0.9);
+      outline-offset: 2px;
+      border-color: rgba(15, 82, 186, 0.62);
+      box-shadow: 0 0 0 4px rgba(15, 82, 186, 0.22);
     }
 
     .features-grid {
@@ -401,15 +427,16 @@
 <body class="page">
   <div id="layout">
     <aside id="sidebar">
-      <h1 class="logo">Omni Ai</h1>
+      <h1 class="logo">Ionirix</h1>
 
       <nav class="nav">
-        <a href="/index.html" class="nav-link active">Home</a>
+        <a href="/index.html" class="nav-link">Home</a>
         <a href="/chat.html" class="nav-link">Chat</a>
         <a href="/codex.html" class="nav-link">Codex</a>
         <a href="/modes.html" class="nav-link">Modes</a>
         <a href="/settings.html" class="nav-link">Settings</a>
         <a href="/about.html" class="nav-link">About</a>
+        <a href="/legal.html" class="nav-link">Legal</a>
       </nav>
 
       <div class="sidebar-footer">
@@ -419,14 +446,14 @@
     </aside>
 
     <main id="main" class="modes-main">
-      <div class="home-omni-art" aria-hidden="true">
-        <canvas id="hero-omni-canvas" class="home-omni-canvas"></canvas>
-        <span class="home-omni-fallback">3D Omni Emblem</span>
+      <div class="home-ION-art" aria-hidden="true">
+        <canvas id="hero-ION-canvas" class="home-ION-canvas"></canvas>
+        <span class="home-ION-fallback">3D Ionirix Emblem</span>
       </div>
 
       <!-- HERO SECTION -->
       <section class="home-hero">
-        <h1>Omni Ai</h1>
+        <h1>Ionirix</h1>
         <div class="home-hero-content">
           <p>A sovereign intelligence for creation, architecture, and iteration.</p>
           <div class="hero-buttons">
@@ -436,10 +463,10 @@
         </div>
       </section>
 
-      <!-- WHAT OMNI IS -->
+      <!-- WHAT IONIRIX IS -->
       <section class="home-section">
         <div class="home-intro">
-          <p>Omni is the resident intelligence of mkomni.com — built for creative architecture, iteration, and problem-solving. Designed as a modular operating system for thought, it's fast, responsive, and cinematic. Every interaction is optimized for clarity, precision, and creative flow.</p>
+          <p>Ionirix is the public intelligence experience of ionirix.com — built for creative architecture, iteration, and problem-solving. Designed as a modular operating system for thought, it's fast, responsive, and cinematic. Every interaction is optimized for clarity, precision, and creative flow.</p>
         </div>
       </section>
 
@@ -447,64 +474,112 @@
       <section class="home-section">
         <h2 class="home-section-title">Cognitive Modes</h2>
         <div class="modes-grid">
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=chat" role="link" tabindex="0">
             <div class="mode-card-icon">💬</div>
             <h3 class="mode-card-title">Chat Mode</h3>
-            <p class="mode-card-desc">Natural conversation, Q&A, and general assistance</p>
+            <p class="mode-card-desc">Conversation, Q&A, and everyday assistance</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=chat" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=architect" role="link" tabindex="0">
             <div class="mode-card-icon">🏗️</div>
             <h3 class="mode-card-title">Architect Mode</h3>
-            <p class="mode-card-desc">Build systems, structures, and technical logic</p>
+            <p class="mode-card-desc">System design, structure planning, and technical blueprints</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=architect" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=analyst" role="link" tabindex="0">
             <div class="mode-card-icon">📊</div>
             <h3 class="mode-card-title">Analyst Mode</h3>
-            <p class="mode-card-desc">Breakdowns, summaries, and data insights</p>
+            <p class="mode-card-desc">Breakdowns, summaries, and evidence-based insights</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=analyst" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=visual" role="link" tabindex="0">
             <div class="mode-card-icon">🎨</div>
             <h3 class="mode-card-title">Visual Mode</h3>
-            <p class="mode-card-desc">Cinematic scenes, composition, and creative direction</p>
+            <p class="mode-card-desc">Image concepts, composition, and creative direction</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=visual" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=lore" role="link" tabindex="0">
             <div class="mode-card-icon">📖</div>
             <h3 class="mode-card-title">Lore Mode</h3>
-            <p class="mode-card-desc">Worldbuilding, narrative memory, and character arcs</p>
+            <p class="mode-card-desc">Worldbuilding, narrative systems, and character arcs</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=lore" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=reasoning" role="link" tabindex="0">
             <div class="mode-card-icon">🧠</div>
             <h3 class="mode-card-title">Reasoning Mode</h3>
-            <p class="mode-card-desc">Stepwise logic scaffolding with concise final outputs</p>
+            <p class="mode-card-desc">Stepwise logic, careful inference, and precise conclusions</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=reasoning" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=coding" role="link" tabindex="0">
             <div class="mode-card-icon">💻</div>
             <h3 class="mode-card-title">Coding Mode</h3>
-            <p class="mode-card-desc">Logic-first implementation with code and self-review</p>
+            <p class="mode-card-desc">Implementation, debugging, and practical code delivery</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=coding" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=knowledge" role="link" tabindex="0">
             <div class="mode-card-icon">📚</div>
             <h3 class="mode-card-title">Knowledge Mode</h3>
-            <p class="mode-card-desc">Retrieval-augmented factual responses from indexed knowledge</p>
+            <p class="mode-card-desc">Fact retrieval, source grounding, and reference synthesis</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=knowledge" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=system-knowledge" role="link" tabindex="0">
             <div class="mode-card-icon">🗂️</div>
             <h3 class="mode-card-title">System Knowledge Mode</h3>
-            <p class="mode-card-desc">Internal module-aware answers grounded in system references</p>
+            <p class="mode-card-desc">Runtime internals, module mapping, and system references</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=system-knowledge" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
 
-          <div class="mode-card">
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=anatomy" role="link" tabindex="0">
+            <div class="mode-card-icon">🔬</div>
+            <h3 class="mode-card-title">Anatomy Mode</h3>
+            <p class="mode-card-desc">Component breakdown, structure mapping, and pathway tracing</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=anatomy" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
+          </div>
+
+          <div class="mode-card mode-card-clickable" data-mode-link="/modes.html?mode=simulation" role="link" tabindex="0">
             <div class="mode-card-icon">🧪</div>
             <h3 class="mode-card-title">Simulation Mode</h3>
-            <p class="mode-card-desc">Run contained worlds, systems, and scenarios inside Omni’s cognitive OS.</p>
+            <p class="mode-card-desc">Scenario modeling, state transitions, and contained test worlds</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html?mode=simulation" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
+          </div>
+
+          <div class="mode-card mode-card-clickable" data-mode="environment" data-mode-link="/modes.html#environment" role="link" tabindex="0" aria-label="Environment Mode - Planetary-scale environmental simulation">
+            <div class="mode-card-icon">🌍</div>
+            <h3 class="mode-card-title">Environment Mode</h3>
+            <p class="mode-card-desc">Planetary dynamics, climate systems, and multi-scale earth simulation</p>
+            <div class="mode-card-cta">
+              <a href="/modes.html#environment" class="hero-btn hero-btn-secondary mode-card-link">Open Mode</a>
+            </div>
           </div>
         </div>
       </section>
@@ -530,12 +605,12 @@
 
           <div class="feature-spec">
             <span class="feature-spec-icon">🧭</span>
-            <p class="feature-spec-text">Multi-model router</p>
+            <p class="feature-spec-text">Ionirix public runtime</p>
           </div>
 
           <div class="feature-spec">
             <span class="feature-spec-icon">🤖</span>
-            <p class="feature-spec-text">Auto model routing</p>
+            <p class="feature-spec-text">Unified AI execution</p>
           </div>
 
           <div class="feature-spec">
@@ -602,20 +677,26 @@
       <section class="home-section">
         <div class="about-mini">
           <p><strong>Designed and architected by Mirnes Kudić</strong></p>
-          <p>Built as a personal OS for creativity and clarity, inspired by Sapphire color theory and modern system design. Omni is a living project that evolves with every iteration.</p>
+          <p>Built as a personal OS for creativity and clarity, inspired by Sapphire color theory and modern system design. Ionirix is a living project that evolves with every iteration.</p>
         </div>
       </section>
 
       <!-- FOOTER -->
-      <footer class="home-footer">
-        <p><strong>Omni Ai v1.0</strong></p>
-        <p>Built with Cloudflare Workers, streaming AI inference, and a modular frontend architecture.</p>
-        <p><a href="/about.html">Learn more about the project →</a></p>
+      <footer class="home-footer site-footer">
+        <div class="site-footer-content">
+          <p><strong>Ionirix</strong></p>
+          <p>Built with Cloudflare Workers, streaming AI inference, and a modular frontend architecture.</p>
+          <p><a href="/about.html">Learn more about Ionirix →</a></p>
+          <p><a href="/legal.html">Legal Notice & Responsible Use</a></p>
+          <p class="site-footer-rights">© 2026 Ionirix LLC. All rights reserved.</p>
+          <p class="site-footer-rights">Ionirix™ is a trademark of Ionirix LLC.</p>
+          <p class="site-footer-rights">Unauthorized reproduction, distribution, or modification is strictly prohibited.</p>
+        </div>
       </footer>
     </main>
   </div>
 
-  <script type="module" src="/omni-visual/main.js"></script>
+  <script type="module" src="/ION-visual/main.js"></script>
   <script src="/scripts/modes.js"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>

@@ -1,4 +1,4 @@
-// omni chat.js — Style C (Full Omni Ai)
+// ION chat.js — Style C (Full ION Ai)
 // Features:
 // - SSE streaming with [DONE] sentinel
 // - No early cutoffs, robust parsing
@@ -16,6 +16,8 @@
   const messagesEl = document.getElementById("chat-messages") || document.getElementById("chat-container");
   const inputEl = document.getElementById("chat-input") || document.getElementById("user-input");
   const ageGateComposerNoticeEl = document.getElementById("age-gate-composer-notice");
+  const legalAttestationComposerNoticeEl = document.getElementById("legal-attestation-composer-notice");
+  const openLegalAttestationBtn = document.getElementById("open-legal-attestation-btn");
   const sendBtn = document.getElementById("send-btn");
   const modelDropdown = document.getElementById("model-dropdown");
   const modelBtn = document.getElementById("model-btn");
@@ -35,21 +37,6 @@
   const simulationExportBtn = document.getElementById("simulation-export-btn");
   const simulationRulesEditorEl = document.getElementById("simulation-rules-editor");
   const simulationLogEl = document.getElementById("simulation-log");
-  const mindRouteEl = document.getElementById("mind-route");
-  const mindPersonaEl = document.getElementById("mind-persona");
-  const mindEmotionEl = document.getElementById("mind-emotion");
-  const mindTimelineEl = document.getElementById("mind-timeline");
-  const internetModeEl = document.getElementById("internet-mode");
-  const internetProfileEl = document.getElementById("internet-profile");
-  const internetCountEl = document.getElementById("internet-count");
-  const internetQueryEl = document.getElementById("internet-query");
-  const internetSourcesEl = document.getElementById("internet-sources");
-  const mediaFilterAllBtn = document.getElementById("media-filter-all");
-  const mediaFilterImagesBtn = document.getElementById("media-filter-images");
-  const mediaFilterGifsBtn = document.getElementById("media-filter-gifs");
-  const mediaFilterVideosBtn = document.getElementById("media-filter-videos");
-  const savePreferencesBtn = document.getElementById("save-preferences-btn");
-  const resetMemoryBtn = document.getElementById("reset-memory-btn");
 
   const sessionsSidebarEl = document.getElementById("sessions-sidebar");
   const newSessionBtn = document.getElementById("new-session-btn");
@@ -60,31 +47,32 @@
   // =========================
   // 2. STATE ENGINE
   // =========================
-  const STORAGE_KEY = "omni_chat_sessions_v1";
+  const STORAGE_KEY = "ION_chat_sessions_v1";
   const SETTINGS_KEYS = {
-    AUTO_SCROLL: "omni-auto-scroll",
-    FONT_SIZE: "omni-font-size",
-    DEFAULT_MODEL: "omni-default-model",
-    MODE_SELECTION: "omni-mode-selection",
-    DEFAULT_MODE: "omni-default-mode",
-    SIMULATION_DEFAULT_RULES: "omni-simulation-default-rules",
-    SIMULATION_MAX_DEPTH: "omni-simulation-max-depth",
-    SIMULATION_MAX_STEPS: "omni-simulation-max-steps",
-    SIMULATION_AUTO_RESET: "omni-simulation-auto-reset",
-    SIMULATION_LOG_VERBOSITY: "omni-simulation-log-verbosity",
-    SOUND: "omni-sound",
-    SHOW_TIMESTAMPS: "omni-show-timestamps",
-    COMPACT_MODE: "omni-compact-mode",
-    SEND_WITH_ENTER: "omni-send-with-enter",
-    SHOW_ASSISTANT_BADGES: "omni-show-assistant-badges",
-    AUTO_DETECT_MODE: "omni-auto-detect-mode",
-    PERSIST_MANUAL_MODE: "omni-persist-manual-mode",
-    REQUEST_TIMEOUT: "omni-request-timeout",
-    API_HEALTH_INTERVAL: "omni-api-health-interval",
-    API_RETRIES: "omni-api-retries"
+    AUTO_SCROLL: "ION-auto-scroll",
+    FONT_SIZE: "ION-font-size",
+    DEFAULT_MODEL: "ION-default-model",
+    MODE_SELECTION: "ION-mode-selection",
+    DEFAULT_MODE: "ION-default-mode",
+    SIMULATION_DEFAULT_RULES: "ION-simulation-default-rules",
+    SIMULATION_MAX_DEPTH: "ION-simulation-max-depth",
+    SIMULATION_MAX_STEPS: "ION-simulation-max-steps",
+    SIMULATION_AUTO_RESET: "ION-simulation-auto-reset",
+    SIMULATION_LOG_VERBOSITY: "ION-simulation-log-verbosity",
+    SOUND: "ION-sound",
+    SHOW_TIMESTAMPS: "ION-show-timestamps",
+    COMPACT_MODE: "ION-compact-mode",
+    MOBILE_COMPACT_MODE: "ION-mobile-compact-mode",
+    SEND_WITH_ENTER: "ION-send-with-enter",
+    SHOW_ASSISTANT_BADGES: "ION-show-assistant-badges",
+    AUTO_DETECT_MODE: "ION-auto-detect-mode",
+    PERSIST_MANUAL_MODE: "ION-persist-manual-mode",
+    REQUEST_TIMEOUT: "ION-request-timeout",
+    API_HEALTH_INTERVAL: "ION-api-health-interval",
+    API_RETRIES: "ION-api-retries"
   };
-  const KNOWN_MODELS = ["auto", "omni", "gpt-4o-mini", "gpt-4o", "deepseek"];
-  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "simulation"];
+  const KNOWN_MODELS = ["ION"];
+  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "anatomy", "environment", "simulation"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
     "3d",
@@ -97,10 +85,11 @@
     "vfx",
     "text"
   ];
-  const KNOWN_CAMERA_PROFILES = ["portrait-85mm", "wide-35mm", "macro", "telephoto-135mm"];
+  const KNOWN_CAMERA_PROFILES = ["prime-85mm", "wide-35mm", "macro", "telephoto-135mm"];
   const KNOWN_LIGHTING_PROFILES = ["studio-soft", "studio-hard", "natural-daylight", "cinematic-lowkey"];
   const KNOWN_MATERIAL_PROFILES = ["skin", "fabric", "metal", "glass"];
-  const AGE_PROFILE_KEY = "omni-age-profile-v1";
+  const AGE_PROFILE_KEY = "ION-age-profile-v1";
+  const LEGAL_PROFILE_KEY = "ION-legal-attestation-v1";
 
   let state = {
     activeSessionId: null,
@@ -113,6 +102,7 @@
     soundEnabled: false,
     showTimestamps: false,
     compactMode: false,
+    mobileCompactMode: false,
     sendWithEnter: true,
     showAssistantBadges: true,
     autoDetectMode: true,
@@ -120,13 +110,6 @@
     apiHealthIntervalSeconds: 30,
     apiRetries: 1
   };
-
-  let activeMediaFilter = "all";
-
-  function normalizeMediaFilter(value) {
-    const normalized = String(value || "").trim().toLowerCase();
-    return ["all", "images", "gifs", "videos"].includes(normalized) ? normalized : "all";
-  }
 
   function getSetting(key, fallback = "") {
     try {
@@ -155,6 +138,7 @@
       soundEnabled: getSettingBool(SETTINGS_KEYS.SOUND, false),
       showTimestamps: getSettingBool(SETTINGS_KEYS.SHOW_TIMESTAMPS, false),
       compactMode: getSettingBool(SETTINGS_KEYS.COMPACT_MODE, false),
+      mobileCompactMode: getSettingBool(SETTINGS_KEYS.MOBILE_COMPACT_MODE, false),
       sendWithEnter: getSettingBool(SETTINGS_KEYS.SEND_WITH_ENTER, true),
       showAssistantBadges: getSettingBool(SETTINGS_KEYS.SHOW_ASSISTANT_BADGES, true),
       autoDetectMode: getSettingBool(SETTINGS_KEYS.AUTO_DETECT_MODE, true),
@@ -173,15 +157,20 @@
   function applyRuntimeSettings() {
     if (!messagesEl) return;
 
-    messagesEl.classList.toggle("chat-compact", !!runtimeSettings.compactMode);
+    const mobileViewport = window.matchMedia
+      ? window.matchMedia("(max-width: 640px)").matches
+      : (window.innerWidth || 0) <= 640;
+    const compactEnabled = Boolean(runtimeSettings.compactMode || (runtimeSettings.mobileCompactMode && mobileViewport));
+
+    messagesEl.classList.toggle("chat-compact", compactEnabled);
     messagesEl.classList.toggle("chat-font-small", runtimeSettings.fontSize === "small");
     messagesEl.classList.toggle("chat-font-medium", runtimeSettings.fontSize === "medium");
     messagesEl.classList.toggle("chat-font-large", runtimeSettings.fontSize === "large");
   }
 
   function getDefaultModelFromSettings() {
-    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "auto"));
-    return candidate || "auto";
+    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "ION"));
+    return candidate || "ION";
   }
 
   function formatMessageTimestamp(timestamp) {
@@ -229,7 +218,7 @@
 
   function normalizeModel(model) {
     const normalized = typeof model === "string" ? model.trim().toLowerCase() : "";
-    return KNOWN_MODELS.includes(normalized) ? normalized : "";
+    return KNOWN_MODELS.includes(normalized) ? normalized : "ION";
   }
 
   function normalizeImageStyle(style) {
@@ -252,11 +241,11 @@
   }
 
   function getActiveCameraProfile(session = getActiveSession()) {
-    return normalizeCameraProfile(session?.imageCamera) || "portrait-85mm";
+    return normalizeCameraProfile(session?.imageCamera);
   }
 
   function getActiveLightingProfile(session = getActiveSession()) {
-    return normalizeLightingProfile(session?.imageLighting) || "studio-soft";
+    return normalizeLightingProfile(session?.imageLighting);
   }
 
   function normalizeMaterialName(material) {
@@ -278,7 +267,7 @@
   function getActiveMaterials(session = getActiveSession()) {
     const materials = normalizeMaterialList(session?.imageMaterials);
     if (materials.length) return materials;
-    return ["skin"];
+    return [];
   }
 
   function getAgeProfile() {
@@ -297,29 +286,182 @@
     return Boolean(profile && profile.verified && profile.humanVerified);
   }
 
+  function normalizeJurisdiction(value) {
+    const compact = String(value || "").trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(compact)) return "";
+    return compact;
+  }
+
+  function getLegalAttestationProfile() {
+    try {
+      const raw = localStorage.getItem(LEGAL_PROFILE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+
+      return {
+        accepted: parsed.accepted === true,
+        jurisdiction: normalizeJurisdiction(parsed.jurisdiction),
+        truthfulIdentity: parsed.truthfulIdentity === true,
+        lawfulUse: parsed.lawfulUse === true,
+        userDirected: parsed.userDirected === true,
+        acceptedAt: Number(parsed.acceptedAt || 0)
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function hasVerifiedLegalAttestation() {
+    const profile = getLegalAttestationProfile();
+    if (!profile) return false;
+    return Boolean(
+      profile.accepted &&
+      profile.truthfulIdentity &&
+      profile.lawfulUse &&
+      profile.userDirected &&
+      profile.jurisdiction
+    );
+  }
+
   function updateAgeGateComposerNotice() {
     if (!ageGateComposerNoticeEl) return;
     ageGateComposerNoticeEl.hidden = hasVerifiedAgeProfile();
   }
 
+  function updateLegalAttestationComposerNotice() {
+    if (!legalAttestationComposerNoticeEl) return;
+    legalAttestationComposerNoticeEl.hidden = hasVerifiedLegalAttestation();
+  }
+
+  function openLegalAttestationModal() {
+    const existing = document.getElementById("legal-attestation-overlay");
+    if (existing) return;
+
+    const profile = getLegalAttestationProfile();
+
+    const overlay = document.createElement("div");
+    overlay.id = "legal-attestation-overlay";
+    overlay.className = "age-gate-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "legal-attestation-title");
+
+    overlay.innerHTML = `
+      <div class="age-gate-modal">
+        <h2 id="legal-attestation-title">Legal Attestation Required</h2>
+        <p class="age-gate-copy">Before using chat, confirm your jurisdiction eligibility, truthful information, and responsible-use acceptance.</p>
+        <form id="legal-attestation-form" class="legal-attestation-form" novalidate>
+          <div class="legal-attestation-jurisdiction">
+            <label class="age-gate-label" for="legal-jurisdiction">Jurisdiction (2-letter country code)</label>
+            <input id="legal-jurisdiction" type="text" autocomplete="country-name" maxlength="2" placeholder="Example: US, CA, DE" />
+          </div>
+          <div class="legal-attestation-checks">
+            <label><input id="legal-eligible" type="checkbox" /> I confirm I am legally allowed to use Ionirix in my jurisdiction.</label>
+            <label><input id="legal-truthful" type="checkbox" /> I confirm age/identity details I provide are truthful and accurate.</label>
+            <label><input id="legal-user-directed" type="checkbox" /> I understand Ionirix acts on user input and my actions remain my responsibility.</label>
+          </div>
+          <p class="legal-attestation-links">See <a href="/legal.html" target="_blank" rel="noopener noreferrer">Legal Notice & Responsible Use</a> for full terms.</p>
+          <p id="legal-attestation-status" class="age-gate-status" aria-live="polite"></p>
+          <button id="legal-attestation-submit" type="submit" class="age-gate-submit">Accept & Continue</button>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const form = overlay.querySelector("#legal-attestation-form");
+    const jurisdictionEl = overlay.querySelector("#legal-jurisdiction");
+    const eligibleEl = overlay.querySelector("#legal-eligible");
+    const truthfulEl = overlay.querySelector("#legal-truthful");
+    const userDirectedEl = overlay.querySelector("#legal-user-directed");
+    const statusEl = overlay.querySelector("#legal-attestation-status");
+    const submitBtn = overlay.querySelector("#legal-attestation-submit");
+
+    if (jurisdictionEl) jurisdictionEl.value = String(profile?.jurisdiction || "");
+    if (eligibleEl) eligibleEl.checked = profile?.lawfulUse === true;
+    if (truthfulEl) truthfulEl.checked = profile?.truthfulIdentity === true;
+    if (userDirectedEl) userDirectedEl.checked = profile?.userDirected === true;
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const jurisdiction = normalizeJurisdiction(jurisdictionEl?.value || "");
+      const lawfulUse = Boolean(eligibleEl?.checked);
+      const truthfulIdentity = Boolean(truthfulEl?.checked);
+      const userDirected = Boolean(userDirectedEl?.checked);
+
+      if (!jurisdiction) {
+        if (statusEl) statusEl.textContent = "Enter a valid 2-letter country code (for example: US, CA, DE).";
+        return;
+      }
+
+      if (!lawfulUse || !truthfulIdentity || !userDirected) {
+        if (statusEl) statusEl.textContent = "All confirmations are required to continue.";
+        return;
+      }
+
+      if (submitBtn) submitBtn.disabled = true;
+
+      const nextProfile = {
+        accepted: true,
+        jurisdiction,
+        truthfulIdentity,
+        lawfulUse,
+        userDirected,
+        acceptedAt: Date.now()
+      };
+
+      try {
+        localStorage.setItem(LEGAL_PROFILE_KEY, JSON.stringify(nextProfile));
+      } catch {
+        if (statusEl) statusEl.textContent = "Unable to save attestation. Check browser storage settings.";
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("ION-legal-attestation-changed", {
+          detail: nextProfile
+        })
+      );
+
+      if (statusEl) statusEl.textContent = "Legal attestation complete.";
+      updateLegalAttestationComposerNotice();
+
+      setTimeout(() => {
+        overlay.remove();
+      }, 180);
+    });
+  }
+
   function buildSafetyProfile() {
     const profile = getAgeProfile() || {};
+    const legalProfile = getLegalAttestationProfile();
     const ageTier = String(profile.ageTier || "minor").toLowerCase() === "adult" ? "adult" : "minor";
-    const nsfwAccess = Boolean(profile.nsfwAccess) && ageTier === "adult";
+    const adultAccess = Boolean(profile.adultAccess) && ageTier === "adult";
     return {
       ageTier,
       humanVerified: Boolean(profile.humanVerified),
-      nsfwAccess,
-      explicitAllowed: nsfwAccess,
-      illegalBlocked: true
+      adultAccess,
+      explicitAllowed: adultAccess,
+      illegalBlocked: true,
+      legalAttestation: {
+        accepted: hasVerifiedLegalAttestation(),
+        jurisdiction: String(legalProfile?.jurisdiction || ""),
+        truthfulIdentity: Boolean(legalProfile?.truthfulIdentity),
+        lawfulUse: Boolean(legalProfile?.lawfulUse),
+        userDirected: Boolean(legalProfile?.userDirected),
+        acceptedAt: Number(legalProfile?.acceptedAt || 0)
+      }
     };
   }
 
   function evaluatePromptPolicy(text, safetyProfile) {
     const value = String(text || "").toLowerCase();
 
-    const directIllegalPattern = /\b(bestiality|child\s*porn|csam|rape\s*content|exploitative\s*sexual|incest\s*porn)\b/i;
-    const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual|nude|nudity|porn|erotic|fetish)\b/i;
+    const directIllegalPattern = /\b(bestiality|child\s*sexual\s*abuse|child\s*porn|csam|rape\s*content|exploitative\s*sexual\s*content|incest\s*porn)\b/i;
+    const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual\s*content|nude|nudity|porn|erotic|fetish|explicit\s*nudity)\b/i;
     const illegalAssaultPattern = /\b(sexual\s*assault|forced\s*sex|non[-\s]?consensual\s*sex)\b/i;
     if (directIllegalPattern.test(value) || illegalMinorSexualPattern.test(value) || illegalAssaultPattern.test(value)) {
       return {
@@ -329,7 +471,7 @@
       };
     }
 
-    const explicitSexualPattern = /\b(nsfw|porn|explicit|erotic|nude|nudity|fetish)\b/i;
+    const explicitSexualPattern = /\b(porn|pornographic|erotic|nude|nudity|fetish|sex\s*scene|sexual\s*content|explicit\s*nudity)\b/i;
     if (explicitSexualPattern.test(value) && !Boolean(safetyProfile?.explicitAllowed)) {
       return {
         blocked: true,
@@ -357,11 +499,11 @@
     if (!hasVerifiedAgeProfile()) {
       return {
         ok: false,
-        message: "Age verification is required before generating images or videos. Complete the age gate and try again."
+        message: "Age verification is required before generating images. Complete the age gate and try again."
       };
     }
 
-    const promptLimit = 1600;
+    const promptLimit = 10000;
     if (prompt.length > promptLimit) {
       return {
         ok: false,
@@ -381,79 +523,13 @@
       return { kind: "command", prompt: raw };
     }
 
-    if (value.startsWith("/video")) {
-      return { kind: "video", prompt: extractVideoPrompt(raw) };
-    }
-
-    const asksVideo = /\b(video|clip|animation|animate|cinematic\s+shot|motion)\b/i.test(value);
-    const asksGif = /\b(gif|loop|animated\s+gif)\b/i.test(value);
-
-    const asksImage = /\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i.test(value);
-
-    if (asksVideo || asksGif) {
-      return { kind: "video", prompt: extractVideoPrompt(raw) };
-    }
-
     if (isImageGenerationRequest(raw)) {
-      return { kind: "image", prompt: extractImagePrompt(raw) };
-    }
-
-    if (asksImage) {
       return { kind: "image", prompt: extractImagePrompt(raw) };
     }
 
     return { kind: "chat", prompt: raw };
   }
 
-  function extractVideoPrompt(text) {
-    const raw = String(text || "").trim();
-    if (!raw) return "";
-
-    if (raw.toLowerCase().startsWith("/video")) {
-      return raw.slice(6).trim();
-    }
-
-    return raw
-      .replace(/^\s*(please\s+)?(generate|create|make|render|animate|produce)\s+(a\s+)?(gif|video|clip|animation)\s*(of|for)?\s*/i, "")
-      .replace(/\b(as\s+a\s+gif|as\s+gif|in\s+video\s+form)\b/gi, "")
-      .trim() || raw;
-  }
-
-  function deriveVideoStyleProfile(promptText) {
-    const prompt = String(promptText || "").toLowerCase();
-
-    let stylePreset = "natural";
-    if (/\b(cinematic|film|movie|dramatic|epic|anamorphic)\b/i.test(prompt)) {
-      stylePreset = "cinematic";
-    } else if (/\b(anime|cartoon|pixar|stylized|illustrated)\b/i.test(prompt)) {
-      stylePreset = "stylized";
-    } else if (/\b(noir|black\s*and\s*white|monochrome|gritty)\b/i.test(prompt)) {
-      stylePreset = "noir";
-    } else if (/\b(neon|cyberpunk|sci[-\s]?fi|futuristic)\b/i.test(prompt)) {
-      stylePreset = "neon";
-    }
-
-    const motion = /\b(slow\s*motion|slow-mo|dramatic\s*slow)\b/i.test(prompt)
-      ? "slow"
-      : /\b(fast|action|chase|dynamic|high\s*energy)\b/i.test(prompt)
-      ? "fast"
-      : "normal";
-
-    const camera = /\b(aerial|drone|overhead|bird'?s\s*eye)\b/i.test(prompt)
-      ? "aerial"
-      : /\b(close\s*up|macro|portrait)\b/i.test(prompt)
-      ? "close-up"
-      : /\b(wide|landscape|establishing\s*shot)\b/i.test(prompt)
-      ? "wide"
-      : "standard";
-
-    return {
-      stylePreset,
-      motion,
-      camera,
-      promptAware: true
-    };
-  }
 
   function parseStyleCommand(content) {
     const text = String(content || "").trim();
@@ -483,7 +559,7 @@
 
     const requested = parts.slice(1).join(" ").trim().toLowerCase();
     if (requested === "reset" || requested === "default" || requested === "auto") {
-      return { action: "set", camera: "portrait-85mm" };
+      return { action: "set", camera: "" };
     }
 
     return { action: "set", camera: normalizeCameraProfile(requested) };
@@ -500,7 +576,7 @@
 
     const requested = parts.slice(1).join(" ").trim().toLowerCase();
     if (requested === "reset" || requested === "default" || requested === "auto") {
-      return { action: "set", lighting: "studio-soft" };
+      return { action: "set", lighting: "" };
     }
 
     return { action: "set", lighting: normalizeLightingProfile(requested) };
@@ -520,7 +596,7 @@
     const requested = parts.slice(1).join(" ").trim();
     const requestedLower = requested.toLowerCase();
     if (requestedLower === "reset" || requestedLower === "default" || requestedLower === "auto") {
-      return { action: "set", materials: ["skin"] };
+      return { action: "set", materials: [] };
     }
 
     return { action: "set", materials: normalizeMaterialList(requested) };
@@ -577,7 +653,7 @@
     const lighting = getActiveLightingProfile(session);
     const materials = getActiveMaterials(session);
     const styleText = active ? `Current style: **${active}**.` : "Current style: **auto** (no forced style).";
-    return `${styleText}\nCamera: **${camera}**\nLighting: **${lighting}**\nMaterials: **${materials.join(", ")}**\n\nUse \`/style <name>\`, \`/camera <profile>\`, \`/light <profile>\`, \`/materials a,b,c\`.\nStyles: ${formatAvailableStyles()}\nCameras: ${formatAvailableCameras()}\nLighting: ${formatAvailableLighting()}\nMaterials: ${formatAvailableMaterials()}`;
+    return `${styleText}\nCamera: **${camera || "auto"}**\nLighting: **${lighting || "auto"}**\nMaterials: **${materials.length ? materials.join(", ") : "auto"}**\n\nUse \`/style <name>\`, \`/camera <profile>\`, \`/light <profile>\`, \`/materials a,b,c\`.\nStyles: ${formatAvailableStyles()}\nCameras: ${formatAvailableCameras()}\nLighting: ${formatAvailableLighting()}\nMaterials: ${formatAvailableMaterials()}`;
   }
 
   async function requestInternetSearch(query, mode) {
@@ -672,17 +748,16 @@
   }
 
   function toModelLabel(model) {
-    const normalized = normalizeModel(model) || "auto";
-    if (normalized === "auto") return "Auto Router";
-    if (normalized === "gpt-4o-mini") return "GPT‑4o Mini";
-    if (normalized === "gpt-4o") return "GPT‑4o";
-    if (normalized === "deepseek") return "DeepSeek";
-    return "Omni";
+    const normalized = normalizeModel(model) || "ION";
+    if (normalized === "auto") return "Ion";
+    return "Ion";
   }
 
   function toModeLabel(mode) {
     const normalized = normalizeMode(mode) || "auto";
     if (normalized === "system-knowledge") return "System Knowledge";
+    if (normalized === "anatomy") return "Anatomy";
+    if (normalized === "environment") return "Environment";
     if (normalized === "simulation") return "Simulation";
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
@@ -725,175 +800,6 @@
       };
     }
     return session.simulation;
-  }
-
-  function ensureMindState(session) {
-    if (!session) return null;
-    if (!session.mindState || typeof session.mindState !== "object") {
-      session.mindState = {
-        route: "chat",
-        persona: "pending",
-        userEmotion: "pending",
-        omniEmotion: "pending",
-        timeline: []
-      };
-    }
-
-    if (!Array.isArray(session.mindState.timeline)) {
-      session.mindState.timeline = [];
-    }
-
-    return session.mindState;
-  }
-
-  function appendMindTimeline(session, text) {
-    const mindState = ensureMindState(session);
-    if (!mindState) return;
-
-    const entry = {
-      ts: Date.now(),
-      text: String(text || "").trim()
-    };
-    if (!entry.text) return;
-
-    mindState.timeline.push(entry);
-    mindState.timeline = mindState.timeline.slice(-30);
-  }
-
-  function renderMindTimeline(session) {
-    if (!mindTimelineEl) return;
-    const mindState = ensureMindState(session);
-    const timeline = Array.isArray(mindState?.timeline) ? mindState.timeline : [];
-
-    mindTimelineEl.innerHTML = "";
-    if (!timeline.length) {
-      const empty = document.createElement("div");
-      empty.className = "mind-timeline-entry";
-      empty.textContent = "No mind-state events yet.";
-      mindTimelineEl.appendChild(empty);
-      return;
-    }
-
-    for (const item of timeline.slice(-8)) {
-      const row = document.createElement("div");
-      row.className = "mind-timeline-entry";
-      const time = Number.isFinite(item?.ts)
-        ? new Date(item.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        : "--:--:--";
-      row.textContent = `[${time}] ${String(item?.text || "")}`;
-      mindTimelineEl.appendChild(row);
-    }
-
-    mindTimelineEl.scrollTop = mindTimelineEl.scrollHeight;
-  }
-
-  function updateMindStateUI(session = getActiveSession()) {
-    const mindState = ensureMindState(session);
-    if (mindRouteEl) mindRouteEl.textContent = `Route: ${mindState?.route || "chat"}`;
-    if (mindPersonaEl) mindPersonaEl.textContent = `Persona: ${mindState?.persona || "pending"}`;
-    if (mindEmotionEl) {
-      const userEmotion = mindState?.userEmotion || "pending";
-      const omniEmotion = mindState?.omniEmotion || "pending";
-      mindEmotionEl.textContent = `Emotion: ${userEmotion} → ${omniEmotion}`;
-    }
-    renderMindTimeline(session);
-    renderInternetInspector(session);
-  }
-
-  function ensureInternetInspectorState(session = getActiveSession()) {
-    if (!session) return null;
-    if (!session.internetInspector || typeof session.internetInspector !== "object") {
-      session.internetInspector = {
-        mode: getActiveMode(session) || "auto",
-        profile: "none",
-        count: 0,
-        query: "",
-        sources: [],
-        updatedAt: 0
-      };
-    }
-    if (!Array.isArray(session.internetInspector.sources)) {
-      session.internetInspector.sources = [];
-    }
-    return session.internetInspector;
-  }
-
-  function renderInternetInspector(session = getActiveSession()) {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    if (internetModeEl) {
-      internetModeEl.textContent = `Internet Mode: ${String(internetState.mode || "auto")}`;
-    }
-    if (internetProfileEl) {
-      internetProfileEl.textContent = `Profile: ${String(internetState.profile || "none")}`;
-    }
-    if (internetCountEl) {
-      const count = Number.isFinite(Number(internetState.count)) ? Number(internetState.count) : 0;
-      internetCountEl.textContent = `Sources: ${count}`;
-    }
-    if (internetQueryEl) {
-      const query = String(internetState.query || "").trim();
-      internetQueryEl.textContent = query ? `Query: ${query}` : "Query: not used yet.";
-    }
-
-    if (!internetSourcesEl) return;
-    internetSourcesEl.innerHTML = "";
-    const sourceList = Array.isArray(internetState.sources) ? internetState.sources : [];
-    if (!sourceList.length) {
-      const row = document.createElement("div");
-      row.className = "internet-source-item";
-      row.textContent = "No internet sources captured for this session yet.";
-      internetSourcesEl.appendChild(row);
-      return;
-    }
-
-    for (const source of sourceList.slice(0, 6)) {
-      const row = document.createElement("div");
-      row.className = "internet-source-item";
-      row.textContent = String(source || "");
-      internetSourcesEl.appendChild(row);
-    }
-  }
-
-  function updateInternetInspectorFromMeta(session, meta, queryText = "") {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    if (meta?.internetMode) {
-      internetState.mode = String(meta.internetMode || "auto").trim().toLowerCase() || "auto";
-    }
-    if (meta?.internetProfile) {
-      internetState.profile = String(meta.internetProfile || "none").trim() || "none";
-    }
-    if (Number.isFinite(meta?.internetCount)) {
-      internetState.count = Number(meta.internetCount) || 0;
-    }
-    if (queryText) {
-      internetState.query = queryText;
-    }
-    internetState.updatedAt = Date.now();
-    renderInternetInspector(session);
-  }
-
-  function updateInternetInspectorFromWebSearch(session, query, searchResult) {
-    const internetState = ensureInternetInspectorState(session);
-    if (!internetState) return;
-
-    internetState.mode = String(searchResult?.mode || getActiveMode(session) || "auto").trim().toLowerCase();
-    const profile = searchResult?.profile;
-    if (profile && typeof profile === "object") {
-      internetState.profile = `${String(profile.queryPrefix || "")}|${String(profile.querySuffix || "")}|${String(profile.limit || "")}`;
-    }
-    internetState.count = Array.isArray(searchResult?.hits) ? searchResult.hits.length : 0;
-    internetState.query = String(query || "").trim();
-    internetState.sources = Array.isArray(searchResult?.hits)
-      ? searchResult.hits
-          .slice(0, 6)
-          .map((hit) => `${String(hit?.source || "web")} · ${String(hit?.title || "Untitled")}`)
-      : [];
-    internetState.updatedAt = Date.now();
-    renderInternetInspector(session);
   }
 
   function appendSimulationLog(session, message) {
@@ -967,29 +873,154 @@
     renderSimulationLog(session);
   }
 
-  function detectModeFromContent(content) {
+  function summarizeHintText(value, maxLen = 180) {
+    const compact = String(value || "").replace(/\s+/g, " ").trim();
+    if (!compact) return "";
+    return compact.length > maxLen ? `${compact.slice(0, maxLen - 3)}...` : compact;
+  }
+
+  function getRecentUserMessages(session, limit = 3) {
+    const history = Array.isArray(session?.messages) ? session.messages : [];
+    return history
+      .filter((message) => message?.role === "user")
+      .slice(-limit)
+      .map((message) => summarizeHintText(message?.content || ""))
+      .filter(Boolean);
+  }
+
+  function scoreModeSignals(text) {
+    const lower = String(text || "").toLowerCase();
+    if (!lower) {
+      return {
+        architect: 0,
+        analyst: 0,
+        visual: 0,
+        lore: 0,
+        simulation: 0,
+        coding: 0,
+        knowledge: 0,
+        reasoning: 0,
+        anatomy: 0,
+        environment: 0,
+        "system-knowledge": 0
+      };
+    }
+
+    const weightedSignals = {
+      architect: [
+        { pattern: /\b(architecture|system\s+design|schema|database|api\s+contract|pipeline|module|component)\b/g, weight: 2 },
+        { pattern: /\b(design|structure|framework|build\s+plan)\b/g, weight: 1 }
+      ],
+      analyst: [
+        { pattern: /\b(analyze|analysis|evaluate|compare|breakdown|root\s+cause|trade-?off)\b/g, weight: 2 },
+        { pattern: /\b(trend|pattern|report|insight|metrics?)\b/g, weight: 1 }
+      ],
+      visual: [
+        { pattern: /\b(image|visual|illustration|render|draw|paint|cinematic|composition|aesthetic)\b/g, weight: 2 },
+        { pattern: /\b(scene|style|color\s+palette|lighting)\b/g, weight: 1 }
+      ],
+      lore: [
+        { pattern: /\b(story|lore|narrative|worldbuild|character\s+arc|mythology|legend)\b/g, weight: 2 },
+        { pattern: /\b(tale|fiction|backstory|history)\b/g, weight: 1 }
+      ],
+      simulation: [
+        { pattern: /\b(simulate|simulation|state\s+transition|run\s+scenario|sandbox|what\s+if)\b/g, weight: 2 },
+        { pattern: /\b(rules:|system-state|agent-based|scenario)\b/g, weight: 1 }
+      ],
+      coding: [
+        { pattern: /\b(code|coding|refactor|typescript|javascript|python|bug|stack\s+trace|compile|lint|test)\b/g, weight: 2 },
+        { pattern: /\b(function|class|api\s+route|implementation|patch)\b/g, weight: 1 }
+      ],
+      knowledge: [
+        { pattern: /\b(explain|what\s+is|teach|overview|reference|facts?|background)\b/g, weight: 1 },
+        { pattern: /\b(source|citation|docs?|documentation)\b/g, weight: 1 }
+      ],
+      anatomy: [
+        { pattern: /\b(anatomy|anatomical|physiology|human\s+body|organ\s+system|skeletal|muscular|cranial\s+nerve|circulatory|respiratory)\b/g, weight: 2 },
+        { pattern: /\b(head\s+api|subsystem|head|neck|torso|spine|limb|routing)\b/g, weight: 1 }
+      ],
+      environment: [
+        { pattern: /\b(environment|ecology|ecosystem|climate|weather|atmosphere|hydrology|geology|biome|biodiversity)\b/g, weight: 2 },
+        { pattern: /\b(carbon\s+cycle|water\s+cycle|temperature|precipitation|ocean\s+current|planetary|earth\s+system)\b/g, weight: 1 }
+      ],
+      reasoning: [
+        { pattern: /\b(reason|reasoning|logic|prove|deduce|step\s*-?by\s*-?step|chain\s+of\s+thought)\b/g, weight: 2 },
+        { pattern: /\bwhy|because|inference\b/g, weight: 1 }
+      ],
+      "system-knowledge": [
+        { pattern: /\b(system\s+knowledge|internal\s+module|runtime\s+internals|worker\s+topology|orchestrator)\b/g, weight: 2 },
+        { pattern: /\barchitecture\s+doc|codex|governance|module\s+map\b/g, weight: 1 }
+      ]
+    };
+
+    const scores = {};
+    for (const [mode, signals] of Object.entries(weightedSignals)) {
+      let score = 0;
+      for (const signal of signals) {
+        const matches = lower.match(signal.pattern);
+        if (matches?.length) {
+          score += matches.length * signal.weight;
+        }
+      }
+      scores[mode] = score;
+    }
+
+    return scores;
+  }
+
+  function detectModeFromContent(content, session = null) {
     if (!content) return null;
-    const lower = content.trim().toLowerCase();
-    
-    const architectKeywords = ["design", "architecture", "structure", "system", "api", "schema", "database", "pipeline", "build", "framework", "component", "module"];
-    const analystKeywords = ["analyze", "analysis", "data", "research", "report", "trend", "pattern", "insight", "breakdown", "summary", "compare", "evaluate"];
-    const visualKeywords = ["image", "visual", "scene", "visual art", "describe", "paint", "draw", "cinematic", "composition", "artistic", "aesthetic"];
-    const loreKeywords = ["story", "lore", "narrative", "fiction", "worldbuild", "character", "background", "history", "mythology", "tales", "legend"];
-    const simulationKeywords = ["simulate", "simulation", "system-state", "state transition", "run scenario", "sandbox", "rules:", "/simulation"];
-    
-    const architectScore = architectKeywords.filter(k => lower.includes(k)).length;
-    const analystScore = analystKeywords.filter(k => lower.includes(k)).length;
-    const visualScore = visualKeywords.filter(k => lower.includes(k)).length;
-    const loreScore = loreKeywords.filter(k => lower.includes(k)).length;
-    const simulationScore = simulationKeywords.filter(k => lower.includes(k)).length;
-    
-    const scores = { architect: architectScore, analyst: analystScore, visual: visualScore, lore: loreScore, simulation: simulationScore };
-    const maxScore = Math.max(...Object.values(scores));
-    
-    if (maxScore === 0) return null;
-    
-    const detectedMode = Object.keys(scores).find(k => scores[k] === maxScore);
-    return detectedMode || null;
+    const latest = String(content || "").trim();
+    const recent = getRecentUserMessages(session, 2).join(" ");
+    const aggregate = `${latest} ${recent}`.trim();
+    if (!aggregate) return null;
+
+    const scores = scoreModeSignals(aggregate);
+    const ranked = Object.entries(scores)
+      .sort((a, b) => b[1] - a[1]);
+
+    const [topMode, topScore] = ranked[0] || [];
+    const secondScore = ranked[1]?.[1] || 0;
+    if (!topMode || !Number.isFinite(topScore)) return null;
+
+    const margin = topScore - secondScore;
+    if (topScore < 2 || margin < 1) {
+      return null;
+    }
+
+    const confidence = Math.max(0.35, Math.min(0.98, topScore / (topScore + secondScore + 1)));
+    return {
+      mode: topMode,
+      confidence
+    };
+  }
+
+  function inferRequestedOutputStyle(text) {
+    const lower = String(text || "").toLowerCase();
+    if (!lower) return "general";
+    if (/\b(table|csv|json|yaml|xml)\b/.test(lower)) return "structured-data";
+    if (/\b(step\s*-?by\s*-?step|plan|checklist|roadmap)\b/.test(lower)) return "procedural";
+    if (/\b(brief|short|tldr|concise)\b/.test(lower)) return "concise";
+    if (/\b(detailed|deep\s*dive|comprehensive|long\s*form)\b/.test(lower)) return "detailed";
+    if (/\b(code|typescript|javascript|python|sql|bash|powershell)\b/.test(lower)) return "code";
+    return "general";
+  }
+
+  function buildConversationHints(session, effectiveMode, latestInput) {
+    const recentUserFocus = getRecentUserMessages(session, 3);
+    const recentAssistantCommitments = (Array.isArray(session?.messages) ? session.messages : [])
+      .filter((message) => message?.role === "assistant")
+      .slice(-2)
+      .map((message) => summarizeHintText(message?.content || ""))
+      .filter(Boolean);
+
+    return {
+      inferredMode: normalizeMode(effectiveMode) || "auto",
+      latestUserIntent: summarizeHintText(latestInput || ""),
+      recentUserFocus,
+      recentAssistantCommitments,
+      requestedOutput: inferRequestedOutputStyle(latestInput)
+    };
   }
 
   function getSelectedModeFromSettings() {
@@ -1054,7 +1085,14 @@
 
   function setDropdownOpen(dropdownEl, buttonEl, open) {
     if (!dropdownEl || !buttonEl) return;
+    const menuEl = dropdownEl.querySelector(".chat-dropdown");
     dropdownEl.classList.toggle("open", !!open);
+    if (menuEl) {
+      menuEl.classList.toggle("open", !!open);
+      menuEl.hidden = !open;
+      menuEl.style.display = open ? "grid" : "none";
+      menuEl.style.pointerEvents = open ? "auto" : "none";
+    }
     buttonEl.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
@@ -1080,7 +1118,6 @@
       for (const session of Object.values(state.sessions)) {
         if (!session || typeof session !== "object") continue;
         session.mode = getActiveMode(session);
-        session.mediaFilter = normalizeMediaFilter(session.mediaFilter || "all");
         ensureSimulationState(session);
       }
 
@@ -1115,8 +1152,7 @@
       title: "New conversation",
       messages: [],
       mode: getSelectedModeFromSettings(),
-      mediaFilter: "all",
-      model: getDefaultModelFromSettings(),
+      model: "ION",
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -1132,13 +1168,79 @@
   function setActiveSession(id) {
     if (!state.sessions[id]) return;
     state.activeSessionId = id;
-    const session = state.sessions[id];
-    activeMediaFilter = normalizeMediaFilter(session?.mediaFilter || "all");
-    updateMediaFilterUI();
     saveState();
     renderSessionsSidebar();
     syncSelectorsFromSession();
     renderActiveSessionMessages();
+  }
+
+  function updateSessionMetaFromMessages(session) {
+    if (!session || typeof session !== "object") return;
+
+    const messages = Array.isArray(session.messages) ? session.messages : [];
+    const firstUserMessage = messages.find((msg) => msg && msg.role === "user" && String(msg.content || "").trim());
+
+    if (firstUserMessage) {
+      const title = String(firstUserMessage.content || "").trim().replace(/\s+/g, " ").slice(0, 64);
+      session.title = title || "New conversation";
+    } else {
+      session.title = session.title || "New conversation";
+    }
+
+    session.updatedAt = Date.now();
+  }
+
+  function deleteSession(id) {
+    if (!id || !state.sessions[id]) return;
+
+    const wasActive = state.activeSessionId === id;
+    delete state.sessions[id];
+
+    const remainingIds = Object.keys(state.sessions).sort((a, b) => {
+      return (state.sessions[b]?.updatedAt || 0) - (state.sessions[a]?.updatedAt || 0);
+    });
+
+    if (!remainingIds.length) {
+      createNewSession();
+    } else if (wasActive) {
+      state.activeSessionId = remainingIds[0];
+    }
+
+    saveState();
+    syncSelectorsFromSession();
+    renderSessionsSidebar();
+    renderActiveSessionMessages();
+  }
+
+  function resetToFreshChat() {
+    state = {
+      activeSessionId: null,
+      sessions: {}
+    };
+    createNewSession();
+    syncSelectorsFromSession();
+    renderSessionsSidebar();
+    renderActiveSessionMessages();
+  }
+
+  function formatAvailableStyles() {
+    return KNOWN_RENDER_STYLES.join(", ");
+  }
+
+  function formatAvailableCameras() {
+    return KNOWN_CAMERA_PROFILES.join(", ");
+  }
+
+  function formatAvailableLighting() {
+    return KNOWN_LIGHTING_PROFILES.join(", ");
+  }
+
+  function formatAvailableMaterials() {
+    return KNOWN_MATERIAL_PROFILES.join(", ");
+  }
+
+  function createGeneratedMediaCard(meta = {}) {
+    return createGeneratedImageCard(meta);
   }
 
   function syncSelectorsFromSession() {
@@ -1147,149 +1249,95 @@
 
     const activeMode = getActiveMode(session);
     session.mode = activeMode;
-    session.model = normalizeModel(session.model) || "auto";
+    session.model = "ION";
 
     updateModelButton(session.model);
     updateModeButton(activeMode);
     setActiveDropdownItem(modelMenu, session.model);
     setActiveDropdownItem(modeMenu, activeMode);
-    activeMediaFilter = normalizeMediaFilter(session.mediaFilter || "all");
-    updateMediaFilterUI();
     updateModeIndicator(activeMode);
     updateSimulationUI(session);
-    updateMindStateUI(session);
   }
 
-  function updateSessionMetaFromMessages(session) {
-    if (!session.messages.length) {
-      session.title = "New conversation";
-      return;
-    }
-    const firstUser = session.messages.find(m => m.role === "user");
-    if (firstUser) {
-      session.title = firstUser.content.slice(0, 40) + (firstUser.content.length > 40 ? "…" : "");
-    }
-    session.updatedAt = Date.now();
-  }
-
-  function deleteSession(id) {
-    if (!state.sessions[id]) return;
-    delete state.sessions[id];
-    const remainingIds = Object.keys(state.sessions);
-    if (!remainingIds.length) {
-      createNewSession();
-    } else if (state.activeSessionId === id) {
-      state.activeSessionId = remainingIds[0];
-    }
-    saveState();
-    renderSessionsSidebar();
-    renderActiveSessionMessages();
-  }
-
-  function resetToFreshChat() {
-    if (isStreaming && currentAbortController) {
-      try {
-        currentAbortController.abort();
-      } catch {
-        // ignore
-      }
-    }
-
-    isStreaming = false;
-    if (sendBtn) sendBtn.disabled = false;
-    if (inputEl) inputEl.disabled = false;
-    if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-
-    state = {
-      activeSessionId: null,
-      sessions: {}
-    };
-
-    createNewSession();
-    syncSelectorsFromSession();
-    renderSessionsSidebar();
-    renderActiveSessionMessages();
-    shouldStickToBottom = true;
-    updateJumpToLatestVisibility();
-  }
-
-  // =========================
-  // 3. MARKDOWN ENGINE
-  // =========================
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-  }
-
-  function renderMarkdown(text) {
-    if (!text) return "";
-
-    let html = escapeHtml(text);
-
-    // Code blocks ``` ```
-    html = html.replace(/```([\s\S]*?)```/g, (m, code) => {
-      return `<pre class="md-code"><code>${code.trim()}</code></pre>`;
-    });
-
-    // Inline code `code`
-    html = html.replace(/`([^`]+)`/g, (m, code) => {
-      return `<code class="md-inline-code">${code}</code>`;
-    });
-
-    // Bold **text**
-    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-
-    // Italic *text*
-    html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-
-    // Simple lists (lines starting with - or *)
-    html = html.replace(/(^|\n)[*-]\s+(.+?)(?=\n|$)/g, (m, start, item) => {
-      return `${start}<li>${item}</li>`;
-    });
-    html = html.replace(/(<li>[\s\S]+<\/li>)/g, "<ul>$1</ul>");
-
-    // Line breaks
-    html = html.replace(/\n/g, "<br>");
-
-    return html;
-  }
-
-  // =========================
-  // 4. MESSAGE ENGINE
-  // =========================
   function clearMessages() {
     if (!messagesEl) return;
     messagesEl.innerHTML = "";
   }
 
-  function encodeExportToken(input) {
-    const raw = String(input || "");
-    try {
-      return btoa(unescape(encodeURIComponent(raw)))
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "")
-        .slice(0, 28);
-    } catch {
-      return btoa(raw)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/g, "")
-        .slice(0, 28);
-    }
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
-  function buildOmniExportFilename(kind, extension, generatedAt = Date.now(), prompt = "") {
-    const safeKind = String(kind || "media").trim().toLowerCase();
-    const ts = Number.isFinite(Number(generatedAt)) ? Number(generatedAt) : Date.now();
-    const stamp = new Date(ts).toISOString().replace(/[:.]/g, "-");
-    const tokenSeed = `${safeKind}|${stamp}|${prompt}|${Math.random().toString(36).slice(2, 10)}`;
-    const token = encodeExportToken(tokenSeed);
-    const safeExt = String(extension || "bin").replace(/[^a-z0-9]/gi, "").toLowerCase() || "bin";
-    return `Omni_${safeKind}_${token}_${stamp}.${safeExt}`;
+  function renderInlineMarkdown(value) {
+    let output = escapeHtml(value || "");
+    output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+    output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    output = output.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    output = output.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    output = output.replace(/\n/g, "<br>");
+    return output;
   }
+
+  function renderMarkdown(value) {
+    const source = String(value || "");
+    if (!source.trim()) return "";
+
+    const segments = source.split(/```/);
+    const htmlParts = [];
+
+    for (let i = 0; i < segments.length; i += 1) {
+      const part = segments[i];
+      if (i % 2 === 1) {
+        const lines = part.split("\n");
+        const firstLine = String(lines[0] || "").trim();
+        const language = /^[-_a-z0-9+#]+$/i.test(firstLine) ? firstLine.toLowerCase() : "";
+        const codeContent = language ? lines.slice(1).join("\n") : part;
+        const langClass = language ? ` class="language-${language}"` : "";
+        htmlParts.push(`<pre><code${langClass}>${escapeHtml(codeContent)}</code></pre>`);
+      } else {
+        const blocks = part
+          .split(/\n{2,}/)
+          .map((block) => block.trim())
+          .filter(Boolean);
+
+        for (const block of blocks) {
+          htmlParts.push(`<p>${renderInlineMarkdown(block)}</p>`);
+        }
+      }
+    }
+
+    return htmlParts.join("\n");
+  }
+
+  function toFilenameSlug(value, fallback = "asset") {
+    const slug = String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 56);
+    return slug || fallback;
+  }
+
+  function buildIONExportFilename(kind, ext, timestamp, prompt) {
+    const ts = Number(timestamp);
+    const date = Number.isFinite(ts) ? new Date(ts) : new Date();
+    const iso = date.toISOString().replace(/[:.]/g, "-");
+    const safeKind = toFilenameSlug(kind, "asset");
+    const safePrompt = toFilenameSlug(prompt, safeKind);
+    const safeExt = String(ext || "bin").toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+    return `${safeKind}-${safePrompt}-${iso}.${safeExt}`;
+  }
+
+  const IMAGE_EXPORT_WIDTH = 2160;
+  const IMAGE_EXPORT_HEIGHT = 3840;
+  const IMAGE_EXPORT_RATIO = "9:16";
+  const IMAGE_EXPORT_RESOLUTION = "4k";
+  const IMAGE_EXPORT_RESOLUTION_LABEL = `${IMAGE_EXPORT_WIDTH}x${IMAGE_EXPORT_HEIGHT}`;
 
   function formatGeneratedTimestamp(value) {
     const ts = Number(value);
@@ -1305,8 +1353,8 @@
 
     const generatedAt = Number(meta.generatedAt || Date.now());
     const prompt = String(meta.imagePrompt || "Generated image").trim() || "Generated image";
-    const filename = buildOmniExportFilename("image", "png", generatedAt, prompt);
-    const resolution = String(meta.imageResolution || "").trim();
+    const filename = buildIONExportFilename("image", "png", generatedAt, prompt);
+    const resolution = String(meta.imageResolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
     const styleId = String(meta.imageStyleId || "").trim();
     const createdLabel = formatGeneratedTimestamp(generatedAt);
 
@@ -1344,57 +1392,6 @@
     return card;
   }
 
-  function createGeneratedVideoCard(meta = {}) {
-    const videoUrl = String(meta.videoUrl || "").trim();
-    if (!videoUrl) {
-      return null;
-    }
-
-    const generatedAt = Number(meta.generatedAt || Date.now());
-    const prompt = String(meta.videoPrompt || "Generated video").trim() || "Generated video";
-    const createdLabel = formatGeneratedTimestamp(generatedAt);
-    const stylePreset = String(meta.videoStylePreset || "").trim();
-    const motionProfile = String(meta.videoMotionProfile || "").trim();
-    const cameraProfile = String(meta.videoCameraProfile || "").trim();
-    const fallbackTag = Boolean(meta.videoFallback) ? "Fallback" : "";
-
-    const card = document.createElement("div");
-    card.className = "generated-image-card";
-
-    const video = document.createElement("video");
-    video.className = "generated-image-preview";
-    video.src = videoUrl;
-    video.controls = true;
-    video.playsInline = true;
-    video.preload = "metadata";
-
-    const actions = document.createElement("div");
-    actions.className = "generated-image-actions";
-
-    const download = document.createElement("a");
-    download.className = "generated-image-download";
-    download.href = videoUrl;
-    download.download = buildOmniExportFilename("video", "mp4", generatedAt, prompt);
-    download.textContent = "Download video";
-    actions.appendChild(download);
-
-    if (createdLabel || stylePreset || motionProfile || cameraProfile || fallbackTag) {
-      const info = document.createElement("div");
-      info.className = "generated-image-meta";
-      info.textContent = [
-        stylePreset ? `Style: ${stylePreset}` : "",
-        motionProfile ? `Motion: ${motionProfile}` : "",
-        cameraProfile ? `Camera: ${cameraProfile}` : "",
-        fallbackTag,
-        createdLabel ? `Created: ${createdLabel}` : ""
-      ].filter(Boolean).join(" • ");
-      actions.appendChild(info);
-    }
-
-    card.appendChild(video);
-    card.appendChild(actions);
-    return card;
-  }
 
   function createMessageElement(role, content, meta = {}) {
     const wrapper = document.createElement("div");
@@ -1408,7 +1405,7 @@
 
     const roleLabel = document.createElement("span");
     roleLabel.className = "message-role";
-    roleLabel.textContent = role === "user" ? "You" : "Omni";
+    roleLabel.textContent = role === "user" ? "You" : "Ion";
 
     header.appendChild(roleLabel);
 
@@ -1423,9 +1420,8 @@
       const badge = document.createElement("span");
       badge.className = "message-badge";
       
-      // Format model name (capitalize first letter)
-      const modelName = meta.model ? 
-        meta.model.charAt(0).toUpperCase() + meta.model.slice(1) : null;
+      // Use user-facing alias while keeping the internal model key unchanged.
+      const modelName = meta.model ? toModelLabel(meta.model) : null;
       
       // Format mode name using toModeLabel for consistent capitalization
       const modeName = meta.mode ? toModeLabel(meta.mode) : null;
@@ -1446,16 +1442,6 @@
         body.appendChild(spacer);
       }
       body.appendChild(imageCard);
-    }
-
-    const videoCard = createGeneratedVideoCard(meta);
-    if (videoCard) {
-      if ((content || "").trim() || imageCard) {
-        const spacer = document.createElement("div");
-        spacer.className = "generated-image-spacer";
-        body.appendChild(spacer);
-      }
-      body.appendChild(videoCard);
     }
 
     inner.appendChild(header);
@@ -1495,16 +1481,10 @@
     const session = getActiveSession();
     if (!session) return;
 
-    const isMediaFilterActive = activeMediaFilter !== "all";
-
     for (const msg of session.messages) {
-      if (isMediaFilterActive && !doesMessageMatchMediaFilter(msg, activeMediaFilter)) {
-        continue;
-      }
-
       const activeMode = getActiveMode(session);
       appendMessage(msg.role, msg.content, {
-        model: session.model || "auto",
+        model: session.model || "ION",
         mode: activeMode,
         timestamp: msg.timestamp || msg.ts || null,
         generatedAt: msg.generatedAt || msg.timestamp || msg.ts || null,
@@ -1512,64 +1492,9 @@
         imageFilename: msg.imageFilename || "",
         imagePrompt: msg.imagePrompt || "",
         imageResolution: msg.imageResolution || "",
-        imageStyleId: msg.imageStyleId || "",
-        videoUrl: msg.videoUrl || "",
-        videoPrompt: msg.videoPrompt || "",
-        videoStylePreset: msg.videoStylePreset || "",
-        videoMotionProfile: msg.videoMotionProfile || "",
-        videoCameraProfile: msg.videoCameraProfile || "",
-        videoFallback: Boolean(msg.videoFallback)
+        imageStyleId: msg.imageStyleId || ""
       });
     }
-    updateMindStateUI(session);
-  }
-
-  function doesMessageMatchMediaFilter(msg, filter) {
-    const mediaType = getMessageMediaType(msg);
-    if (!mediaType) return false;
-    if (filter === "images") return mediaType === "image";
-    return true;
-  }
-
-  function getMessageMediaType(msg) {
-    const imageDataUrl = String(msg?.imageDataUrl || "").trim();
-    const videoUrl = String(msg?.videoUrl || "").trim();
-
-    if (videoUrl) {
-      return "video";
-    }
-
-    if (imageDataUrl.startsWith("data:image/")) {
-      return "image";
-    }
-
-    return null;
-  }
-
-  function updateMediaFilterUI() {
-    const map = {
-      all: mediaFilterAllBtn,
-      images: mediaFilterImagesBtn
-    };
-
-    for (const [key, button] of Object.entries(map)) {
-      if (!button) continue;
-      const active = activeMediaFilter === key;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", active ? "true" : "false");
-    }
-  }
-
-  function setMediaFilter(nextFilter) {
-    const session = getActiveSession();
-    activeMediaFilter = normalizeMediaFilter(nextFilter);
-    if (session) {
-      session.mediaFilter = activeMediaFilter;
-      session.updatedAt = Date.now();
-      saveState();
-    }
-    updateMediaFilterUI();
-    renderActiveSessionMessages();
   }
 
   // =========================
@@ -1591,10 +1516,10 @@
 
   function getApiEndpoint() {
     try {
-      const saved = localStorage.getItem("omni-endpoint") || "";
-      return saved.trim() || "/api/omni";
+      const saved = localStorage.getItem("ION-endpoint") || "";
+      return saved.trim() || "/api/ION";
     } catch {
-      return "/api/omni";
+      return "/api/ION";
     }
   }
 
@@ -1602,8 +1527,8 @@
     const chatEndpoint = getApiEndpoint();
     try {
       const url = new URL(chatEndpoint, window.location.origin);
-      if (/\/api\/omni$/i.test(url.pathname)) {
-        url.pathname = url.pathname.replace(/\/api\/omni$/i, "/api/image");
+      if (/\/api\/ION$/i.test(url.pathname)) {
+        url.pathname = url.pathname.replace(/\/api\/ION$/i, "/api/image");
       } else {
         url.pathname = "/api/image";
       }
@@ -1619,35 +1544,13 @@
     }
   }
 
-  function getVideoEndpoint() {
-    const chatEndpoint = getApiEndpoint();
-    try {
-      const url = new URL(chatEndpoint, window.location.origin);
-      if (/\/api\/omni$/i.test(url.pathname)) {
-        url.pathname = url.pathname.replace(/\/api\/omni$/i, "/api/video/generate");
-      } else {
-        url.pathname = "/api/video/generate";
-      }
-      url.search = "";
-
-      if (url.origin === window.location.origin) {
-        return url.pathname;
-      }
-
-      return url.toString();
-    } catch {
-      return "/api/video/generate";
-    }
-  }
-
   function isImageGenerationRequest(text) {
     const value = String(text || "").trim().toLowerCase();
     if (!value) return false;
     if (value.startsWith("/image ") || value === "/image") return true;
 
-    const directIntent = /\b(generate|create|make|render|draw|imagine|design)\b[\s\S]{0,80}\b(image|picture|illustration|art|photo|logo|poster|wallpaper)\b/i;
-    const quickIntent = /\b(image of|picture of|illustration of|art of)\b/i;
-    return directIntent.test(value) || quickIntent.test(value);
+    const explicitImageIntent = /\b(create|generate|make|imagine)\s+(?:an?\s+)?image\b/i;
+    return explicitImageIntent.test(value);
   }
 
   function extractImagePrompt(text) {
@@ -1659,8 +1562,56 @@
     }
 
     return raw
-      .replace(/^\s*(please\s+)?(generate|create|make|render|draw|imagine|design)\s+(an?\s+)?(image|picture|illustration|art|photo|logo|poster|wallpaper)\s*(of|for)?\s*/i, "")
+      .replace(/^\s*(please\s+)?(create|generate|make|imagine)\s+(an?\s+)?image\s*(of|for)?\s*/i, "")
       .trim() || raw;
+  }
+
+  function extractBackendErrorReason(data, rawText, fallbackMessage) {
+    const fallback = String(fallbackMessage || "Backend returned an error").trim() || "Backend returned an error";
+
+    if (typeof data?.error === "string" && data.error.trim()) {
+      return data.error.trim();
+    }
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message.trim();
+    }
+
+    if (typeof data?.detail === "string" && data.detail.trim()) {
+      return data.detail.trim();
+    }
+
+    if (Array.isArray(data?.detail)) {
+      const detailMessages = data.detail
+        .map((item) => {
+          if (typeof item === "string") return item.trim();
+          if (item && typeof item === "object" && typeof item.msg === "string") return item.msg.trim();
+          return "";
+        })
+        .filter(Boolean);
+
+      if (detailMessages.length) {
+        return detailMessages.join("; ");
+      }
+    }
+
+    if (data?.detail && typeof data.detail === "object") {
+      const nestedReason = String(data.detail.message || data.detail.error || data.detail.reason || "").trim();
+      if (nestedReason) {
+        return nestedReason;
+      }
+    }
+
+    const text = String(rawText || "").trim();
+    if (!text) {
+      return fallback;
+    }
+
+    if (text.startsWith("<")) {
+      return fallback;
+    }
+
+    return text.length > 400 ? `${text.slice(0, 397)}...` : text;
   }
 
   async function requestGeneratedImage(session, prompt, safetyProfile = null) {
@@ -1678,11 +1629,23 @@
       prompt,
       feedback: "",
       stylePack: selectedStyle || "",
-      camera: selectedCamera,
-      lighting: selectedLighting,
-      materials: selectedStyle === "hyper-real" ? selectedMaterials : [],
+      quality: "ultra",
+      ratio: IMAGE_EXPORT_RATIO,
+      resolution: IMAGE_EXPORT_RESOLUTION,
+      width: IMAGE_EXPORT_WIDTH,
+      height: IMAGE_EXPORT_HEIGHT,
       safetyProfile: safetyProfile || buildSafetyProfile()
     };
+
+    if (selectedCamera) {
+      payload.camera = selectedCamera;
+    }
+    if (selectedLighting) {
+      payload.lighting = selectedLighting;
+    }
+    if (selectedMaterials.length) {
+      payload.materials = selectedMaterials;
+    }
 
     const res = await fetch(getImageEndpoint(), {
       method: "POST",
@@ -1715,90 +1678,7 @@
       imageDataUrl,
       filename: String(data?.filename || "generated-image.png").trim() || "generated-image.png",
       metadata: data?.metadata || {},
-      modelUsed: String(res.headers.get("X-Omni-Image-Model") || data?.metadata?.model || "").trim()
-    };
-  }
-
-  async function requestGeneratedVideo(session, prompt, safetyProfile = null) {
-    const preflight = preflightMediaGenerationCheck(prompt, "video");
-    if (!preflight.ok) {
-      throw new Error(preflight.message);
-    }
-
-    const styleProfile = deriveVideoStyleProfile(prompt);
-    const payload = {
-      prompt,
-      mode: styleProfile.stylePreset,
-      params: {
-        width: 768,
-        height: 432,
-        num_frames: 24,
-        fps: styleProfile.motion === "slow" ? 10 : styleProfile.motion === "fast" ? 16 : 12,
-        num_inference_steps: 30,
-        guidance_scale: styleProfile.stylePreset === "cinematic" ? 8 : 7.5,
-        style_preset: styleProfile.stylePreset,
-        motion_profile: styleProfile.motion,
-        camera_profile: styleProfile.camera
-      },
-      safety_level: safetyProfile?.explicitAllowed ? "default" : "strict",
-      watermark: true,
-      return_format: "url",
-      safetyProfile: safetyProfile || buildSafetyProfile(),
-      sessionId: session?.id || ""
-    };
-
-    const headers = { "Content-Type": "application/json" };
-    try {
-      const key = String(localStorage.getItem("omni-media-api-key") || "").trim();
-      if (key) {
-        headers["x-api-key"] = key;
-      }
-    } catch {
-      // ignore localStorage access errors
-    }
-
-    let res;
-    const videoEndpoint = getVideoEndpoint();
-    try {
-      res = await fetch(videoEndpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload)
-      });
-    } catch (error) {
-      const detail = String(error?.message || "network error").trim();
-      throw new Error(`Unable to reach video backend (${videoEndpoint}): ${detail}`);
-    }
-
-    let data = null;
-    try {
-      data = await res.json();
-    } catch {
-      data = null;
-    }
-
-    if (!res.ok) {
-      const reason = String(data?.error || data?.detail || data?.message || "Video backend returned an error").trim();
-      throw new Error(reason || "Video generation failed");
-    }
-
-    const outputs = Array.isArray(data?.outputs) ? data.outputs : [];
-    const videoOut = outputs.find((item) => String(item?.type || "").toLowerCase() === "video") || outputs[0] || null;
-    const videoUrl = String(videoOut?.url || "").trim();
-    if (!videoUrl) {
-      throw new Error("Video response did not include a playable URL");
-    }
-
-    return {
-      videoUrl,
-      metadata: {
-        ...(videoOut?.metadata || {}),
-        style_preset: String(videoOut?.metadata?.style_preset || styleProfile.stylePreset),
-        motion_profile: String(videoOut?.metadata?.motion_profile || styleProfile.motion),
-        camera_profile: String(videoOut?.metadata?.camera_profile || styleProfile.camera),
-        prompt_aware: true
-      },
-      requestId: String(data?.id || "")
+      modelUsed: String(res.headers.get("X-ION-Image-Model") || data?.metadata?.model || "").trim()
     };
   }
 
@@ -1845,14 +1725,144 @@
     return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
   }
 
-  async function streamOmniResponse(session, onChunk, onMeta, safetyProfile = null) {
-    const activeMode = getActiveMode(session);
-    const payload = {
-      messages: session.messages,
-      model: session.model || "auto",
-      mode: activeMode,
-      safetyProfile: safetyProfile || buildSafetyProfile()
+  function isLikelyMobileViewport() {
+    try {
+      if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return true;
+      return Math.min(window.innerWidth || 9999, window.innerHeight || 9999) <= 900;
+    } catch {
+      return false;
+    }
+  }
+
+  function focusInputIfAppropriate() {
+    if (!inputEl) return;
+    if (isLikelyMobileViewport()) return;
+    inputEl.focus();
+  }
+
+  let mobileKeyboardWasOpen = false;
+
+  function alignMobileViewportToTop() {
+    if (!isLikelyMobileViewport()) return;
+
+    const forceTop = () => {
+      const scrollingEl = document.scrollingElement || document.documentElement;
+      if (scrollingEl) {
+        scrollingEl.scrollTop = 0;
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
     };
+
+    forceTop();
+    requestAnimationFrame(forceTop);
+    setTimeout(forceTop, 60);
+    setTimeout(forceTop, 180);
+  }
+
+  function updateMobileViewportMetrics() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const viewportHeight = Number(window.visualViewport?.height || window.innerHeight || 0);
+    if (viewportHeight > 0) {
+      root.style.setProperty("--ION-vvh", `${viewportHeight}px`);
+    }
+
+    const baselineHeight = Number(window.innerHeight || viewportHeight || 0);
+    const keyboardOpen = baselineHeight > 0 && viewportHeight > 0 && baselineHeight - viewportHeight > 120;
+    document.body.classList.toggle("mobile-keyboard-open", Boolean(keyboardOpen));
+
+    const activeEl = document.activeElement;
+    const composerFocused = Boolean(inputEl && activeEl === inputEl);
+    if (keyboardOpen && composerFocused && !mobileKeyboardWasOpen) {
+      alignMobileViewportToTop();
+    }
+    mobileKeyboardWasOpen = Boolean(keyboardOpen);
+
+    applyRuntimeSettings();
+  }
+
+  function installMobileViewportHandlers() {
+    updateMobileViewportMetrics();
+
+    const focusSelector = "input, textarea, [contenteditable='true']";
+    document.addEventListener("focusin", (event) => {
+      if (event.target && event.target.matches && event.target.matches(focusSelector)) {
+        document.body.classList.add("mobile-input-active");
+        if (inputEl && event.target === inputEl) {
+          alignMobileViewportToTop();
+        }
+        updateMobileViewportMetrics();
+      }
+    });
+
+    document.addEventListener("focusout", (event) => {
+      if (event.target && event.target.matches && event.target.matches(focusSelector)) {
+        setTimeout(() => {
+          const active = document.activeElement;
+          const stillEditing = active && active.matches && active.matches(focusSelector);
+          if (!stillEditing) {
+            document.body.classList.remove("mobile-input-active");
+          }
+          updateMobileViewportMetrics();
+        }, 80);
+      }
+    });
+
+    window.addEventListener("resize", updateMobileViewportMetrics);
+    window.addEventListener("orientationchange", updateMobileViewportMetrics);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateMobileViewportMetrics);
+      window.visualViewport.addEventListener("scroll", updateMobileViewportMetrics);
+    }
+  }
+
+  function buildNetworkMessages(session, maxMessages = 16, maxChars = 12000) {
+    const history = Array.isArray(session?.messages) ? session.messages : [];
+    if (!history.length) return [];
+
+    const compact = [];
+    let totalChars = 0;
+
+    for (let index = history.length - 1; index >= 0; index -= 1) {
+      const item = history[index] || {};
+      const role = String(item.role || "").toLowerCase() === "assistant" ? "assistant" : "user";
+      const content = String(item.content || "").trim();
+      if (!content) continue;
+
+      const wouldExceedChars = totalChars + content.length > maxChars;
+      if (wouldExceedChars && compact.length >= 6) {
+        break;
+      }
+
+      compact.push({ role, content });
+      totalChars += content.length;
+
+      if (compact.length >= maxMessages) {
+        break;
+      }
+    }
+
+    return compact.reverse();
+  }
+
+  async function streamIONResponse(session, onChunk, onMeta, safetyProfile = null, modeOverride = "", conversationHints = null) {
+    const activeMode = normalizeMode(modeOverride) || getActiveMode(session);
+    const outboundMessages = buildNetworkMessages(session);
+    const payload = {
+      messages: outboundMessages,
+      model: "ION",
+      mode: activeMode,
+      safetyProfile: safetyProfile || buildSafetyProfile(),
+      conversationHints: conversationHints && typeof conversationHints === "object" ? conversationHints : undefined
+    };
+
+    const requestHeaders = { "Content-Type": "application/json" };
+    if (session?.id) {
+      requestHeaders["x-ION-session-id"] = String(session.id);
+    }
 
     const controller = new AbortController();
     currentAbortController = controller;
@@ -1876,7 +1886,7 @@
         try {
           res = await fetch(getApiEndpoint(), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: requestHeaders,
             body: JSON.stringify(payload),
             signal: controller.signal
           });
@@ -1903,24 +1913,24 @@
       if (lastError) {
         throw lastError;
       }
-      throw new Error("Bad response from Omni backend");
+      throw new Error("Bad response from Ion backend");
     }
 
     if (typeof onMeta === "function") {
       onMeta({
-        modelUsed: (res.headers.get("X-Omni-Model-Used") || "").trim(),
-        routeReason: (res.headers.get("X-Omni-Route-Reason") || "").trim(),
-        orchestratorRoute: (res.headers.get("X-Omni-Orchestrator-Route") || "").trim(),
-        orchestratorReason: (res.headers.get("X-Omni-Orchestrator-Reason") || "").trim(),
-        personaTone: (res.headers.get("X-Omni-Persona-Tone") || "").trim(),
-        userEmotion: (res.headers.get("X-Omni-Emotion-User") || "").trim(),
-        omniEmotion: (res.headers.get("X-Omni-Emotion-Omni") || "").trim(),
-        internetMode: (res.headers.get("X-Omni-Internet-Mode") || "").trim(),
-        internetProfile: (res.headers.get("X-Omni-Internet-Profile") || "").trim(),
-        internetCount: Number(res.headers.get("X-Omni-Internet-Count") || "0"),
-        simulationId: (res.headers.get("X-Omni-Simulation-Id") || "").trim(),
-        simulationStatus: (res.headers.get("X-Omni-Simulation-Status") || "").trim(),
-        simulationSteps: Number(res.headers.get("X-Omni-Simulation-Steps") || "0")
+        modelUsed: (res.headers.get("X-ION-Model-Used") || "").trim(),
+        routeReason: (res.headers.get("X-ION-Route-Reason") || "").trim(),
+        orchestratorRoute: (res.headers.get("X-ION-Orchestrator-Route") || "").trim(),
+        orchestratorReason: (res.headers.get("X-ION-Orchestrator-Reason") || "").trim(),
+        personaTone: (res.headers.get("X-ION-Persona-Tone") || "").trim(),
+        userEmotion: (res.headers.get("X-ION-Emotion-User") || "").trim(),
+        IONEmotion: (res.headers.get("X-ION-Emotion-ION") || "").trim(),
+        internetMode: (res.headers.get("X-ION-Internet-Mode") || "").trim(),
+        internetProfile: (res.headers.get("X-ION-Internet-Profile") || "").trim(),
+        internetCount: Number(res.headers.get("X-ION-Internet-Count") || "0"),
+        simulationId: (res.headers.get("X-ION-Simulation-Id") || "").trim(),
+        simulationStatus: (res.headers.get("X-ION-Simulation-Status") || "").trim(),
+        simulationSteps: Number(res.headers.get("X-ION-Simulation-Steps") || "0")
       });
     }
 
@@ -2000,6 +2010,16 @@
     const trimmed = content.trim();
     if (!trimmed) return;
 
+    if (!hasVerifiedLegalAttestation()) {
+      appendMessage("assistant", "Legal attestation is required before chat can run. Please confirm jurisdiction eligibility and truthful/responsible use.", {
+        model: session.model || "ION",
+        mode: getActiveMode(session),
+        timestamp: Date.now()
+      });
+      openLegalAttestationModal();
+      return;
+    }
+
     const styleCommand = parseStyleCommand(trimmed);
     const cameraCommand = parseCameraCommand(trimmed);
     const lightCommand = parseLightCommand(trimmed);
@@ -2016,7 +2036,7 @@
 
       const activeMode = getActiveMode(session);
       appendMessage("user", trimmed, {
-        model: session.model || "auto",
+        model: session.model || "ION",
         mode: activeMode,
         timestamp: commandTimestamp
       });
@@ -2039,11 +2059,6 @@
             }
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore style preference save failures
-            }
             assistantText = requestedStyle
               ? `Image style set to **${requestedStyle}** for this session.`
               : "Image style reset to **auto** for this session.";
@@ -2060,11 +2075,6 @@
             session.imageCamera = requestedCamera;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore camera preference save failures
-            }
             assistantText = `Camera profile set to **${requestedCamera}**.`;
           }
         }
@@ -2079,11 +2089,6 @@
             session.imageLighting = requestedLighting;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore lighting preference save failures
-            }
             assistantText = `Lighting profile set to **${requestedLighting}**.`;
           }
         }
@@ -2098,11 +2103,6 @@
             session.imageMaterials = requestedMaterials;
             session.updatedAt = Date.now();
             saveState();
-            try {
-              await savePreferences();
-            } catch {
-              // ignore material preference save failures
-            }
             assistantText = `Materials set to **${requestedMaterials.join(", ")}**.`;
           }
         }
@@ -2113,7 +2113,6 @@
           try {
             const currentMode = getActiveMode(session);
             const search = await requestInternetSearch(webCommand.query, currentMode);
-            updateInternetInspectorFromWebSearch(session, webCommand.query, search);
             if (!search.hits.length) {
               assistantText = `No internet results found for **${webCommand.query}** in mode **${search.mode}**.`;
             } else {
@@ -2213,7 +2212,7 @@
         }
       } else {
         appendMessage("assistant", assistantText, {
-          model: session.model || "auto",
+          model: session.model || "ION",
           mode: getActiveMode(session),
           timestamp: Date.now(),
           ...(assistantMediaMeta || {})
@@ -2233,7 +2232,7 @@
 
       if (inputEl) {
         inputEl.value = "";
-        inputEl.focus();
+        focusInputIfAppropriate();
       }
       return;
     }
@@ -2244,13 +2243,13 @@
       const blockTs = Date.now();
       session.messages.push({ role: "user", content: trimmed, timestamp: blockTs });
       appendMessage("user", trimmed, {
-        model: session.model || "auto",
+        model: session.model || "ION",
         mode: getActiveMode(session),
         timestamp: blockTs
       });
 
       appendMessage("assistant", policy.message, {
-        model: session.model || "auto",
+        model: session.model || "ION",
         mode: getActiveMode(session),
         timestamp: Date.now()
       });
@@ -2266,7 +2265,7 @@
 
       if (inputEl) {
         inputEl.value = "";
-        inputEl.focus();
+        focusInputIfAppropriate();
       }
       return;
     }
@@ -2282,16 +2281,14 @@
     
     // Auto-detect mode based on user content
     if (activeMode === "auto" && runtimeSettings.autoDetectMode) {
-      const detectedMode = detectModeFromContent(trimmed);
-      if (detectedMode) {
-        activeMode = detectedMode;
-        session.mode = activeMode;
-        saveState();
-        updateModeButton(activeMode);
-        updateModeIndicator(activeMode);
-        setActiveDropdownItem(modeMenu, activeMode);
+      const detected = detectModeFromContent(trimmed, session);
+      if (detected?.mode) {
+        activeMode = normalizeMode(detected.mode) || "auto";
+        updateModelInspector(session.model || "ION", `mode:${activeMode}`);
       }
     }
+
+    const conversationHints = buildConversationHints(session, activeMode, trimmed);
 
     if (activeMode === "simulation") {
       const simulation = ensureSimulationState(session);
@@ -2306,7 +2303,7 @@
     }
     
     appendMessage("user", trimmed, {
-      model: session.model || "auto",
+      model: session.model || "ION",
       mode: activeMode,
       timestamp: Date.now()
     });
@@ -2317,100 +2314,10 @@
 
     const mediaIntent = detectAutoMediaIntent(trimmed);
 
-    const shouldGenerateVideo = mediaIntent.kind === "video";
-    if (shouldGenerateVideo) {
-      const mindState = ensureMindState(session);
-      if (mindState) {
-        mindState.route = "video";
-        appendMindTimeline(session, "route=video, source=prompt-aware-media-intent");
-        updateMindStateUI(session);
-      }
-
-      const assistantMessage = appendMessage("assistant", "Generating video...", {
-        model: session.model || "auto",
-        mode: activeMode
-      });
-      const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
-
-      isStreaming = true;
-      if (sendBtn) sendBtn.disabled = true;
-      if (inputEl) inputEl.disabled = true;
-      if (typingIndicatorEl) typingIndicatorEl.style.display = "block";
-
-      try {
-        const videoPrompt = String(mediaIntent.prompt || extractVideoPrompt(trimmed) || trimmed).trim();
-        const videoResult = await requestGeneratedVideo(session, videoPrompt, safetyProfile);
-        const generatedAt = Date.now();
-
-        if (assistantBodyEl) {
-          assistantBodyEl.innerHTML = renderMarkdown(`Generated video for: **${videoPrompt}**`);
-          const videoCard = createGeneratedVideoCard({
-            videoUrl: videoResult.videoUrl,
-            videoPrompt,
-            videoStylePreset: String(videoResult?.metadata?.style_preset || "").trim(),
-            videoMotionProfile: String(videoResult?.metadata?.motion_profile || "").trim(),
-            videoCameraProfile: String(videoResult?.metadata?.camera_profile || "").trim(),
-            videoFallback: Boolean(videoResult?.metadata?.fallback),
-            generatedAt
-          });
-          if (videoCard) {
-            const spacer = document.createElement("div");
-            spacer.className = "generated-image-spacer";
-            assistantBodyEl.appendChild(spacer);
-            assistantBodyEl.appendChild(videoCard);
-          }
-          smoothScrollToBottom(true);
-        }
-
-        session.messages.push({
-          role: "assistant",
-          content: `Generated video for: ${videoPrompt}`,
-          type: "video",
-          videoUrl: videoResult.videoUrl,
-          videoPrompt,
-          videoStylePreset: String(videoResult?.metadata?.style_preset || "").trim(),
-          videoMotionProfile: String(videoResult?.metadata?.motion_profile || "").trim(),
-          videoCameraProfile: String(videoResult?.metadata?.camera_profile || "").trim(),
-          videoFallback: Boolean(videoResult?.metadata?.fallback),
-          generatedAt,
-          timestamp: Date.now()
-        });
-        updateSessionMetaFromMessages(session);
-        saveState();
-        playNotificationSound("assistant");
-      } catch (err) {
-        console.error("Omni video generation error:", err);
-        const reason = String(err?.message || "").trim();
-        updateAssistantMessageBody(
-          assistantBodyEl,
-          reason
-            ? `[Error] Video generation failed: ${reason}`
-            : "[Error] Video generation failed. Check backend availability and try again."
-        );
-        playNotificationSound("error");
-      } finally {
-        isStreaming = false;
-        updateJumpToLatestVisibility();
-        if (sendBtn) sendBtn.disabled = false;
-        if (inputEl) inputEl.disabled = false;
-        if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-        if (inputEl) inputEl.focus();
-      }
-
-      return;
-    }
-
     const shouldGenerateImage = mediaIntent.kind === "image";
     if (shouldGenerateImage) {
-      const mindState = ensureMindState(session);
-      if (mindState) {
-        mindState.route = "image";
-        appendMindTimeline(session, "route=image, source=prompt-aware-media-intent");
-        updateMindStateUI(session);
-      }
-
       const assistantMessage = appendMessage("assistant", "Generating image...", {
-        model: session.model || "auto",
+        model: session.model || "ION",
         mode: activeMode
       });
       const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2424,10 +2331,10 @@
         const imagePrompt = String(mediaIntent.prompt || extractImagePrompt(trimmed) || trimmed).trim();
         const imageResult = await requestGeneratedImage(session, imagePrompt, safetyProfile);
         const generatedAt = Date.now();
-        const resolution = String(imageResult?.metadata?.resolution || "").trim();
+        const resolution = String(imageResult?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
         const styleId = String(imageResult?.metadata?.style_id || "").trim();
 
-        updateModelInspector(imageResult.modelUsed || session.model || "auto", "image-generated");
+        updateModelInspector(imageResult.modelUsed || session.model || "ION", "image-generated");
 
         if (assistantBodyEl) {
           assistantBodyEl.innerHTML = renderMarkdown(`Generated image for: **${imagePrompt}**`);
@@ -2468,10 +2375,13 @@
           renderActiveSessionMessages();
         }
       } catch (err) {
-        console.error("Omni image generation error:", err);
+        console.error("ION image generation error:", err);
+        const reason = String(err?.message || "").trim();
         updateAssistantMessageBody(
           assistantBodyEl,
-          "[Error] Image generation failed. Try a different image prompt."
+          reason
+            ? `[Error] Image generation failed: ${reason}`
+            : "[Error] Image generation failed. Try a different image prompt."
         );
         playNotificationSound("error");
       } finally {
@@ -2480,7 +2390,7 @@
         if (sendBtn) sendBtn.disabled = false;
         if (inputEl) inputEl.disabled = false;
         if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-        if (inputEl) inputEl.focus();
+        focusInputIfAppropriate();
       }
 
       return;
@@ -2488,7 +2398,7 @@
 
     // Prepare assistant placeholder
     const assistantMessage = appendMessage("assistant", "", {
-      model: session.model || "auto",
+      model: session.model || "ION",
       mode: activeMode
     });
     const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2500,9 +2410,15 @@
     if (typingIndicatorEl) typingIndicatorEl.style.display = "block";
 
     session._streamingAssistantText = "";
+    let streamingRenderFrameId = 0;
+
+    const flushStreamingRender = () => {
+      streamingRenderFrameId = 0;
+      updateAssistantMessageBody(assistantBodyEl, session._streamingAssistantText || "", { highlight: false });
+    };
 
     try {
-      await streamOmniResponse(
+      await streamIONResponse(
         session,
         (chunk) => {
           if (chunk && typeof chunk === "object") {
@@ -2511,7 +2427,7 @@
               route: String(payload.route || "").trim(),
               imageDataUrl: String(payload.imageDataUrl || "").trim(),
               imageFilename: String(payload?.image?.filename || "").trim(),
-              imageResolution: String(payload?.image?.metadata?.resolution || "").trim(),
+              imageResolution: String(payload?.image?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL,
               imageStyleId: String(payload?.image?.metadata?.style_id || "").trim(),
               imagePrompt: trimmed,
               generatedAt: Date.now()
@@ -2528,25 +2444,13 @@
               chunk
             );
           }
-          updateAssistantMessageBody(assistantBodyEl, session._streamingAssistantText || "", { highlight: false });
+
+          if (!streamingRenderFrameId) {
+            streamingRenderFrameId = requestAnimationFrame(flushStreamingRender);
+          }
         },
         (meta) => {
-          updateModelInspector(meta?.modelUsed || session.model || "auto", meta?.routeReason || "");
-          updateInternetInspectorFromMeta(session, meta, trimmed);
-
-          const mindState = ensureMindState(session);
-          if (mindState) {
-            if (meta?.orchestratorRoute) mindState.route = meta.orchestratorRoute;
-            if (meta?.personaTone) mindState.persona = meta.personaTone;
-            if (meta?.userEmotion) mindState.userEmotion = meta.userEmotion;
-            if (meta?.omniEmotion) mindState.omniEmotion = meta.omniEmotion;
-
-            const route = meta?.orchestratorRoute || "chat";
-            const persona = meta?.personaTone || "pending";
-            const emotions = `${meta?.userEmotion || "pending"}->${meta?.omniEmotion || "pending"}`;
-            appendMindTimeline(session, `route=${route}, persona=${persona}, emotion=${emotions}`);
-            updateMindStateUI(session);
-          }
+          updateModelInspector(meta?.modelUsed || session.model || "ION", meta?.routeReason || "");
 
           if (getActiveMode(session) === "simulation") {
             const simulation = ensureSimulationState(session);
@@ -2559,8 +2463,15 @@
             updateSimulationUI(session);
           }
         },
-        safetyProfile
+        safetyProfile,
+        activeMode,
+        conversationHints
       );
+
+      if (streamingRenderFrameId) {
+        cancelAnimationFrame(streamingRenderFrameId);
+        flushStreamingRender();
+      }
 
       const finalText = (session._streamingAssistantText || "").trim();
       const safeText = finalText || "[No response received]";
@@ -2603,14 +2514,17 @@
       delete session._streamingMeta;
       updateSessionMetaFromMessages(session);
       saveState();
-      updateMindStateUI(session);
       playNotificationSound("assistant");
 
       if (runtimeSettings.showTimestamps || runtimeSettings.compactMode) {
         renderActiveSessionMessages();
       }
     } catch (err) {
-      console.error("Omni streaming error:", err);
+      if (streamingRenderFrameId) {
+        cancelAnimationFrame(streamingRenderFrameId);
+        streamingRenderFrameId = 0;
+      }
+      console.error("ION streaming error:", err);
       updateAssistantMessageBody(
         assistantBodyEl,
         "[Error] Something went wrong while streaming the response."
@@ -2622,7 +2536,7 @@
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.disabled = false;
       if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
-      if (inputEl) inputEl.focus();
+      focusInputIfAppropriate();
     }
   }
 
@@ -2769,41 +2683,6 @@
     }
   }
 
-  async function savePreferences() {
-    const session = getActiveSession();
-    if (!session) return;
-    const preferredImageStyle = getActiveImageStyle(session);
-    const preferredImageCamera = getActiveCameraProfile(session);
-    const preferredImageLighting = getActiveLightingProfile(session);
-    const preferredImageMaterials = getActiveMaterials(session);
-
-    const payload = {
-      preferredMode: getActiveMode(session),
-      writingStyle: "concise",
-      lastUsedSettings: {
-        preferredModel: session.model || "auto",
-        preferredImageStyle: preferredImageStyle || "",
-        preferredImageCamera: preferredImageCamera,
-        preferredImageLighting: preferredImageLighting,
-        preferredImageMaterials: preferredImageMaterials.join(","),
-        reasoningMode: getActiveMode(session) === "reasoning",
-        codingMode: getActiveMode(session) === "coding",
-        knowledgeMode: getActiveMode(session) === "knowledge"
-      }
-    };
-
-    try {
-      await fetch("/api/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      updateModelInspector(session.model || "auto", "preferences-saved");
-    } catch {
-      updateModelInspector(session.model || "auto", "save-failed");
-    }
-  }
-
   async function loadPreferences() {
     try {
       const res = await fetch("/api/preferences", { method: "GET" });
@@ -2815,7 +2694,7 @@
 
       const preferredMode = normalizeMode(data.preferredMode) || session.mode || "auto";
       const preferredImageStyle = normalizeImageStyle(data?.lastUsedSettings?.preferredImageStyle || "");
-      const preferredImageCamera = normalizeCameraProfile(data?.lastUsedSettings?.preferredImageCamera || "") || "portrait-85mm";
+      const preferredImageCamera = normalizeCameraProfile(data?.lastUsedSettings?.preferredImageCamera || "") || "prime-85mm";
       const preferredImageLighting = normalizeLightingProfile(data?.lastUsedSettings?.preferredImageLighting || "") || "studio-soft";
       const preferredImageMaterials = normalizeMaterialList(data?.lastUsedSettings?.preferredImageMaterials || "") || ["skin"];
       session.mode = preferredMode;
@@ -2828,15 +2707,6 @@
       syncSelectorsFromSession();
     } catch {
       // ignore
-    }
-  }
-
-  async function resetMemory() {
-    try {
-      await fetch("/api/preferences", { method: "DELETE" });
-      updateModelInspector("auto", "memory-reset");
-    } catch {
-      updateModelInspector("auto", "reset-failed");
     }
   }
 
@@ -2917,18 +2787,19 @@
   // 10. INIT
   // =========================
   function init() {
+    installMobileViewportHandlers();
     loadRuntimeSettings();
     applyRuntimeSettings();
     loadState();
     syncSelectorsFromSession();
     renderSessionsSidebar();
     renderActiveSessionMessages();
-    updateMediaFilterUI();
     startApiChecks();
-    updateModelInspector("auto", "router-ready");
+    updateModelInspector("ION", "ION-locked");
     loadPreferences();
     updateSimulationUI();
     updateAgeGateComposerNotice();
+    updateLegalAttestationComposerNotice();
 
     // Listen for settings changes from other tabs or same page
     window.addEventListener("storage", (e) => {
@@ -2954,6 +2825,7 @@
         e.key === SETTINGS_KEYS.SOUND ||
         e.key === SETTINGS_KEYS.SHOW_TIMESTAMPS ||
         e.key === SETTINGS_KEYS.COMPACT_MODE ||
+        e.key === SETTINGS_KEYS.MOBILE_COMPACT_MODE ||
         e.key === SETTINGS_KEYS.REQUEST_TIMEOUT
       ) {
         loadRuntimeSettings();
@@ -2975,10 +2847,14 @@
       if (e.key === AGE_PROFILE_KEY) {
         updateAgeGateComposerNotice();
       }
+
+      if (e.key === LEGAL_PROFILE_KEY) {
+        updateLegalAttestationComposerNotice();
+      }
     });
 
     // Listen for same-page settings events
-    window.addEventListener("omni-settings-changed", (e) => {
+    window.addEventListener("ION-settings-changed", (e) => {
       const { key } = e.detail;
       if (key === STORAGE_KEY) {
         resetToFreshChat();
@@ -3002,6 +2878,7 @@
         key === SETTINGS_KEYS.SOUND ||
         key === SETTINGS_KEYS.SHOW_TIMESTAMPS ||
         key === SETTINGS_KEYS.COMPACT_MODE ||
+        key === SETTINGS_KEYS.MOBILE_COMPACT_MODE ||
         key === SETTINGS_KEYS.SEND_WITH_ENTER ||
         key === SETTINGS_KEYS.SHOW_ASSISTANT_BADGES ||
         key === SETTINGS_KEYS.AUTO_DETECT_MODE ||
@@ -3029,11 +2906,14 @@
       }
     });
 
-    window.addEventListener("omni-age-profile-changed", () => {
+    window.addEventListener("ION-age-profile-changed", () => {
       const session = getActiveSession();
       updateAgeGateComposerNotice();
       if (!session) return;
-      updateMindStateUI(session);
+    });
+
+    window.addEventListener("ION-legal-attestation-changed", () => {
+      updateLegalAttestationComposerNotice();
     });
 
     if (modelBtn && modelDropdown) {
@@ -3051,7 +2931,7 @@
         if (!optionBtn) return;
         const session = getActiveSession();
         if (!session) return;
-        session.model = normalizeModel(optionBtn.dataset.value) || "auto";
+        session.model = normalizeModel(optionBtn.dataset.value) || "ION";
         session.updatedAt = Date.now();
         saveState();
         updateModelButton(session.model);
@@ -3089,14 +2969,6 @@
         }
         closeAllDropdowns();
       });
-    }
-
-    if (savePreferencesBtn) {
-      savePreferencesBtn.addEventListener("click", savePreferences);
-    }
-
-    if (resetMemoryBtn) {
-      resetMemoryBtn.addEventListener("click", resetMemory);
     }
 
     if (simulationStartBtn) {
@@ -3142,16 +3014,22 @@
     if (sendBtn) {
       sendBtn.addEventListener("click", handleSendClick);
     }
+
+    if (openLegalAttestationBtn) {
+      openLegalAttestationBtn.addEventListener("click", () => {
+        openLegalAttestationModal();
+      });
+    }
     if (inputEl) {
       inputEl.addEventListener("keydown", handleInputKeydown);
       inputEl.addEventListener("input", autoResizeInput);
       autoResizeInput();
 
       try {
-        const queuedPrompt = localStorage.getItem("omni-tools-prompt") || "";
+        const queuedPrompt = localStorage.getItem("ION-tools-prompt") || "";
         if (queuedPrompt.trim()) {
           inputEl.value = queuedPrompt;
-          localStorage.removeItem("omni-tools-prompt");
+          localStorage.removeItem("ION-tools-prompt");
           autoResizeInput();
         }
       } catch {
@@ -3177,18 +3055,8 @@
       });
     }
 
-    if (mediaFilterAllBtn) {
-      mediaFilterAllBtn.addEventListener("click", () => setMediaFilter("all"));
-    }
-    if (mediaFilterImagesBtn) {
-      mediaFilterImagesBtn.addEventListener("click", () => setMediaFilter("images"));
-    }
-    if (mediaFilterGifsBtn) {
-      mediaFilterGifsBtn.addEventListener("click", () => setMediaFilter("gifs"));
-    }
-    if (mediaFilterVideosBtn) {
-      mediaFilterVideosBtn.addEventListener("click", () => setMediaFilter("videos"));
-    }
+    closeAllDropdowns();
+
   }
 
   init();

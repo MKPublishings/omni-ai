@@ -2,9 +2,9 @@
 
 ## Mind Layer
 
-The Mind Layer is Omni Ai's self-improvement and self-reflection system.
-It does not change Omni Ai's name or identity; it deepens Omni Ai's capabilities.
-Omni Ai remains Omni Ai.
+The Mind Layer is ION Ai's self-improvement and self-reflection system.
+It does not change ION Ai's name or identity; it deepens ION Ai's capabilities.
+ION Ai remains ION Ai.
 
 ## Core Components
 

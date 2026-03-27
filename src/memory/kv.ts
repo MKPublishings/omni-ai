@@ -1,10 +1,10 @@
-export class OmniKV {
+export class IONKV {
   env: any;
   binding: any;
 
   constructor(env: any) {
     this.env = env;
-    this.binding = env?.OMNI_KV || env?.MEMORY || null;
+    this.binding = env?.ION_KV || env?.MEMORY || null;
   }
 
   async get(key: string) {

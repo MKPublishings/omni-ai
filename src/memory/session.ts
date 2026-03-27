@@ -1,4 +1,4 @@
-export class OmniSession {
+export class IONSession {
   state: any;
 
   constructor(state: any) {
@@ -24,6 +24,6 @@ export class OmniSession {
       return new Response("OK");
     }
 
-    return new Response("Omni Session Active");
+    return new Response("ION Session Active");
   }
 }

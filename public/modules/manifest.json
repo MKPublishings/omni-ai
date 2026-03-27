@@ -1,7 +1,9 @@
 {
   "files": [
-    "omni-philosophy.md",
+    "ION-philosophy.md",
     "system-rules.md",
-    "modes.md"
+    "modes.md",
+    "anatomy-capabilities.md",
+    "simulation-capabilities.md"
   ]
 }

@@ -1,10 +1,10 @@
 {
   "routes": {
-    "coding": "gpt-4o",
-    "math": "deepseek",
-    "creative": "omni",
-    "system": "omni",
-    "default": "omni"
+    "coding": "ION",
+    "math": "ION",
+    "creative": "ION",
+    "system": "ION",
+    "default": "ION"
   },
   "confidenceThresholds": {
     "coding": 0.7,
@@ -17,5 +17,5 @@
     "coding": 0.7,
     "default": 0.85
   },
-  "fallbackOrder": ["omni", "gpt-4o", "deepseek"]
+  "fallbackOrder": ["ION"]
 }

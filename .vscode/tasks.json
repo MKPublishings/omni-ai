@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build Omni Image Engine",
+      "label": "Build ION Image Engine",
       "type": "shell",
-      "command": "npm run lint --if-present; npm run test --if-present; npm run typecheck --if-present; node ./omni-image-engine/utils/validator.js; Write-Output 'Core modules are JS and do not require bundling in current setup.'",
+      "command": "npm run lint --if-present; npm run test --if-present; npm run typecheck --if-present; node ./ION-image-engine/utils/validator.js; Write-Output 'Core modules are JS and do not require bundling in current setup.'",
       "group": "build",
       "problemMatcher": []
     },
@@ -16,43 +16,43 @@
       "problemMatcher": []
     },
     {
-      "label": "Omni: Mind Loop on Recent Logs",
+      "label": "ION: Mind Loop on Recent Logs",
       "type": "shell",
       "command": "node ./scripts/mind/runOnRecentLogs.js",
       "problemMatcher": []
     },
     {
-      "label": "Omni: Auto-Debug",
+      "label": "ION: Auto-Debug",
       "type": "shell",
       "command": "node ./scripts/tools/runAutoDebug.js",
       "problemMatcher": []
     },
     {
-      "label": "Omni: View Task Tokens",
+      "label": "ION: View Task Tokens",
       "type": "shell",
       "command": "node ./scripts/tools/printTaskTokens.js",
       "problemMatcher": []
     },
     {
-      "label": "Omni: Set Task Token Status",
+      "label": "ION: Set Task Token Status",
       "type": "shell",
       "command": "Write-Output 'Usage: npm run mind:tokens:set -- <tokenId> <open|in-progress|resolved>'",
       "problemMatcher": []
     },
     {
-      "label": "Omni: View Active Task Tokens",
+      "label": "ION: View Active Task Tokens",
       "type": "shell",
       "command": "node ./scripts/tools/printActiveTaskTokens.js",
       "problemMatcher": []
     },
     {
-      "label": "Omni: Next Actionable Task Token",
+      "label": "ION: Next Actionable Task Token",
       "type": "shell",
       "command": "node ./scripts/tools/printNextTaskToken.js",
       "problemMatcher": []
     },
     {
-      "label": "Omni: Maintain Task Token Queue",
+      "label": "ION: Maintain Task Token Queue",
       "type": "shell",
       "command": "node ./scripts/tools/runTaskTokenMaintenance.js",
       "problemMatcher": []

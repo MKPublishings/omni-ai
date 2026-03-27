@@ -1,6 +1,6 @@
-import { OmniLogger } from "./logging/logger";
-import { OmniSafety } from "./stability/safety";
-import { omniBrainLoop } from "./api/omni/runtime/loop";
+import { IONLogger } from "./logging/logger";
+import { IONSafety } from "./stability/safety";
+import { IONBrainLoop } from "./runtime/loop";
 import { ping as apiPing } from "./api/ping";
 import { listModes, listModeDetails, getModeDetails } from "./api/modes";
 import { getMemory as getMemoryApi, setMemory as setMemoryApi, deleteMemory as deleteMemoryApi } from "./api/memory";
@@ -14,81 +14,128 @@ import {
   searchModules,
   shouldUseKnowledgeRetrieval,
   shouldUseSystemKnowledge
-} from "./omni/enhancements";
-import { assemblePrompt } from "./omni/rendering/engine/promptAssembler";
-import { listAvailableStyles, resolveStyleName } from "./omni/rendering/styles/styleRegistry";
-import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./omni/laws/imageLawBridge";
-import { Laws, type LawDomain } from "./omni/laws/lawRegistry";
+} from "./ION/enhancements";
+import { assemblePrompt } from "./ION/rendering/engine/promptAssembler";
+import { listAvailableStyles, resolveStyleName } from "./ION/rendering/styles/styleRegistry";
+import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./ION/laws/imageLawBridge";
+import { Laws, type LawDomain } from "./ION/laws/lawRegistry";
 import { warmupConnections, getConnectionStats } from "./llm/cloudflareOptimizations";
-import { advanceSimulationState } from "./omni/simulation/engine";
-import { ensureOmniMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
+import { advanceSimulationState } from "./ION/simulation/engine";
+import { ensureIONMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
 import { formatWorkingMemoryPrompt, loadWorkingMemory, updateWorkingMemoryFromTurn } from "./memory/workingMemory";
 import { runSelfMaintenance } from "./maintenance/selfMaintenance";
 import { getMaintenanceStatus } from "./maintenance/status";
-import { decideMultimodalRoute } from "./omni/multimodal/router";
-import { runVisualReasoning } from "./omni/multimodal/visualReasoner";
-import { buildPersonaPrompt, resolvePersonaProfile } from "./omni/behavior/personaEngine";
-import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./omni/behavior/emotionalResonance";
-import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./omni/behavior/adaptiveBehavior";
+import { decideMultimodalRoute } from "./ION/multimodal/router";
+import { runVisualReasoning } from "./ION/multimodal/visualReasoner";
+import { buildPersonaPrompt, resolvePersonaProfile } from "./ION/behavior/personaEngine";
+import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./ION/behavior/emotionalResonance";
+import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./ION/behavior/adaptiveBehavior";
 import { executeTool } from "./tools/execute";
+import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
+import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
+import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
 import type { KVNamespace, Fetcher, DurableObjectNamespace, D1Database, ScheduledController, ExecutionContext } from "@cloudflare/workers-types";
 
-export { OmniSession } from "./memory/session";
+export { IONSession } from "./memory/session";
 
 export interface Env {
   AI: any;
   MEMORY: KVNamespace;
   MIND: KVNamespace;
   ASSETS: Fetcher;
-  OMNI_DB?: D1Database;
-  OMNI_SESSION?: DurableObjectNamespace;
-  MODEL_OMNI?: string;
-  MODEL_GPT_4O?: string;
-  MODEL_GPT_4O_MINI?: string;
-  MODEL_DEEPSEEK?: string;
+  ION_DB?: D1Database;
+  ION_SESSION?: DurableObjectNamespace;
+  MODEL_ION?: string;
   MODEL_IMAGE?: string;
-  OPENAI_API_KEY?: string;
-  DEEPSEEK_API_KEY?: string;
-  OMNI_RESPONSE_MIN_CHARS?: string;
-  OMNI_RESPONSE_BASE_CHARS?: string;
-  OMNI_RESPONSE_MAX_CHARS?: string;
-  OMNI_MIN_OUTPUT_TOKENS?: string;
-  OMNI_MAX_OUTPUT_TOKENS?: string;
-  OMNI_ENV?: string;
-  OMNI_MEMORY_RETENTION_DAYS?: string;
-  OMNI_SESSION_MAX_AGE_HOURS?: string;
-  OMNI_AUTONOMY_LEVEL?: string;
-  OMNI_ADMIN_KEY?: string;
-  OMNI_MEDIA_API_BASE_URL?: string;
-  OMNI_MEDIA_BASE_URL?: string;
-  OMNI_MEDIA_HOST?: string;
-  OMNI_MEDIA_PORT?: string;
-  OMNI_MEDIA_API_KEY?: string;
-  OMNI_MEDIA_API_TIMEOUT_MS?: string;
-  OMNI_MEDIA_FALLBACK_VIDEO_URL?: string;
-  OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO?: string;
-  OMNI_MEDIA_PLACEHOLDER_ONLY?: string;
+  MODEL_IMAGE_POLICY_FALLBACK?: string;
+  ION_RESPONSE_MIN_CHARS?: string;
+  ION_RESPONSE_BASE_CHARS?: string;
+  ION_RESPONSE_MAX_CHARS?: string;
+  ION_MIN_OUTPUT_TOKENS?: string;
+  ION_MAX_OUTPUT_TOKENS?: string;
+  ION_ENV?: string;
+  ION_MEMORY_RETENTION_DAYS?: string;
+  ION_SESSION_MAX_AGE_HOURS?: string;
+  ION_AUTONOMY_LEVEL?: string;
+  ION_ADMIN_KEY?: string;
+  ION_MEDIA_API_BASE_URL?: string;
+  ION_MEDIA_BASE_URL?: string;
+  ION_MEDIA_HOST?: string;
+  ION_MEDIA_PORT?: string;
+  ION_MEDIA_API_KEY?: string;
+  ION_MEDIA_API_TIMEOUT_MS?: string;
+  ION_FAST_CHAT?: string;
+  ION_NATIVE_STREAMING?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
 
-type OmniRole = "system" | "user" | "assistant";
+function hasRuntimeSecret(value: unknown): boolean {
+  return String(value || "").trim().length > 0;
+}
 
-type OmniMessage = {
-  role: OmniRole;
+function getProviderStatusSnapshot(env: Env): Record<string, unknown> {
+  void env;
+
+  return {
+    ok: true,
+    generatedAt: Date.now(),
+    providers: {
+      text: {
+        active: "ION",
+        ION_live: true,
+        fallback_active: false,
+        models: ["ION"]
+      },
+      image: {
+        active: "ION",
+        ION_live: true,
+        fallback_active: false,
+        model_hint: "ION-image"
+      },
+      audio: {
+        ION_live: true
+      }
+    },
+    runtime: {
+      ION_runtime: true
+    }
+  };
+}
+
+type IONRole = "system" | "user" | "assistant";
+
+type IONMessage = {
+  role: IONRole;
   content: string;
 };
 
-type OmniRequestBody = {
+type IONRequestBody = {
   mode?: string;
   model?: string;
+  fastMode?: boolean;
   messages?: Array<{ role?: string; content?: string }>;
+  conversationHints?: {
+    inferredMode?: string;
+    latestUserIntent?: string;
+    recentUserFocus?: string[];
+    recentAssistantCommitments?: string[];
+    requestedOutput?: string;
+  };
   safetyProfile?: {
     ageTier?: string;
     humanVerified?: boolean;
-    nsfwAccess?: boolean;
+    adultAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
+    legalAttestation?: {
+      accepted?: boolean;
+      jurisdiction?: string;
+      truthfulIdentity?: boolean;
+      lawfulUse?: boolean;
+      userDirected?: boolean;
+      acceptedAt?: number;
+    };
   };
 };
 
@@ -123,18 +170,34 @@ type ImageRequestBody = {
   safetyProfile?: {
     ageTier?: string;
     humanVerified?: boolean;
-    nsfwAccess?: boolean;
+    adultAccess?: boolean;
     explicitAllowed?: boolean;
     illegalBlocked?: boolean;
+    legalAttestation?: {
+      accepted?: boolean;
+      jurisdiction?: string;
+      truthfulIdentity?: boolean;
+      lawfulUse?: boolean;
+      userDirected?: boolean;
+      acceptedAt?: number;
+    };
   };
 };
 
 type SafetyProfile = {
   ageTier: "adult" | "minor";
   humanVerified: boolean;
-  nsfwAccess: boolean;
+  adultAccess: boolean;
   explicitAllowed: boolean;
   illegalBlocked: boolean;
+  legalAttestation: {
+    accepted: boolean;
+    jurisdiction: string;
+    truthfulIdentity: boolean;
+    lawfulUse: boolean;
+    userDirected: boolean;
+    acceptedAt: number;
+  };
 };
 
 type InternetSearchHit = {
@@ -182,7 +245,7 @@ type InternetLearningStore = {
   entries: InternetLearningEntry[];
 };
 
-const INTERNET_LEARNING_KEY = "omni_internet_learning_v1";
+const INTERNET_LEARNING_KEY = "ION_internet_learning_v1";
 const INTERNET_LEARNING_MAX_ENTRIES = 120;
 
 type InternetSearchProfile = {
@@ -194,13 +257,13 @@ type InternetSearchProfile = {
 type ImageModelConfig = {
   model: string;
   styleId: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   ratio: string;
   resolution: string;
 };
 
-type OmniImagePromptData = {
+type IONImagePromptData = {
   userPrompt: string;
   tokens: string[];
   semanticExpansion: string;
@@ -221,7 +284,7 @@ type OmniImagePromptData = {
 
 type TimeIntent = "day" | "night" | "sunset" | "indoor" | "neutral";
 
-type OmniImageOptions = {
+type IONImageOptions = {
   mode?: string;
   stylePack?: string;
   laws?: LawReference[];
@@ -234,7 +297,7 @@ type OmniImageOptions = {
   materials?: string[];
 };
 
-type OmniImageGenerationResult = {
+type IONImageGenerationResult = {
   imageDataUrl: string;
   filename: string;
   metadata: Record<string, unknown>;
@@ -251,88 +314,10 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function deriveVideoStyleFromPrompt(promptText: string): {
-  stylePreset: string;
-  motionProfile: string;
-  cameraProfile: string;
-} {
-  const prompt = String(promptText || "").toLowerCase();
-
-  let stylePreset = "natural";
-  if (/\b(cinematic|film|movie|dramatic|epic|anamorphic)\b/i.test(prompt)) {
-    stylePreset = "cinematic";
-  } else if (/\b(anime|cartoon|pixar|stylized|illustrated)\b/i.test(prompt)) {
-    stylePreset = "stylized";
-  } else if (/\b(noir|monochrome|black\s*and\s*white|gritty)\b/i.test(prompt)) {
-    stylePreset = "noir";
-  } else if (/\b(neon|cyberpunk|sci[-\s]?fi|futuristic)\b/i.test(prompt)) {
-    stylePreset = "neon";
-  }
-
-  const motionProfile = /\b(slow\s*motion|slow-mo|dramatic\s*slow)\b/i.test(prompt)
-    ? "slow"
-    : /\b(fast|action|chase|dynamic|high\s*energy)\b/i.test(prompt)
-    ? "fast"
-    : "normal";
-
-  const cameraProfile = /\b(aerial|drone|overhead|bird'?s\s*eye)\b/i.test(prompt)
-    ? "aerial"
-    : /\b(close\s*up|macro|portrait)\b/i.test(prompt)
-    ? "close-up"
-    : /\b(wide|landscape|establishing\s*shot)\b/i.test(prompt)
-    ? "wide"
-    : "standard";
-
-  return { stylePreset, motionProfile, cameraProfile };
-}
-
-function selectFallbackVideoUrl(promptText: string, configuredDefault: string): string {
-  const prompt = String(promptText || "").toLowerCase();
-  const catalog: Array<{ url: string; tags: string[] }> = [
-    {
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-      tags: ["nature", "forest", "wildlife", "outdoor", "mountain", "rain"]
-    },
-    {
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-      tags: ["cinematic", "dramatic", "action", "epic", "slow", "moody"]
-    },
-    {
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-      tags: ["bright", "day", "fun", "travel", "colorful"]
-    },
-    {
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-      tags: ["city", "urban", "street", "night", "driving", "neon"]
-    },
-    {
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-      tags: ["road", "terrain", "outdoor", "wide", "drone", "landscape"]
-    }
-  ];
-
-  let bestUrl = configuredDefault;
-  let bestScore = -1;
-
-  for (const item of catalog) {
-    let score = 0;
-    for (const tag of item.tags) {
-      if (prompt.includes(tag)) score += 1;
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestUrl = item.url;
-    }
-  }
-
-  if (bestScore > 0) return bestUrl;
-  return configuredDefault || catalog[0].url;
-}
-
-function computeAdaptiveResponseMax(messages: OmniMessage[], env: Env): number {
-  const configuredMin = toPositiveInt(env.OMNI_RESPONSE_MIN_CHARS, 2000);
-  const configuredBase = toPositiveInt(env.OMNI_RESPONSE_BASE_CHARS, 4500);
-  const configuredMax = toPositiveInt(env.OMNI_RESPONSE_MAX_CHARS, 50000);
+function computeAdaptiveResponseMax(messages: IONMessage[], env: Env): number {
+  const configuredMin = toPositiveInt(env.ION_RESPONSE_MIN_CHARS, 2000);
+  const configuredBase = toPositiveInt(env.ION_RESPONSE_BASE_CHARS, 4500);
+  const configuredMax = toPositiveInt(env.ION_RESPONSE_MAX_CHARS, 50000);
 
   const floor = Math.max(500, configuredMin);
   const ceiling = Math.max(floor, configuredMax);
@@ -360,8 +345,8 @@ function computeAdaptiveResponseMax(messages: OmniMessage[], env: Env): number {
 }
 
 function computeAdaptiveOutputTokens(responseCharLimit: number, env: Env): number {
-  const configuredMinTokens = toPositiveInt(env.OMNI_MIN_OUTPUT_TOKENS, 512);
-  const configuredMaxTokens = toPositiveInt(env.OMNI_MAX_OUTPUT_TOKENS, 8192);
+  const configuredMinTokens = toPositiveInt(env.ION_MIN_OUTPUT_TOKENS, 512);
+  const configuredMaxTokens = toPositiveInt(env.ION_MAX_OUTPUT_TOKENS, 8192);
 
   const minTokens = Math.max(128, configuredMinTokens);
   const maxTokens = Math.max(minTokens, configuredMaxTokens);
@@ -372,13 +357,18 @@ function computeAdaptiveOutputTokens(responseCharLimit: number, env: Env): numbe
 }
 
 function isNonProduction(request: Request, env: Env): boolean {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   if (explicitEnv) {
     return explicitEnv !== "production";
   }
 
   const host = new URL(request.url).hostname.toLowerCase();
   return host === "localhost" || host === "127.0.0.1" || host.endsWith(".workers.dev");
+}
+
+function isEnabledFlag(value: unknown): boolean {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 const CORS_HEADERS = {
@@ -523,7 +513,7 @@ async function verifyFallbackChallenge(env: Env, challengeId: string, answer: st
   }
 }
 
-function getLatestUserText(messages: OmniMessage[]): string {
+function getLatestUserText(messages: IONMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i]?.role === "user") {
       return String(messages[i]?.content || "");
@@ -533,25 +523,257 @@ function getLatestUserText(messages: OmniMessage[]): string {
   return "";
 }
 
-function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
+function summarizeConversationSnippet(value: string, maxLen = 200): string {
+  const compact = sanitizePromptText(String(value || "")).trim();
+  if (!compact) return "";
+  if (compact.length <= maxLen) return compact;
+  return `${compact.slice(0, Math.max(0, maxLen - 3))}...`;
+}
+
+function normalizeConversationHints(raw: IONRequestBody["conversationHints"]): {
+  inferredMode: string;
+  latestUserIntent: string;
+  recentUserFocus: string[];
+  recentAssistantCommitments: string[];
+  requestedOutput: string;
+} {
+  const inferredMode = sanitizePromptText(String(raw?.inferredMode || "")).trim().toLowerCase();
+  const latestUserIntent = summarizeConversationSnippet(String(raw?.latestUserIntent || ""), 220);
+  const requestedOutput = summarizeConversationSnippet(String(raw?.requestedOutput || "general"), 48).toLowerCase();
+
+  const recentUserFocus = Array.isArray(raw?.recentUserFocus)
+    ? raw.recentUserFocus
+        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
+        .filter(Boolean)
+        .slice(0, 4)
+    : [];
+
+  const recentAssistantCommitments = Array.isArray(raw?.recentAssistantCommitments)
+    ? raw.recentAssistantCommitments
+        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
+        .filter(Boolean)
+        .slice(0, 3)
+    : [];
+
+  return {
+    inferredMode,
+    latestUserIntent,
+    recentUserFocus,
+    recentAssistantCommitments,
+    requestedOutput: requestedOutput || "general"
+  };
+}
+
+function buildConversationDigest(messages: IONMessage[], limit = 6): string {
+  const turns = (messages || [])
+    .filter((message) => message?.role === "user" || message?.role === "assistant")
+    .slice(-Math.max(2, limit));
+
+  if (!turns.length) return "";
+
+  return turns
+    .map((turn, index) => {
+      const role = String(turn.role || "user").toUpperCase();
+      const content = summarizeConversationSnippet(String(turn.content || ""), 170);
+      return `${index + 1}. [${role}] ${content}`;
+    })
+    .join("\n");
+}
+
+function buildReasoningPlannerPrompt(input: {
+  mode: string;
+  latestUserText: string;
+  conversationDigest: string;
+  conversationHints: ReturnType<typeof normalizeConversationHints>;
+}): string {
+  const mode = sanitizePromptText(String(input.mode || "auto")).trim().toLowerCase() || "auto";
+  const latestUserText = summarizeConversationSnippet(String(input.latestUserText || ""), 260);
+  const digest = String(input.conversationDigest || "").trim();
+  const hints = input.conversationHints;
+
+  const hintBlock = [
+    `Inferred mode: ${hints.inferredMode || mode}`,
+    `Requested output style: ${hints.requestedOutput || "general"}`,
+    hints.latestUserIntent ? `Latest intent: ${hints.latestUserIntent}` : "",
+    hints.recentUserFocus.length ? `Recent user focus: ${hints.recentUserFocus.map((item, idx) => `(${idx + 1}) ${item}`).join(" | ")}` : "",
+    hints.recentAssistantCommitments.length
+      ? `Recent assistant commitments: ${hints.recentAssistantCommitments.map((item, idx) => `(${idx + 1}) ${item}`).join(" | ")}`
+      : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return [
+    "Reasoning plan before answering:",
+    "1) Identify the exact task and required output format.",
+    "2) Prefer user-provided context, memory, and retrieved evidence over assumptions.",
+    "3) Keep response mode-consistent and avoid drift into unrelated domains.",
+    "4) Before finalizing, run a short self-check for contradictions and missing constraints.",
+    "",
+    `Mode context: ${mode}`,
+    latestUserText ? `Latest user text: ${latestUserText}` : "",
+    hintBlock ? `Conversation hints:\n${hintBlock}` : "",
+    digest ? `Recent conversation digest:\n${digest}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parseDepartment(value: unknown): Department | null {
+  const text = sanitizePromptText(String(value || "")).trim();
+  if (text === "Research" || text === "Ops" || text === "Finance" || text === "Creative" || text === "Infra") {
+    return text;
+  }
+
+  return null;
+}
+
+function parsePriority(value: unknown): Priority | null {
+  const text = sanitizePromptText(String(value || "")).trim().toLowerCase();
+  if (text === "low" || text === "normal" || text === "high" || text === "critical") {
+    return text;
+  }
+
+  return null;
+}
+
+function parseBlackwellProfilesFromConfig(): AgentProfile[] {
+  const root = blackwellAgentProfilesConfig as { agents?: unknown };
+  const rawAgents = Array.isArray(root?.agents) ? root.agents : [];
+
+  const profiles = rawAgents
+    .map((agent): AgentProfile | null => {
+      if (!agent || typeof agent !== "object") return null;
+      const record = agent as Record<string, unknown>;
+      const id = sanitizePromptText(String(record.id || "")).trim();
+      const role = sanitizePromptText(String(record.role || "")).trim();
+      const departmentRaw = sanitizePromptText(String(record.department || "")).trim();
+      const ritual = sanitizePromptText(String(record.ritual || "")).trim();
+      const handoff_targets = Array.isArray(record.handoff_targets)
+        ? record.handoff_targets.map((target) => sanitizePromptText(String(target || "")).trim()).filter(Boolean)
+        : [];
+
+      const isRoleValid =
+        role === "Engineer" || role === "Synthesizer" || role === "Archivist" || role === "Analyst" || role === "Manager";
+      const isDepartmentValid =
+        departmentRaw === "Research" ||
+        departmentRaw === "Ops" ||
+        departmentRaw === "Finance" ||
+        departmentRaw === "Creative" ||
+        departmentRaw === "Infra" ||
+        departmentRaw === "All";
+
+      if (!id || !isRoleValid || !isDepartmentValid || !ritual) {
+        return null;
+      }
+
+      return {
+        id,
+        role,
+        department: departmentRaw,
+        ritual,
+        handoff_targets
+      } as AgentProfile;
+    })
+    .filter((profile): profile is AgentProfile => Boolean(profile));
+
+  if (profiles.length > 0) {
+    return profiles;
+  }
+
+  return [
+    {
+      id: "agent.conductor.blackwell",
+      role: "Manager",
+      department: "Ops",
+      ritual: "Keep the pantheon in motion. No shard dies in silence.",
+      handoff_targets: []
+    }
+  ];
+}
+
+function normalizeSafetyProfile(raw: IONRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
   const tier = String(raw?.ageTier || "minor").trim().toLowerCase() === "adult" ? "adult" : "minor";
   const humanVerified = Boolean(raw?.humanVerified);
-  const nsfwAccess = Boolean(raw?.nsfwAccess) && tier === "adult";
+  const adultAccess = Boolean(raw?.adultAccess) && tier === "adult";
+  const legalAttestation = raw?.legalAttestation;
+  const rawJurisdiction = String(legalAttestation?.jurisdiction || "").trim().toUpperCase();
+  const jurisdiction = /^[A-Z]{2}$/.test(rawJurisdiction) ? rawJurisdiction : "";
 
   return {
     ageTier: tier,
     humanVerified,
-    nsfwAccess,
-    explicitAllowed: Boolean(raw?.explicitAllowed) && nsfwAccess,
-    illegalBlocked: raw?.illegalBlocked !== false
+    adultAccess,
+    explicitAllowed: Boolean(raw?.explicitAllowed) && adultAccess,
+    illegalBlocked: raw?.illegalBlocked !== false,
+    legalAttestation: {
+      accepted: Boolean(legalAttestation?.accepted),
+      jurisdiction,
+      truthfulIdentity: Boolean(legalAttestation?.truthfulIdentity),
+      lawfulUse: Boolean(legalAttestation?.lawfulUse),
+      userDirected: Boolean(legalAttestation?.userDirected),
+      acceptedAt: Number(legalAttestation?.acceptedAt || 0)
+    }
+  };
+}
+
+function getRequestCountryCode(request: Request): string {
+  const cf = (request as any)?.cf || {};
+  const raw = String(cf?.country || "").trim().toUpperCase();
+  if (!raw || raw === "XX" || raw === "T1") return "";
+  return /^[A-Z]{2}$/.test(raw) ? raw : "";
+}
+
+function evaluateLegalAttestation(
+  safetyProfile: SafetyProfile,
+  request: Request
+): { blocked: boolean; code: string; error: string } {
+  const legal = safetyProfile.legalAttestation;
+  if (!legal.accepted) {
+    return {
+      blocked: true,
+      code: "legal-attestation-required",
+      error: "Legal attestation is required before using ION Ai chat features."
+    };
+  }
+
+  if (!legal.jurisdiction) {
+    return {
+      blocked: true,
+      code: "jurisdiction-required",
+      error: "Jurisdiction confirmation is required before proceeding."
+    };
+  }
+
+  if (!legal.truthfulIdentity || !legal.lawfulUse || !legal.userDirected) {
+    return {
+      blocked: true,
+      code: "legal-attestation-incomplete",
+      error: "Complete all legal confirmations (truthfulness, lawful use, and user responsibility) to continue."
+    };
+  }
+
+  const requestCountryCode = getRequestCountryCode(request);
+  if (requestCountryCode && legal.jurisdiction !== requestCountryCode) {
+    return {
+      blocked: true,
+      code: "jurisdiction-mismatch",
+      error: `Jurisdiction attestation (${legal.jurisdiction}) does not match detected request region (${requestCountryCode}).`
+    };
+  }
+
+  return {
+    blocked: false,
+    code: "allowed",
+    error: ""
   };
 }
 
 function evaluateSexualSafetyPrompt(text: string, safetyProfile: SafetyProfile): { blocked: boolean; reason: string } {
   const input = String(text || "").toLowerCase();
 
-  const directIllegalPattern = /\b(bestiality|child\s*porn|csam|rape\s*content|exploitative\s*sexual|incest\s*porn)\b/i;
-  const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual|nude|nudity|porn|erotic|fetish)\b/i;
+  const directIllegalPattern = /\b(bestiality|child\s*sexual\s*abuse|child\s*porn|csam|rape\s*content|exploitative\s*sexual\s*content|incest\s*porn)\b/i;
+  const illegalMinorSexualPattern = /\b(child|minor|underage|teen)\b[\s\S]{0,35}\b(sex|sexual\s*content|nude|nudity|porn|erotic|fetish|explicit\s*nudity)\b/i;
   const illegalAssaultPattern = /\b(sexual\s*assault|forced\s*sex|non[-\s]?consensual\s*sex)\b/i;
 
   if (directIllegalPattern.test(input) || illegalMinorSexualPattern.test(input) || illegalAssaultPattern.test(input)) {
@@ -574,6 +796,7 @@ function normalizeImageGenerationError(err: any): {
     value.includes("moderat") ||
     value.includes("safety") ||
     value.includes("policy") ||
+    value.includes("nsfw") ||
     value.includes("unsafe") ||
     value.includes("content blocked")
   ) {
@@ -589,7 +812,9 @@ function normalizeImageGenerationError(err: any): {
     value.includes("too long") ||
     value.includes("context length") ||
     value.includes("max tokens") ||
-    value.includes("input is too large")
+    value.includes("input is too large") ||
+    value.includes("length of '/prompt'") ||
+    (/must be\s*<=\s*\d+/.test(value) && value.includes("prompt"))
   ) {
     return {
       status: 400,
@@ -635,6 +860,7 @@ const INTERNET_MODE_PROFILES: Record<string, InternetSearchProfile> = {
   coding: { queryPrefix: "developer docs", querySuffix: "implementation", limit: 5 },
   knowledge: { queryPrefix: "reference", querySuffix: "facts", limit: 5 },
   "system-knowledge": { queryPrefix: "systems engineering", querySuffix: "best practices", limit: 5 },
+  anatomy: { queryPrefix: "human anatomy systems", querySuffix: "integration", limit: 4 },
   simulation: { queryPrefix: "simulation methods", querySuffix: "models", limit: 3 }
 };
 
@@ -773,13 +999,116 @@ function shouldUseInternetSearch(userText: string, mode: string): boolean {
   if (!value) return false;
   if (normalizeInternetMode(mode) === "simulation") return false;
   const intentPattern = /\b(latest|current|today|news|recent|what is|how to|documentation|docs|guide|compare|vs\.?|benchmark|release|update)\b/i;
-  return intentPattern.test(value) || value.length > 24;
+  return intentPattern.test(value);
 }
 
 function shouldUseWeatherContext(userText: string): boolean {
   const value = String(userText || "").trim().toLowerCase();
   if (!value) return false;
   return /\b(weather|temperature|forecast|rain|snow|humidity|wind|climate)\b/i.test(value);
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timeoutId = setTimeout(() => resolve(fallback), timeoutMs);
+      })
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function extractProviderToken(rawLine: string): string {
+  const line = String(rawLine || "").trim();
+  if (!line || line === "[DONE]") return "";
+
+  try {
+    const parsed = JSON.parse(line) as any;
+    const fromChoices = parsed?.choices?.[0];
+    const value =
+      parsed?.response ??
+      parsed?.output_text ??
+      parsed?.text ??
+      parsed?.content ??
+      fromChoices?.delta?.content ??
+      fromChoices?.message?.content ??
+      "";
+    return typeof value === "string" ? value : "";
+  } catch {
+    return line;
+  }
+}
+
+function createIONSseFromProviderStream(options: {
+  providerStream: ReadableStream;
+  route: string;
+  multimodalPayload?: Record<string, unknown> | null;
+  onComplete?: (fullText: string) => void;
+}): ReadableStream {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const reader = options.providerStream.getReader();
+
+  return new ReadableStream({
+    async start(controller) {
+      let pending = "";
+      let firstChunkSent = false;
+      let fullText = "";
+
+      const emitChunk = (content: string) => {
+        if (!content) return;
+        fullText += content;
+        const payload = firstChunkSent
+          ? { content }
+          : { content, route: options.route, ...(options.multimodalPayload || {}) };
+        firstChunkSent = true;
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+      };
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          pending += decoder.decode(value, { stream: true });
+          const lines = pending.split(/\r?\n/);
+          pending = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = String(line || "").trim();
+            if (!trimmed) continue;
+            const payload = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+            emitChunk(extractProviderToken(payload));
+          }
+        }
+
+        const trailing = pending.trim();
+        if (trailing) {
+          const payload = trailing.startsWith("data:") ? trailing.slice(5).trim() : trailing;
+          emitChunk(extractProviderToken(payload));
+        }
+      } catch {
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ content: "Streaming interrupted. Continuing with partial output." })}\n\n`)
+        );
+      } finally {
+        options.onComplete?.(fullText);
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      }
+    },
+    cancel() {
+      void reader.cancel();
+    }
+  });
 }
 
 function inferWeatherLocation(userText: string, request: Request): string {
@@ -869,7 +1198,7 @@ async function inspectWebsite(urlInput: string): Promise<InternetInspectResult |
   const response = await fetch(normalizedUrl, {
     method: "GET",
     headers: {
-      "User-Agent": "OmniAi/1.0 (+internet-inspector)"
+      "User-Agent": "IONAi/1.0 (+internet-inspector)"
     }
   });
   if (!response.ok) return null;
@@ -1011,7 +1340,7 @@ async function getInternetLearningContext(env: Env, mode: string, query: string,
     .join("\n\n---\n\n");
 }
 
-function makeContextSystemMessage(label: string, content: string): OmniMessage {
+function makeContextSystemMessage(label: string, content: string): IONMessage {
   return {
     role: "system",
     content: `[${label}]\n${content}`
@@ -1020,19 +1349,19 @@ function makeContextSystemMessage(label: string, content: string): OmniMessage {
 
 function resolveSessionId(request: Request): string {
   const url = new URL(request.url);
-  const headerSession = String(request.headers.get("x-omni-session-id") || "").trim();
+  const headerSession = String(request.headers.get("x-ION-session-id") || "").trim();
   const querySession = String(url.searchParams.get("sid") || "").trim();
   const raw = headerSession || querySession || "anon";
   return raw.replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 120) || "anon";
 }
 
 function isAdminAuthorized(request: Request, env: Env): boolean {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   const isProduction = explicitEnv === "production";
-  const configured = String(env.OMNI_ADMIN_KEY || "").trim();
+  const configured = String(env.ION_ADMIN_KEY || "").trim();
   if (!configured) return !isProduction;
 
-  const provided = String(request.headers.get("x-omni-admin-key") || "").trim();
+  const provided = String(request.headers.get("x-ION-admin-key") || "").trim();
   return provided.length > 0 && provided === configured;
 }
 
@@ -1222,23 +1551,23 @@ function getBackgroundReadinessStatus(env: Env): {
   ready: boolean;
   checks: Array<{ name: string; ok: boolean; detail: string }>;
 } {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   const isProduction = explicitEnv === "production";
-  const adminKey = String(env.OMNI_ADMIN_KEY || "").trim();
+  const adminKey = String(env.ION_ADMIN_KEY || "").trim();
 
   const checks = [
     {
       name: "env-set",
       ok: explicitEnv.length > 0,
-      detail: explicitEnv.length > 0 ? `OMNI_ENV=${explicitEnv}` : "OMNI_ENV is not set"
+      detail: explicitEnv.length > 0 ? `ION_ENV=${explicitEnv}` : "ION_ENV is not set"
     },
     {
       name: "admin-key",
       ok: !isProduction || adminKey.length >= 16,
       detail:
         !isProduction || adminKey.length >= 16
-          ? "OMNI_ADMIN_KEY configured for production protected endpoints"
-          : "OMNI_ADMIN_KEY missing or weak for production"
+          ? "ION_ADMIN_KEY configured for production protected endpoints"
+          : "ION_ADMIN_KEY missing or weak for production"
     },
     {
       name: "memory-kv",
@@ -1270,10 +1599,10 @@ function getBackgroundReadinessStatus(env: Env): {
 
 async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>> {
   const release = {
-    name: "Omni Ai",
+    name: "Ionirix",
     version: "1.0.0",
     date: "2026-02-26",
-    lineage: ["Omni Ai"],
+    lineage: ["Ionirix"],
     recognitionCycle: "initiated"
   };
 
@@ -1310,16 +1639,18 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
       frontendMindState: true
     },
     endpoints: {
-      omni: "/api/omni",
+      ION: "/api/ION",
       image: "/api/image",
+      providerStatus: "/api/provider/status",
+      mindShardGenerate: "/api/mind/shards/generate",
       maintenanceStatus: "/api/maintenance/status",
       maintenanceRun: "/api/maintenance/run",
       releaseSpec: "/api/release/spec"
     },
     publicArtifacts: {
-      declaration: "/omni-ai-declaration.md",
-      manifest: "/omni-ai-release.json",
-      specDoc: "/OMNI_AI_RELEASE_SPEC.md"
+      declaration: "/ionirix-declaration.md",
+      manifest: "/ionirix-release.json",
+      specDoc: "/ION_AI_RELEASE_SPEC.md"
     },
     runtime: autonomyStatus
       ? {
@@ -1339,41 +1670,7 @@ function sanitizePromptText(prompt: string): string {
     .trim();
 }
 
-function parseOptionalBoolFlag(value: unknown): boolean | null {
-  const text = sanitizePromptText(String(value || "")).trim();
-  if (!text) return null;
-  if (/^(1|true|yes|on)$/i.test(text)) return true;
-  if (/^(0|false|no|off)$/i.test(text)) return false;
-  return null;
-}
-
-function resolvePlaceholderVideoAllowed(env: Env): boolean {
-  const allow = parseOptionalBoolFlag(env.OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO);
-  if (allow !== null) return allow;
-
-  const placeholderOnly = parseOptionalBoolFlag(env.OMNI_MEDIA_PLACEHOLDER_ONLY);
-  if (placeholderOnly !== null) return placeholderOnly;
-
-  return false;
-}
-
-function resolveMediaBaseUrl(env: Env): string {
-  const explicitApiBase = sanitizePromptText(String(env.OMNI_MEDIA_API_BASE_URL || "")).trim();
-  if (explicitApiBase) return explicitApiBase;
-
-  const explicitBase = sanitizePromptText(String(env.OMNI_MEDIA_BASE_URL || "")).trim();
-  if (explicitBase) return explicitBase;
-
-  const host = sanitizePromptText(String(env.OMNI_MEDIA_HOST || "")).trim();
-  const port = sanitizePromptText(String(env.OMNI_MEDIA_PORT || "")).trim();
-  if (host && port) {
-    return `http://${host}:${port}`;
-  }
-
-  return "";
-}
-
-const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
+const ION_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   mythic_cinematic: {
     name: "Mythic Cinematic",
     tags: ["cinematic lighting", "dramatic contrast", "symbolic composition", "high detail", "emotional depth"]
@@ -1388,29 +1685,47 @@ const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   }
 };
 
-const OMNI_QUALITY_DEFAULT = [
-  "8k resolution",
-  "ultra detailed",
-  "sharp focus",
-  "global illumination",
-  "subsurface scattering",
-  "film grain",
-  "depth of field",
-  "HDR"
+const ION_IMAGE_DEFAULT_QUALITY = "ultra";
+const ION_IMAGE_DEFAULT_RATIO = "9:16";
+const ION_IMAGE_DEFAULT_RESOLUTION = "4k";
+const ION_IMAGE_DEFAULT_WIDTH = 2160;
+const ION_IMAGE_DEFAULT_HEIGHT = 3840;
+const ION_IMAGE_DIMENSION_LOCK = "strict";
+const ION_IMAGE_PROMPT_MAX_CHARS = 10000;
+const ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS = 2048;
+const ION_IMAGE_MODEL_MAX_EDGE = 2048;
+const ION_IMAGE_MODEL_MIN_EDGE = 256;
+const ION_IMAGE_MODEL_DIMENSION_STEP = 64;
+const ION_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+
+const ION_QUALITY_DEFAULT = [
+  "very high image quality",
+  "4k uhd render",
+  "high detail",
+  "high-frequency texture retention",
+  "physically based rendering",
+  "physically accurate lighting",
+  "realistic material response",
+  "anti-haze clarity",
+  "anti-pixelation"
 ];
 
-const OMNI_NEGATIVE_BASE = [
+const ION_NEGATIVE_BASE = [
   "no distortion",
   "no extra limbs",
   "no artifacts",
   "no watermark",
   "no blurry details",
-  "no deformed anatomy"
+  "no deformed anatomy",
+  "no haze",
+  "no fog veil",
+  "no pixelation",
+  "no compression artifacts"
 ];
 
-const OMNI_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
+const ION_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
 
-const OMNI_ENVIRONMENTS = [
+const ION_ENVIRONMENTS = [
   "bedroom", "room", "forest", "city", "street", "cafe", "office",
   "studio", "kitchen", "mountains", "desert", "classroom",
   "library", "garage", "basement", "attic", "garden", "cathedral"
@@ -1480,26 +1795,38 @@ function buildTimeDirective(intent: TimeIntent): string {
     return "interior lighting setup, practical lights, no night sky elements unless requested";
   }
 
-  return "neutral natural lighting, balanced exposure";
+  return "";
 }
 
 function getStylePack(name: string): { name: string; tags: string[] } {
   if (!name) {
     return { name: "none", tags: [] };
   }
-  return OMNI_STYLE_PACKS[name] || { name: "none", tags: [] };
+  return ION_STYLE_PACKS[name] || { name: "none", tags: [] };
 }
 
 function promptRequestsPeople(prompt: string): boolean {
   const lower = String(prompt || "").toLowerCase();
-  return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|portrait|selfie|face|worker|hiker|runner|couple|family)\b/.test(lower);
+  return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
 }
 
 function buildStrictPromptDirective(): string {
   return "strict prompt fidelity: include only elements explicitly requested by the user; do not add extra subjects, characters, objects, text, logos, or overlays";
 }
 
-function applyPromptFreshness(options: OmniImageOptions): OmniImageOptions {
+function buildPolicySafePrompt(userPrompt: string): string {
+  const raw = sanitizePromptText(String(userPrompt || "")).trim();
+  if (!raw) return "";
+
+  const compact = raw
+    .replace(/^(please\s+)?(create|generate|make)\s+(an?\s+)?image\s+of\s+/i, "")
+    .replace(/^(please\s+)?(create|generate|make)\s+/i, "")
+    .trim();
+
+  return (compact || raw).slice(0, 700);
+}
+
+function applyPromptFreshness(options: IONImageOptions): IONImageOptions {
   return {
     ...options,
     seed: Number.isFinite(options.seed) ? Number(options.seed) : Math.floor(Math.random() * 999999999),
@@ -1509,7 +1836,7 @@ function applyPromptFreshness(options: OmniImageOptions): OmniImageOptions {
 
 function extractEnvironmentKeywords(prompt: string): string[] {
   const lower = String(prompt || "").toLowerCase();
-  return OMNI_ENVIRONMENTS.filter((value) => lower.includes(value));
+  return ION_ENVIRONMENTS.filter((value) => lower.includes(value));
 }
 
 function inferStyleFromPrompt(prompt: string): string {
@@ -1542,8 +1869,12 @@ function inferCameraFromPrompt(prompt: string): string {
   const lower = String(prompt || "").toLowerCase();
   if (!lower) return "";
 
-  if (/\b(85mm|portrait lens|portrait shot|headshot|bokeh portrait)\b/i.test(lower)) return "portrait-85mm";
-  if (/\b(35mm|wide angle|wide-angle|environmental portrait|street photo)\b/i.test(lower)) return "wide-35mm";
+  if (/\b(full[-\s]?body|full[-\s]?length|head[-\s]?to[-\s]?toe|whole\s+body|entire\s+figure|standing\s+pose|body\s+shot)\b/i.test(lower)) {
+    return "wide-35mm";
+  }
+
+  if (/\b(85mm|subject lens|subject shot|headshot|bokeh shot)\b/i.test(lower)) return "prime-85mm";
+  if (/\b(35mm|wide angle|wide-angle|environmental shot|street photo)\b/i.test(lower)) return "wide-35mm";
   if (/\b(macro|close-up macro|extreme close-up|micro detail|micro-detail)\b/i.test(lower)) return "macro";
   if (/\b(135mm|telephoto|compressed background|long lens)\b/i.test(lower)) return "telephoto-135mm";
 
@@ -1567,7 +1898,7 @@ function inferMaterialsFromPrompt(prompt: string): string[] {
   if (!lower) return [];
 
   const inferred: string[] = [];
-  if (/\b(skin|portrait skin|face texture|pores)\b/i.test(lower)) inferred.push("skin");
+  if (/\b(skin|subject skin|face texture|pores)\b/i.test(lower)) inferred.push("skin");
   if (/\b(fabric|cloth|textile|cotton|silk|denim|wool)\b/i.test(lower)) inferred.push("fabric");
   if (/\b(metal|chrome|steel|iron|aluminum|brushed metal)\b/i.test(lower)) inferred.push("metal");
   if (/\b(glass|crystal|transparent|refraction|window pane)\b/i.test(lower)) inferred.push("glass");
@@ -1575,7 +1906,7 @@ function inferMaterialsFromPrompt(prompt: string): string[] {
   return [...new Set(inferred)];
 }
 
-function orchestrateOmniImagePrompt(userPrompt: string, options: OmniImageOptions): OmniImagePromptData {
+function orchestrateIONImagePrompt(userPrompt: string, options: IONImageOptions): IONImagePromptData {
   const tokens = tokenizePrompt(userPrompt);
   const sceneDescription = inferSceneDescription(userPrompt);
   const timeIntent = inferTimeIntent(userPrompt);
@@ -1614,34 +1945,14 @@ function orchestrateOmniImagePrompt(userPrompt: string, options: OmniImageOption
   };
 }
 
-function refineOmniImagePrompt(promptData: OmniImagePromptData, options: OmniImageOptions): { data: OmniImagePromptData; finalOptions: OmniImageOptions } {
-  const data: OmniImagePromptData = { ...promptData };
+function refineIONImagePrompt(promptData: IONImagePromptData, options: IONImageOptions): { data: IONImagePromptData; finalOptions: IONImageOptions } {
+  const data: IONImagePromptData = { ...promptData };
 
-  data.technicalTags = [...(data.technicalTags || []), ...OMNI_QUALITY_DEFAULT];
-
-  const lowerPrompt = data.userPrompt.toLowerCase();
-  const timeIntent = inferTimeIntent(data.userPrompt);
-  const explicitlyRequestsNight = timeIntent === "night";
-  const includesPeople = promptRequestsPeople(data.userPrompt);
-  const negativeTags = [...(data.negativeTags || []), ...OMNI_NEGATIVE_BASE];
-  if (!lowerPrompt.includes("ocean") && !lowerPrompt.includes("sea") && !lowerPrompt.includes("beach")) {
-    negativeTags.push(...OMNI_NEGATIVE_NO_OCEAN);
+  if (String(options?.quality || "").trim()) {
+    data.technicalTags = [...(data.technicalTags || []), ...ION_QUALITY_DEFAULT];
   }
 
-  if (!explicitlyRequestsNight && !lowerPrompt.includes("night")) {
-    negativeTags.push("no starry sky", "no nighttime atmosphere unless requested");
-  }
-
-  if (!includesPeople) {
-    negativeTags.push(
-      "no people",
-      "no characters",
-      "no human subjects",
-      "no portraits",
-      "no crowd"
-    );
-  }
-  data.negativeTags = [...new Set(negativeTags)];
+  data.negativeTags = [...new Set(data.negativeTags || [])];
 
   const tags = [
     data.semanticExpansion,
@@ -1652,7 +1963,7 @@ function refineOmniImagePrompt(promptData: OmniImagePromptData, options: OmniIma
 
   let finalPrompt = tags;
   if (data.negativeTags.length) {
-    finalPrompt += `, negative: ${data.negativeTags.join(", ")}`;
+    finalPrompt += `, avoid: ${data.negativeTags.join(", ")}`;
   }
 
   const envKeywords = extractEnvironmentKeywords(data.userPrompt);
@@ -1728,9 +2039,9 @@ function parseResolutionPreset(value: string, quality: string): number {
     return presets[normalized];
   }
 
-  if (quality === "high") return 1280;
-  if (quality === "ultra") return 2048;
-  return 1024;
+  if (quality === "high") return 2560;
+  if (quality === "ultra" || quality === "very_high" || quality === "very-high") return 3840;
+  return ION_IMAGE_DEFAULT_WIDTH;
 }
 
 function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: string): { width: number; height: number; ratio: string } {
@@ -1752,6 +2063,32 @@ function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: s
   };
 }
 
+function snapModelDimension(value: number): number {
+  const clamped = clamp(Math.floor(value), ION_IMAGE_MODEL_MIN_EDGE, ION_IMAGE_MODEL_MAX_EDGE);
+  const snapped = Math.floor(clamped / ION_IMAGE_MODEL_DIMENSION_STEP) * ION_IMAGE_MODEL_DIMENSION_STEP;
+  return Math.max(ION_IMAGE_MODEL_MIN_EDGE, snapped || ION_IMAGE_MODEL_MIN_EDGE);
+}
+
+function normalizeModelRenderDimensions(width: number, height: number): { width: number; height: number } {
+  let safeWidth = clamp(Math.floor(width), ION_IMAGE_MODEL_MIN_EDGE, 8192);
+  let safeHeight = clamp(Math.floor(height), ION_IMAGE_MODEL_MIN_EDGE, 8192);
+
+  const maxEdge = Math.max(safeWidth, safeHeight);
+  if (maxEdge > ION_IMAGE_MODEL_MAX_EDGE) {
+    const scale = ION_IMAGE_MODEL_MAX_EDGE / maxEdge;
+    safeWidth = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeWidth * scale));
+    safeHeight = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeHeight * scale));
+  }
+
+  safeWidth = snapModelDimension(safeWidth);
+  safeHeight = snapModelDimension(safeHeight);
+
+  return {
+    width: safeWidth,
+    height: safeHeight
+  };
+}
+
 function selectImageModelConfig(
   styleId: string,
   quality: string | undefined,
@@ -1761,22 +2098,77 @@ function selectImageModelConfig(
   requestedWidth?: number,
   requestedHeight?: number
 ): ImageModelConfig {
-  const safeQuality = String(quality || "ultra").toLowerCase();
-  const computed = deriveDimensionsFromRatio(requestedRatio || "1:1", requestedResolution || "", safeQuality);
   const explicitWidth = Number(requestedWidth);
   const explicitHeight = Number(requestedHeight);
+  const safeQuality = String(quality || "").toLowerCase();
 
-  const width = Number.isFinite(explicitWidth) ? clamp(Math.floor(explicitWidth), 256, 8192) : computed.width;
-  const height = Number.isFinite(explicitHeight) ? clamp(Math.floor(explicitHeight), 256, 8192) : computed.height;
+  let width: number | undefined;
+  let height: number | undefined;
+
+  if (Number.isFinite(explicitWidth)) {
+    width = clamp(Math.floor(explicitWidth), 256, 8192);
+  }
+  if (Number.isFinite(explicitHeight)) {
+    height = clamp(Math.floor(explicitHeight), 256, 8192);
+  }
+
+  const hasExplicitSize = Number.isFinite(width) && Number.isFinite(height);
+  const hasRatioOrResolution = Boolean(String(requestedRatio || "").trim() || String(requestedResolution || "").trim());
+  if (!hasExplicitSize && hasRatioOrResolution) {
+    const computed = deriveDimensionsFromRatio(
+      requestedRatio || ION_IMAGE_DEFAULT_RATIO,
+      requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION,
+      safeQuality || ION_IMAGE_DEFAULT_QUALITY
+    );
+    width = computed.width;
+    height = computed.height;
+  }
+
+  if (!Number.isFinite(width) || !Number.isFinite(height)) {
+    width = ION_IMAGE_DEFAULT_WIDTH;
+    height = ION_IMAGE_DEFAULT_HEIGHT;
+  }
+
+  const normalizedRenderDimensions = normalizeModelRenderDimensions(
+    Number(width || ION_IMAGE_DEFAULT_WIDTH),
+    Number(height || ION_IMAGE_DEFAULT_HEIGHT)
+  );
+  width = normalizedRenderDimensions.width;
+  height = normalizedRenderDimensions.height;
+
+  const ratioLabel = String(requestedRatio || "").trim();
+  const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
+    ? `${width}x${height}`
+    : (String(requestedResolution || "").trim() || ION_IMAGE_DEFAULT_RESOLUTION);
 
   return {
     model: env.MODEL_IMAGE || "@cf/black-forest-labs/flux-1-schnell",
-    styleId: styleId || "mythic_cinematic",
+    styleId: styleId || "auto",
     width,
     height,
-    ratio: requestedRatio || computed.ratio,
-    resolution: `${width}x${height}`
+    ratio: ratioLabel || ION_IMAGE_DEFAULT_RATIO,
+    resolution: resolutionLabel
   };
+}
+
+function buildImageRunPayload(prompt: string, modelConfig: ImageModelConfig, seed?: number): Record<string, unknown> {
+  const normalizedPrompt = sanitizePromptText(String(prompt || "")).trim();
+  const providerPrompt = normalizedPrompt.length > ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS
+    ? normalizedPrompt.slice(0, ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS)
+    : normalizedPrompt;
+  const payload: Record<string, unknown> = {
+    prompt: providerPrompt,
+    seed
+  };
+
+  if (Number.isFinite(modelConfig.width)) {
+    payload.width = modelConfig.width;
+  }
+  if (Number.isFinite(modelConfig.height)) {
+    payload.height = modelConfig.height;
+  }
+
+  return payload;
 }
 
 function isReadableByteStream(value: unknown): value is ReadableStream {
@@ -1784,8 +2176,12 @@ function isReadableByteStream(value: unknown): value is ReadableStream {
 }
 
 function base64ToBytes(base64: string): Uint8Array {
-  const normalized = String(base64 || "").replace(/\s+/g, "");
-  const binary = atob(normalized);
+  const normalized = String(base64 || "")
+    .replace(/\s+/g, "")
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
@@ -1813,7 +2209,8 @@ async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; 
   }
 
   if (ArrayBuffer.isView(raw)) {
-    return { bytes: new Uint8Array(raw.buffer), mimeType: "image/png" };
+    const view = raw as ArrayBufferView;
+    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
   }
 
   if (isReadableByteStream(raw)) {
@@ -1823,13 +2220,26 @@ async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; 
 
   const candidate =
     (raw as any)?.image ??
+    (raw as any)?.result?.bytes ??
     (raw as any)?.result?.image ??
     (raw as any)?.data?.[0]?.b64_json ??
     (raw as any)?.output?.[0]?.image;
 
+  if (candidate instanceof ArrayBuffer) {
+    return { bytes: new Uint8Array(candidate), mimeType: "image/png" };
+  }
+
+  if (ArrayBuffer.isView(candidate)) {
+    const view = candidate as ArrayBufferView;
+    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
+  }
+
   if (typeof candidate === "string") {
     if (candidate.startsWith("data:image/")) {
       const commaIndex = candidate.indexOf(",");
+      if (commaIndex <= 0) {
+        throw new Error("Image response included malformed data URL");
+      }
       const header = candidate.slice(5, commaIndex);
       const payload = candidate.slice(commaIndex + 1);
       const mimeType = header.split(";")[0] || "image/png";
@@ -1854,10 +2264,13 @@ function makeImageFilename(styleId: string): string {
   return `slizzai_${safeStyle}_${ts}.png`;
 }
 
-async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<OmniImageGenerationResult> {
+async function generateIONImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<IONImageGenerationResult> {
   const promptText = sanitizePromptText(String(userPrompt || ""));
   if (!promptText) {
     throw new Error("Prompt is required");
+  }
+  if (promptText.length > ION_IMAGE_PROMPT_MAX_CHARS) {
+    throw new Error(`Prompt is too long. Keep it under ${ION_IMAGE_PROMPT_MAX_CHARS} characters.`);
   }
 
   const feedback = sanitizePromptText(String(options?.feedback || ""));
@@ -1881,7 +2294,8 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
         .filter((law) => Boolean(law.id))
     : [];
 
-  const requestedQuality = sanitizePromptText(String(options?.quality || "ultra")).toLowerCase() || "ultra";
+  const requestedQuality = sanitizePromptText(String(options?.quality || "")).toLowerCase();
+  const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
   const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
   const visualReasoning = runVisualReasoning(promptText);
   const promptInferredCamera = inferCameraFromPrompt(promptText) || visualReasoning.cameraIntent;
@@ -1894,29 +2308,31 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
   const requestedMaterials = Array.isArray(options?.materials)
     ? options.materials.map((item) => sanitizePromptText(String(item || "")).toLowerCase()).filter(Boolean)
     : [];
-  const effectiveCamera = promptInferredCamera || requestedCameraRaw || "portrait-85mm";
-  const effectiveLighting = promptInferredLighting || requestedLightingRaw || "studio-soft";
+  const effectiveCamera = promptInferredCamera || requestedCameraRaw;
+  const effectiveLighting = promptInferredLighting || requestedLightingRaw;
   const effectiveMaterials = promptInferredMaterials.length
     ? promptInferredMaterials
     : requestedMaterials.length
       ? requestedMaterials
-      : resolvedRenderingStyle === "hyper-real"
-        ? ["skin"]
-        : [];
+      : [];
 
-  const requestedRatio = sanitizePromptText(String(options?.ratio || "1:1")) || "1:1";
+  const requestedRatio = sanitizePromptText(String(options?.ratio || ""));
   const requestedResolution = sanitizePromptText(String(options?.resolution || ""));
   const requestedWidth = Number(options?.width);
   const requestedHeight = Number(options?.height);
+  const effectiveRatio = requestedRatio || ION_IMAGE_DEFAULT_RATIO;
+  const effectiveResolution = requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION;
+  const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
+  const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
   const parsedSeed = Number(options?.seed);
 
-  const orchestrated = orchestrateOmniImagePrompt(
+  const orchestrated = orchestrateIONImagePrompt(
     `${promptText}, visual reasoning: ${visualReasoning.directive}`,
     {
       mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
       stylePack: effectiveStylePack,
       laws: requestedLaws,
-      quality: requestedQuality,
+      quality: effectiveQuality,
       feedback,
       seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
       camera: effectiveCamera,
@@ -1925,11 +2341,11 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     }
   );
 
-  const refined = refineOmniImagePrompt(orchestrated, {
+  const refined = refineIONImagePrompt(orchestrated, {
     mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
     stylePack: effectiveStylePack,
     laws: requestedLaws,
-    quality: requestedQuality,
+    quality: effectiveQuality,
     feedback,
     seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
     camera: effectiveCamera,
@@ -1939,20 +2355,15 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
 
   const modelConfig = selectImageModelConfig(
     effectiveStylePack,
-    requestedQuality,
+    effectiveQuality,
     env,
-    requestedRatio,
-    requestedResolution,
-    requestedWidth,
-    requestedHeight
+    effectiveRatio,
+    effectiveResolution,
+    effectiveWidth,
+    effectiveHeight
   );
 
-  const rawImage = await env.AI.run(modelConfig.model, {
-    prompt: refined.data.finalPrompt,
-    width: modelConfig.width,
-    height: modelConfig.height,
-    seed: refined.finalOptions.seed
-  });
+  const rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(refined.data.finalPrompt, modelConfig, refined.finalOptions.seed));
 
   const normalized = await normalizeImageOutput(rawImage);
   const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
@@ -1967,7 +2378,12 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
       model: modelConfig.model,
       ratio: modelConfig.ratio,
       resolution: modelConfig.resolution,
-      quality: requestedQuality,
+      forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
+      forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
+      forced_width: ION_IMAGE_DEFAULT_WIDTH,
+      forced_height: ION_IMAGE_DEFAULT_HEIGHT,
+      dimension_lock: ION_IMAGE_DIMENSION_LOCK,
+      quality: effectiveQuality,
       rendering_style: resolvedRenderingStyle,
       camera: effectiveCamera,
       lighting: effectiveLighting,
@@ -1989,7 +2405,7 @@ let lastReadinessAuditAt = 0;
 let lastReadinessSignature = "";
 const READINESS_AUDIT_INTERVAL_MS = 5 * 60 * 1000;
 
-function runBackgroundReadinessAudit(env: Env, logger: OmniLogger): void {
+function runBackgroundReadinessAudit(env: Env, logger: IONLogger): void {
   const now = Date.now();
   if (now - lastReadinessAuditAt < READINESS_AUDIT_INTERVAL_MS) {
     return;
@@ -2017,7 +2433,7 @@ function runBackgroundReadinessAudit(env: Env, logger: OmniLogger): void {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const logger = new OmniLogger(env);
+    const logger = new IONLogger(env);
 
     // Warmup API connections on first request (non-blocking)
     if (!connectionsWarmedUp) {
@@ -2030,11 +2446,9 @@ export default {
     try {
       const url = new URL(request.url);
       const isApiRoute =
-        url.pathname === "/api/omni" ||
+        url.pathname === "/api/ION" ||
         url.pathname === "/api/image" ||
-        url.pathname === "/api/video/generate" ||
-        url.pathname === "/omni_video_exports" ||
-        url.pathname === "/api/video/health" ||
+        url.pathname === "/api/provider/status" ||
         url.pathname === "/api/ping" ||
         url.pathname === "/api/modes" ||
         url.pathname === "/api/modes/details" ||
@@ -2054,6 +2468,7 @@ export default {
         url.pathname === "/api/maintenance/run" ||
         url.pathname === "/api/maintenance/status" ||
         url.pathname === "/api/release/spec" ||
+        url.pathname === "/api/mind/shards/generate" ||
         url.pathname === "/internal/mind";
         
       if (isApiRoute && request.method === "OPTIONS") {
@@ -2391,7 +2806,7 @@ export default {
             age,
             isAdult,
             ageTier: isAdult ? "adult" : "minor",
-            nsfwAccess: isAdult,
+            adultAccess: isAdult,
             illegalContentBlocked: true
           }),
           {
@@ -2415,6 +2830,15 @@ export default {
 
       if (url.pathname === "/api/ping" && request.method === "GET") {
         return withCors(await apiPing());
+      }
+
+      if (url.pathname === "/api/provider/status" && request.method === "GET") {
+        return new Response(JSON.stringify(getProviderStatusSnapshot(env)), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
       }
 
       if (url.pathname === "/api/modes" && request.method === "GET") {
@@ -2511,6 +2935,74 @@ export default {
         });
       }
 
+      if (url.pathname === "/api/mind/shards/generate" && request.method === "POST") {
+        const body = (await request.json().catch(() => null)) as GenerateTaskShardRequestBody | null;
+        if (!body) {
+          return new Response(JSON.stringify({ ok: false, error: "Invalid JSON body" }), {
+            status: 400,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const title = sanitizePromptText(String(body.title || "")).trim();
+        const summary = sanitizePromptText(String(body.summary || "")).trim();
+        const department = parseDepartment(body.department);
+        const priority = parsePriority(body.priority) || "normal";
+        const legacyWeight = Number(body.legacy_weight);
+        const createdBy = sanitizePromptText(String(body.created_by || "agent.conductor.blackwell")).trim() || "agent.conductor.blackwell";
+        const decayAt = sanitizePromptText(String(body.decay_at || "")).trim() || undefined;
+
+        if (!title || !summary || !department) {
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              error: "Missing or invalid fields. Required: title, summary, department(Research|Ops|Finance|Creative|Infra)."
+            }),
+            {
+              status: 400,
+              headers: {
+                ...CORS_HEADERS,
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        }
+
+        const profiles = parseBlackwellProfilesFromConfig();
+        const result = generateTaskShards(
+          {
+            title,
+            summary,
+            department,
+            priority,
+            input_payload: body.input_payload ?? {},
+            legacy_weight: Number.isFinite(legacyWeight) ? legacyWeight : undefined,
+            decay_at: decayAt,
+            created_by: createdBy
+          },
+          profiles
+        );
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            ticket: result.ticket,
+            shards: result.shards,
+            assignmentPlan: result.assignmentPlan,
+            profileCount: profiles.length
+          }),
+          {
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+
       if (url.pathname === "/internal/mind" && request.method === "POST") {
         if (!isAdminAuthorized(request, env)) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -2575,7 +3067,7 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/omni" && request.method !== "POST") {
+      if (url.pathname === "/api/ION" && request.method !== "POST") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -2595,24 +3087,7 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/video/generate" && request.method !== "POST") {
-        return new Response("Method Not Allowed", {
-          status: 405,
-          headers: {
-            ...CORS_HEADERS,
-            "Allow": "POST, OPTIONS"
-          }
-        });
-      }
-
-      if (url.pathname === "/omni_video_exports" && request.method !== "POST") {
-        return new Response("Method Not Allowed", {
-          status: 405,
-          headers: CORS_HEADERS
-        });
-      }
-
-      if (url.pathname === "/api/video/health" && request.method !== "GET") {
+      if (url.pathname === "/api/ping" && request.method !== "GET") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -2622,7 +3097,7 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/ping" && request.method !== "GET") {
+      if (url.pathname === "/api/provider/status" && request.method !== "GET") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -2673,6 +3148,16 @@ export default {
       }
 
       if (url.pathname === "/internal/mind" && request.method !== "POST") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            ...CORS_HEADERS,
+            "Allow": "POST, OPTIONS"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/mind/shards/generate" && request.method !== "POST") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -2796,6 +3281,22 @@ export default {
         try {
           const body = (await request.json()) as ImageRequestBody;
           const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
+          const legalDecision = evaluateLegalAttestation(safetyProfile, request);
+          if (legalDecision.blocked) {
+            return new Response(
+              JSON.stringify({
+                error: legalDecision.error,
+                code: legalDecision.code
+              }),
+              {
+                status: 403,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
+          }
           const userId = sanitizePromptText(String(body?.userId || "anonymous"));
           const promptText = sanitizePromptText(String(body?.prompt || ""));
           const feedback = sanitizePromptText(String(body?.feedback || ""));
@@ -2818,7 +3319,8 @@ export default {
                 })
                 .filter((law) => Boolean(law.id))
             : [];
-          const requestedQuality = sanitizePromptText(String(body?.quality || "ultra")).toLowerCase() || "ultra";
+          const requestedQuality = sanitizePromptText(String(body?.quality || "")).toLowerCase();
+          const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
           const requestedMode = sanitizePromptText(String(body?.mode || "simple")).toLowerCase() || "simple";
           const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
           const promptInferredCamera = inferCameraFromPrompt(promptText);
@@ -2831,19 +3333,21 @@ export default {
           const requestedMaterials = Array.isArray(body?.materials)
             ? body.materials.map((item) => sanitizePromptText(String(item || "")).toLowerCase()).filter(Boolean)
             : [];
-          const effectiveCamera = promptInferredCamera || requestedCameraRaw || "portrait-85mm";
-          const effectiveLighting = promptInferredLighting || requestedLightingRaw || "studio-soft";
+          const effectiveCamera = promptInferredCamera || requestedCameraRaw;
+          const effectiveLighting = promptInferredLighting || requestedLightingRaw;
           const effectiveMaterials = promptInferredMaterials.length
             ? promptInferredMaterials
             : requestedMaterials.length
               ? requestedMaterials
-              : resolvedRenderingStyle === "hyper-real"
-                ? ["skin"]
-                : [];
-          const requestedRatio = sanitizePromptText(String(body?.ratio || "1:1")) || "1:1";
+              : [];
+          const requestedRatio = sanitizePromptText(String(body?.ratio || ""));
           const requestedResolution = sanitizePromptText(String(body?.resolution || ""));
           const requestedWidth = Number(body?.width);
           const requestedHeight = Number(body?.height);
+          const effectiveRatio = requestedRatio || ION_IMAGE_DEFAULT_RATIO;
+          const effectiveResolution = requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION;
+          const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
+          const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
           const parsedSeed = Number(body?.seed);
           const debugRequested =
             body?.debug === true ||
@@ -2857,6 +3361,22 @@ export default {
                 "Content-Type": "application/json"
               }
             });
+          }
+
+          if (promptText.length > ION_IMAGE_PROMPT_MAX_CHARS) {
+            return new Response(
+              JSON.stringify({
+                error: `Prompt is too long for image generation. Please keep it under ${ION_IMAGE_PROMPT_MAX_CHARS} characters.`,
+                code: "prompt-too-long"
+              }),
+              {
+                status: 400,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
           }
 
           const safetyDecision = evaluateSexualSafetyPrompt(promptText, safetyProfile);
@@ -2879,11 +3399,11 @@ export default {
             );
           }
 
-          const orchestrated = orchestrateOmniImagePrompt(promptText, {
+          const orchestrated = orchestrateIONImagePrompt(promptText, {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
-            quality: requestedQuality,
+            quality: effectiveQuality,
             feedback,
             seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
             camera: effectiveCamera,
@@ -2891,11 +3411,11 @@ export default {
             materials: effectiveMaterials
           });
 
-          const refined = refineOmniImagePrompt(orchestrated, {
+          const refined = refineIONImagePrompt(orchestrated, {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
-            quality: requestedQuality,
+            quality: effectiveQuality,
             feedback,
             seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
             camera: effectiveCamera,
@@ -2905,13 +3425,14 @@ export default {
 
           const modelConfig = selectImageModelConfig(
             effectiveStylePack,
-            requestedQuality,
+            effectiveQuality,
             env,
-            requestedRatio,
-            requestedResolution,
-            requestedWidth,
-            requestedHeight
+            effectiveRatio,
+            effectiveResolution,
+            effectiveWidth,
+            effectiveHeight
           );
+          let outputModel = modelConfig.model;
 
           let fallbackUsed = false;
           let fallbackReason: string | null = null;
@@ -2925,34 +3446,46 @@ export default {
             .filter(Boolean)
             .join(", ")
             .slice(0, 900);
+          const policySafePrompt = buildPolicySafePrompt(orchestrated.userPrompt);
 
           let rawImage: any;
           try {
-            rawImage = await env.AI.run(modelConfig.model, {
-              prompt: primaryPrompt,
-              width: modelConfig.width,
-              height: modelConfig.height,
-              seed: refined.finalOptions.seed
-            });
+            rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(primaryPrompt, modelConfig, refined.finalOptions.seed));
           } catch (primaryErr: any) {
             const normalizedPrimaryError = normalizeImageGenerationError(primaryErr);
             const shouldRetryCompactPrompt =
               normalizedPrimaryError.code === "prompt-too-long" ||
               normalizedPrimaryError.code === "provider-timeout" ||
-              normalizedPrimaryError.code === "provider-unavailable";
+              normalizedPrimaryError.code === "provider-unavailable" ||
+              normalizedPrimaryError.code === "provider-policy-blocked";
 
-            if (!shouldRetryCompactPrompt || !compactPrompt) {
+            if (!shouldRetryCompactPrompt || (!compactPrompt && !policySafePrompt)) {
               throw primaryErr;
             }
 
             fallbackUsed = true;
             fallbackReason = normalizedPrimaryError.code;
-            rawImage = await env.AI.run(modelConfig.model, {
-              prompt: compactPrompt,
-              width: modelConfig.width,
-              height: modelConfig.height,
-              seed: refined.finalOptions.seed
-            });
+
+            if (normalizedPrimaryError.code === "provider-policy-blocked") {
+              const fallbackModel =
+                String(env.MODEL_IMAGE_POLICY_FALLBACK || ION_IMAGE_POLICY_FALLBACK_MODEL).trim() ||
+                ION_IMAGE_POLICY_FALLBACK_MODEL;
+              const fallbackModelConfig = {
+                ...modelConfig,
+                model: fallbackModel,
+                width: 1152,
+                height: 2048,
+                resolution: "1152x2048"
+              };
+              const retryPrompt = policySafePrompt || compactPrompt;
+              outputModel = fallbackModelConfig.model;
+              rawImage = await env.AI.run(
+                fallbackModelConfig.model,
+                buildImageRunPayload(retryPrompt, fallbackModelConfig, refined.finalOptions.seed)
+              );
+            } else {
+              rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(compactPrompt, modelConfig, refined.finalOptions.seed));
+            }
           }
 
           const normalized = await normalizeImageOutput(rawImage);
@@ -2965,19 +3498,24 @@ export default {
             filename,
             metadata: {
               style_id: modelConfig.styleId,
-              model: modelConfig.model,
+              model: outputModel,
               ratio: modelConfig.ratio,
               resolution: modelConfig.resolution,
+              forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
+              forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
+              forced_width: ION_IMAGE_DEFAULT_WIDTH,
+              forced_height: ION_IMAGE_DEFAULT_HEIGHT,
+              dimension_lock: ION_IMAGE_DIMENSION_LOCK,
               mode: requestedMode,
-              quality: requestedQuality,
+              quality: effectiveQuality,
               rendering_style: resolvedRenderingStyle,
               rendering_style_source: promptInferredStyle ? "prompt" : (requestedStylePack ? "session-or-request" : "auto"),
               camera: effectiveCamera,
-              camera_source: promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "default"),
+              camera_source: promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "none"),
               lighting: effectiveLighting,
-              lighting_source: promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "default"),
+              lighting_source: promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "none"),
               materials: effectiveMaterials,
-              materials_source: promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : (resolvedRenderingStyle === "hyper-real" ? "hyper-real-default" : "default")),
+              materials_source: promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : "none"),
               seed: refined.finalOptions.seed,
               feedbackApplied: Boolean(feedback),
               prompt: {
@@ -3008,7 +3546,7 @@ export default {
                 stylePack: requestedStylePack,
                 inferredStyleFromPrompt: promptInferredStyle || null,
                 effectiveStylePack: effectiveStylePack || null,
-                quality: requestedQuality,
+                quality: effectiveQuality,
                 renderingStyle: resolvedRenderingStyle,
                 inferredCameraFromPrompt: promptInferredCamera || null,
                 effectiveCamera: effectiveCamera,
@@ -3051,8 +3589,8 @@ export default {
               headers: {
                 ...CORS_HEADERS,
                 "Content-Type": "application/json",
-                "X-Omni-Image-Model": modelConfig.model,
-                "Access-Control-Expose-Headers": "X-Omni-Image-Model"
+                "X-ION-Image-Model": outputModel,
+                "Access-Control-Expose-Headers": "X-ION-Image-Model"
               }
             }
           );
@@ -3073,35 +3611,17 @@ export default {
         }
       }
 
-      if (url.pathname === "/api/video/generate" && request.method === "POST") {
-        const baseUrl = resolveMediaBaseUrl(env);
-        const fallbackVideoUrl = sanitizePromptText(
-          String(env.OMNI_MEDIA_FALLBACK_VIDEO_URL || "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4")
-        ).trim();
-        const allowPlaceholderVideo = resolvePlaceholderVideoAllowed(env);
-
-        const body = (await request.json().catch(() => ({}))) as any;
-        const prompt = sanitizePromptText(String(body?.prompt || "")).trim();
-        if (!prompt) {
-          return new Response(JSON.stringify({ error: "Prompt is required" }), {
-            status: 400,
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        }
-
+      if (url.pathname === "/api/ION" && request.method === "POST") {
+        const requestStartedAt = Date.now();
+        await ensureIONMemorySchema(env);
+        const body = (await request.json()) as IONRequestBody;
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
-        const safetyDecision = evaluateSexualSafetyPrompt(prompt, safetyProfile);
-        if (safetyDecision.blocked) {
+        const legalDecision = evaluateLegalAttestation(safetyProfile, request);
+        if (legalDecision.blocked) {
           return new Response(
             JSON.stringify({
-              error:
-                safetyDecision.reason === "illegal-content-blocked"
-                  ? "Illegal sexual content is blocked for all access tiers."
-                  : "Explicit sexual content is age-restricted and unavailable for this profile.",
-              code: safetyDecision.reason
+              error: legalDecision.error,
+              code: legalDecision.code
             }),
             {
               status: 403,
@@ -3113,403 +3633,36 @@ export default {
           );
         }
 
-        const promptStyle = deriveVideoStyleFromPrompt(prompt);
-        const fallbackUrlForPrompt = selectFallbackVideoUrl(prompt, fallbackVideoUrl);
-
-        if (!baseUrl && allowPlaceholderVideo) {
-          return new Response(
-            JSON.stringify({
-              id: crypto.randomUUID(),
-              status: "completed",
-              outputs: [
-                {
-                  type: "video",
-                  url: fallbackUrlForPrompt,
-                  data: null,
-                  metadata: {
-                    fallback: true,
-                    fallback_reason: "video-service-not-configured",
-                    source: "OMNI_MEDIA_FALLBACK_VIDEO_URL",
-                    style_preset: promptStyle.stylePreset,
-                    motion_profile: promptStyle.motionProfile,
-                    camera_profile: promptStyle.cameraProfile,
-                    prompt_aware: true
-                  }
-                }
-              ],
-              error: null,
-              metadata: {
-                fallback: true,
-                fallback_reason: "video-service-not-configured",
-                style_preset: promptStyle.stylePreset,
-                motion_profile: promptStyle.motionProfile,
-                camera_profile: promptStyle.cameraProfile,
-                prompt_aware: true
-              }
-            }),
-            {
-              status: 200,
-              headers: {
-                ...CORS_HEADERS,
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-
-        if (!baseUrl) {
-          return new Response(
-            JSON.stringify({
-              error:
-                "Prompt-grounded video backend is not configured. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT) and disable placeholder-only mode.",
-              code: "video-backend-not-configured"
-            }),
-            {
-              status: 503,
-              headers: {
-                ...CORS_HEADERS,
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-
-        const normalizedBase = baseUrl.replace(/\/+$/, "");
-        const healthUrl = `${normalizedBase}/v1/health`;
-        const targetUrl = `${normalizedBase}/v1/generate/video`;
-        const userParams = typeof body?.params === "object" && body?.params ? body.params : {};
-        const upstreamParams = {
-          width: Number.isFinite(Number(userParams?.width)) ? Number(userParams.width) : 768,
-          height: Number.isFinite(Number(userParams?.height)) ? Number(userParams.height) : 432,
-          num_frames: Number.isFinite(Number(userParams?.num_frames)) ? Number(userParams.num_frames) : 24,
-          fps: Number.isFinite(Number(userParams?.fps))
-            ? Number(userParams.fps)
-            : promptStyle.motionProfile === "slow"
-            ? 10
-            : promptStyle.motionProfile === "fast"
-            ? 16
-            : 12,
-          num_inference_steps: Number.isFinite(Number(userParams?.num_inference_steps))
-            ? Number(userParams.num_inference_steps)
-            : 30,
-          guidance_scale: Number.isFinite(Number(userParams?.guidance_scale))
-            ? Number(userParams.guidance_scale)
-            : promptStyle.stylePreset === "cinematic"
-            ? 8
-            : 7.5,
-          style_preset: sanitizePromptText(String(userParams?.style_preset || promptStyle.stylePreset)).trim() || promptStyle.stylePreset,
-          motion_profile:
-            sanitizePromptText(String(userParams?.motion_profile || promptStyle.motionProfile)).trim() || promptStyle.motionProfile,
-          camera_profile:
-            sanitizePromptText(String(userParams?.camera_profile || promptStyle.cameraProfile)).trim() || promptStyle.cameraProfile
-        };
-        const upstreamPayload = {
-          prompt,
-          negative_prompt: typeof body?.negative_prompt === "string" ? body.negative_prompt : undefined,
-          mode: sanitizePromptText(String(body?.mode || promptStyle.stylePreset)).trim() || promptStyle.stylePreset,
-          params: upstreamParams,
-          safety_level: sanitizePromptText(String(body?.safety_level || "default")).trim() || "default",
-          watermark: body?.watermark !== false,
-          return_format: sanitizePromptText(String(body?.return_format || "url")).trim() || "url"
-        };
-
-        const controller = new AbortController();
-        const timeoutMs = clamp(Number(env.OMNI_MEDIA_API_TIMEOUT_MS || "45000"), 5000, 120000);
-        const timeoutHandle = setTimeout(() => {
-          try {
-            controller.abort("video-service-timeout");
-          } catch {
-            // ignore
-          }
-        }, timeoutMs);
-
-        try {
-          if (!allowPlaceholderVideo) {
-            try {
-              const healthResponse = await fetch(healthUrl, {
-                method: "GET",
-                signal: controller.signal
-              });
-              const healthData = (await healthResponse.json().catch(() => ({}))) as any;
-              const backend = healthData?.video_backend || {};
-              const realReady = Boolean(backend?.real_video_backend_ready);
-              if (!realReady) {
-                const backendError = String(backend?.error || "").trim();
-                const providerError = String(backend?.provider_error || "").trim();
-                const detail = [backendError, providerError].filter(Boolean).join(" | ");
-                return new Response(
-                  JSON.stringify({
-                    error:
-                      "Prompt-grounded video backend is not ready." +
-                      (detail ? ` ${detail}` : "") +
-                      " Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
-                    code: "video-backend-not-ready",
-                    backend
-                  }),
-                  {
-                    status: 503,
-                    headers: {
-                      ...CORS_HEADERS,
-                      "Content-Type": "application/json"
-                    }
-                  }
-                );
-              }
-            } catch {
-              return new Response(
-                JSON.stringify({
-                  error:
-                    "Prompt-grounded video backend health check failed before generation. " +
-                    "Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
-                  code: "video-backend-health-check-failed"
-                }),
-                {
-                  status: 503,
-                  headers: {
-                    ...CORS_HEADERS,
-                    "Content-Type": "application/json"
-                  }
-                }
-              );
-            }
-          }
-
-          const upstreamHeaders: Record<string, string> = {
-            "Content-Type": "application/json"
-          };
-
-          const serviceApiKey = sanitizePromptText(String(env.OMNI_MEDIA_API_KEY || "")).trim();
-          if (serviceApiKey) {
-            upstreamHeaders["x-api-key"] = serviceApiKey;
-          }
-
-          const upstreamResponse = await fetch(targetUrl, {
-            method: "POST",
-            headers: upstreamHeaders,
-            body: JSON.stringify(upstreamPayload),
-            signal: controller.signal
-          });
-
-          const rawText = await upstreamResponse.text();
-          return new Response(rawText, {
-            status: upstreamResponse.status,
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        } catch (error: any) {
-          logger.error("video_proxy_error", error);
-          if (allowPlaceholderVideo && fallbackVideoUrl) {
-            return new Response(
-              JSON.stringify({
-                id: crypto.randomUUID(),
-                status: "completed",
-                outputs: [
-                  {
-                    type: "video",
-                    url: fallbackUrlForPrompt,
-                    data: null,
-                    metadata: {
-                      fallback: true,
-                      fallback_reason: "video-proxy-error",
-                      source: "OMNI_MEDIA_FALLBACK_VIDEO_URL",
-                      proxy_error: String(error?.message || "unknown error"),
-                      style_preset: promptStyle.stylePreset,
-                      motion_profile: promptStyle.motionProfile,
-                      camera_profile: promptStyle.cameraProfile,
-                      prompt_aware: true
-                    }
-                  }
-                ],
-                error: null,
-                metadata: {
-                  fallback: true,
-                  fallback_reason: "video-proxy-error",
-                  style_preset: promptStyle.stylePreset,
-                  motion_profile: promptStyle.motionProfile,
-                  camera_profile: promptStyle.cameraProfile,
-                  prompt_aware: true
-                }
-              }),
-              {
-                status: 200,
-                headers: {
-                  ...CORS_HEADERS,
-                  "Content-Type": "application/json"
-                }
-              }
-            );
-          }
-
-          return new Response(
-            JSON.stringify({
-              error:
-                `Prompt-grounded video generation failed: ${String(error?.message || "unknown error")}. ` +
-                "Enable OMNI_MEDIA_ALLOW_PLACEHOLDER_VIDEO=true only if you explicitly want placeholder clips.",
-              code: "video-generation-unavailable"
-            }),
-            {
-              status: 502,
-              headers: {
-                ...CORS_HEADERS,
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        } finally {
-          clearTimeout(timeoutHandle);
-        }
-      }
-
-      if (url.pathname === "/omni_video_exports" && request.method === "POST") {
-        const baseUrl = resolveMediaBaseUrl(env);
-        if (!baseUrl) {
-          return new Response(
-            JSON.stringify({
-              error:
-                "OMNI media base URL is required for /omni_video_exports proxy. Set OMNI_MEDIA_API_BASE_URL (or OMNI_MEDIA_BASE_URL / OMNI_MEDIA_HOST+OMNI_MEDIA_PORT)."
-            }),
-            {
-              status: 503,
-              headers: {
-                ...CORS_HEADERS,
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-
-        const targetUrl = `${baseUrl.replace(/\/+$/, "")}/omni_video_exports`;
-        const upstreamHeaders: Record<string, string> = {
-          "Content-Type": "application/json"
-        };
-        const serviceApiKey = sanitizePromptText(String(env.OMNI_MEDIA_API_KEY || "")).trim();
-        if (serviceApiKey) {
-          upstreamHeaders["x-api-key"] = serviceApiKey;
-        }
-
-        try {
-          const rawBody = await request.text();
-          const upstreamResponse = await fetch(targetUrl, {
-            method: "POST",
-            headers: upstreamHeaders,
-            body: rawBody
-          });
-          const rawText = await upstreamResponse.text();
-          return new Response(rawText, {
-            status: upstreamResponse.status,
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        } catch (error: any) {
-          return new Response(
-            JSON.stringify({
-              error: `Failed to proxy /omni_video_exports: ${String(error?.message || "unknown error")}`
-            }),
-            {
-              status: 502,
-              headers: {
-                ...CORS_HEADERS,
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-      }
-
-      if (url.pathname === "/api/video/health" && request.method === "GET") {
-        const baseUrl = resolveMediaBaseUrl(env);
-        const allowPlaceholderVideo = resolvePlaceholderVideoAllowed(env);
-
-        const payload: Record<string, unknown> = {
-          ok: true,
-          strict_prompt_generation: !allowPlaceholderVideo,
-          placeholder_mode_enabled: allowPlaceholderVideo,
-          media_base_configured: Boolean(baseUrl),
-          real_video_backend_ready: false,
-          media_health_source: baseUrl ? `${baseUrl.replace(/\/+$/, "")}/v1/health` : null
-        };
-
-        if (!baseUrl) {
-          return new Response(JSON.stringify(payload), {
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        }
-
-        const targetUrl = `${baseUrl.replace(/\/+$/, "")}/v1/health`;
-        const controller = new AbortController();
-        const timeoutMs = clamp(Number(env.OMNI_MEDIA_API_TIMEOUT_MS || "45000"), 5000, 120000);
-        const timeoutHandle = setTimeout(() => {
-          try {
-            controller.abort("video-health-timeout");
-          } catch {
-            // ignore
-          }
-        }, timeoutMs);
-
-        try {
-          const response = await fetch(targetUrl, {
-            method: "GET",
-            signal: controller.signal
-          });
-          const data = (await response.json().catch(() => ({}))) as any;
-          payload.media_health_status = response.status;
-          payload.media_health_ok = response.ok;
-          payload.real_video_backend_ready = Boolean(data?.video_backend?.real_video_backend_ready);
-          payload.media_video_backend = data?.video_backend || null;
-          return new Response(JSON.stringify(payload), {
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        } catch (error: any) {
-          payload.media_health_ok = false;
-          payload.media_health_error = String(error?.message || "unknown error");
-          return new Response(JSON.stringify(payload), {
-            headers: {
-              ...CORS_HEADERS,
-              "Content-Type": "application/json"
-            }
-          });
-        } finally {
-          clearTimeout(timeoutHandle);
-        }
-      }
-
-      if (url.pathname === "/api/omni" && request.method === "POST") {
-        await ensureOmniMemorySchema(env);
-        const body = (await request.json()) as OmniRequestBody;
-        const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
-
-        if (!body.messages || !OmniSafety.validateMessages(body.messages)) {
+        if (!body.messages || !IONSafety.validateMessages(body.messages)) {
           logger.error("invalid_messages", body);
           return new Response("Invalid message format", { status: 400 });
         }
 
         const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
-        const ctx = {
+        const requestCtx = {
           mode: normalizedMode,
-          model: body.model || "auto",
+          model: "ION",
           messages: (body.messages || []).map((m) => ({
-            role: (m?.role || "user") as OmniRole,
-            content: OmniSafety.sanitizeInput(m?.content || "")
+            role: (m?.role || "user") as IONRole,
+            content: IONSafety.sanitizeInput(m?.content || "")
           }))
         };
 
         const simulationContext = normalizedMode === "simulation"
-          ? await advanceSimulationState(env, ctx.messages)
+          ? await advanceSimulationState(env, requestCtx.messages)
           : null;
         const sessionId = resolveSessionId(request);
         const workingMemory = await loadWorkingMemory(env, sessionId);
+        const requestCountryCode = getRequestCountryCode(request);
+        const fastChatEnabled =
+          isEnabledFlag(env.ION_FAST_CHAT) ||
+          body?.fastMode === true ||
+          String(url.searchParams.get("fast") || "").toLowerCase() === "true";
+        const nativeStreamingEnabled = isEnabledFlag(env.ION_NATIVE_STREAMING) || fastChatEnabled;
 
-        const latestUserText = getLatestUserText(ctx.messages);
+        const latestUserText = getLatestUserText(requestCtx.messages);
+        const conversationHints = normalizeConversationHints(body?.conversationHints);
+        const conversationDigest = buildConversationDigest(requestCtx.messages, 6);
         const safetyDecision = evaluateSexualSafetyPrompt(latestUserText, safetyProfile);
         if (safetyDecision.blocked) {
           return new Response(
@@ -3530,8 +3683,8 @@ export default {
           );
         }
 
-        const personaProfile = await resolvePersonaProfile(env, normalizedMode);
-        const emotionalResonance = await getEmotionalResonance(
+        const personaProfilePromise = resolvePersonaProfile(env, normalizedMode);
+        const emotionalResonancePromise = getEmotionalResonance(
           env,
           sessionId,
           latestUserText,
@@ -3541,12 +3694,14 @@ export default {
           latestUserText,
           mode: normalizedMode
         });
-        const routeSelection = chooseModelForTask(ctx.model, latestUserText, normalizedMode);
+        const routeSelection = chooseModelForTask("ION", latestUserText, normalizedMode);
 
-        const promptSystemMessages: OmniMessage[] = [];
+        const promptSystemMessages: IONMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;
         let internetHitCount = 0;
         const savedMemory = normalizedMode === "simulation" ? {} : await getPreferences(env);
+        const personaProfile = await personaProfilePromise;
+        const emotionalResonance = await emotionalResonancePromise;
         if (normalizedMode !== "simulation" && savedMemory && Object.keys(savedMemory).length > 0) {
           promptSystemMessages.push(
             makeContextSystemMessage("User Memory", JSON.stringify(savedMemory, null, 2))
@@ -3573,6 +3728,14 @@ export default {
                 ageTier: safetyProfile.ageTier,
                 explicitAllowed: safetyProfile.explicitAllowed,
                 illegalBlocked: safetyProfile.illegalBlocked,
+                legalAttestation: {
+                  accepted: safetyProfile.legalAttestation.accepted,
+                  jurisdiction: safetyProfile.legalAttestation.jurisdiction,
+                  truthfulIdentity: safetyProfile.legalAttestation.truthfulIdentity,
+                  lawfulUse: safetyProfile.legalAttestation.lawfulUse,
+                  userDirected: safetyProfile.legalAttestation.userDirected
+                },
+                requestCountryCode,
                 enforcement: "illegal content is always blocked"
               },
               null,
@@ -3589,11 +3752,49 @@ export default {
             buildAdaptiveBehaviorPrompt({
               mode: normalizedMode,
               userEmotion: emotionalResonance.userEmotion,
-              omniTone: emotionalResonance.omniTone,
+              IONTone: emotionalResonance.IONTone,
               route: orchestratorDecision.route
             })
           )
         );
+        promptSystemMessages.push(
+          makeContextSystemMessage(
+            "Reasoning Planner",
+            buildReasoningPlannerPrompt({
+              mode: normalizedMode,
+              latestUserText,
+              conversationDigest,
+              conversationHints
+            })
+          )
+        );
+
+        const shouldLoadMemoryArc = normalizedMode !== "simulation" && !fastChatEnabled;
+        const shouldLoadInternetLearning = !fastChatEnabled;
+        const shouldLoadWeather = !fastChatEnabled && shouldUseWeatherContext(latestUserText);
+        const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
+        const shouldUseKnowledge = !fastChatEnabled && shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
+        const shouldLoadSystemModules = !fastChatEnabled && shouldUseSystemKnowledge(normalizedMode, latestUserText);
+        const shouldLoadInternetSearch = !fastChatEnabled && shouldUseInternetSearch(latestUserText, normalizedMode);
+
+        const memoryArcPromise = shouldLoadMemoryArc
+          ? getRecentMemoryArc(env, sessionId, 3)
+          : Promise.resolve([]);
+        const internetLearningPromise = shouldLoadInternetLearning
+          ? getInternetLearningContext(env, normalizedMode, latestUserText, 4)
+          : Promise.resolve("");
+        const weatherPromise = shouldLoadWeather
+          ? fetchWeatherForLocation(weatherLocation)
+          : Promise.resolve(null);
+        const knowledgePromise = shouldUseKnowledge
+          ? searchKnowledge(env, request, latestUserText, 4)
+          : Promise.resolve([]);
+        const modulePromise = shouldLoadSystemModules
+          ? searchModules(env, request, latestUserText || "system modules", 3)
+          : Promise.resolve([]);
+        const internetSearchPromise = shouldLoadInternetSearch
+          ? performModeAwareInternetSearch(normalizedMode, latestUserText)
+          : Promise.resolve(null);
 
         if (normalizedMode !== "simulation") {
           const workingMemoryPrompt = formatWorkingMemoryPrompt(workingMemory);
@@ -3603,11 +3804,11 @@ export default {
             );
           }
 
-          const memoryArc = await getRecentMemoryArc(env, sessionId, 3);
+          const memoryArc = await memoryArcPromise;
           if (memoryArc.length) {
             const arcPrompt = memoryArc
               .map((entry, index) => {
-                return `(${index + 1}) [${entry.mode}] USER: ${entry.userText}\nOMNI: ${entry.assistantText}`;
+                return `(${index + 1}) [${entry.mode}] USER: ${entry.userText}\nION: ${entry.assistantText}`;
               })
               .join("\n\n");
 
@@ -3626,7 +3827,7 @@ export default {
           promptSystemMessages.push(makeContextSystemMessage("Mode Template", modeTemplate));
         }
 
-        const internetLearningContext = await getInternetLearningContext(env, normalizedMode, latestUserText, 4);
+        const internetLearningContext = await withTimeout(internetLearningPromise, 250, "");
         if (internetLearningContext) {
           promptSystemMessages.push(
             makeContextSystemMessage(
@@ -3641,9 +3842,8 @@ export default {
           );
         }
 
-        if (shouldUseWeatherContext(latestUserText)) {
-          const weatherLocation = inferWeatherLocation(latestUserText, request);
-          const weather = await fetchWeatherForLocation(weatherLocation);
+        if (shouldLoadWeather) {
+          const weather = await withTimeout(weatherPromise, 800, null);
           if (weather) {
             promptSystemMessages.push(
               makeContextSystemMessage(
@@ -3662,9 +3862,8 @@ export default {
           }
         }
 
-        const shouldUseKnowledge = shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
         if (shouldUseKnowledge) {
-          const hits = await searchKnowledge(env, request, latestUserText, 4);
+          const hits = await withTimeout(knowledgePromise, 500, []);
           if (hits.length) {
             const context = hits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3678,8 +3877,8 @@ export default {
           }
         }
 
-        if (shouldUseSystemKnowledge(normalizedMode)) {
-          const moduleHits = await searchModules(env, request, latestUserText || "system modules", 3);
+        if (shouldLoadSystemModules) {
+          const moduleHits = await withTimeout(modulePromise, 500, []);
           if (moduleHits.length) {
             const moduleContext = moduleHits
               .map((hit, index) => `(${index + 1}) ${hit.title}\n${hit.chunk}`)
@@ -3693,9 +3892,15 @@ export default {
           }
         }
 
-        if (shouldUseInternetSearch(latestUserText, normalizedMode)) {
-          const internet = await performModeAwareInternetSearch(normalizedMode, latestUserText);
-          await recordInternetLearning(env, normalizedMode, latestUserText, internet.hits);
+        if (shouldLoadInternetSearch) {
+          const internet = await withTimeout(internetSearchPromise, 1100, null);
+          if (internet) {
+            void recordInternetLearning(env, normalizedMode, latestUserText, internet.hits).catch((internetErr) => {
+              logger.log("internet_learning_record_failed", {
+                mode: normalizedMode,
+                message: String((internetErr as Error)?.message || internetErr || "unknown error")
+              });
+            });
           internetProfileUsed = internet.profile;
           internetHitCount = internet.hits.length;
           if (internet.hits.length) {
@@ -3717,16 +3922,17 @@ export default {
               )
             );
           }
+          }
         }
 
-        const enrichedMessages: OmniMessage[] = [...promptSystemMessages, ...ctx.messages];
+        const enrichedMessages: IONMessage[] = [...promptSystemMessages, ...requestCtx.messages];
 
-        const responseLimit = computeAdaptiveResponseMax(ctx.messages, env);
+        const responseLimit = computeAdaptiveResponseMax(requestCtx.messages, env);
         const outputTokenLimit = computeAdaptiveOutputTokens(responseLimit, env);
         const debugEnabled = isNonProduction(request, env);
 
         logger.log("incoming_request", {
-          ...ctx,
+          ...requestCtx,
           orchestratorRoute: orchestratorDecision.route,
           orchestratorReason: orchestratorDecision.reason,
           modelSelected: routeSelection.selectedModel,
@@ -3739,10 +3945,12 @@ export default {
         });
 
         const runtimeCtx = {
-          ...ctx,
+          ...requestCtx,
           model: routeSelection.selectedModel,
           messages: enrichedMessages,
-          maxOutputTokens: outputTokenLimit
+          maxOutputTokens: outputTokenLimit,
+          simulationContext,
+          preferStreaming: nativeStreamingEnabled
         };
 
         try {
@@ -3772,7 +3980,7 @@ export default {
                 .join("\n\n")
             };
           } else if (orchestratorDecision.route === "image") {
-            const generated = await generateOmniImageFromPrompt(env, latestUserText, {
+            const generated = await generateIONImageFromPrompt(env, latestUserText, {
               mode: normalizedMode,
               quality: "ultra"
             });
@@ -3790,75 +3998,183 @@ export default {
               response: `Image generated via multi-modal orchestration. File: ${generated.filename}. Model: ${generated.model}.`
             };
           } else {
-            result = await omniBrainLoop(env, runtimeCtx);
+            result = await IONBrainLoop(env, runtimeCtx);
           }
 
           if (result) {
+            const nativeProviderStream = (result as any)?.stream;
+            if (isReadableByteStream(nativeProviderStream)) {
+              const latestUserTurn = getLatestUserText(requestCtx.messages);
+              const stream = createIONSseFromProviderStream({
+                providerStream: nativeProviderStream,
+                route: orchestratorDecision.route,
+                multimodalPayload,
+                onComplete: (fullText) => {
+                  if (normalizedMode !== "simulation" && latestUserTurn && fullText) {
+                    ctx.waitUntil(
+                      Promise.all([
+                        persistEmotionalResonance(env, emotionalResonance),
+                        updateWorkingMemoryFromTurn(env, {
+                          sessionId,
+                          mode: normalizedMode,
+                          userText: latestUserTurn,
+                          assistantText: fullText,
+                          emotionalTone: emotionalResonance.IONTone
+                        }),
+                        saveMemoryTurn(env, {
+                          sessionId,
+                          mode: normalizedMode,
+                          userText: latestUserTurn,
+                          assistantText: fullText,
+                          emotionalTone: emotionalResonance.IONTone
+                        })
+                      ]).catch((memoryErr) => {
+                        logger.log("memory_persist_deferred_failed", {
+                          message: String((memoryErr as Error)?.message || memoryErr || "unknown error")
+                        });
+                      })
+                    );
+                  }
+                }
+              });
+
+              const exposeHeaders = [
+                "X-ION-Model-Used",
+                "X-ION-Route-Reason",
+                "X-ION-Orchestrator-Route",
+                "X-ION-Orchestrator-Reason",
+                "X-ION-Persona-Tone",
+                "X-ION-Emotion-User",
+                "X-ION-Emotion-ION",
+                "X-ION-Internet-Mode",
+                "X-ION-Internet-Profile",
+                "X-ION-Internet-Count",
+                "X-ION-Fast-Chat",
+                "X-ION-Prestream-Latency-Ms"
+              ];
+
+              if (simulationContext) {
+                exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
+              }
+
+              return new Response(stream, {
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "text/event-stream",
+                  "Cache-Control": "no-cache",
+                  "Connection": "keep-alive",
+                  "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                  "X-ION-Route-Reason": routeSelection.reason,
+                  "X-ION-Orchestrator-Route": orchestratorDecision.route,
+                  "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
+                  "X-ION-Persona-Tone": personaProfile.tone,
+                  "X-ION-Emotion-User": emotionalResonance.userEmotion,
+                  "X-ION-Emotion-ION": emotionalResonance.IONTone,
+                  "X-ION-Internet-Mode": normalizeInternetMode(normalizedMode),
+                  "X-ION-Internet-Profile": internetProfileUsed
+                    ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
+                    : "none",
+                  "X-ION-Internet-Count": String(internetHitCount),
+                  "X-ION-Fast-Chat": String(fastChatEnabled),
+                  "X-ION-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
+                  ...(simulationContext
+                    ? {
+                        "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                        "X-ION-Simulation-Status": simulationContext.state.status,
+                        "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                      }
+                    : {}),
+                  "Access-Control-Expose-Headers": exposeHeaders.join(", ")
+                }
+              });
+            }
+
             const parsedResult =
               typeof result === "string"
                 ? { response: result }
                 : result;
-            const safe = OmniSafety.safeGuardResponse(parsedResult.response || "", responseLimit);
+            const safe = IONSafety.safeGuardResponse(parsedResult.response || "", responseLimit);
             const adapted = applyAdaptiveBehavior(safe, {
               mode: normalizedMode,
               userEmotion: emotionalResonance.userEmotion,
-              omniTone: emotionalResonance.omniTone,
+              IONTone: emotionalResonance.IONTone,
               route: orchestratorDecision.route
             });
-            const finalResponse = OmniSafety.safeGuardResponse(adapted, responseLimit);
+            const finalResponse = IONSafety.safeGuardResponse(adapted, responseLimit);
             const encoder = new TextEncoder();
+            const responseChunks = finalResponse
+              .match(/.{1,220}(?:\s+|$)/g)
+              ?.map((chunk) => chunk)
+              .filter((chunk) => chunk.length > 0) || [finalResponse];
             const stream = new ReadableStream({
               start(controller) {
-                controller.enqueue(
-                  encoder.encode(
-                    `data: ${JSON.stringify({ content: finalResponse, route: orchestratorDecision.route, ...multimodalPayload })}\n\n`
-                  )
-                );
+                if (responseChunks.length > 0) {
+                  controller.enqueue(
+                    encoder.encode(
+                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload })}\n\n`
+                    )
+                  );
+                  for (let index = 1; index < responseChunks.length; index += 1) {
+                    controller.enqueue(
+                      encoder.encode(
+                        `data: ${JSON.stringify({ content: responseChunks[index] })}\n\n`
+                      )
+                    );
+                  }
+                }
                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                 controller.close();
               }
             });
 
-            const latestUserTurn = getLatestUserText(ctx.messages);
+            const latestUserTurn = getLatestUserText(requestCtx.messages);
             if (normalizedMode !== "simulation" && latestUserTurn && finalResponse) {
-              await persistEmotionalResonance(env, emotionalResonance);
-
-              await updateWorkingMemoryFromTurn(env, {
-                sessionId,
-                mode: normalizedMode,
-                userText: latestUserTurn,
-                assistantText: finalResponse,
-                emotionalTone: emotionalResonance.omniTone
-              });
-
-              await saveMemoryTurn(env, {
-                sessionId,
-                mode: normalizedMode,
-                userText: latestUserTurn,
-                assistantText: finalResponse,
-                emotionalTone: emotionalResonance.omniTone
-              });
+              ctx.waitUntil(
+                Promise.all([
+                  persistEmotionalResonance(env, emotionalResonance),
+                  updateWorkingMemoryFromTurn(env, {
+                    sessionId,
+                    mode: normalizedMode,
+                    userText: latestUserTurn,
+                    assistantText: finalResponse,
+                    emotionalTone: emotionalResonance.IONTone
+                  }),
+                  saveMemoryTurn(env, {
+                    sessionId,
+                    mode: normalizedMode,
+                    userText: latestUserTurn,
+                    assistantText: finalResponse,
+                    emotionalTone: emotionalResonance.IONTone
+                  })
+                ]).catch((memoryErr) => {
+                  logger.log("memory_persist_deferred_failed", {
+                    message: String((memoryErr as Error)?.message || memoryErr || "unknown error")
+                  });
+                })
+              );
             }
 
             const exposeHeaders = [
-              "X-Omni-Model-Used",
-              "X-Omni-Route-Reason",
-              "X-Omni-Orchestrator-Route",
-              "X-Omni-Orchestrator-Reason",
-              "X-Omni-Persona-Tone",
-              "X-Omni-Emotion-User",
-              "X-Omni-Emotion-Omni",
-              "X-Omni-Internet-Mode",
-              "X-Omni-Internet-Profile",
-              "X-Omni-Internet-Count"
+              "X-ION-Model-Used",
+              "X-ION-Route-Reason",
+              "X-ION-Orchestrator-Route",
+              "X-ION-Orchestrator-Reason",
+              "X-ION-Persona-Tone",
+              "X-ION-Emotion-User",
+              "X-ION-Emotion-ION",
+              "X-ION-Internet-Mode",
+              "X-ION-Internet-Profile",
+              "X-ION-Internet-Count",
+              "X-ION-Fast-Chat",
+              "X-ION-Prestream-Latency-Ms"
             ];
 
             if (simulationContext) {
-              exposeHeaders.push("X-Omni-Simulation-Id", "X-Omni-Simulation-Status", "X-Omni-Simulation-Steps");
+              exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
             }
 
             if (debugEnabled) {
-              exposeHeaders.push("X-Omni-Response-Cap", "X-Omni-Output-Token-Cap");
+              exposeHeaders.push("X-ION-Response-Cap", "X-ION-Output-Token-Cap");
             }
 
             return new Response(stream, {
@@ -3867,29 +4183,31 @@ export default {
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
-                "X-Omni-Route-Reason": routeSelection.reason,
-                "X-Omni-Orchestrator-Route": orchestratorDecision.route,
-                "X-Omni-Orchestrator-Reason": orchestratorDecision.reason,
-                "X-Omni-Persona-Tone": personaProfile.tone,
-                "X-Omni-Emotion-User": emotionalResonance.userEmotion,
-                "X-Omni-Emotion-Omni": emotionalResonance.omniTone,
-                "X-Omni-Internet-Mode": normalizeInternetMode(normalizedMode),
-                "X-Omni-Internet-Profile": internetProfileUsed
+                "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                "X-ION-Route-Reason": routeSelection.reason,
+                "X-ION-Orchestrator-Route": orchestratorDecision.route,
+                "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
+                "X-ION-Persona-Tone": personaProfile.tone,
+                "X-ION-Emotion-User": emotionalResonance.userEmotion,
+                "X-ION-Emotion-ION": emotionalResonance.IONTone,
+                "X-ION-Internet-Mode": normalizeInternetMode(normalizedMode),
+                "X-ION-Internet-Profile": internetProfileUsed
                   ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
                   : "none",
-                "X-Omni-Internet-Count": String(internetHitCount),
+                "X-ION-Internet-Count": String(internetHitCount),
+                "X-ION-Fast-Chat": String(fastChatEnabled),
+                "X-ION-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
                 ...(simulationContext
                   ? {
-                      "X-Omni-Simulation-Id": simulationContext.state.simulationId,
-                      "X-Omni-Simulation-Status": simulationContext.state.status,
-                      "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                      "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                      "X-ION-Simulation-Status": simulationContext.state.status,
+                      "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
                     }
                   : {}),
                 ...(debugEnabled
                   ? {
-                      "X-Omni-Response-Cap": String(responseLimit),
-                      "X-Omni-Output-Token-Cap": String(outputTokenLimit)
+                      "X-ION-Response-Cap": String(responseLimit),
+                      "X-ION-Output-Token-Cap": String(outputTokenLimit)
                     }
                   : {}),
                 "Access-Control-Expose-Headers": exposeHeaders.join(", ")
@@ -3920,7 +4238,11 @@ export default {
           const encoder = new TextEncoder();
           const errorStream = new ReadableStream({
             start(controller) {
-              controller.enqueue(encoder.encode("data: Runtime loop failed.\\n\\n"));
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ content: "Runtime loop failed. Please try again.", error: true })}\\n\\n`
+                )
+              );
               controller.enqueue(encoder.encode("data: [DONE]\\n\\n"));
               controller.close();
             }
@@ -3931,27 +4253,27 @@ export default {
               ...CORS_HEADERS,
               "Content-Type": "text/event-stream",
             "Connection": "keep-alive",
-            "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
-            "X-Omni-Route-Reason": routeSelection.reason,
+            "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+            "X-ION-Route-Reason": routeSelection.reason,
             ...(simulationContext
               ? {
-                  "X-Omni-Simulation-Id": simulationContext.state.simulationId,
-                  "X-Omni-Simulation-Status": simulationContext.state.status,
-                  "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                  "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                  "X-ION-Simulation-Status": simulationContext.state.status,
+                  "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
                 }
               : {}),
             ...(debugEnabled
               ? {
-                  "X-Omni-Response-Cap": String(responseLimit),
-                  "X-Omni-Output-Token-Cap": String(outputTokenLimit),
+                  "X-ION-Response-Cap": String(responseLimit),
+                  "X-ION-Output-Token-Cap": String(outputTokenLimit),
                 "Access-Control-Expose-Headers": simulationContext
-                  ? "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Simulation-Id, X-Omni-Simulation-Status, X-Omni-Simulation-Steps, X-Omni-Response-Cap, X-Omni-Output-Token-Cap"
-                  : "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Response-Cap, X-Omni-Output-Token-Cap"
+                  ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps, X-ION-Response-Cap, X-ION-Output-Token-Cap"
+                  : "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Response-Cap, X-ION-Output-Token-Cap"
                 }
               : {
                   "Access-Control-Expose-Headers": simulationContext
-                    ? "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Simulation-Id, X-Omni-Simulation-Status, X-Omni-Simulation-Steps"
-                    : "X-Omni-Model-Used, X-Omni-Route-Reason"
+                    ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps"
+                    : "X-ION-Model-Used, X-ION-Route-Reason"
                 })
           }
         });
@@ -3962,12 +4284,12 @@ export default {
       return env.ASSETS.fetch(request.url) as unknown as Response;
     } catch (err: any) {
       logger.error("fatal_error", err);
-      return new Response("Omni crashed but recovered", { status: 500 });
+      return new Response("ION crashed but recovered", { status: 500 });
     }
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    const logger = new OmniLogger(env);
+    const logger = new IONLogger(env);
     ctx.waitUntil(
       (async () => {
         const report = await runSelfMaintenance(env);
@@ -4011,4 +4333,15 @@ type InternalMindRequestBody = {
   };
   issues?: string[];
   codexGaps?: string[];
+};
+
+type GenerateTaskShardRequestBody = {
+  title?: string;
+  summary?: string;
+  department?: Department;
+  priority?: Priority;
+  input_payload?: unknown;
+  legacy_weight?: number;
+  decay_at?: string;
+  created_by?: string;
 };

@@ -4,7 +4,7 @@ const root = document.documentElement;
 const themeSelect = document.getElementById("theme-select");
 
 if (themeSelect) {
-  const saved = localStorage.getItem("omni-theme");
+  const saved = localStorage.getItem("ION-theme");
   if (saved) {
     root.className = saved;
     themeSelect.value = saved;
@@ -13,7 +13,7 @@ if (themeSelect) {
   themeSelect.addEventListener("change", () => {
     const theme = themeSelect.value;
     root.className = theme === "dark" ? "" : theme;
-    localStorage.setItem("omni-theme", theme);
+    localStorage.setItem("ION-theme", theme);
   });
 }
 

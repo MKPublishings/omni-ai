@@ -7,14 +7,14 @@ const simIdEl = document.getElementById("sim-id");
 const simStepsEl = document.getElementById("sim-steps");
 const simMemoryEl = document.getElementById("sim-memory");
 const terminateSimulationBtn = document.getElementById("terminate-simulation");
-const CHAT_SESSIONS_KEY = "omni_chat_sessions_v1";
+const CHAT_SESSIONS_KEY = "ION_chat_sessions_v1";
 
 function getApiEndpoint() {
   try {
-    const saved = localStorage.getItem("omni-endpoint") || "";
-    return saved.trim() || "/api/omni";
+    const saved = localStorage.getItem("ION-endpoint") || "";
+    return saved.trim() || "/api/ION";
   } catch {
-    return "/api/omni";
+    return "/api/ION";
   }
 }
 
@@ -28,7 +28,7 @@ pingBtn?.addEventListener("click", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "omni",
+        model: "ION",
         mode: "chat",
         messages: [{ role: "user", content: "ping" }]
       })

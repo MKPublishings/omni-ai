@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { appendDecision } from "../../mind/self_improvement/updateCodex";
-import { buildPatchPromptContract } from "../../mind/evaluators/omniPromptContracts";
+import { buildPatchPromptContract } from "../../mind/evaluators/IONPromptContracts";
 
 export interface AutoDebugResult {
   success: boolean;
@@ -41,7 +41,7 @@ export async function runAutoDebugger(testCommand = "npm test"): Promise<AutoDeb
     };
   }
 
-  const patchProposal = await callOmniForPatch({
+  const patchProposal = await callIONForPatch({
     command: testCommand,
     stdout,
     stderr
@@ -49,7 +49,7 @@ export async function runAutoDebugger(testCommand = "npm test"): Promise<AutoDeb
 
   await appendDecision({
     timestamp: new Date().toISOString(),
-    source: "omni",
+    source: "ION",
     area: "auto-debugger",
     summary: "Proposed patch for failing tests",
     details: [
@@ -86,7 +86,7 @@ export async function runAutoDebugger(testCommand = "npm test"): Promise<AutoDeb
   };
 }
 
-async function callOmniForPatch(input: {
+async function callIONForPatch(input: {
   command: string;
   stderr: string;
   stdout: string;
@@ -153,7 +153,7 @@ export interface InternalMindPatchResponse {
 }
 
 function resolveInternalMindEndpoint(): string {
-  const base = String(process.env.OMNI_INTERNAL_MIND_URL || "http://127.0.0.1:8787/internal/mind").trim();
+  const base = String(process.env.ION_INTERNAL_MIND_URL || "http://127.0.0.1:8787/internal/mind").trim();
   return base || "http://127.0.0.1:8787/internal/mind";
 }
 

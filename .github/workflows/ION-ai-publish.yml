@@ -1,0 +1,88 @@
+name: ION AI Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+
+      - name: Resolve version channel
+        id: version
+        shell: bash
+        run: |
+          REF_NAME="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            REF_NAME="manual"
+          fi
+
+          if [[ "${REF_NAME}" == *"a"* || "${REF_NAME}" == *"b"* || "${REF_NAME}" == *"rc"* || "${REF_NAME}" == *"-alpha"* || "${REF_NAME}" == *"-beta"* || "${REF_NAME}" == *"-pre"* ]]; then
+            echo "prerelease=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "prerelease=false" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "version=${REF_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build distributions
+        run: python -m build
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    if: ${{ needs.build.outputs.prerelease == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    if: ${{ needs.build.outputs.prerelease != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -1,5 +1,5 @@
 // ============================================================
-// Omni Ai — Cloudflare Workers Optimizations
+// ION Ai — Cloudflare Workers Optimizations
 // Cloudflare-specific API optimizations and utilities
 // ============================================================
 
@@ -9,7 +9,7 @@ import { optimizedFetch, getStreamingEngine } from "./optimizedStreaming";
  * Cloudflare Workers Cache API wrapper for API responses
  */
 export class CloudflareCacheManager {
-  private cacheName: string = "omni-api-cache";
+  private cacheName: string = "ION-api-cache";
 
   async get(key: string): Promise<any | null> {
     if (typeof caches === "undefined") return null;
@@ -115,7 +115,7 @@ export async function cloudflareOptimizedFetch(
   const optimizedOptions: RequestInit = {
     ...options,
     headers: {
-      "User-Agent": "Omni-Mind-OS/1.0",
+      "User-Agent": "ION-Mind-OS/1.0",
       "Connection": "keep-alive",
       ...options.headers
     },
@@ -212,15 +212,8 @@ export function getConnectionStats() {
  * Warm up connections to external APIs during Worker initialization
  */
 export async function warmupConnections(env: any): Promise<void> {
+  void env;
   const warmupUrls: string[] = [];
-
-  // Add API endpoints that need warming
-  if (env?.OPENAI_API_KEY) {
-    warmupUrls.push("https://api.openai.com/v1/models");
-  }
-  if (env?.DEEPSEEK_API_KEY) {
-    warmupUrls.push("https://api.deepseek.com/v1/models");
-  }
 
   // Fire warmup requests (don't await, just initiate)
   warmupUrls.forEach(url => {
