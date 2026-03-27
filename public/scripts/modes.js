@@ -5,9 +5,10 @@ console.log("modes.js loaded");
 // ==============================================
 
 // Smooth scroll reveal animations
+const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
 const observerOptions = {
-  threshold: 0.1,
-  rootMargin: "0px 0px -50px 0px"
+  threshold: isMobileViewport ? 0.01 : 0.1,
+  rootMargin: isMobileViewport ? "0px 0px -20px 0px" : "0px 0px -50px 0px"
 };
 
 const modeSections = document.querySelectorAll(".mode-section");
@@ -15,6 +16,12 @@ const modeSections = document.querySelectorAll(".mode-section");
 const modeAliases = {
   chat: "auto"
 };
+
+function revealModeSection(section) {
+  section.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+  section.style.opacity = "1";
+  section.style.transform = "translateY(0)";
+}
 
 function getRequestedMode() {
   const params = new URLSearchParams(window.location.search);
@@ -58,9 +65,7 @@ if (modeSections.length > 0 && "IntersectionObserver" in window) {
         
         // Trigger animation
         requestAnimationFrame(() => {
-          entry.target.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
+          revealModeSection(entry.target);
         });
         
         observer.unobserve(entry.target);
@@ -74,6 +79,15 @@ if (modeSections.length > 0 && "IntersectionObserver" in window) {
     section.style.transform = "translateY(20px)";
     observer.observe(section);
   });
+
+  // Fallback: ensure any unobserved section never stays hidden.
+  window.setTimeout(() => {
+    modeSections.forEach((section) => {
+      if (section.style.opacity === "0") {
+        revealModeSection(section);
+      }
+    });
+  }, 1400);
 }
 
 // ==============================================
