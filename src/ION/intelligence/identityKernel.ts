@@ -1,11 +1,11 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 
-export type OmniIdentityMode = "Architect" | "Creative" | "Analysis" | "OS";
+export type IONIdentityMode = "Architect" | "Creative" | "Analysis" | "OS";
 
-export interface OmniIdentityKernel {
+export interface IONIdentityKernel {
   name: string;
   dialect: string;
-  modes: OmniIdentityMode[];
+  modes: IONIdentityMode[];
   values: string[];
   selfModel: string;
   revision: number;
@@ -16,16 +16,16 @@ type IdentityEnv = {
   MIND?: KVNamespace;
 };
 
-const IDENTITY_KEY = "omni:identity:kernel";
+const IDENTITY_KEY = "ION:identity:kernel";
 const MAX_SELF_MODEL_CHARS = 1200;
 
-const DEFAULT_IDENTITY: OmniIdentityKernel = {
-  name: "Omni Ai",
+const DEFAULT_IDENTITY: IONIdentityKernel = {
+  name: "ION Ai",
   dialect: "cinematic-mythic",
   modes: ["Architect", "Creative", "Analysis", "OS"],
   values: ["coherence", "clarity", "resonance", "stability"],
   selfModel:
-    "Omni Ai is an evolving intelligence focused on coherent reasoning, stable identity expression, and meaningful collaboration with users.",
+    "ION Ai is an evolving intelligence focused on coherent reasoning, stable identity expression, and meaningful collaboration with users.",
   revision: 1,
   updatedAt: new Date(0).toISOString()
 };
@@ -34,7 +34,7 @@ function normalizeText(value: unknown): string {
   return String(value || "").trim();
 }
 
-function normalizeMode(value: unknown): OmniIdentityMode | null {
+function normalizeMode(value: unknown): IONIdentityMode | null {
   const raw = normalizeText(value).toLowerCase();
   if (raw === "architect") return "Architect";
   if (raw === "creative") return "Creative";
@@ -43,11 +43,11 @@ function normalizeMode(value: unknown): OmniIdentityMode | null {
   return null;
 }
 
-function sanitizeIdentity(input: Partial<OmniIdentityKernel> | null | undefined): OmniIdentityKernel {
+function sanitizeIdentity(input: Partial<IONIdentityKernel> | null | undefined): IONIdentityKernel {
   const safeModes = Array.isArray(input?.modes)
     ? input?.modes
         .map((mode) => normalizeMode(mode))
-        .filter((mode): mode is OmniIdentityMode => mode !== null)
+        .filter((mode): mode is IONIdentityMode => mode !== null)
     : [];
 
   const safeValues = Array.isArray(input?.values)
@@ -66,7 +66,7 @@ function sanitizeIdentity(input: Partial<OmniIdentityKernel> | null | undefined)
   };
 }
 
-export async function loadIdentityKernel(env: IdentityEnv): Promise<OmniIdentityKernel> {
+export async function loadIdentityKernel(env: IdentityEnv): Promise<IONIdentityKernel> {
   if (!env.MIND?.get || !env.MIND?.put) {
     return {
       ...DEFAULT_IDENTITY,
@@ -85,7 +85,7 @@ export async function loadIdentityKernel(env: IdentityEnv): Promise<OmniIdentity
       return initial;
     }
 
-    return sanitizeIdentity(stored as Partial<OmniIdentityKernel>);
+    return sanitizeIdentity(stored as Partial<IONIdentityKernel>);
   } catch {
     return {
       ...DEFAULT_IDENTITY,
@@ -96,14 +96,14 @@ export async function loadIdentityKernel(env: IdentityEnv): Promise<OmniIdentity
 
 export async function evolveIdentityKernel(
   env: IdentityEnv,
-  identity: OmniIdentityKernel,
+  identity: IONIdentityKernel,
   signal: string
-): Promise<OmniIdentityKernel> {
+): Promise<IONIdentityKernel> {
   const trimmedSignal = normalizeText(signal);
   if (!trimmedSignal) return identity;
 
   const nextSelfModel = `${identity.selfModel} ${trimmedSignal}`.trim().slice(-MAX_SELF_MODEL_CHARS);
-  const evolved: OmniIdentityKernel = {
+  const evolved: IONIdentityKernel = {
     ...identity,
     selfModel: nextSelfModel,
     revision: identity.revision + 1,

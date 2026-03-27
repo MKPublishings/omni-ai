@@ -5,7 +5,7 @@
     "symbol": "C_t",
     "definition": "The active tokenized scope the runtime can reason over in a turn.",
     "tags": ["context", "runtime"],
-    "links": ["law.cognitive.01", "system.omni.overview"]
+    "links": ["law.cognitive.01", "system.ION.overview"]
   },
   {
     "id": "glossary.lineage",
@@ -13,13 +13,13 @@
     "symbol": "L",
     "definition": "Traceable ancestry between artifacts and system phases.",
     "tags": ["history", "graph"],
-    "links": ["system.mind-os.lineage", "system.omni.intelligence-lineage"]
+    "links": ["system.mind-os.lineage", "system.ION.intelligence-lineage"]
   },
   {
     "id": "glossary.resonance",
     "term": "Resonance",
     "symbol": "R",
-    "definition": "Alignment between user emotional signal and Omni behavior output.",
+    "definition": "Alignment between user emotional signal and ION behavior output.",
     "tags": ["emotion", "behavior"],
     "links": ["equation.2026-02-27-002", "law.cognitive.02"]
   }

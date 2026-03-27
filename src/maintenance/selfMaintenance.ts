@@ -1,18 +1,18 @@
 import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
-import { ensureOmniMemorySchema, getLongTermMemoryStats, pruneMemoryOlderThanDays } from "../memory/d1Memory";
+import { ensureIONMemorySchema, getLongTermMemoryStats, pruneMemoryOlderThanDays } from "../memory/d1Memory";
 import { pruneWorkingMemory } from "../memory/workingMemory";
-import { loadIdentityKernel, evolveIdentityKernel } from "../omni/intelligence/identityKernel";
-import { evaluateSelfHealing, persistSelfHealingReport } from "../omni/autonomy/selfHealing";
-import { resolveSchedulerPolicy } from "../omni/autonomy/schedulerPolicy";
-import { updateInternalGoals } from "../omni/autonomy/goalsRegistry";
+import { loadIdentityKernel, evolveIdentityKernel } from "../ION/intelligence/identityKernel";
+import { evaluateSelfHealing, persistSelfHealingReport } from "../ION/autonomy/selfHealing";
+import { resolveSchedulerPolicy } from "../ION/autonomy/schedulerPolicy";
+import { updateInternalGoals } from "../ION/autonomy/goalsRegistry";
 
 type MaintenanceEnv = {
   MEMORY?: KVNamespace;
   MIND?: KVNamespace;
-  OMNI_DB?: D1Database;
-  OMNI_MEMORY_RETENTION_DAYS?: string;
-  OMNI_SESSION_MAX_AGE_HOURS?: string;
-  OMNI_AUTONOMY_LEVEL?: string;
+  ION_DB?: D1Database;
+  ION_MEMORY_RETENTION_DAYS?: string;
+  ION_SESSION_MAX_AGE_HOURS?: string;
+  ION_AUTONOMY_LEVEL?: string;
 };
 
 type LastMaintenanceRecord = {
@@ -47,10 +47,10 @@ function toMinutesSince(isoTs?: string): number | null {
 }
 
 export async function runSelfMaintenance(env: MaintenanceEnv): Promise<SelfMaintenanceReport> {
-  await ensureOmniMemorySchema(env);
+  await ensureIONMemorySchema(env);
 
-  const retentionDays = toBoundedInt(env.OMNI_MEMORY_RETENTION_DAYS, 45, 7, 365);
-  const sessionMaxAgeHours = toBoundedInt(env.OMNI_SESSION_MAX_AGE_HOURS, 72, 1, 720);
+  const retentionDays = toBoundedInt(env.ION_MEMORY_RETENTION_DAYS, 45, 7, 365);
+  const sessionMaxAgeHours = toBoundedInt(env.ION_SESSION_MAX_AGE_HOURS, 72, 1, 720);
 
   const [prunedLongTermRows, prunedSessionEntries] = await Promise.all([
     pruneMemoryOlderThanDays(env, retentionDays),
@@ -59,7 +59,7 @@ export async function runSelfMaintenance(env: MaintenanceEnv): Promise<SelfMaint
 
   const [longTermStats, previousMaintenance] = await Promise.all([
     getLongTermMemoryStats(env),
-    env.MIND?.get ? env.MIND.get("omni:maintenance:last", "json") : Promise.resolve(null)
+    env.MIND?.get ? env.MIND.get("ION:maintenance:last", "json") : Promise.resolve(null)
   ]);
 
   const last = (previousMaintenance || {}) as LastMaintenanceRecord;
@@ -79,7 +79,7 @@ export async function runSelfMaintenance(env: MaintenanceEnv): Promise<SelfMaint
   });
 
   const policy = resolveSchedulerPolicy({
-    autonomyLevel: env.OMNI_AUTONOMY_LEVEL,
+    autonomyLevel: env.ION_AUTONOMY_LEVEL,
     healingScore: healing.score,
     rowsLast24h: longTermStats.rowsLast24h
   });
@@ -98,7 +98,7 @@ export async function runSelfMaintenance(env: MaintenanceEnv): Promise<SelfMaint
 
   if (env.MIND?.put) {
     await env.MIND.put(
-      "omni:maintenance:last",
+      "ION:maintenance:last",
       JSON.stringify({
         ranAt: new Date().toISOString(),
         prunedLongTermRows,

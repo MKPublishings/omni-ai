@@ -1,12 +1,12 @@
-export type OmniRouteKind = "chat" | "image" | "memory" | "simulation" | "tool";
+export type IONRouteKind = "chat" | "image" | "memory" | "simulation" | "tool";
 
 export interface ToolDirective {
   name: string;
   input: string;
 }
 
-export interface OmniRouteDecision {
-  route: OmniRouteKind;
+export interface IONRouteDecision {
+  route: IONRouteKind;
   reason: string;
   confidence: number;
   toolDirective?: ToolDirective;
@@ -28,7 +28,7 @@ function extractToolDirective(text: string): ToolDirective | null {
 }
 
 type RouteScore = {
-  route: OmniRouteKind;
+  route: IONRouteKind;
   score: number;
   reason: string;
 };
@@ -37,10 +37,10 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text));
 }
 
-function extractExplicitRoute(text: string): OmniRouteKind | null {
+function extractExplicitRoute(text: string): IONRouteKind | null {
   const match = String(text || "").trim().toLowerCase().match(/^\/(chat|image|memory|simulation|tool)\b/);
   if (!match) return null;
-  return match[1] as OmniRouteKind;
+  return match[1] as IONRouteKind;
 }
 
 function scoreRouteCandidates(text: string, mode: string): { candidates: RouteScore[]; signals: string[] } {
@@ -112,7 +112,7 @@ function scoreRouteCandidates(text: string, mode: string): { candidates: RouteSc
 export function decideMultimodalRoute(params: {
   latestUserText: string;
   mode: string;
-}): OmniRouteDecision {
+}): IONRouteDecision {
   const text = String(params.latestUserText || "").trim();
   const mode = String(params.mode || "").toLowerCase();
 

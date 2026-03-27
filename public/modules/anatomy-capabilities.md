@@ -1,17 +1,17 @@
 # Ionirix Anatomy Capabilities
 
-Ionirix includes a human anatomy stack in `omni_ai/` with subsystem boundaries that can be reasoned about in chat.
+Ionirix includes a human anatomy stack in `ION_ai/` with subsystem boundaries that can be reasoned about in chat.
 
 ## Top-level modules
 
-- `omni_ai.anatomy`
+- `ION_ai.anatomy`
   - Exposes subsystem namespaces: `arms`, `body`, `legs`, `routing`, `spine`, `torso`.
-- `omni_ai.human`
+- `ION_ai.human`
   - Exposes `head_api`, `NECK_REGISTRY`, `Scenario`, and `simulate_population`.
 
 ## Head subsystem entrypoint
 
-- Function: `omni_ai.human.head.api.head(subsystem, operation, payload)`
+- Function: `ION_ai.human.head.api.head(subsystem, operation, payload)`
 - Contract envelope:
   - `system`: `human_head`
   - `subsystem`: selected head subsystem
@@ -20,7 +20,7 @@ Ionirix includes a human anatomy stack in `omni_ai/` with subsystem boundaries t
 
 ## Integration details
 
-- Head integration graph tooling exists under `omni_ai.human.head.integration`.
+- Head integration graph tooling exists under `ION_ai.human.head.integration`.
 - Registry validation is covered in `tests/test_head_unittest.py` and `tests/test_head_neck_trace_unittest.py`.
 - Canonical aliases and graph consistency are maintained in head registry and integration validators.
 

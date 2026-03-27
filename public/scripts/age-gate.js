@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_KEY = "omni-age-profile-v1";
+  const STORAGE_KEY = "ION-age-profile-v1";
   const TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
   function safeJsonParse(value) {
@@ -64,7 +64,7 @@
     document.documentElement.dataset.adultAccess = adultUnlocked ? "enabled" : "disabled";
 
     window.dispatchEvent(
-      new CustomEvent("omni-age-profile-changed", {
+      new CustomEvent("ION-age-profile-changed", {
         detail: profile
       })
     );
@@ -101,7 +101,7 @@
         return;
       }
 
-      const existing = document.querySelector('script[data-omni-turnstile="true"]');
+      const existing = document.querySelector('script[data-ION-turnstile="true"]');
       if (existing) {
         existing.addEventListener("load", () => resolve(window.turnstile));
         existing.addEventListener("error", () => reject(new Error("Turnstile failed to load")));
@@ -112,7 +112,7 @@
       script.src = TURNSTILE_SCRIPT_SRC;
       script.async = true;
       script.defer = true;
-      script.dataset.omniTurnstile = "true";
+      script.dataset.IONTurnstile = "true";
       script.addEventListener("load", () => resolve(window.turnstile));
       script.addEventListener("error", () => reject(new Error("Turnstile failed to load")));
       document.head.appendChild(script);
@@ -120,12 +120,12 @@
   }
 
   async function fetchTurnstileSiteKey() {
-    const meta = document.querySelector('meta[name="omni-turnstile-site-key"]');
+    const meta = document.querySelector('meta[name="ION-turnstile-site-key"]');
     const fromMeta = String(meta?.getAttribute("content") || "").trim();
     if (fromMeta) return fromMeta;
 
-    if (typeof window.OMNI_TURNSTILE_SITE_KEY === "string" && window.OMNI_TURNSTILE_SITE_KEY.trim()) {
-      return window.OMNI_TURNSTILE_SITE_KEY.trim();
+    if (typeof window.ION_TURNSTILE_SITE_KEY === "string" && window.ION_TURNSTILE_SITE_KEY.trim()) {
+      return window.ION_TURNSTILE_SITE_KEY.trim();
     }
 
     try {

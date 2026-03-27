@@ -45,7 +45,7 @@ class LocalFileStorageAdapter(StorageAdapter):
 @dataclass(slots=True)
 class S3LikeStorageAdapter(StorageAdapter):
     bucket: str
-    prefix: str = "omni-media"
+    prefix: str = "ION-media"
     endpoint_url: str | None = None
     region_name: str | None = None
 

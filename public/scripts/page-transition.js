@@ -3,9 +3,9 @@
   if (!page) return;
 
   const SETTINGS_KEYS = {
-    ANIMATIONS: "omni-animations",
-    HIGH_CONTRAST_MODE: "omni-high-contrast",
-    REDUCE_GLASS_BLUR: "omni-reduce-glass"
+    ANIMATIONS: "ION-animations",
+    HIGH_CONTRAST_MODE: "ION-high-contrast",
+    REDUCE_GLASS_BLUR: "ION-reduce-glass"
   };
 
   function getSettingBool(key, fallback = false) {
@@ -83,7 +83,7 @@
     }
   });
 
-  window.addEventListener("omni-settings-changed", (event) => {
+  window.addEventListener("ION-settings-changed", (event) => {
     const key = event?.detail?.key;
     if (key === SETTINGS_KEYS.HIGH_CONTRAST_MODE || key === SETTINGS_KEYS.REDUCE_GLASS_BLUR) {
       applyInterfaceFlags();

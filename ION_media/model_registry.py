@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 @dataclass(slots=True)
 class ModelProfile:
     key: str
-    omni_model_id: str
+    ION_model_id: str
     precision: str
     max_width: int
     max_height: int
@@ -20,7 +20,7 @@ class ModelRegistry:
         self._profiles: dict[str, ModelProfile] = {
             "image_default": ModelProfile(
                 key="image_default",
-                omni_model_id="Qwen/Qwen-Image",
+                ION_model_id="Qwen/Qwen-Image",
                 precision="fp16",
                 max_width=1536,
                 max_height=1536,
@@ -29,7 +29,7 @@ class ModelRegistry:
             ),
             "image_hd": ModelProfile(
                 key="image_hd",
-                omni_model_id="Qwen/Qwen-Image-2512",
+                ION_model_id="Qwen/Qwen-Image-2512",
                 precision="fp16",
                 max_width=2512,
                 max_height=2512,

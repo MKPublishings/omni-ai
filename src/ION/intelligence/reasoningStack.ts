@@ -1,10 +1,10 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import type { OmniIdentityKernel } from "./identityKernel.ts";
+import type { IONIdentityKernel } from "./identityKernel.ts";
 
-type OmniRole = "system" | "user" | "assistant";
+type IONRole = "system" | "user" | "assistant";
 
-export interface OmniReasoningMessage {
-  role: OmniRole;
+export interface IONReasoningMessage {
+  role: IONRole;
   content: string;
 }
 
@@ -16,8 +16,8 @@ type StackEnv = {
 export interface ReasoningStackInput {
   env: StackEnv;
   model: string;
-  identity: OmniIdentityKernel;
-  messages: OmniReasoningMessage[];
+  identity: IONIdentityKernel;
+  messages: IONReasoningMessage[];
   maxOutputTokens: number;
   strategy?: string;
 }
@@ -29,14 +29,14 @@ export interface ReasoningStackResult {
 }
 
 interface LayerState {
-  systemMessages: OmniReasoningMessage[];
+  systemMessages: IONReasoningMessage[];
   draft: string;
   response: string;
   diagnostics: string[];
   metaScore: number;
 }
 
-const MEMORY_PROFILE_KEY = "omni:memory:profile";
+const MEMORY_PROFILE_KEY = "ION:memory:profile";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -151,7 +151,7 @@ function runMetaLayer(_input: ReasoningStackInput, state: LayerState): void {
 
   if (/\bas an ai\b/i.test(response)) {
     score -= 15;
-    state.response = response.replace(/\bas an ai\b/gi, "As Omni Ai");
+    state.response = response.replace(/\bas an ai\b/gi, "As ION Ai");
     state.diagnostics.push("meta:identity-reframed");
   }
 

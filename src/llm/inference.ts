@@ -1,12 +1,12 @@
 // ============================================================
-// Omni Ai — LLM Inference Wrapper
-// Wraps Cloudflare's AI model with Omni's cognitive engine.
+// ION Ai — LLM Inference Wrapper
+// Wraps Cloudflare's AI model with ION's cognitive engine.
 // ============================================================
 
-import { buildOmniPrompt, OmniContext } from "../omni/mindos-core";
+import { buildIONPrompt, IONContext } from "../ION/mindos-core";
 
-export async function runOmniLLM(env: any, ctx: OmniContext) {
-  const prompt = buildOmniPrompt(ctx);
+export async function runIONLLM(env: any, ctx: IONContext) {
+  const prompt = buildIONPrompt(ctx);
 
   const response = await env.AI.run(env.MODEL, {
     prompt,

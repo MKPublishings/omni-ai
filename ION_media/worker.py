@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .contracts import GenerateRequest, GenerateResponse
-from .pipeline import OmniMediaPipeline
+from .pipeline import IONMediaPipeline
 
 
 @dataclass(slots=True)
@@ -32,8 +32,8 @@ class InMemoryJobQueue:
         return int(self._queue.qsize())
 
 
-class OmniMediaWorker:
-    def __init__(self, pipeline: OmniMediaPipeline, queue_backend: InMemoryJobQueue) -> None:
+class IONMediaWorker:
+    def __init__(self, pipeline: IONMediaPipeline, queue_backend: InMemoryJobQueue) -> None:
         self.pipeline = pipeline
         self.queue_backend = queue_backend
         self._stop_event = threading.Event()

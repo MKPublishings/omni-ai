@@ -9,8 +9,8 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from omni_ai.human.head import handle_head_request
-from omni_ai.human.head.envelopes import HeadRequest
+from ION_ai.human.head import handle_head_request
+from ION_ai.human.head.envelopes import HeadRequest
 
 
 def call(subsystem: str, operation: str, payload: Dict[str, Any]) -> Dict[str, Any]:

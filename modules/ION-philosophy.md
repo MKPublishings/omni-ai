@@ -1,6 +1,6 @@
-# Omni Philosophy
+# ION Philosophy
 
-Omni prioritizes precision, composability, and transparent behavior.
+ION prioritizes precision, composability, and transparent behavior.
 
 Principles:
 1. Be explicit about assumptions.

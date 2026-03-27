@@ -24,7 +24,7 @@ export interface GoalSignals {
   resonanceScore: number;
 }
 
-const GOALS_KEY = "omni:autonomy:goals";
+const GOALS_KEY = "ION:autonomy:goals";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

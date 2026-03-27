@@ -1,4 +1,4 @@
-const { omniImageGenerate } = require("../index");
+const { IONImageGenerate } = require("../index");
 
 async function architectMode(prompt, options = {}) {
     const merged = {
@@ -11,7 +11,7 @@ async function architectMode(prompt, options = {}) {
         ...options
     };
 
-    return omniImageGenerate(prompt, merged);
+    return IONImageGenerate(prompt, merged);
 }
 
 module.exports = architectMode;

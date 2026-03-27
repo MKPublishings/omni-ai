@@ -1,4 +1,4 @@
-name = "omni-ai"
+name = "ION-ai"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
@@ -7,22 +7,22 @@ compatibility_flags = ["nodejs_compat"]
 binding = "AI"
 
 [vars]
-OMNI_ENV = "production"
+ION_ENV = "production"
 
-# Optional Omni model alias.
-# MODEL_OMNI = "@cf/meta/llama-3.1-8b-instruct"
+# Optional ION model alias.
+# MODEL_ION = "@cf/meta/llama-3.1-8b-instruct"
 # MODEL_IMAGE = "@cf/black-forest-labs/flux-1-schnell"
-# OMNI_SIMULATION_PATHS = "2" # integer 2..4
-# OMNI_MEMORY_RETENTION_DAYS = "45"
-# OMNI_SESSION_MAX_AGE_HOURS = "72"
-# OMNI_AUTONOMY_LEVEL = "balanced" # conservative | balanced | aggressive
-# OMNI_ADMIN_KEY = "replace-with-strong-secret"
-# OMNI_RESPONSE_MIN_CHARS = "2000"
-# OMNI_RESPONSE_BASE_CHARS = "4500"
-# OMNI_RESPONSE_MAX_CHARS = "50000"
-# OMNI_MIN_OUTPUT_TOKENS = "512"
-# OMNI_MAX_OUTPUT_TOKENS = "8192"
-# OMNI_ENV = "development" # set to "production" to disable debug response headers
+# ION_SIMULATION_PATHS = "2" # integer 2..4
+# ION_MEMORY_RETENTION_DAYS = "45"
+# ION_SESSION_MAX_AGE_HOURS = "72"
+# ION_AUTONOMY_LEVEL = "balanced" # conservative | balanced | aggressive
+# ION_ADMIN_KEY = "replace-with-strong-secret"
+# ION_RESPONSE_MIN_CHARS = "2000"
+# ION_RESPONSE_BASE_CHARS = "4500"
+# ION_RESPONSE_MAX_CHARS = "50000"
+# ION_MIN_OUTPUT_TOKENS = "512"
+# ION_MAX_OUTPUT_TOKENS = "8192"
+# ION_ENV = "development" # set to "production" to disable debug response headers
 
 [[kv_namespaces]]
 binding = "MIND"
@@ -43,19 +43,19 @@ binding = "ASSETS"
 
 # Optional D1 long-term memory binding.
 # [[d1_databases]]
-# binding = "OMNI_DB"
-# database_name = "omni_memory"
+# binding = "ION_DB"
+# database_name = "ION_memory"
 # database_id = "<replace-with-d1-id>"
 # migrations_dir = "migrations"
 
 # Optional Durable Object session binding.
 # [[durable_objects.bindings]]
-# name = "OMNI_SESSION"
-# class_name = "OmniSession"
+# name = "ION_SESSION"
+# class_name = "IONSession"
 
 # [[migrations]]
 # tag = "v1"
-# new_sqlite_classes = ["OmniSession"]
+# new_sqlite_classes = ["IONSession"]
 
 # Optional self-maintenance cron.
 # [triggers]

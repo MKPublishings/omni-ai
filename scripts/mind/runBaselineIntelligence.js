@@ -246,7 +246,7 @@ function main() {
 
   const payload = {
     generatedAt: new Date().toISOString(),
-    kind: "omni-intelligence-baseline",
+    kind: "ION-intelligence-baseline",
     version: "v1",
     overallScore: scoring.score,
     dimensions: scoring.dimensions,
@@ -282,7 +282,7 @@ function main() {
 
   const files = writeScorecard(payload);
 
-  console.log("Omni intelligence baseline complete.");
+  console.log("ION intelligence baseline complete.");
   console.log(`Overall score: ${payload.overallScore}`);
   console.log(`Dimensions: ${JSON.stringify(payload.dimensions)}`);
   console.log(`Report: ${files.reportFile}`);

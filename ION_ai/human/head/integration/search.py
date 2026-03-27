@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from omni_ai.human.head.registry import HEAD_REGISTRY
+from ION_ai.human.head.registry import HEAD_REGISTRY
 
 
 def search_head(query: str) -> List[Dict[str, Any]]:

@@ -1,9 +1,9 @@
 const ORCHESTRATOR_URL =
-  String(process.env.OMNI_ORCHESTRATOR_URL || "https://omni-ai.omni-ai.workers.dev").replace(/\/+$/, "");
+  String(process.env.ION_ORCHESTRATOR_URL || "https://ION-ai.ION-ai.workers.dev").replace(/\/+$/, "");
 
-const REQUEST_TIMEOUT_MS = Number(process.env.OMNI_SMOKE_TIMEOUT_MS || 90_000);
+const REQUEST_TIMEOUT_MS = Number(process.env.ION_SMOKE_TIMEOUT_MS || 90_000);
 const RUN_LONG_PROMPT_CLAMP_CHECK = ["1", "true", "yes"].includes(
-  String(process.env.OMNI_SMOKE_LONG_PROMPT || "").trim().toLowerCase()
+  String(process.env.ION_SMOKE_LONG_PROMPT || "").trim().toLowerCase()
 );
 
 function expect(condition, message) {
@@ -71,8 +71,8 @@ function expectAttestedImageSuccess(result, label) {
   expect(typeof result.data.filename === "string" && result.data.filename.length > 0, `${label}: expected filename`);
   expect(result.data.metadata && typeof result.data.metadata === "object", `${label}: expected metadata object`);
 
-  const modelHeader = String(result.headers.get("X-Omni-Image-Model") || "").trim();
-  expect(modelHeader.length > 0, `${label}: expected X-Omni-Image-Model header`);
+  const modelHeader = String(result.headers.get("X-ION-Image-Model") || "").trim();
+  expect(modelHeader.length > 0, `${label}: expected X-ION-Image-Model header`);
 }
 
 function expectPromptDoesNotUseNegativeLabel(result, label) {
@@ -128,7 +128,7 @@ async function run() {
     expectPromptDoesNotUseNegativeLabel(longPromptResult, "long prompt clamp regression");
     console.log("✓ orchestrator /api/image accepts long prompt and succeeds via provider-safe prompt handling");
   } else {
-    console.log("• long prompt clamp regression check skipped (set OMNI_SMOKE_LONG_PROMPT=1 to enable)");
+    console.log("• long prompt clamp regression check skipped (set ION_SMOKE_LONG_PROMPT=1 to enable)");
   }
 
   const dogRegression = await postJson("/api/image", {

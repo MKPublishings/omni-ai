@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from omni_ai.human.head.integration.search import search_head as _integration_search_head
+from ION_ai.human.head.integration.search import search_head as _integration_search_head
 
 
 def search_head(query: str, registry: Dict[str, Any] | None = None) -> List[Dict[str, Any]]:

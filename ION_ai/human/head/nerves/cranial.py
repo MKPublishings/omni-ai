@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import CranialNerve
+from ION_ai.human.head.models import CranialNerve
 
 CRANIAL_NERVES: Dict[int, CranialNerve] = {
     1: CranialNerve(

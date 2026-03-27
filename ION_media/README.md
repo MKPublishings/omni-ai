@@ -1,6 +1,6 @@
-# Omni Media (Image-Only)
+# ION Media (Image-Only)
 
-`omni_media` provides an Omni-native image generation service layer used for local/service integration.
+`ION_media` provides an ION-native image generation service layer used for local/service integration.
 
 ## Scope
 - Text/Image prompt input -> image outputs
@@ -14,7 +14,7 @@
 - `pipeline.py` — request normalization, model routing, generation packaging
 - `service.py` — sync + async orchestration, runtime diagnostics
 - `http_fastapi.py` — HTTP API (`/v1/generate/image`, `/v1/jobs/*`, admin endpoints)
-- `engine.py` — Omni backend adapter for image generation
+- `engine.py` — ION backend adapter for image generation
 - `model_registry.py` — image profiles and selection
 - `storage.py` — local and S3-like adapters
 
@@ -57,9 +57,9 @@ python plot_avalanche_compare.py \
 ```
 
 ## Environment Notes
-- API key auth: `OMNI_MEDIA_API_KEYS`
-- Rate limits: `OMNI_MEDIA_RATE_LIMIT_*` and window vars
-- Optional Redis limiter via `OMNI_MEDIA_RATE_LIMIT_BACKEND=redis` and `OMNI_MEDIA_REDIS_URL`
+- API key auth: `ION_MEDIA_API_KEYS`
+- Rate limits: `ION_MEDIA_RATE_LIMIT_*` and window vars
+- Optional Redis limiter via `ION_MEDIA_RATE_LIMIT_BACKEND=redis` and `ION_MEDIA_REDIS_URL`
 
 ## Run (example)
 - Install deps in the target Python environment

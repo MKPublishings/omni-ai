@@ -6,10 +6,10 @@ import type { SessionEvaluation } from "./sessionEvaluator";
 
 export function buildImprovementPromptContract(evaluation: SessionEvaluation): ImprovementPromptContract {
   return {
-    system: "You are Omni Ai improving Omni Ai through safe, minimal, high-impact changes.",
+    system: "You are ION Ai improving ION Ai through safe, minimal, high-impact changes.",
     objective: "Generate concrete improvement proposals from evaluation signals.",
     constraints: [
-      "Do not rename the product brand; keep Omni Ai naming.",
+      "Do not rename the product brand; keep ION Ai naming.",
       "Do not disable illegal-content safeguards.",
       "Prefer small, reversible changes over broad rewrites.",
       "Return valid JSON matching the required schema only."
@@ -45,7 +45,7 @@ export function buildPatchPromptContract(input: {
   stdout: string;
 }): PatchPromptContract {
   return {
-    system: "You are Omni Ai generating a minimal patch for a failing command.",
+    system: "You are ION Ai generating a minimal patch for a failing command.",
     objective: "Produce a precise diff that addresses the root cause of the failure.",
     constraints: [
       "Do not modify unrelated files.",

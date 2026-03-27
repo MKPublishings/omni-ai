@@ -3,7 +3,7 @@ const path = require("path");
 const { formatDateTimeForFilename } = require("../utils/datetime");
 const logger = require("../utils/logger");
 
-const OUTPUT_DIR = path.join(process.cwd(), "omni_image_exports");
+const OUTPUT_DIR = path.join(process.cwd(), "ION_image_exports");
 
 function ensureOutputDir() {
     if (!fs.existsSync(OUTPUT_DIR)) {
@@ -73,7 +73,7 @@ async function exportImage(buffer, format = "png") {
     const prepared = prepareExportPayload(buffer, format);
 
     const timestamp = formatDateTimeForFilename(new Date());
-    const filename = `omni_image_${timestamp}.${prepared.format}`;
+    const filename = `ION_image_${timestamp}.${prepared.format}`;
     const filePath = path.join(OUTPUT_DIR, filename);
 
     await fs.promises.writeFile(filePath, prepared.buffer);
@@ -98,7 +98,7 @@ async function exportImageWithMeta(buffer, options = {}) {
     const ratioLabel = sanitizeRatioLabel(options.ratio || options.aspectRatio || (width > 0 && height > 0 ? `${width}:${height}` : ""));
     const resolutionLabel = width > 0 && height > 0 ? `${width}x${height}` : "";
 
-    const parts = ["omni_image", timestamp];
+    const parts = ["ION_image", timestamp];
     if (ratioLabel) parts.push(ratioLabel);
     if (resolutionLabel) parts.push(resolutionLabel);
 

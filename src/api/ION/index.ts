@@ -1,9 +1,9 @@
-// src/api/omni/index.ts
+// src/api/ION/index.ts
 
 import { routeModel } from "../../llm/router";
 import { validateMessages } from "../../utils/validation";
 
-export interface OmniRequest {
+export interface IONRequest {
   messages: { role: string; content: string }[];
   model: string;
   mode: string;
@@ -31,7 +31,7 @@ export default {
       }
 
       // Parse JSON
-      const body = (await request.json().catch(() => null)) as OmniRequest | null;
+      const body = (await request.json().catch(() => null)) as IONRequest | null;
       if (!body) {
         return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
           status: 400,

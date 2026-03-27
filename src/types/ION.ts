@@ -1,4 +1,4 @@
-export type OmniMode =
+export type IONMode =
   | "architect"
   | "reasoning"
   | "coding"
@@ -20,7 +20,7 @@ export interface MemorySettings {
 
 export interface MemoryState {
   [key: string]: unknown;
-  preferredMode?: OmniMode | string;
+  preferredMode?: IONMode | string;
   tone?: string;
   structure?: string;
   memoryInfluenceLevel?: MemoryInfluenceLevel;
@@ -55,8 +55,8 @@ export interface ConfidenceInfo {
   escalated: boolean;
 }
 
-export interface OmniResponse {
-  mode: OmniMode | string;
+export interface IONResponse {
+  mode: IONMode | string;
   route: RouteInfo;
   moduleFile: string;
   retrievalCount: number;

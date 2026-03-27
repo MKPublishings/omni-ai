@@ -61,7 +61,7 @@ class DefaultMediaHooks:
         try:
             image = image_module.open(io.BytesIO(data)).convert("RGBA")
             drawer = draw_module.Draw(image)
-            text = "Omni Ai"
+            text = "ION Ai"
             width, height = image.size
             x = max(8, width - 88)
             y = max(8, height - 20)

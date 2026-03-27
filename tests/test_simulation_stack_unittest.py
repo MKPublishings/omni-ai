@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.simulation import (
+from ION_ai.simulation import (
     simulate_existential_risks,
     simulate_grand_strategy,
     simulate_intercivilizational_dynamics,

@@ -6,7 +6,7 @@ category: laws/quantum
 number: 2
 symbol: "ρ(A,B) ≠ ρ(A) ⊗ ρ(B)"
 tags: [quantum, law, coupling]
-links: [law.cognitive.02, system.omni.intelligence-lineage]
+links: [law.cognitive.02, system.ION.intelligence-lineage]
 lineage: [legacy.codex.20-protocols]
 ---
 

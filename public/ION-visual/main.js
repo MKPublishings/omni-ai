@@ -1,8 +1,8 @@
 import * as THREE from "https://unpkg.com/three@0.163.0/build/three.module.js";
 
-const canvas = document.getElementById("hero-omni-canvas");
+const canvas = document.getElementById("hero-ION-canvas");
 if (!canvas) {
-  throw new Error("Missing #hero-omni-canvas for omni visual");
+  throw new Error("Missing #hero-ION-canvas for ION visual");
 }
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

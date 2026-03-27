@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import SenseOrgan
+from ION_ai.human.head.models import SenseOrgan
 
 HEARING_ORGANS: Dict[str, SenseOrgan] = {
     "ear_left": SenseOrgan(

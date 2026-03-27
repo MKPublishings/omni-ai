@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from omni_ai.anatomy.arms import Arm, BilateralArms
-from omni_ai.anatomy.body.body import Body
-from omni_ai.anatomy.legs import BilateralLegs, Leg
-from omni_ai.jobs.coordinator import TorsoSowingCoordinator
-from omni_ai.registry.anatomy_registry import AnatomyRegistry
-from omni_ai.registry.envelope_registry import EnvelopeRegistry
+from ION_ai.anatomy.arms import Arm, BilateralArms
+from ION_ai.anatomy.body.body import Body
+from ION_ai.anatomy.legs import BilateralLegs, Leg
+from ION_ai.jobs.coordinator import TorsoSowingCoordinator
+from ION_ai.registry.anatomy_registry import AnatomyRegistry
+from ION_ai.registry.envelope_registry import EnvelopeRegistry
 
 
 def initialize_body(

@@ -1,12 +1,12 @@
 ![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
 
 
-# **Omni Ai**  
+# **ION Ai**  
 *A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture • A Public Summonable Intelligence*
 
-Omni Ai is a **cognitive operating system** in active unification. The current north star is a **single TypeScript-first Cloudflare Worker runtime** with one authoritative cognitive loop, one routing policy layer, unified memory services, and an embedded simulation substrate that can optionally call into deeper Python-origin logic when warranted.
+ION Ai is a **cognitive operating system** in active unification. The current north star is a **single TypeScript-first Cloudflare Worker runtime** with one authoritative cognitive loop, one routing policy layer, unified memory services, and an embedded simulation substrate that can optionally call into deeper Python-origin logic when warranted.
 
-This README provides a **complete, structured, diagram‑rich** overview of Omni Ai’s architecture, philosophy, and usage.
+This README provides a **complete, structured, diagram‑rich** overview of ION Ai’s architecture, philosophy, and usage.
 
 ---
 
@@ -14,7 +14,7 @@ This README provides a **complete, structured, diagram‑rich** overview of Omni
 
 ## **1. System Overview**
 
-Omni Ai is designed as a **summonable intelligence**—a system where every capability is exposed through a single cognitive surface. It merges:
+ION Ai is designed as a **summonable intelligence**—a system where every capability is exposed through a single cognitive surface. It merges:
 
 - A unified envelope  
 - A stable namespace  
@@ -31,7 +31,7 @@ Omni Ai is designed as a **summonable intelligence**—a system where every capa
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                               Omni Ai                                │
+│                               ION Ai                                │
 │                     Unified Cognitive Architecture                   │
 ├──────────────────────────────────────────────────────────────────────┤
 │  Cognitive Layer (Mind Layer)                                        │
@@ -60,7 +60,7 @@ Omni Ai is designed as a **summonable intelligence**—a system where every capa
 
 ## **2. Unified Envelope Architecture**
 
-The envelope is the **core contract** of Omni Ai. Every request—text, image, audio, video, reasoning, planning—uses the same structure.
+The envelope is the **core contract** of ION Ai. Every request—text, image, audio, video, reasoning, planning—uses the same structure.
 
 ### **Envelope Structure**
 
@@ -81,11 +81,11 @@ meta:       Tokens, routing, diagnostics
 ### **Python Example**
 
 ```python
-from omni import Omni
+from ION import ION
 
-omni = Omni()
+ION = ION()
 
-response = omni.generate(
+response = ION.generate(
     input="Explain dark matter using a mythic persona.",
     profile={"persona": "mythic", "temperature": 0.8}
 )
@@ -97,7 +97,7 @@ print(response.output)
 
 ## **3. Full‑Surface Namespace**
 
-Omni Ai exposes a **complete, discoverable namespace** that mirrors the cognitive architecture. This ensures:
+ION Ai exposes a **complete, discoverable namespace** that mirrors the cognitive architecture. This ensures:
 
 - Autocomplete reveals the entire mind  
 - No hidden endpoints  
@@ -107,7 +107,7 @@ Omni Ai exposes a **complete, discoverable namespace** that mirrors the cognitiv
 ### **Namespace Diagram**
 
 ```
-omni/
+ION/
 │
 ├── generate/          # Text, vision, audio, video
 ├── task/              # Cognitive contracts
@@ -122,7 +122,7 @@ omni/
 
 ## **4. Cognitive Layer (Mind Layer)**
 
-The cognitive layer is the internal mind of Omni Ai. It governs reasoning, identity, memory, and contract evaluation.
+The cognitive layer is the internal mind of ION Ai. It governs reasoning, identity, memory, and contract evaluation.
 
 ### **Cognitive Layer Diagram**
 
@@ -154,13 +154,13 @@ The cognitive layer is the internal mind of Omni Ai. It governs reasoning, ident
 - **analyst** — structured, precise, technical  
 - **cinematic** — visual, atmospheric  
 - **concise** — distilled, minimal  
-- **omniscient** — panoramic reasoning  
+- **IONscient** — panoramic reasoning  
 
 ---
 
 ## **5. Multimodal Engine**
 
-Omni Ai supports **text, image, audio, and video** generation through the same envelope.
+ION Ai supports **text, image, audio, and video** generation through the same envelope.
 
 ### **Multimodal Diagram**
 
@@ -179,7 +179,7 @@ Omni Ai supports **text, image, audio, and video** generation through the same e
 ### **Physics Profile Example**
 
 ```python
-video = omni.generate_video(
+video = ION.generate_video(
     prompt="A biomechanical cathedral breathing slowly.",
     physics={"heart_rate": 72, "stress_level": 0.2}
 )
@@ -189,7 +189,7 @@ video = omni.generate_video(
 
 ## **6. Agents & Tools**
 
-Agents allow Omni Ai to perform multi-step reasoning, tool use, and planning.
+Agents allow ION Ai to perform multi-step reasoning, tool use, and planning.
 
 ### **Agent Mesh Diagram**
 
@@ -210,7 +210,7 @@ Agents allow Omni Ai to perform multi-step reasoning, tool use, and planning.
 ### **Agent Example**
 
 ```python
-agent = omni.agent("researcher")
+agent = ION.agent("researcher")
 agent.add_tool("web_search")
 result = agent.run("Compare Japan and Germany GDP.")
 ```
@@ -220,17 +220,17 @@ result = agent.run("Compare Japan and Germany GDP.")
 ## **7. Directory Structure**
 
 ```
-omni-ai/
+ION-ai/
 │
 ├── src/
 │   ├── index.ts          # Authoritative Worker entrypoint
 │   ├── runtime/          # Unified loop, routing, retrieval
 │   ├── simulation/       # TS-first object-oriented simulation core
 │   ├── memory/           # Working and long-term memory services
-│   ├── omni/             # Identity, behavior, rendering, multimodal subsystems
+│   ├── ION/             # Identity, behavior, rendering, multimodal subsystems
 │   └── tools/            # Tool execution and registries
 │
-├── omni_ai/
+├── ION_ai/
 │   ├── client.py         # Python client surface
 │   ├── simulation/       # High-fidelity Python depth retained during migration
 │   ├── anatomy/          # Specialized anatomy models
@@ -246,14 +246,14 @@ omni-ai/
 ## **8. Installation**
 
 ```bash
-pip install omni-ai
+pip install ION-ai
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/MKPublishings/omni-ai
-cd omni-ai
+git clone https://github.com/MKPublishings/ION-ai
+cd ION-ai
 pip install -e .
 ```
 
@@ -264,13 +264,13 @@ pip install -e .
 ### **Text Generation**
 
 ```python
-omni.generate("Explain quantum entanglement.")
+ION.generate("Explain quantum entanglement.")
 ```
 
 ### **Task-Based Reasoning**
 
 ```python
-task = omni.task("summarize", input="Long text...")
+task = ION.task("summarize", input="Long text...")
 task.evaluate()
 task.plan()
 task.execute()
@@ -279,7 +279,7 @@ task.execute()
 ### **Video Generation**
 
 ```python
-omni.generate_video(prompt="A glowing fractal forest at night.")
+ION.generate_video(prompt="A glowing fractal forest at night.")
 ```
 
 ---
@@ -305,7 +305,7 @@ omni.generate_video(prompt="A glowing fractal forest at night.")
 
 ## **11. Philosophy**
 
-Omni Ai is built on the belief that:
+ION Ai is built on the belief that:
 
 - A cognitive system should feel like a **mind**, not a toolkit  
 - A namespace is a form of **identity**  
@@ -313,7 +313,7 @@ Omni Ai is built on the belief that:
 - Symmetry is **stability**  
 - Developer experience is **generosity**  
 
-Omni Ai is a **living node** in your network of minds.
+ION Ai is a **living node** in your network of minds.
 
 ---
 📝 License

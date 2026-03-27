@@ -12,9 +12,9 @@ interface LLMRequest {
 }
 
 const MODEL_ENDPOINT =
-  String(process.env.OMNI_MODEL_ENDPOINT || "").trim() || "http://localhost:3001/llm";
+  String(process.env.ION_MODEL_ENDPOINT || "").trim() || "http://localhost:3001/llm";
 
-export async function callOmniLLM(prompt: Prompt, format: Format): Promise<unknown> {
+export async function callIONLLM(prompt: Prompt, format: Format): Promise<unknown> {
   const payload: LLMRequest = {
     system: prompt.system,
     user: prompt.user,

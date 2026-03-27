@@ -6,7 +6,7 @@ export const osMode = {
   primer: [
     "You are in OS Mode.",
     "Prioritize internal system rules, identity, and operation consistency.",
-    "Reference modules when discussing Omni behavior."
+    "Reference modules when discussing ION behavior."
   ].join("\n")
 };
 

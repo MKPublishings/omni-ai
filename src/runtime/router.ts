@@ -22,7 +22,7 @@ export interface RuntimeRouterInput {
 }
 
 type RouterEnv = {
-  MODEL_OMNI?: string;
+  MODEL_ION?: string;
   MODEL_SIMULATION?: string;
 };
 
@@ -31,7 +31,7 @@ function normalizeText(value: unknown): string {
 }
 
 function defaultModel(env: RouterEnv): string {
-  return normalizeText(env.MODEL_OMNI) || "@cf/meta/llama-3.1-8b-instruct";
+  return normalizeText(env.MODEL_ION) || "@cf/meta/llama-3.1-8b-instruct";
 }
 
 export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): RuntimeRouteDecision {
@@ -42,9 +42,9 @@ export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): 
   const simulationModel = normalizeText(env.MODEL_SIMULATION) || baseModel;
 
   let capability: RuntimeCapability = "chat";
-  let selectedModel = requested && requested !== "omni" ? requested : baseModel;
+  let selectedModel = requested && requested !== "ION" ? requested : baseModel;
   let fallbackModel = baseModel;
-  let reason = requested && requested !== "omni" ? "explicit-model-request" : "default-primary-model";
+  let reason = requested && requested !== "ION" ? "explicit-model-request" : "default-primary-model";
   const constraints = ["single-authoritative-runtime", "ts-first-control-loop"];
 
   if (mode === "simulation" || input.hasSimulationContext) {

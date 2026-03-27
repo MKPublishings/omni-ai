@@ -17,10 +17,10 @@ from .security import (
     create_rate_limiter_from_env,
     load_rate_limits_from_env,
 )
-from .service import OmniMediaService
+from .service import IONMediaService
 
 
-def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
+def create_fastapi_app(service: IONMediaService | None = None) -> Any:
     try:
         fastapi_module = importlib.import_module("fastapi")
     except Exception as exc:
@@ -28,8 +28,8 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
 
     FastAPI = getattr(fastapi_module, "FastAPI")
     HTTPException = getattr(fastapi_module, "HTTPException")
-    app = FastAPI(title="Omni Media API", version="1.0.0")
-    media_service = service or OmniMediaService()
+    app = FastAPI(title="ION Media API", version="1.0.0")
+    media_service = service or IONMediaService()
     auth = ApiKeyAuth()
     limiter = create_rate_limiter_from_env()
     limits = load_rate_limits_from_env()
@@ -209,7 +209,7 @@ def create_fastapi_app(service: OmniMediaService | None = None) -> Any:
 
         return {
             "ok": True,
-            "service": "omni-media",
+            "service": "ION-media",
             "version": "1.0.0",
             "backend": health_probe,
         }

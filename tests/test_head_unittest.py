@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.human import head_api
-from omni_ai.human.head.integration.graphs import supported_graphs
-from omni_ai.human.head.integration.validate import validate_graph
+from ION_ai.human import head_api
+from ION_ai.human.head.integration.graphs import supported_graphs
+from ION_ai.human.head.integration.validate import validate_graph
 
 
 class HeadSubsystemTests(unittest.TestCase):

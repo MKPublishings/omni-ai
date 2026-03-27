@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from omni_ai.anatomy.torso import OrganLoad, Torso, fast_torso_tick
+from ION_ai.anatomy.torso import OrganLoad, Torso, fast_torso_tick
 
 from .torso_request import TorsoRequest
 from .torso_response import CirculatoryOut, MetabolicOut, RespiratoryOut, TorsoResponse

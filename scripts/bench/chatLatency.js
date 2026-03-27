@@ -1,8 +1,8 @@
-const DEFAULT_URL = process.env.OMNI_CHAT_BENCH_URL || "http://127.0.0.1:8787/api/omni";
-const RUNS = Number(process.env.OMNI_CHAT_BENCH_RUNS || 15);
-const WARMUP = Number(process.env.OMNI_CHAT_BENCH_WARMUP || 3);
-const MODE = process.env.OMNI_CHAT_BENCH_MODE || "auto";
-const FAST = String(process.env.OMNI_CHAT_BENCH_FAST || "false").toLowerCase() === "true";
+const DEFAULT_URL = process.env.ION_CHAT_BENCH_URL || "http://127.0.0.1:8787/api/ION";
+const RUNS = Number(process.env.ION_CHAT_BENCH_RUNS || 15);
+const WARMUP = Number(process.env.ION_CHAT_BENCH_WARMUP || 3);
+const MODE = process.env.ION_CHAT_BENCH_MODE || "auto";
+const FAST = String(process.env.ION_CHAT_BENCH_FAST || "false").toLowerCase() === "true";
 
 function percentile(values, p) {
   if (!values.length) return 0;
@@ -50,7 +50,7 @@ async function runOnce(index) {
   });
 
   const headerMs = toMs(startedNs);
-  const prestreamHeader = Number(response.headers.get("x-omni-prestream-latency-ms") || 0);
+  const prestreamHeader = Number(response.headers.get("x-ION-prestream-latency-ms") || 0);
 
   if (!response.ok) {
     const text = await response.text();

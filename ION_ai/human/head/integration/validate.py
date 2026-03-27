@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from omni_ai.human.head.registry import HEAD_REGISTRY
+from ION_ai.human.head.registry import HEAD_REGISTRY
 
 
 def validate_graph(graph: Dict[str, List[Dict[str, str]]], registry: Dict[str, Any] | None = None) -> List[str]:

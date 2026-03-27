@@ -21,7 +21,7 @@ function exists(relativePath) {
 function validateImageEngine() {
     const required = [
         ["index.js", "image entrypoint"],
-        ["core/omniImageGenerator.js", "image generator"],
+        ["core/IONImageGenerator.js", "image generator"],
         ["core/modelRouter.js", "model router"],
         ["core/promptOrchestrator.js", "prompt orchestrator"],
         ["io/fileExporter.js", "file exporter"],
@@ -33,26 +33,26 @@ function validateImageEngine() {
     });
 
     const imageEntry = require("..");
-    assert(imageEntry && typeof imageEntry.omniImageGenerate === "function", "omni-image-engine/index.js must export omniImageGenerate");
+    assert(imageEntry && typeof imageEntry.IONImageGenerate === "function", "ION-image-engine/index.js must export IONImageGenerate");
     return { valid: true };
 }
 
-function validateOmniEngine() {
+function validateIONEngine() {
     return validateImageEngine();
 }
 
 if (require.main === module) {
     try {
-        validateOmniEngine();
-        console.log("[OMNI-IMAGE-ENGINE] Validator passed.");
+        validateIONEngine();
+        console.log("[ION-IMAGE-ENGINE] Validator passed.");
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        console.error("[OMNI-IMAGE-ENGINE][ERROR]", message);
+        console.error("[ION-IMAGE-ENGINE][ERROR]", message);
         process.exitCode = 1;
     }
 }
 
 module.exports = {
     ensureString,
-    validateOmniEngine
+    validateIONEngine
 };

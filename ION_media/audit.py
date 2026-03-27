@@ -11,13 +11,13 @@ from typing import Any
 @dataclass(slots=True)
 class AuditLogger:
     enabled: bool = True
-    path: str = "logs/omni_media_audit.log"
+    path: str = "logs/ION_media_audit.log"
 
     @classmethod
     def from_env(cls) -> "AuditLogger":
-        enabled_raw = str(os.getenv("OMNI_MEDIA_AUDIT_ENABLED", "true")).strip().lower()
+        enabled_raw = str(os.getenv("ION_MEDIA_AUDIT_ENABLED", "true")).strip().lower()
         enabled = enabled_raw in {"1", "true", "yes", "on"}
-        path = str(os.getenv("OMNI_MEDIA_AUDIT_LOG_PATH", "logs/omni_media_audit.log")).strip()
+        path = str(os.getenv("ION_MEDIA_AUDIT_LOG_PATH", "logs/ION_media_audit.log")).strip()
         return cls(enabled=enabled, path=path)
 
     def log(self, event: dict[str, Any]) -> None:

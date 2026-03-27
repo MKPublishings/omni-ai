@@ -5,9 +5,9 @@ from .contracts import (
     ImageObject,
 )
 from .model_registry import ModelRegistry, ModelProfile
-from .engine import OmniMediaEngine
-from .pipeline import OmniMediaPipeline
-from .service import OmniMediaService, InMemoryJobStore, JobRecord
+from .engine import IONMediaEngine
+from .pipeline import IONMediaPipeline
+from .service import IONMediaService, InMemoryJobStore, JobRecord
 from .storage import StorageAdapter, LocalFileStorageAdapter, S3LikeStorageAdapter
 from .http_fastapi import create_fastapi_app
 from .hooks import DefaultMediaHooks, MediaPolicyError
@@ -29,9 +29,9 @@ __all__ = [
     "ImageObject",
     "ModelRegistry",
     "ModelProfile",
-    "OmniMediaEngine",
-    "OmniMediaPipeline",
-    "OmniMediaService",
+    "IONMediaEngine",
+    "IONMediaPipeline",
+    "IONMediaService",
     "InMemoryJobStore",
     "JobRecord",
     "StorageAdapter",

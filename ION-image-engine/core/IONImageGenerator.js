@@ -44,7 +44,7 @@ async function generate(userPrompt, options = {}) {
 
     const imageBuffer = await modelRouter.generateImage(data.finalPrompt, generationOptions);
 
-    // Export to disk with omni_image_(date&time).ext
+    // Export to disk with ION_image_(date&time).ext
     const filePath = await fileExporter.exportImageWithMeta(imageBuffer, generationOptions);
 
     return {

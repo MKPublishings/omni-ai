@@ -1,7 +1,7 @@
 // @ts-check
 import { get as getMemory, set as setMemory } from "../memory/memoryManager.js";
 
-const MODE_STATE_KEY = "omni-ui-modes";
+const MODE_STATE_KEY = "ION-ui-modes";
 
 export function getModesState() {
   try {

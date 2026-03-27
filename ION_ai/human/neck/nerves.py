@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.neck.models import NeckNerve
+from ION_ai.human.neck.models import NeckNerve
 
 NECK_NERVES: Dict[str, NeckNerve] = {
     "cervical_plexus": NeckNerve(

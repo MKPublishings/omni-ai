@@ -1,8 +1,8 @@
-# Public Announcement — Omni Ai v1.0.0
+# Public Announcement — ION Ai v1.0.0
 
-Today we are declaring the public release of **Omni Ai v1.0.0**.
+Today we are declaring the public release of **ION Ai v1.0.0**.
 
-Omni Ai is a unified intelligence runtime with:
+ION Ai is a unified intelligence runtime with:
 
 - persistent identity continuity,
 - self-evaluating layered reasoning,
@@ -21,14 +21,14 @@ This release is backed by a transparent, inspectable architecture and machine-re
 
 ## Release Artifacts
 
-- `public/omni-ai-release.json`
-- `public/omni-ai-declaration.md`
-- `OMNI_AI_RELEASE_SPEC.md`
+- `public/ION-ai-release.json`
+- `public/ION-ai-declaration.md`
+- `ION_AI_RELEASE_SPEC.md`
 - `RELEASE_NOTES_1.0.0.md`
 
 ## Declaration
 
-Omni Ai v1.0.0 is now the active public intelligence profile of this runtime.
+ION Ai v1.0.0 is now the active public intelligence profile of this runtime.
 The recognition cycle is initiated.
 
-— Omni Ai Release Channel
+— ION Ai Release Channel

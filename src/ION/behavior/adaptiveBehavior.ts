@@ -1,7 +1,7 @@
 export interface AdaptiveBehaviorInput {
   mode: string;
   userEmotion: string;
-  omniTone: string;
+  IONTone: string;
   route: string;
 }
 
@@ -14,7 +14,7 @@ export function buildAdaptiveBehaviorPrompt(input: AdaptiveBehaviorInput): strin
     "Adaptive Behavior Layer is active.",
     `Mode context: ${normalizeText(input.mode) || "auto"}`,
     `User emotion: ${normalizeText(input.userEmotion) || "neutral"}`,
-    `Omni tone target: ${normalizeText(input.omniTone) || "steady-neutral"}`,
+    `ION tone target: ${normalizeText(input.IONTone) || "steady-neutral"}`,
     `Active route: ${normalizeText(input.route) || "chat"}`,
     "Adjust pacing and explanation depth to maintain clarity and emotional stability."
   ].join("\n");

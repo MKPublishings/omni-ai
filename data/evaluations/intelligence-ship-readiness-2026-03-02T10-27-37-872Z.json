@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-03-02T10:27:37.872Z",
-  "kind": "omni-intelligence-ship-readiness",
+  "kind": "ION-intelligence-ship-readiness",
   "version": "v1",
   "baselineRef": "data/evaluations/intelligence-baseline.latest.json",
   "baselineGeneratedAt": "2026-03-02T10:26:36.725Z",

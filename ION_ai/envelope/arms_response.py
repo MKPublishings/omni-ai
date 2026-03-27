@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from omni_ai.anatomy.arms import ArmSensoryData, ArmState, BilateralArmSensory, BilateralArmState
+from ION_ai.anatomy.arms import ArmSensoryData, ArmState, BilateralArmSensory, BilateralArmState
 
 
 @dataclass(frozen=True)

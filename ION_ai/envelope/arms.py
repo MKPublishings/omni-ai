@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Mapping
 
-from omni_ai.anatomy.arms import Arm, ArmCommand, BilateralArms
+from ION_ai.anatomy.arms import Arm, ArmCommand, BilateralArms
 
 from .arms_request import ArmsBilateralRequest, ArmsRequest
 from .arms_response import ArmsBilateralResponse, ArmsResponse

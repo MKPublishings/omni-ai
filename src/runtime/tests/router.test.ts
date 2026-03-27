@@ -7,11 +7,11 @@ test("resolveRuntimeRoute prefers simulation policy for simulation requests", ()
     {
       mode: "simulation",
       latestUserText: "simulate downstream consequences for the system",
-      requestedModel: "omni",
+      requestedModel: "ION",
       hasSimulationContext: true
     },
     {
-      MODEL_OMNI: "primary-model",
+      MODEL_ION: "primary-model",
       MODEL_SIMULATION: "simulation-model"
     }
   );

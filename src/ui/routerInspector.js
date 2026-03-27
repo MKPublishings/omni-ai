@@ -1,5 +1,5 @@
 // @ts-check
-const LAST_ROUTE_KEY = "omni-last-route";
+const LAST_ROUTE_KEY = "ION-last-route";
 
 /** @param {{ task?: string, model?: string, reason?: string }} routeInfo */
 export function setLastRoute(routeInfo) {

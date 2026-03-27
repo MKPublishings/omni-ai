@@ -93,7 +93,7 @@ function appendDecision(area, summary, details) {
   const header = `# Decisions for ${date}\n\n`;
   const block = [
     `## ${now} – ${area}`,
-    "**Source:** omni",
+    "**Source:** ION",
     `**Summary:** ${summary}`,
     "",
     details,

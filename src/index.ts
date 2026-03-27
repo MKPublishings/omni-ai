@@ -1,6 +1,6 @@
-import { OmniLogger } from "./logging/logger";
-import { OmniSafety } from "./stability/safety";
-import { omniBrainLoop } from "./runtime/loop";
+import { IONLogger } from "./logging/logger";
+import { IONSafety } from "./stability/safety";
+import { IONBrainLoop } from "./runtime/loop";
 import { ping as apiPing } from "./api/ping";
 import { listModes, listModeDetails, getModeDetails } from "./api/modes";
 import { getMemory as getMemoryApi, setMemory as setMemoryApi, deleteMemory as deleteMemoryApi } from "./api/memory";
@@ -14,58 +14,58 @@ import {
   searchModules,
   shouldUseKnowledgeRetrieval,
   shouldUseSystemKnowledge
-} from "./omni/enhancements";
-import { assemblePrompt } from "./omni/rendering/engine/promptAssembler";
-import { listAvailableStyles, resolveStyleName } from "./omni/rendering/styles/styleRegistry";
-import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./omni/laws/imageLawBridge";
-import { Laws, type LawDomain } from "./omni/laws/lawRegistry";
+} from "./ION/enhancements";
+import { assemblePrompt } from "./ION/rendering/engine/promptAssembler";
+import { listAvailableStyles, resolveStyleName } from "./ION/rendering/styles/styleRegistry";
+import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./ION/laws/imageLawBridge";
+import { Laws, type LawDomain } from "./ION/laws/lawRegistry";
 import { warmupConnections, getConnectionStats } from "./llm/cloudflareOptimizations";
-import { advanceSimulationState } from "./omni/simulation/engine";
-import { ensureOmniMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
+import { advanceSimulationState } from "./ION/simulation/engine";
+import { ensureIONMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
 import { formatWorkingMemoryPrompt, loadWorkingMemory, updateWorkingMemoryFromTurn } from "./memory/workingMemory";
 import { runSelfMaintenance } from "./maintenance/selfMaintenance";
 import { getMaintenanceStatus } from "./maintenance/status";
-import { decideMultimodalRoute } from "./omni/multimodal/router";
-import { runVisualReasoning } from "./omni/multimodal/visualReasoner";
-import { buildPersonaPrompt, resolvePersonaProfile } from "./omni/behavior/personaEngine";
-import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./omni/behavior/emotionalResonance";
-import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./omni/behavior/adaptiveBehavior";
+import { decideMultimodalRoute } from "./ION/multimodal/router";
+import { runVisualReasoning } from "./ION/multimodal/visualReasoner";
+import { buildPersonaPrompt, resolvePersonaProfile } from "./ION/behavior/personaEngine";
+import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./ION/behavior/emotionalResonance";
+import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./ION/behavior/adaptiveBehavior";
 import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
 import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
 import type { KVNamespace, Fetcher, DurableObjectNamespace, D1Database, ScheduledController, ExecutionContext } from "@cloudflare/workers-types";
 
-export { OmniSession } from "./memory/session";
+export { IONSession } from "./memory/session";
 
 export interface Env {
   AI: any;
   MEMORY: KVNamespace;
   MIND: KVNamespace;
   ASSETS: Fetcher;
-  OMNI_DB?: D1Database;
-  OMNI_SESSION?: DurableObjectNamespace;
-  MODEL_OMNI?: string;
+  ION_DB?: D1Database;
+  ION_SESSION?: DurableObjectNamespace;
+  MODEL_ION?: string;
   MODEL_IMAGE?: string;
   MODEL_IMAGE_POLICY_FALLBACK?: string;
-  OMNI_RESPONSE_MIN_CHARS?: string;
-  OMNI_RESPONSE_BASE_CHARS?: string;
-  OMNI_RESPONSE_MAX_CHARS?: string;
-  OMNI_MIN_OUTPUT_TOKENS?: string;
-  OMNI_MAX_OUTPUT_TOKENS?: string;
-  OMNI_ENV?: string;
-  OMNI_MEMORY_RETENTION_DAYS?: string;
-  OMNI_SESSION_MAX_AGE_HOURS?: string;
-  OMNI_AUTONOMY_LEVEL?: string;
-  OMNI_ADMIN_KEY?: string;
-  OMNI_MEDIA_API_BASE_URL?: string;
-  OMNI_MEDIA_BASE_URL?: string;
-  OMNI_MEDIA_HOST?: string;
-  OMNI_MEDIA_PORT?: string;
-  OMNI_MEDIA_API_KEY?: string;
-  OMNI_MEDIA_API_TIMEOUT_MS?: string;
-  OMNI_FAST_CHAT?: string;
-  OMNI_NATIVE_STREAMING?: string;
+  ION_RESPONSE_MIN_CHARS?: string;
+  ION_RESPONSE_BASE_CHARS?: string;
+  ION_RESPONSE_MAX_CHARS?: string;
+  ION_MIN_OUTPUT_TOKENS?: string;
+  ION_MAX_OUTPUT_TOKENS?: string;
+  ION_ENV?: string;
+  ION_MEMORY_RETENTION_DAYS?: string;
+  ION_SESSION_MAX_AGE_HOURS?: string;
+  ION_AUTONOMY_LEVEL?: string;
+  ION_ADMIN_KEY?: string;
+  ION_MEDIA_API_BASE_URL?: string;
+  ION_MEDIA_BASE_URL?: string;
+  ION_MEDIA_HOST?: string;
+  ION_MEDIA_PORT?: string;
+  ION_MEDIA_API_KEY?: string;
+  ION_MEDIA_API_TIMEOUT_MS?: string;
+  ION_FAST_CHAT?: string;
+  ION_NATIVE_STREAMING?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -82,35 +82,35 @@ function getProviderStatusSnapshot(env: Env): Record<string, unknown> {
     generatedAt: Date.now(),
     providers: {
       text: {
-        active: "omni",
-        omni_live: true,
+        active: "ION",
+        ION_live: true,
         fallback_active: false,
-        models: ["omni"]
+        models: ["ION"]
       },
       image: {
-        active: "omni",
-        omni_live: true,
+        active: "ION",
+        ION_live: true,
         fallback_active: false,
-        model_hint: "omni-image"
+        model_hint: "ION-image"
       },
       audio: {
-        omni_live: true
+        ION_live: true
       }
     },
     runtime: {
-      omni_runtime: true
+      ION_runtime: true
     }
   };
 }
 
-type OmniRole = "system" | "user" | "assistant";
+type IONRole = "system" | "user" | "assistant";
 
-type OmniMessage = {
-  role: OmniRole;
+type IONMessage = {
+  role: IONRole;
   content: string;
 };
 
-type OmniRequestBody = {
+type IONRequestBody = {
   mode?: string;
   model?: string;
   fastMode?: boolean;
@@ -245,7 +245,7 @@ type InternetLearningStore = {
   entries: InternetLearningEntry[];
 };
 
-const INTERNET_LEARNING_KEY = "omni_internet_learning_v1";
+const INTERNET_LEARNING_KEY = "ION_internet_learning_v1";
 const INTERNET_LEARNING_MAX_ENTRIES = 120;
 
 type InternetSearchProfile = {
@@ -263,7 +263,7 @@ type ImageModelConfig = {
   resolution: string;
 };
 
-type OmniImagePromptData = {
+type IONImagePromptData = {
   userPrompt: string;
   tokens: string[];
   semanticExpansion: string;
@@ -284,7 +284,7 @@ type OmniImagePromptData = {
 
 type TimeIntent = "day" | "night" | "sunset" | "indoor" | "neutral";
 
-type OmniImageOptions = {
+type IONImageOptions = {
   mode?: string;
   stylePack?: string;
   laws?: LawReference[];
@@ -297,7 +297,7 @@ type OmniImageOptions = {
   materials?: string[];
 };
 
-type OmniImageGenerationResult = {
+type IONImageGenerationResult = {
   imageDataUrl: string;
   filename: string;
   metadata: Record<string, unknown>;
@@ -314,10 +314,10 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function computeAdaptiveResponseMax(messages: OmniMessage[], env: Env): number {
-  const configuredMin = toPositiveInt(env.OMNI_RESPONSE_MIN_CHARS, 2000);
-  const configuredBase = toPositiveInt(env.OMNI_RESPONSE_BASE_CHARS, 4500);
-  const configuredMax = toPositiveInt(env.OMNI_RESPONSE_MAX_CHARS, 50000);
+function computeAdaptiveResponseMax(messages: IONMessage[], env: Env): number {
+  const configuredMin = toPositiveInt(env.ION_RESPONSE_MIN_CHARS, 2000);
+  const configuredBase = toPositiveInt(env.ION_RESPONSE_BASE_CHARS, 4500);
+  const configuredMax = toPositiveInt(env.ION_RESPONSE_MAX_CHARS, 50000);
 
   const floor = Math.max(500, configuredMin);
   const ceiling = Math.max(floor, configuredMax);
@@ -345,8 +345,8 @@ function computeAdaptiveResponseMax(messages: OmniMessage[], env: Env): number {
 }
 
 function computeAdaptiveOutputTokens(responseCharLimit: number, env: Env): number {
-  const configuredMinTokens = toPositiveInt(env.OMNI_MIN_OUTPUT_TOKENS, 512);
-  const configuredMaxTokens = toPositiveInt(env.OMNI_MAX_OUTPUT_TOKENS, 8192);
+  const configuredMinTokens = toPositiveInt(env.ION_MIN_OUTPUT_TOKENS, 512);
+  const configuredMaxTokens = toPositiveInt(env.ION_MAX_OUTPUT_TOKENS, 8192);
 
   const minTokens = Math.max(128, configuredMinTokens);
   const maxTokens = Math.max(minTokens, configuredMaxTokens);
@@ -357,7 +357,7 @@ function computeAdaptiveOutputTokens(responseCharLimit: number, env: Env): numbe
 }
 
 function isNonProduction(request: Request, env: Env): boolean {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   if (explicitEnv) {
     return explicitEnv !== "production";
   }
@@ -513,7 +513,7 @@ async function verifyFallbackChallenge(env: Env, challengeId: string, answer: st
   }
 }
 
-function getLatestUserText(messages: OmniMessage[]): string {
+function getLatestUserText(messages: IONMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i]?.role === "user") {
       return String(messages[i]?.content || "");
@@ -530,7 +530,7 @@ function summarizeConversationSnippet(value: string, maxLen = 200): string {
   return `${compact.slice(0, Math.max(0, maxLen - 3))}...`;
 }
 
-function normalizeConversationHints(raw: OmniRequestBody["conversationHints"]): {
+function normalizeConversationHints(raw: IONRequestBody["conversationHints"]): {
   inferredMode: string;
   latestUserIntent: string;
   recentUserFocus: string[];
@@ -564,7 +564,7 @@ function normalizeConversationHints(raw: OmniRequestBody["conversationHints"]): 
   };
 }
 
-function buildConversationDigest(messages: OmniMessage[], limit = 6): string {
+function buildConversationDigest(messages: IONMessage[], limit = 6): string {
   const turns = (messages || [])
     .filter((message) => message?.role === "user" || message?.role === "assistant")
     .slice(-Math.max(2, limit));
@@ -692,7 +692,7 @@ function parseBlackwellProfilesFromConfig(): AgentProfile[] {
   ];
 }
 
-function normalizeSafetyProfile(raw: OmniRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
+function normalizeSafetyProfile(raw: IONRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
   const tier = String(raw?.ageTier || "minor").trim().toLowerCase() === "adult" ? "adult" : "minor";
   const humanVerified = Boolean(raw?.humanVerified);
   const adultAccess = Boolean(raw?.adultAccess) && tier === "adult";
@@ -733,7 +733,7 @@ function evaluateLegalAttestation(
     return {
       blocked: true,
       code: "legal-attestation-required",
-      error: "Legal attestation is required before using Omni Ai chat features."
+      error: "Legal attestation is required before using ION Ai chat features."
     };
   }
 
@@ -1047,7 +1047,7 @@ function extractProviderToken(rawLine: string): string {
   }
 }
 
-function createOmniSseFromProviderStream(options: {
+function createIONSseFromProviderStream(options: {
   providerStream: ReadableStream;
   route: string;
   multimodalPayload?: Record<string, unknown> | null;
@@ -1198,7 +1198,7 @@ async function inspectWebsite(urlInput: string): Promise<InternetInspectResult |
   const response = await fetch(normalizedUrl, {
     method: "GET",
     headers: {
-      "User-Agent": "OmniAi/1.0 (+internet-inspector)"
+      "User-Agent": "IONAi/1.0 (+internet-inspector)"
     }
   });
   if (!response.ok) return null;
@@ -1340,7 +1340,7 @@ async function getInternetLearningContext(env: Env, mode: string, query: string,
     .join("\n\n---\n\n");
 }
 
-function makeContextSystemMessage(label: string, content: string): OmniMessage {
+function makeContextSystemMessage(label: string, content: string): IONMessage {
   return {
     role: "system",
     content: `[${label}]\n${content}`
@@ -1349,19 +1349,19 @@ function makeContextSystemMessage(label: string, content: string): OmniMessage {
 
 function resolveSessionId(request: Request): string {
   const url = new URL(request.url);
-  const headerSession = String(request.headers.get("x-omni-session-id") || "").trim();
+  const headerSession = String(request.headers.get("x-ION-session-id") || "").trim();
   const querySession = String(url.searchParams.get("sid") || "").trim();
   const raw = headerSession || querySession || "anon";
   return raw.replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 120) || "anon";
 }
 
 function isAdminAuthorized(request: Request, env: Env): boolean {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   const isProduction = explicitEnv === "production";
-  const configured = String(env.OMNI_ADMIN_KEY || "").trim();
+  const configured = String(env.ION_ADMIN_KEY || "").trim();
   if (!configured) return !isProduction;
 
-  const provided = String(request.headers.get("x-omni-admin-key") || "").trim();
+  const provided = String(request.headers.get("x-ION-admin-key") || "").trim();
   return provided.length > 0 && provided === configured;
 }
 
@@ -1551,23 +1551,23 @@ function getBackgroundReadinessStatus(env: Env): {
   ready: boolean;
   checks: Array<{ name: string; ok: boolean; detail: string }>;
 } {
-  const explicitEnv = String(env.OMNI_ENV || "").trim().toLowerCase();
+  const explicitEnv = String(env.ION_ENV || "").trim().toLowerCase();
   const isProduction = explicitEnv === "production";
-  const adminKey = String(env.OMNI_ADMIN_KEY || "").trim();
+  const adminKey = String(env.ION_ADMIN_KEY || "").trim();
 
   const checks = [
     {
       name: "env-set",
       ok: explicitEnv.length > 0,
-      detail: explicitEnv.length > 0 ? `OMNI_ENV=${explicitEnv}` : "OMNI_ENV is not set"
+      detail: explicitEnv.length > 0 ? `ION_ENV=${explicitEnv}` : "ION_ENV is not set"
     },
     {
       name: "admin-key",
       ok: !isProduction || adminKey.length >= 16,
       detail:
         !isProduction || adminKey.length >= 16
-          ? "OMNI_ADMIN_KEY configured for production protected endpoints"
-          : "OMNI_ADMIN_KEY missing or weak for production"
+          ? "ION_ADMIN_KEY configured for production protected endpoints"
+          : "ION_ADMIN_KEY missing or weak for production"
     },
     {
       name: "memory-kv",
@@ -1639,7 +1639,7 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
       frontendMindState: true
     },
     endpoints: {
-      omni: "/api/omni",
+      ION: "/api/ION",
       image: "/api/image",
       providerStatus: "/api/provider/status",
       mindShardGenerate: "/api/mind/shards/generate",
@@ -1650,7 +1650,7 @@ async function getReleaseSpecPayload(env: Env): Promise<Record<string, unknown>>
     publicArtifacts: {
       declaration: "/ionirix-declaration.md",
       manifest: "/ionirix-release.json",
-      specDoc: "/OMNI_AI_RELEASE_SPEC.md"
+      specDoc: "/ION_AI_RELEASE_SPEC.md"
     },
     runtime: autonomyStatus
       ? {
@@ -1670,7 +1670,7 @@ function sanitizePromptText(prompt: string): string {
     .trim();
 }
 
-const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
+const ION_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   mythic_cinematic: {
     name: "Mythic Cinematic",
     tags: ["cinematic lighting", "dramatic contrast", "symbolic composition", "high detail", "emotional depth"]
@@ -1685,20 +1685,20 @@ const OMNI_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
   }
 };
 
-const OMNI_IMAGE_DEFAULT_QUALITY = "ultra";
-const OMNI_IMAGE_DEFAULT_RATIO = "9:16";
-const OMNI_IMAGE_DEFAULT_RESOLUTION = "4k";
-const OMNI_IMAGE_DEFAULT_WIDTH = 2160;
-const OMNI_IMAGE_DEFAULT_HEIGHT = 3840;
-const OMNI_IMAGE_DIMENSION_LOCK = "strict";
-const OMNI_IMAGE_PROMPT_MAX_CHARS = 10000;
-const OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS = 2048;
-const OMNI_IMAGE_MODEL_MAX_EDGE = 2048;
-const OMNI_IMAGE_MODEL_MIN_EDGE = 256;
-const OMNI_IMAGE_MODEL_DIMENSION_STEP = 64;
-const OMNI_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+const ION_IMAGE_DEFAULT_QUALITY = "ultra";
+const ION_IMAGE_DEFAULT_RATIO = "9:16";
+const ION_IMAGE_DEFAULT_RESOLUTION = "4k";
+const ION_IMAGE_DEFAULT_WIDTH = 2160;
+const ION_IMAGE_DEFAULT_HEIGHT = 3840;
+const ION_IMAGE_DIMENSION_LOCK = "strict";
+const ION_IMAGE_PROMPT_MAX_CHARS = 10000;
+const ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS = 2048;
+const ION_IMAGE_MODEL_MAX_EDGE = 2048;
+const ION_IMAGE_MODEL_MIN_EDGE = 256;
+const ION_IMAGE_MODEL_DIMENSION_STEP = 64;
+const ION_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 
-const OMNI_QUALITY_DEFAULT = [
+const ION_QUALITY_DEFAULT = [
   "very high image quality",
   "4k uhd render",
   "high detail",
@@ -1710,7 +1710,7 @@ const OMNI_QUALITY_DEFAULT = [
   "anti-pixelation"
 ];
 
-const OMNI_NEGATIVE_BASE = [
+const ION_NEGATIVE_BASE = [
   "no distortion",
   "no extra limbs",
   "no artifacts",
@@ -1723,9 +1723,9 @@ const OMNI_NEGATIVE_BASE = [
   "no compression artifacts"
 ];
 
-const OMNI_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
+const ION_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
 
-const OMNI_ENVIRONMENTS = [
+const ION_ENVIRONMENTS = [
   "bedroom", "room", "forest", "city", "street", "cafe", "office",
   "studio", "kitchen", "mountains", "desert", "classroom",
   "library", "garage", "basement", "attic", "garden", "cathedral"
@@ -1802,7 +1802,7 @@ function getStylePack(name: string): { name: string; tags: string[] } {
   if (!name) {
     return { name: "none", tags: [] };
   }
-  return OMNI_STYLE_PACKS[name] || { name: "none", tags: [] };
+  return ION_STYLE_PACKS[name] || { name: "none", tags: [] };
 }
 
 function promptRequestsPeople(prompt: string): boolean {
@@ -1826,7 +1826,7 @@ function buildPolicySafePrompt(userPrompt: string): string {
   return (compact || raw).slice(0, 700);
 }
 
-function applyPromptFreshness(options: OmniImageOptions): OmniImageOptions {
+function applyPromptFreshness(options: IONImageOptions): IONImageOptions {
   return {
     ...options,
     seed: Number.isFinite(options.seed) ? Number(options.seed) : Math.floor(Math.random() * 999999999),
@@ -1836,7 +1836,7 @@ function applyPromptFreshness(options: OmniImageOptions): OmniImageOptions {
 
 function extractEnvironmentKeywords(prompt: string): string[] {
   const lower = String(prompt || "").toLowerCase();
-  return OMNI_ENVIRONMENTS.filter((value) => lower.includes(value));
+  return ION_ENVIRONMENTS.filter((value) => lower.includes(value));
 }
 
 function inferStyleFromPrompt(prompt: string): string {
@@ -1906,7 +1906,7 @@ function inferMaterialsFromPrompt(prompt: string): string[] {
   return [...new Set(inferred)];
 }
 
-function orchestrateOmniImagePrompt(userPrompt: string, options: OmniImageOptions): OmniImagePromptData {
+function orchestrateIONImagePrompt(userPrompt: string, options: IONImageOptions): IONImagePromptData {
   const tokens = tokenizePrompt(userPrompt);
   const sceneDescription = inferSceneDescription(userPrompt);
   const timeIntent = inferTimeIntent(userPrompt);
@@ -1945,11 +1945,11 @@ function orchestrateOmniImagePrompt(userPrompt: string, options: OmniImageOption
   };
 }
 
-function refineOmniImagePrompt(promptData: OmniImagePromptData, options: OmniImageOptions): { data: OmniImagePromptData; finalOptions: OmniImageOptions } {
-  const data: OmniImagePromptData = { ...promptData };
+function refineIONImagePrompt(promptData: IONImagePromptData, options: IONImageOptions): { data: IONImagePromptData; finalOptions: IONImageOptions } {
+  const data: IONImagePromptData = { ...promptData };
 
   if (String(options?.quality || "").trim()) {
-    data.technicalTags = [...(data.technicalTags || []), ...OMNI_QUALITY_DEFAULT];
+    data.technicalTags = [...(data.technicalTags || []), ...ION_QUALITY_DEFAULT];
   }
 
   data.negativeTags = [...new Set(data.negativeTags || [])];
@@ -2041,7 +2041,7 @@ function parseResolutionPreset(value: string, quality: string): number {
 
   if (quality === "high") return 2560;
   if (quality === "ultra" || quality === "very_high" || quality === "very-high") return 3840;
-  return OMNI_IMAGE_DEFAULT_WIDTH;
+  return ION_IMAGE_DEFAULT_WIDTH;
 }
 
 function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: string): { width: number; height: number; ratio: string } {
@@ -2064,20 +2064,20 @@ function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: s
 }
 
 function snapModelDimension(value: number): number {
-  const clamped = clamp(Math.floor(value), OMNI_IMAGE_MODEL_MIN_EDGE, OMNI_IMAGE_MODEL_MAX_EDGE);
-  const snapped = Math.floor(clamped / OMNI_IMAGE_MODEL_DIMENSION_STEP) * OMNI_IMAGE_MODEL_DIMENSION_STEP;
-  return Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, snapped || OMNI_IMAGE_MODEL_MIN_EDGE);
+  const clamped = clamp(Math.floor(value), ION_IMAGE_MODEL_MIN_EDGE, ION_IMAGE_MODEL_MAX_EDGE);
+  const snapped = Math.floor(clamped / ION_IMAGE_MODEL_DIMENSION_STEP) * ION_IMAGE_MODEL_DIMENSION_STEP;
+  return Math.max(ION_IMAGE_MODEL_MIN_EDGE, snapped || ION_IMAGE_MODEL_MIN_EDGE);
 }
 
 function normalizeModelRenderDimensions(width: number, height: number): { width: number; height: number } {
-  let safeWidth = clamp(Math.floor(width), OMNI_IMAGE_MODEL_MIN_EDGE, 8192);
-  let safeHeight = clamp(Math.floor(height), OMNI_IMAGE_MODEL_MIN_EDGE, 8192);
+  let safeWidth = clamp(Math.floor(width), ION_IMAGE_MODEL_MIN_EDGE, 8192);
+  let safeHeight = clamp(Math.floor(height), ION_IMAGE_MODEL_MIN_EDGE, 8192);
 
   const maxEdge = Math.max(safeWidth, safeHeight);
-  if (maxEdge > OMNI_IMAGE_MODEL_MAX_EDGE) {
-    const scale = OMNI_IMAGE_MODEL_MAX_EDGE / maxEdge;
-    safeWidth = Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, Math.floor(safeWidth * scale));
-    safeHeight = Math.max(OMNI_IMAGE_MODEL_MIN_EDGE, Math.floor(safeHeight * scale));
+  if (maxEdge > ION_IMAGE_MODEL_MAX_EDGE) {
+    const scale = ION_IMAGE_MODEL_MAX_EDGE / maxEdge;
+    safeWidth = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeWidth * scale));
+    safeHeight = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeHeight * scale));
   }
 
   safeWidth = snapModelDimension(safeWidth);
@@ -2116,22 +2116,22 @@ function selectImageModelConfig(
   const hasRatioOrResolution = Boolean(String(requestedRatio || "").trim() || String(requestedResolution || "").trim());
   if (!hasExplicitSize && hasRatioOrResolution) {
     const computed = deriveDimensionsFromRatio(
-      requestedRatio || OMNI_IMAGE_DEFAULT_RATIO,
-      requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION,
-      safeQuality || OMNI_IMAGE_DEFAULT_QUALITY
+      requestedRatio || ION_IMAGE_DEFAULT_RATIO,
+      requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION,
+      safeQuality || ION_IMAGE_DEFAULT_QUALITY
     );
     width = computed.width;
     height = computed.height;
   }
 
   if (!Number.isFinite(width) || !Number.isFinite(height)) {
-    width = OMNI_IMAGE_DEFAULT_WIDTH;
-    height = OMNI_IMAGE_DEFAULT_HEIGHT;
+    width = ION_IMAGE_DEFAULT_WIDTH;
+    height = ION_IMAGE_DEFAULT_HEIGHT;
   }
 
   const normalizedRenderDimensions = normalizeModelRenderDimensions(
-    Number(width || OMNI_IMAGE_DEFAULT_WIDTH),
-    Number(height || OMNI_IMAGE_DEFAULT_HEIGHT)
+    Number(width || ION_IMAGE_DEFAULT_WIDTH),
+    Number(height || ION_IMAGE_DEFAULT_HEIGHT)
   );
   width = normalizedRenderDimensions.width;
   height = normalizedRenderDimensions.height;
@@ -2139,22 +2139,22 @@ function selectImageModelConfig(
   const ratioLabel = String(requestedRatio || "").trim();
   const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
     ? `${width}x${height}`
-    : (String(requestedResolution || "").trim() || OMNI_IMAGE_DEFAULT_RESOLUTION);
+    : (String(requestedResolution || "").trim() || ION_IMAGE_DEFAULT_RESOLUTION);
 
   return {
     model: env.MODEL_IMAGE || "@cf/black-forest-labs/flux-1-schnell",
     styleId: styleId || "auto",
     width,
     height,
-    ratio: ratioLabel || OMNI_IMAGE_DEFAULT_RATIO,
+    ratio: ratioLabel || ION_IMAGE_DEFAULT_RATIO,
     resolution: resolutionLabel
   };
 }
 
 function buildImageRunPayload(prompt: string, modelConfig: ImageModelConfig, seed?: number): Record<string, unknown> {
   const normalizedPrompt = sanitizePromptText(String(prompt || "")).trim();
-  const providerPrompt = normalizedPrompt.length > OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS
-    ? normalizedPrompt.slice(0, OMNI_IMAGE_PROVIDER_PROMPT_MAX_CHARS)
+  const providerPrompt = normalizedPrompt.length > ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS
+    ? normalizedPrompt.slice(0, ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS)
     : normalizedPrompt;
   const payload: Record<string, unknown> = {
     prompt: providerPrompt,
@@ -2264,13 +2264,13 @@ function makeImageFilename(styleId: string): string {
   return `slizzai_${safeStyle}_${ts}.png`;
 }
 
-async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<OmniImageGenerationResult> {
+async function generateIONImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<IONImageGenerationResult> {
   const promptText = sanitizePromptText(String(userPrompt || ""));
   if (!promptText) {
     throw new Error("Prompt is required");
   }
-  if (promptText.length > OMNI_IMAGE_PROMPT_MAX_CHARS) {
-    throw new Error(`Prompt is too long. Keep it under ${OMNI_IMAGE_PROMPT_MAX_CHARS} characters.`);
+  if (promptText.length > ION_IMAGE_PROMPT_MAX_CHARS) {
+    throw new Error(`Prompt is too long. Keep it under ${ION_IMAGE_PROMPT_MAX_CHARS} characters.`);
   }
 
   const feedback = sanitizePromptText(String(options?.feedback || ""));
@@ -2295,7 +2295,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     : [];
 
   const requestedQuality = sanitizePromptText(String(options?.quality || "")).toLowerCase();
-  const effectiveQuality = requestedQuality || OMNI_IMAGE_DEFAULT_QUALITY;
+  const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
   const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
   const visualReasoning = runVisualReasoning(promptText);
   const promptInferredCamera = inferCameraFromPrompt(promptText) || visualReasoning.cameraIntent;
@@ -2320,13 +2320,13 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
   const requestedResolution = sanitizePromptText(String(options?.resolution || ""));
   const requestedWidth = Number(options?.width);
   const requestedHeight = Number(options?.height);
-  const effectiveRatio = requestedRatio || OMNI_IMAGE_DEFAULT_RATIO;
-  const effectiveResolution = requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION;
-  const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : OMNI_IMAGE_DEFAULT_WIDTH;
-  const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : OMNI_IMAGE_DEFAULT_HEIGHT;
+  const effectiveRatio = requestedRatio || ION_IMAGE_DEFAULT_RATIO;
+  const effectiveResolution = requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION;
+  const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
+  const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
   const parsedSeed = Number(options?.seed);
 
-  const orchestrated = orchestrateOmniImagePrompt(
+  const orchestrated = orchestrateIONImagePrompt(
     `${promptText}, visual reasoning: ${visualReasoning.directive}`,
     {
       mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
@@ -2341,7 +2341,7 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
     }
   );
 
-  const refined = refineOmniImagePrompt(orchestrated, {
+  const refined = refineIONImagePrompt(orchestrated, {
     mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
     stylePack: effectiveStylePack,
     laws: requestedLaws,
@@ -2378,11 +2378,11 @@ async function generateOmniImageFromPrompt(env: Env, userPrompt: string, options
       model: modelConfig.model,
       ratio: modelConfig.ratio,
       resolution: modelConfig.resolution,
-      forced_resolution: `${OMNI_IMAGE_DEFAULT_WIDTH}x${OMNI_IMAGE_DEFAULT_HEIGHT}`,
-      forced_aspect_ratio: OMNI_IMAGE_DEFAULT_RATIO,
-      forced_width: OMNI_IMAGE_DEFAULT_WIDTH,
-      forced_height: OMNI_IMAGE_DEFAULT_HEIGHT,
-      dimension_lock: OMNI_IMAGE_DIMENSION_LOCK,
+      forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
+      forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
+      forced_width: ION_IMAGE_DEFAULT_WIDTH,
+      forced_height: ION_IMAGE_DEFAULT_HEIGHT,
+      dimension_lock: ION_IMAGE_DIMENSION_LOCK,
       quality: effectiveQuality,
       rendering_style: resolvedRenderingStyle,
       camera: effectiveCamera,
@@ -2405,7 +2405,7 @@ let lastReadinessAuditAt = 0;
 let lastReadinessSignature = "";
 const READINESS_AUDIT_INTERVAL_MS = 5 * 60 * 1000;
 
-function runBackgroundReadinessAudit(env: Env, logger: OmniLogger): void {
+function runBackgroundReadinessAudit(env: Env, logger: IONLogger): void {
   const now = Date.now();
   if (now - lastReadinessAuditAt < READINESS_AUDIT_INTERVAL_MS) {
     return;
@@ -2433,7 +2433,7 @@ function runBackgroundReadinessAudit(env: Env, logger: OmniLogger): void {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const logger = new OmniLogger(env);
+    const logger = new IONLogger(env);
 
     // Warmup API connections on first request (non-blocking)
     if (!connectionsWarmedUp) {
@@ -2446,7 +2446,7 @@ export default {
     try {
       const url = new URL(request.url);
       const isApiRoute =
-        url.pathname === "/api/omni" ||
+        url.pathname === "/api/ION" ||
         url.pathname === "/api/image" ||
         url.pathname === "/api/provider/status" ||
         url.pathname === "/api/ping" ||
@@ -3067,7 +3067,7 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/omni" && request.method !== "POST") {
+      if (url.pathname === "/api/ION" && request.method !== "POST") {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
@@ -3320,7 +3320,7 @@ export default {
                 .filter((law) => Boolean(law.id))
             : [];
           const requestedQuality = sanitizePromptText(String(body?.quality || "")).toLowerCase();
-          const effectiveQuality = requestedQuality || OMNI_IMAGE_DEFAULT_QUALITY;
+          const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
           const requestedMode = sanitizePromptText(String(body?.mode || "simple")).toLowerCase() || "simple";
           const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
           const promptInferredCamera = inferCameraFromPrompt(promptText);
@@ -3344,10 +3344,10 @@ export default {
           const requestedResolution = sanitizePromptText(String(body?.resolution || ""));
           const requestedWidth = Number(body?.width);
           const requestedHeight = Number(body?.height);
-          const effectiveRatio = requestedRatio || OMNI_IMAGE_DEFAULT_RATIO;
-          const effectiveResolution = requestedResolution || OMNI_IMAGE_DEFAULT_RESOLUTION;
-          const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : OMNI_IMAGE_DEFAULT_WIDTH;
-          const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : OMNI_IMAGE_DEFAULT_HEIGHT;
+          const effectiveRatio = requestedRatio || ION_IMAGE_DEFAULT_RATIO;
+          const effectiveResolution = requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION;
+          const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
+          const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
           const parsedSeed = Number(body?.seed);
           const debugRequested =
             body?.debug === true ||
@@ -3363,10 +3363,10 @@ export default {
             });
           }
 
-          if (promptText.length > OMNI_IMAGE_PROMPT_MAX_CHARS) {
+          if (promptText.length > ION_IMAGE_PROMPT_MAX_CHARS) {
             return new Response(
               JSON.stringify({
-                error: `Prompt is too long for image generation. Please keep it under ${OMNI_IMAGE_PROMPT_MAX_CHARS} characters.`,
+                error: `Prompt is too long for image generation. Please keep it under ${ION_IMAGE_PROMPT_MAX_CHARS} characters.`,
                 code: "prompt-too-long"
               }),
               {
@@ -3399,7 +3399,7 @@ export default {
             );
           }
 
-          const orchestrated = orchestrateOmniImagePrompt(promptText, {
+          const orchestrated = orchestrateIONImagePrompt(promptText, {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
@@ -3411,7 +3411,7 @@ export default {
             materials: effectiveMaterials
           });
 
-          const refined = refineOmniImagePrompt(orchestrated, {
+          const refined = refineIONImagePrompt(orchestrated, {
             mode: requestedMode,
             stylePack: effectiveStylePack,
             laws: requestedLaws,
@@ -3468,8 +3468,8 @@ export default {
 
             if (normalizedPrimaryError.code === "provider-policy-blocked") {
               const fallbackModel =
-                String(env.MODEL_IMAGE_POLICY_FALLBACK || OMNI_IMAGE_POLICY_FALLBACK_MODEL).trim() ||
-                OMNI_IMAGE_POLICY_FALLBACK_MODEL;
+                String(env.MODEL_IMAGE_POLICY_FALLBACK || ION_IMAGE_POLICY_FALLBACK_MODEL).trim() ||
+                ION_IMAGE_POLICY_FALLBACK_MODEL;
               const fallbackModelConfig = {
                 ...modelConfig,
                 model: fallbackModel,
@@ -3501,11 +3501,11 @@ export default {
               model: outputModel,
               ratio: modelConfig.ratio,
               resolution: modelConfig.resolution,
-              forced_resolution: `${OMNI_IMAGE_DEFAULT_WIDTH}x${OMNI_IMAGE_DEFAULT_HEIGHT}`,
-              forced_aspect_ratio: OMNI_IMAGE_DEFAULT_RATIO,
-              forced_width: OMNI_IMAGE_DEFAULT_WIDTH,
-              forced_height: OMNI_IMAGE_DEFAULT_HEIGHT,
-              dimension_lock: OMNI_IMAGE_DIMENSION_LOCK,
+              forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
+              forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
+              forced_width: ION_IMAGE_DEFAULT_WIDTH,
+              forced_height: ION_IMAGE_DEFAULT_HEIGHT,
+              dimension_lock: ION_IMAGE_DIMENSION_LOCK,
               mode: requestedMode,
               quality: effectiveQuality,
               rendering_style: resolvedRenderingStyle,
@@ -3589,8 +3589,8 @@ export default {
               headers: {
                 ...CORS_HEADERS,
                 "Content-Type": "application/json",
-                "X-Omni-Image-Model": outputModel,
-                "Access-Control-Expose-Headers": "X-Omni-Image-Model"
+                "X-ION-Image-Model": outputModel,
+                "Access-Control-Expose-Headers": "X-ION-Image-Model"
               }
             }
           );
@@ -3611,10 +3611,10 @@ export default {
         }
       }
 
-      if (url.pathname === "/api/omni" && request.method === "POST") {
+      if (url.pathname === "/api/ION" && request.method === "POST") {
         const requestStartedAt = Date.now();
-        await ensureOmniMemorySchema(env);
-        const body = (await request.json()) as OmniRequestBody;
+        await ensureIONMemorySchema(env);
+        const body = (await request.json()) as IONRequestBody;
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
         const legalDecision = evaluateLegalAttestation(safetyProfile, request);
         if (legalDecision.blocked) {
@@ -3633,7 +3633,7 @@ export default {
           );
         }
 
-        if (!body.messages || !OmniSafety.validateMessages(body.messages)) {
+        if (!body.messages || !IONSafety.validateMessages(body.messages)) {
           logger.error("invalid_messages", body);
           return new Response("Invalid message format", { status: 400 });
         }
@@ -3641,10 +3641,10 @@ export default {
         const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
         const requestCtx = {
           mode: normalizedMode,
-          model: "omni",
+          model: "ION",
           messages: (body.messages || []).map((m) => ({
-            role: (m?.role || "user") as OmniRole,
-            content: OmniSafety.sanitizeInput(m?.content || "")
+            role: (m?.role || "user") as IONRole,
+            content: IONSafety.sanitizeInput(m?.content || "")
           }))
         };
 
@@ -3655,10 +3655,10 @@ export default {
         const workingMemory = await loadWorkingMemory(env, sessionId);
         const requestCountryCode = getRequestCountryCode(request);
         const fastChatEnabled =
-          isEnabledFlag(env.OMNI_FAST_CHAT) ||
+          isEnabledFlag(env.ION_FAST_CHAT) ||
           body?.fastMode === true ||
           String(url.searchParams.get("fast") || "").toLowerCase() === "true";
-        const nativeStreamingEnabled = isEnabledFlag(env.OMNI_NATIVE_STREAMING) || fastChatEnabled;
+        const nativeStreamingEnabled = isEnabledFlag(env.ION_NATIVE_STREAMING) || fastChatEnabled;
 
         const latestUserText = getLatestUserText(requestCtx.messages);
         const conversationHints = normalizeConversationHints(body?.conversationHints);
@@ -3694,9 +3694,9 @@ export default {
           latestUserText,
           mode: normalizedMode
         });
-        const routeSelection = chooseModelForTask("omni", latestUserText, normalizedMode);
+        const routeSelection = chooseModelForTask("ION", latestUserText, normalizedMode);
 
-        const promptSystemMessages: OmniMessage[] = [];
+        const promptSystemMessages: IONMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;
         let internetHitCount = 0;
         const savedMemory = normalizedMode === "simulation" ? {} : await getPreferences(env);
@@ -3752,7 +3752,7 @@ export default {
             buildAdaptiveBehaviorPrompt({
               mode: normalizedMode,
               userEmotion: emotionalResonance.userEmotion,
-              omniTone: emotionalResonance.omniTone,
+              IONTone: emotionalResonance.IONTone,
               route: orchestratorDecision.route
             })
           )
@@ -3808,7 +3808,7 @@ export default {
           if (memoryArc.length) {
             const arcPrompt = memoryArc
               .map((entry, index) => {
-                return `(${index + 1}) [${entry.mode}] USER: ${entry.userText}\nOMNI: ${entry.assistantText}`;
+                return `(${index + 1}) [${entry.mode}] USER: ${entry.userText}\nION: ${entry.assistantText}`;
               })
               .join("\n\n");
 
@@ -3925,7 +3925,7 @@ export default {
           }
         }
 
-        const enrichedMessages: OmniMessage[] = [...promptSystemMessages, ...requestCtx.messages];
+        const enrichedMessages: IONMessage[] = [...promptSystemMessages, ...requestCtx.messages];
 
         const responseLimit = computeAdaptiveResponseMax(requestCtx.messages, env);
         const outputTokenLimit = computeAdaptiveOutputTokens(responseLimit, env);
@@ -3980,7 +3980,7 @@ export default {
                 .join("\n\n")
             };
           } else if (orchestratorDecision.route === "image") {
-            const generated = await generateOmniImageFromPrompt(env, latestUserText, {
+            const generated = await generateIONImageFromPrompt(env, latestUserText, {
               mode: normalizedMode,
               quality: "ultra"
             });
@@ -3998,14 +3998,14 @@ export default {
               response: `Image generated via multi-modal orchestration. File: ${generated.filename}. Model: ${generated.model}.`
             };
           } else {
-            result = await omniBrainLoop(env, runtimeCtx);
+            result = await IONBrainLoop(env, runtimeCtx);
           }
 
           if (result) {
             const nativeProviderStream = (result as any)?.stream;
             if (isReadableByteStream(nativeProviderStream)) {
               const latestUserTurn = getLatestUserText(requestCtx.messages);
-              const stream = createOmniSseFromProviderStream({
+              const stream = createIONSseFromProviderStream({
                 providerStream: nativeProviderStream,
                 route: orchestratorDecision.route,
                 multimodalPayload,
@@ -4019,14 +4019,14 @@ export default {
                           mode: normalizedMode,
                           userText: latestUserTurn,
                           assistantText: fullText,
-                          emotionalTone: emotionalResonance.omniTone
+                          emotionalTone: emotionalResonance.IONTone
                         }),
                         saveMemoryTurn(env, {
                           sessionId,
                           mode: normalizedMode,
                           userText: latestUserTurn,
                           assistantText: fullText,
-                          emotionalTone: emotionalResonance.omniTone
+                          emotionalTone: emotionalResonance.IONTone
                         })
                       ]).catch((memoryErr) => {
                         logger.log("memory_persist_deferred_failed", {
@@ -4039,22 +4039,22 @@ export default {
               });
 
               const exposeHeaders = [
-                "X-Omni-Model-Used",
-                "X-Omni-Route-Reason",
-                "X-Omni-Orchestrator-Route",
-                "X-Omni-Orchestrator-Reason",
-                "X-Omni-Persona-Tone",
-                "X-Omni-Emotion-User",
-                "X-Omni-Emotion-Omni",
-                "X-Omni-Internet-Mode",
-                "X-Omni-Internet-Profile",
-                "X-Omni-Internet-Count",
-                "X-Omni-Fast-Chat",
-                "X-Omni-Prestream-Latency-Ms"
+                "X-ION-Model-Used",
+                "X-ION-Route-Reason",
+                "X-ION-Orchestrator-Route",
+                "X-ION-Orchestrator-Reason",
+                "X-ION-Persona-Tone",
+                "X-ION-Emotion-User",
+                "X-ION-Emotion-ION",
+                "X-ION-Internet-Mode",
+                "X-ION-Internet-Profile",
+                "X-ION-Internet-Count",
+                "X-ION-Fast-Chat",
+                "X-ION-Prestream-Latency-Ms"
               ];
 
               if (simulationContext) {
-                exposeHeaders.push("X-Omni-Simulation-Id", "X-Omni-Simulation-Status", "X-Omni-Simulation-Steps");
+                exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
               }
 
               return new Response(stream, {
@@ -4063,25 +4063,25 @@ export default {
                   "Content-Type": "text/event-stream",
                   "Cache-Control": "no-cache",
                   "Connection": "keep-alive",
-                  "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
-                  "X-Omni-Route-Reason": routeSelection.reason,
-                  "X-Omni-Orchestrator-Route": orchestratorDecision.route,
-                  "X-Omni-Orchestrator-Reason": orchestratorDecision.reason,
-                  "X-Omni-Persona-Tone": personaProfile.tone,
-                  "X-Omni-Emotion-User": emotionalResonance.userEmotion,
-                  "X-Omni-Emotion-Omni": emotionalResonance.omniTone,
-                  "X-Omni-Internet-Mode": normalizeInternetMode(normalizedMode),
-                  "X-Omni-Internet-Profile": internetProfileUsed
+                  "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                  "X-ION-Route-Reason": routeSelection.reason,
+                  "X-ION-Orchestrator-Route": orchestratorDecision.route,
+                  "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
+                  "X-ION-Persona-Tone": personaProfile.tone,
+                  "X-ION-Emotion-User": emotionalResonance.userEmotion,
+                  "X-ION-Emotion-ION": emotionalResonance.IONTone,
+                  "X-ION-Internet-Mode": normalizeInternetMode(normalizedMode),
+                  "X-ION-Internet-Profile": internetProfileUsed
                     ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
                     : "none",
-                  "X-Omni-Internet-Count": String(internetHitCount),
-                  "X-Omni-Fast-Chat": String(fastChatEnabled),
-                  "X-Omni-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
+                  "X-ION-Internet-Count": String(internetHitCount),
+                  "X-ION-Fast-Chat": String(fastChatEnabled),
+                  "X-ION-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
                   ...(simulationContext
                     ? {
-                        "X-Omni-Simulation-Id": simulationContext.state.simulationId,
-                        "X-Omni-Simulation-Status": simulationContext.state.status,
-                        "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                        "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                        "X-ION-Simulation-Status": simulationContext.state.status,
+                        "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
                       }
                     : {}),
                   "Access-Control-Expose-Headers": exposeHeaders.join(", ")
@@ -4093,14 +4093,14 @@ export default {
               typeof result === "string"
                 ? { response: result }
                 : result;
-            const safe = OmniSafety.safeGuardResponse(parsedResult.response || "", responseLimit);
+            const safe = IONSafety.safeGuardResponse(parsedResult.response || "", responseLimit);
             const adapted = applyAdaptiveBehavior(safe, {
               mode: normalizedMode,
               userEmotion: emotionalResonance.userEmotion,
-              omniTone: emotionalResonance.omniTone,
+              IONTone: emotionalResonance.IONTone,
               route: orchestratorDecision.route
             });
-            const finalResponse = OmniSafety.safeGuardResponse(adapted, responseLimit);
+            const finalResponse = IONSafety.safeGuardResponse(adapted, responseLimit);
             const encoder = new TextEncoder();
             const responseChunks = finalResponse
               .match(/.{1,220}(?:\s+|$)/g)
@@ -4137,14 +4137,14 @@ export default {
                     mode: normalizedMode,
                     userText: latestUserTurn,
                     assistantText: finalResponse,
-                    emotionalTone: emotionalResonance.omniTone
+                    emotionalTone: emotionalResonance.IONTone
                   }),
                   saveMemoryTurn(env, {
                     sessionId,
                     mode: normalizedMode,
                     userText: latestUserTurn,
                     assistantText: finalResponse,
-                    emotionalTone: emotionalResonance.omniTone
+                    emotionalTone: emotionalResonance.IONTone
                   })
                 ]).catch((memoryErr) => {
                   logger.log("memory_persist_deferred_failed", {
@@ -4155,26 +4155,26 @@ export default {
             }
 
             const exposeHeaders = [
-              "X-Omni-Model-Used",
-              "X-Omni-Route-Reason",
-              "X-Omni-Orchestrator-Route",
-              "X-Omni-Orchestrator-Reason",
-              "X-Omni-Persona-Tone",
-              "X-Omni-Emotion-User",
-              "X-Omni-Emotion-Omni",
-              "X-Omni-Internet-Mode",
-              "X-Omni-Internet-Profile",
-              "X-Omni-Internet-Count",
-              "X-Omni-Fast-Chat",
-              "X-Omni-Prestream-Latency-Ms"
+              "X-ION-Model-Used",
+              "X-ION-Route-Reason",
+              "X-ION-Orchestrator-Route",
+              "X-ION-Orchestrator-Reason",
+              "X-ION-Persona-Tone",
+              "X-ION-Emotion-User",
+              "X-ION-Emotion-ION",
+              "X-ION-Internet-Mode",
+              "X-ION-Internet-Profile",
+              "X-ION-Internet-Count",
+              "X-ION-Fast-Chat",
+              "X-ION-Prestream-Latency-Ms"
             ];
 
             if (simulationContext) {
-              exposeHeaders.push("X-Omni-Simulation-Id", "X-Omni-Simulation-Status", "X-Omni-Simulation-Steps");
+              exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
             }
 
             if (debugEnabled) {
-              exposeHeaders.push("X-Omni-Response-Cap", "X-Omni-Output-Token-Cap");
+              exposeHeaders.push("X-ION-Response-Cap", "X-ION-Output-Token-Cap");
             }
 
             return new Response(stream, {
@@ -4183,31 +4183,31 @@ export default {
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
-                "X-Omni-Route-Reason": routeSelection.reason,
-                "X-Omni-Orchestrator-Route": orchestratorDecision.route,
-                "X-Omni-Orchestrator-Reason": orchestratorDecision.reason,
-                "X-Omni-Persona-Tone": personaProfile.tone,
-                "X-Omni-Emotion-User": emotionalResonance.userEmotion,
-                "X-Omni-Emotion-Omni": emotionalResonance.omniTone,
-                "X-Omni-Internet-Mode": normalizeInternetMode(normalizedMode),
-                "X-Omni-Internet-Profile": internetProfileUsed
+                "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                "X-ION-Route-Reason": routeSelection.reason,
+                "X-ION-Orchestrator-Route": orchestratorDecision.route,
+                "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
+                "X-ION-Persona-Tone": personaProfile.tone,
+                "X-ION-Emotion-User": emotionalResonance.userEmotion,
+                "X-ION-Emotion-ION": emotionalResonance.IONTone,
+                "X-ION-Internet-Mode": normalizeInternetMode(normalizedMode),
+                "X-ION-Internet-Profile": internetProfileUsed
                   ? `${internetProfileUsed.queryPrefix}|${internetProfileUsed.querySuffix}|${internetProfileUsed.limit}`
                   : "none",
-                "X-Omni-Internet-Count": String(internetHitCount),
-                "X-Omni-Fast-Chat": String(fastChatEnabled),
-                "X-Omni-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
+                "X-ION-Internet-Count": String(internetHitCount),
+                "X-ION-Fast-Chat": String(fastChatEnabled),
+                "X-ION-Prestream-Latency-Ms": String(Date.now() - requestStartedAt),
                 ...(simulationContext
                   ? {
-                      "X-Omni-Simulation-Id": simulationContext.state.simulationId,
-                      "X-Omni-Simulation-Status": simulationContext.state.status,
-                      "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                      "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                      "X-ION-Simulation-Status": simulationContext.state.status,
+                      "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
                     }
                   : {}),
                 ...(debugEnabled
                   ? {
-                      "X-Omni-Response-Cap": String(responseLimit),
-                      "X-Omni-Output-Token-Cap": String(outputTokenLimit)
+                      "X-ION-Response-Cap": String(responseLimit),
+                      "X-ION-Output-Token-Cap": String(outputTokenLimit)
                     }
                   : {}),
                 "Access-Control-Expose-Headers": exposeHeaders.join(", ")
@@ -4253,27 +4253,27 @@ export default {
               ...CORS_HEADERS,
               "Content-Type": "text/event-stream",
             "Connection": "keep-alive",
-            "X-Omni-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
-            "X-Omni-Route-Reason": routeSelection.reason,
+            "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+            "X-ION-Route-Reason": routeSelection.reason,
             ...(simulationContext
               ? {
-                  "X-Omni-Simulation-Id": simulationContext.state.simulationId,
-                  "X-Omni-Simulation-Status": simulationContext.state.status,
-                  "X-Omni-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                  "X-ION-Simulation-Id": simulationContext.state.simulationId,
+                  "X-ION-Simulation-Status": simulationContext.state.status,
+                  "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
                 }
               : {}),
             ...(debugEnabled
               ? {
-                  "X-Omni-Response-Cap": String(responseLimit),
-                  "X-Omni-Output-Token-Cap": String(outputTokenLimit),
+                  "X-ION-Response-Cap": String(responseLimit),
+                  "X-ION-Output-Token-Cap": String(outputTokenLimit),
                 "Access-Control-Expose-Headers": simulationContext
-                  ? "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Simulation-Id, X-Omni-Simulation-Status, X-Omni-Simulation-Steps, X-Omni-Response-Cap, X-Omni-Output-Token-Cap"
-                  : "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Response-Cap, X-Omni-Output-Token-Cap"
+                  ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps, X-ION-Response-Cap, X-ION-Output-Token-Cap"
+                  : "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Response-Cap, X-ION-Output-Token-Cap"
                 }
               : {
                   "Access-Control-Expose-Headers": simulationContext
-                    ? "X-Omni-Model-Used, X-Omni-Route-Reason, X-Omni-Simulation-Id, X-Omni-Simulation-Status, X-Omni-Simulation-Steps"
-                    : "X-Omni-Model-Used, X-Omni-Route-Reason"
+                    ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps"
+                    : "X-ION-Model-Used, X-ION-Route-Reason"
                 })
           }
         });
@@ -4284,12 +4284,12 @@ export default {
       return env.ASSETS.fetch(request.url) as unknown as Response;
     } catch (err: any) {
       logger.error("fatal_error", err);
-      return new Response("Omni crashed but recovered", { status: 500 });
+      return new Response("ION crashed but recovered", { status: 500 });
     }
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    const logger = new OmniLogger(env);
+    const logger = new IONLogger(env);
     ctx.waitUntil(
       (async () => {
         const report = await runSelfMaintenance(env);

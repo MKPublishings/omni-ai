@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse
 
 from .lacrimal import LACRIMAL_GLAND, LACRIMAL_GLANDS
 from .salivary import SALIVARY_GLANDS

@@ -10,11 +10,11 @@ def main() -> None:
     try:
         uvicorn = importlib.import_module("uvicorn")
     except Exception as exc:
-        raise RuntimeError("uvicorn is required to run the Omni Media API server") from exc
+        raise RuntimeError("uvicorn is required to run the ION Media API server") from exc
 
     app = create_fastapi_app()
-    host = os.getenv("OMNI_MEDIA_HOST", "127.0.0.1")
-    port = int(os.getenv("OMNI_MEDIA_PORT", "8788"))
+    host = os.getenv("ION_MEDIA_HOST", "127.0.0.1")
+    port = int(os.getenv("ION_MEDIA_PORT", "8788"))
     uvicorn.run(app, host=host, port=port)
 
 

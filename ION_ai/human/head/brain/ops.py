@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse
-from omni_ai.human.head.brain.regions import BRAIN_REGIONS
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse
+from ION_ai.human.head.brain.regions import BRAIN_REGIONS
 
 
 def handle_brain_request(req: HeadRequest) -> HeadResponse:

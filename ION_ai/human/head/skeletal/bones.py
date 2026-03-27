@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import Bone
+from ION_ai.human.head.models import Bone
 
 BONES: Dict[str, Bone] = {
     "frontal": Bone(id="frontal", name="Frontal Bone", region="cranium", articulations=["parietal_left", "parietal_right", "sphenoid", "ethmoid", "nasal_left", "nasal_right", "zygomatic_left", "zygomatic_right", "maxilla_left", "maxilla_right"]),

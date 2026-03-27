@@ -1,10 +1,10 @@
-const { omniImageGenerate } = require("../index");
+const { IONImageGenerate } = require("../index");
 
 async function expectReject(label, value) {
     let failedAsExpected = false;
 
     try {
-        await omniImageGenerate(value);
+        await IONImageGenerate(value);
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("non-empty prompt string")) {

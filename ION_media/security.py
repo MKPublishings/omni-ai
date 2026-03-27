@@ -24,7 +24,7 @@ class RateLimiter(Protocol):
 @dataclass(slots=True)
 class ApiKeyAuth:
     header_name: str = "x-api-key"
-    env_var_name: str = "OMNI_MEDIA_API_KEYS"
+    env_var_name: str = "ION_MEDIA_API_KEYS"
     allow_without_keys: bool = True
 
     def _configured_keys(self) -> set[str]:
@@ -82,7 +82,7 @@ class RedisRateLimiter:
     redis_url: str
     default_limit: int = 60
     default_window_sec: int = 60
-    key_prefix: str = "omni-media:ratelimit"
+    key_prefix: str = "ION-media:ratelimit"
     _client: object = field(init=False)
 
     def __post_init__(self) -> None:
@@ -107,17 +107,17 @@ class RedisRateLimiter:
 
 
 def load_rate_limits_from_env() -> dict[str, tuple[int, int]]:
-    default_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_DEFAULT", "60"))
-    default_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_DEFAULT", "60"))
+    default_limit = int(os.getenv("ION_MEDIA_RATE_LIMIT_DEFAULT", "60"))
+    default_window = int(os.getenv("ION_MEDIA_RATE_LIMIT_WINDOW_DEFAULT", "60"))
 
-    image_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_IMAGE", str(default_limit)))
-    image_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_IMAGE", str(default_window)))
+    image_limit = int(os.getenv("ION_MEDIA_RATE_LIMIT_IMAGE", str(default_limit)))
+    image_window = int(os.getenv("ION_MEDIA_RATE_LIMIT_WINDOW_IMAGE", str(default_window)))
 
-    jobs_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_JOBS", "30"))
-    jobs_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_JOBS", "60"))
+    jobs_limit = int(os.getenv("ION_MEDIA_RATE_LIMIT_JOBS", "30"))
+    jobs_window = int(os.getenv("ION_MEDIA_RATE_LIMIT_WINDOW_JOBS", "60"))
 
-    admin_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_ADMIN", "30"))
-    admin_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_ADMIN", "60"))
+    admin_limit = int(os.getenv("ION_MEDIA_RATE_LIMIT_ADMIN", "30"))
+    admin_window = int(os.getenv("ION_MEDIA_RATE_LIMIT_WINDOW_ADMIN", "60"))
 
     return {
         "image": (image_limit, image_window),
@@ -128,14 +128,14 @@ def load_rate_limits_from_env() -> dict[str, tuple[int, int]]:
 
 
 def create_rate_limiter_from_env() -> RateLimiter:
-    backend = str(os.getenv("OMNI_MEDIA_RATE_LIMIT_BACKEND", "memory")).strip().lower()
-    default_limit = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_DEFAULT", "60"))
-    default_window = int(os.getenv("OMNI_MEDIA_RATE_LIMIT_WINDOW_DEFAULT", "60"))
+    backend = str(os.getenv("ION_MEDIA_RATE_LIMIT_BACKEND", "memory")).strip().lower()
+    default_limit = int(os.getenv("ION_MEDIA_RATE_LIMIT_DEFAULT", "60"))
+    default_window = int(os.getenv("ION_MEDIA_RATE_LIMIT_WINDOW_DEFAULT", "60"))
 
     if backend == "redis":
-        redis_url = str(os.getenv("OMNI_MEDIA_REDIS_URL", "")).strip()
+        redis_url = str(os.getenv("ION_MEDIA_REDIS_URL", "")).strip()
         if not redis_url:
-            raise RuntimeError("OMNI_MEDIA_REDIS_URL must be set when OMNI_MEDIA_RATE_LIMIT_BACKEND=redis")
+            raise RuntimeError("ION_MEDIA_REDIS_URL must be set when ION_MEDIA_RATE_LIMIT_BACKEND=redis")
         return RedisRateLimiter(
             redis_url=redis_url,
             default_limit=default_limit,

@@ -1,2 +1,2 @@
-export { omniBrainLoop } from "../../../runtime/loop";
-export type { OmniLoopContext, OmniLoopMessage, OmniLoopResult } from "../../../runtime/loop";
+export { IONBrainLoop } from "../../../runtime/loop";
+export type { IONLoopContext, IONLoopMessage, IONLoopResult } from "../../../runtime/loop";

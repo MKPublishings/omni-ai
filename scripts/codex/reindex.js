@@ -399,7 +399,7 @@ function buildIndex() {
   return {
     $schema: SCHEMA_REL,
     meta: {
-      name: "Omni Living Codex",
+      name: "ION Living Codex",
       version: "1.0.0",
       generatedAt: new Date().toISOString(),
       entryCount: entriesWithAuto.length,

@@ -1,7 +1,7 @@
 // @ts-check
 import { runStabilityPipeline } from "./pipeline.js";
 
-/** @typedef {{ enhancedReasoning?: boolean, stabilityMode?: boolean }} OmniEngineOptions */
+/** @typedef {{ enhancedReasoning?: boolean, stabilityMode?: boolean }} IONEngineOptions */
 /** @typedef {{ drifted: boolean, signal?: string | null }} DriftResult */
 /** @typedef {{ valid: boolean, issues?: string[] }} VerificationResult */
 /** @typedef {{ ok: boolean, finalAnswer: string, verification: VerificationResult }} ReasoningResult */
@@ -10,9 +10,9 @@ import { runStabilityPipeline } from "./pipeline.js";
 /** @typedef {StabilitySuccess | StabilityFailure} StabilityResult */
 
 /**
- * @param {{ userInput?: string, mode?: string, options?: OmniEngineOptions }} [options]
+ * @param {{ userInput?: string, mode?: string, options?: IONEngineOptions }} [options]
  */
-export function runOmniEngine({ userInput = "", mode = "architect", options = {} } = {}) {
+export function runIONEngine({ userInput = "", mode = "architect", options = {} } = {}) {
   const enhancedReasoning = Boolean(options.enhancedReasoning);
   const stabilityMode = options.stabilityMode !== false;
 

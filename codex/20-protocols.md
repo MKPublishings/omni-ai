@@ -19,13 +19,13 @@
 
 - `ImprovementPromptContract` is generated from session evaluation and rubric signals.
 - `PatchPromptContract` is generated from failing command + stderr/stdout traces.
-- Contracts enforce minimal-scope fixes, Omni Ai naming continuity, and safety policy retention.
+- Contracts enforce minimal-scope fixes, ION Ai naming continuity, and safety policy retention.
 
 ## Task Token Queue v1
 
 - Evaluation runs and auto-debug runs append task tokens to `data/sessions/task-tokens.jsonl`.
 - Tokens carry acceptance criteria and metadata needed for scheduling and review.
-- Queue can be inspected with `npm run mind:tokens` or the VS Code task `Omni: View Task Tokens`.
+- Queue can be inspected with `npm run mind:tokens` or the VS Code task `ION: View Task Tokens`.
 - Repeated equivalent tokens are deduplicated within a rolling 24-hour window.
 - Low-priority tokens age out after 72 hours.
 - Queue is bounded to the most recent 400 active entries.

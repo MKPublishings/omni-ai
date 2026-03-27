@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from omni_ai.human.head.brain.regions import BRAIN_REGIONS
-from omni_ai.human.head.glands import ALL_GLANDS
-from omni_ai.human.head.muscles import ALL_MUSCLES
-from omni_ai.human.head.nerves.cranial import CRANIAL_NERVES
-from omni_ai.human.head.senses import ALL_ORGANS
-from omni_ai.human.head.skeletal.bones import SKULL_BONES
-from omni_ai.human.head.vascular import ALL_VESSELS
+from ION_ai.human.head.brain.regions import BRAIN_REGIONS
+from ION_ai.human.head.glands import ALL_GLANDS
+from ION_ai.human.head.muscles import ALL_MUSCLES
+from ION_ai.human.head.nerves.cranial import CRANIAL_NERVES
+from ION_ai.human.head.senses import ALL_ORGANS
+from ION_ai.human.head.skeletal.bones import SKULL_BONES
+from ION_ai.human.head.vascular import ALL_VESSELS
 
 
 def _nerve_aliases() -> Dict[str, Any]:

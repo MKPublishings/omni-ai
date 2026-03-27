@@ -1,5 +1,5 @@
 // @ts-check
-const CONFIDENCE_KEY = "omni-last-confidence";
+const CONFIDENCE_KEY = "ION-last-confidence";
 
 /** @param {{ score?: number, band?: string, model?: string }} payload */
 export function setLastConfidence(payload) {

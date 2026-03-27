@@ -17,7 +17,7 @@ export function createEvaluationScheduleTokens(evaluation: SessionEvaluation, th
           "Composite score exceeds configured threshold",
           "Top findings are reduced on next sampled run"
         ],
-        createdBy: "omni",
+        createdBy: "ION",
         priority: "high"
       })
     ];
@@ -32,7 +32,7 @@ export function createEvaluationScheduleTokens(evaluation: SessionEvaluation, th
         "Monitoring snapshot logged",
         "No unresolved high-priority token from prior run"
       ],
-      createdBy: "omni",
+      createdBy: "ION",
       priority: "low"
     })
   ];
@@ -46,7 +46,7 @@ export function createAutoDebugScheduleTokens(result: AutoDebugResult): TaskToke
         summary: "Auto-debug pass is healthy; no patch action required",
         contextFiles: ["src/tools/auto_debugger/autoDebugger.ts"],
         acceptanceCriteria: ["No failing command from the last debug run"],
-        createdBy: "omni",
+        createdBy: "ION",
         priority: "low"
       })
     ];
@@ -61,7 +61,7 @@ export function createAutoDebugScheduleTokens(result: AutoDebugResult): TaskToke
         "Previously failing command exits successfully",
         "Typecheck and smoke tests remain passing"
       ],
-      createdBy: "omni",
+      createdBy: "ION",
       priority: result.riskLevel === "high" ? "high" : "medium"
     })
   ];

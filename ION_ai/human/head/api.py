@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse, HeadSubsystem
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse, HeadSubsystem
 
 
 def head(subsystem: HeadSubsystem, operation: str, payload: Dict[str, Any]) -> HeadResponse:
-    from omni_ai.human.head import handle_head_request
+    from ION_ai.human.head import handle_head_request
 
     request = HeadRequest(
         system="human_head",

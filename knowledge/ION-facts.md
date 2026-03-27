@@ -1,9 +1,9 @@
-# Omni Facts
+# ION Facts
 
-Omni Ai is a Cloudflare Worker-based cognitive runtime with streaming responses.
+ION Ai is a Cloudflare Worker-based cognitive runtime with streaming responses.
 
 ## Core Capabilities
-- Multi-model routing across Omni, GPT-4o, GPT-4o-mini, and DeepSeek.
+- Multi-model routing across ION, GPT-4o, GPT-4o-mini, and DeepSeek.
 - Mode-aware behavior with specialized interaction styles.
 - Safety sanitization on input and output paths.
 - Memory integration for user preferences.

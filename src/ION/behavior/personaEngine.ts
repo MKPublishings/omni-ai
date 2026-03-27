@@ -12,7 +12,7 @@ export interface PersonaProfile {
   values: string[];
 }
 
-const PERSONA_KEY = "omni:persona:profile";
+const PERSONA_KEY = "ION:persona:profile";
 
 const DEFAULT_PERSONA: PersonaProfile = {
   tone: "clear and cinematic",

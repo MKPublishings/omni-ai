@@ -1,7 +1,7 @@
-const { omniImageGenerate } = require("../index");
+const { IONImageGenerate } = require("../index");
 
 async function simpleMode(prompt) {
-    return omniImageGenerate(prompt, {
+    return IONImageGenerate(prompt, {
         mode: "simple"
     });
 }

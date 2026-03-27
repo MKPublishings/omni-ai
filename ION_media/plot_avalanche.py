@@ -67,7 +67,7 @@ def render_avalanche_plot(input_json: Path, output_png: Path) -> Path:
     avg_degree = graph.get("avg_degree", "n/a")
 
     fig.suptitle(
-        "Omni Avalanche Stress Traces\n"
+        "ION Avalanche Stress Traces\n"
         f"solver={solver}, gamma={gamma}, num_cols={num_cols}, levels={levels}, ntraj={ntraj}, "
         f"graph_density={density}, graph_avg_degree={avg_degree}",
         fontsize=11,
@@ -79,7 +79,7 @@ def render_avalanche_plot(input_json: Path, output_png: Path) -> Path:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Render avalanche traces from Omni simulation JSON")
+    parser = argparse.ArgumentParser(description="Render avalanche traces from ION simulation JSON")
     parser.add_argument("--input-json", required=True, type=str, help="Path to avalanche simulation JSON")
     parser.add_argument(
         "--output-png",

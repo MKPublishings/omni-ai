@@ -1,6 +1,6 @@
 # Ionirix Simulation Capabilities
 
-Ionirix includes a dedicated simulation stack under `omni_ai/simulation/` with layered orchestrators.
+Ionirix includes a dedicated simulation stack under `ION_ai/simulation/` with layered orchestrators.
 
 ## Public orchestrators
 
@@ -19,7 +19,7 @@ Ionirix includes a dedicated simulation stack under `omni_ai/simulation/` with l
 
 ## Shared helpers
 
-- Utility layer in `omni_ai/simulation/_utils.py`:
+- Utility layer in `ION_ai/simulation/_utils.py`:
   - `as_id`, `as_name`, `get_nested`, `clamp`, `average`, `relation_lookup`
 
 ## Config-driven controls

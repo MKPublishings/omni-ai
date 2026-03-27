@@ -19,7 +19,7 @@
   - `evaluateSession(sessionLogPath)`
 - `src/mind/evaluators/improvementProposer.ts`
   - `proposeImprovements(evaluation)`
-- `src/mind/evaluators/omniPromptContracts.ts`
+- `src/mind/evaluators/IONPromptContracts.ts`
   - `buildImprovementPromptContract(evaluation)`
   - `buildPatchPromptContract(input)`
 

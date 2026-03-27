@@ -6,10 +6,10 @@ import { wrapCodingPrompt } from "../modes/codingMode.js";
 import { runCreativeMode } from "../modes/creativeMode.js";
 import { runOsMode } from "../modes/osMode.js";
 
-/** @typedef {import("../types/omni").OmniMode} OmniMode */
-/** @typedef {import("../types/omni").MemoryState} MemoryState */
-/** @typedef {import("../types/omni").RetrievalChunk} RetrievalChunk */
-/** @typedef {import("../types/omni").MemoryInfluenceLevel} MemoryInfluenceLevel */
+/** @typedef {import("../types/ION").IONMode} IONMode */
+/** @typedef {import("../types/ION").MemoryState} MemoryState */
+/** @typedef {import("../types/ION").RetrievalChunk} RetrievalChunk */
+/** @typedef {import("../types/ION").MemoryInfluenceLevel} MemoryInfluenceLevel */
 
 /** @param {string} header @param {unknown} value */
 function withContext(header, value) {
@@ -51,7 +51,7 @@ function selectTopRetrieval(retrievalChunks = [], deepKnowledgeMode = false) {
 
 /**
  * @param {{
- *  mode?: OmniMode,
+ *  mode?: IONMode,
  *  userInput?: string,
  *  memory?: MemoryState,
  *  retrievalChunks?: RetrievalChunk[],

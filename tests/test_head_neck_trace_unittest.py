@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.human import head_api
+from ION_ai.human import head_api
 
 
 class HeadNeckTraceBridgeTests(unittest.TestCase):

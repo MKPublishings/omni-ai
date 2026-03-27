@@ -39,7 +39,7 @@ def _extract_avalanche(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, 
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Compare Omni avalanche JSON runs")
+    parser = argparse.ArgumentParser(description="Compare ION avalanche JSON runs")
     parser.add_argument(
         "--input-json",
         nargs="+",
@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-png",
         type=str,
-        default="omni_image_exports/avalanche_compare.png",
+        default="ION_image_exports/avalanche_compare.png",
         help="Output PNG path",
     )
     return parser.parse_args()
@@ -96,7 +96,7 @@ def main() -> None:
         ax.grid(alpha=0.25)
         ax.legend(loc="best", fontsize=8)
 
-    fig.suptitle("Omni Avalanche Comparison", fontsize=12)
+    fig.suptitle("ION Avalanche Comparison", fontsize=12)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(output_path, dpi=160)
     plt.close(fig)

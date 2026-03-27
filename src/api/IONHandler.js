@@ -6,12 +6,12 @@ import { formatResponse } from "../utils/responseFormatter.js";
 import { routeModel, fallbackModel, getRoutingThresholds } from "../router/modelRouter.js";
 import { runTieredRetrieval } from "../retrieval/multiSourceRAG.js";
 import { get as getMemory, pushTopic } from "../memory/memoryManager.js";
-import { runOmniEngine } from "../core/omniEngine.js";
+import { runIONEngine } from "../core/IONEngine.js";
 import { scoreConfidence } from "../core/confidence.js";
 import { selectModelByConfidence } from "../router/confidenceRouter.js";
 
-/** @typedef {import("../types/omni").OmniMode} OmniMode */
-/** @typedef {import("../types/omni").OmniResponse} OmniResponse */
+/** @typedef {import("../types/ION").IONMode} IONMode */
+/** @typedef {import("../types/ION").IONResponse} IONResponse */
 /** @typedef {{ model: string, text: string, routeFallback?: string }} ModelResponse */
 
 /** @param {string} name */
@@ -27,10 +27,10 @@ function readModuleFile(name) {
 /** @param {string} userInput @param {string} mode */
 function selectModuleByQuery(userInput = "", mode = "") {
   const text = `${userInput} ${mode}`.toLowerCase();
-  if (/\b(identity|who are you|omni)\b/.test(text)) return "identity_layer.md";
+  if (/\b(identity|who are you|ION)\b/.test(text)) return "identity_layer.md";
   if (/\b(rule|policy|system)\b/.test(text)) return "system_rules.md";
   if (/\b(mode|architect|reasoning|coding|creative)\b/.test(text)) return "modes_reference.md";
-  return "omni_philosophy.md";
+  return "ION_philosophy.md";
 }
 
 /**
@@ -42,17 +42,17 @@ async function runModel({ model, prompt, env }) {
   void model;
 
   return {
-    model: "omni",
-    text: `[omniHandler:omni] ${String(prompt || "")}`
+    model: "ION",
+    text: `[IONHandler:ION] ${String(prompt || "")}`
   };
 }
 
 /**
- * @param {{ userInput?: string, mode?: OmniMode, env?: any, complexity?: number }} [options]
- * @returns {Promise<OmniResponse>}
+ * @param {{ userInput?: string, mode?: IONMode, env?: any, complexity?: number }} [options]
+ * @returns {Promise<IONResponse>}
  */
-export async function omniHandler({ userInput = "", mode = "architect", env, complexity = 0 } = {}) {
-  const memory = /** @type {import("../types/omni").MemoryState} */ (getMemory(null, {}));
+export async function IONHandler({ userInput = "", mode = "architect", env, complexity = 0 } = {}) {
+  const memory = /** @type {import("../types/ION").MemoryState} */ (getMemory(null, {}));
   const influenceLevel = memory?.memoryInfluenceLevel || "medium";
   const modeFlags = memory?.lastUsedSettings || {};
   const deepKnowledgeMode = Boolean(modeFlags.deepKnowledgeMode);
@@ -65,7 +65,7 @@ export async function omniHandler({ userInput = "", mode = "architect", env, com
   });
   const retrievalChunks = retrievalResult?.selected || [];
 
-  const engine = runOmniEngine({
+  const engine = runIONEngine({
     userInput,
     mode,
     options: {
@@ -81,7 +81,7 @@ export async function omniHandler({ userInput = "", mode = "architect", env, com
   const moduleText = readModuleFile(moduleFile);
 
   const prompt = buildPrompt({
-    mode: /** @type {import("../types/omni").OmniMode} */ (finalMode),
+    mode: /** @type {import("../types/ION").IONMode} */ (finalMode),
     userInput: processedInput,
     memory,
     retrievalChunks,
@@ -120,7 +120,7 @@ export async function omniHandler({ userInput = "", mode = "architect", env, com
 
   pushTopic(userInput);
 
-  return /** @type {OmniResponse} */ ({
+  return /** @type {IONResponse} */ ({
     mode: finalMode,
     route: {
       ...route,

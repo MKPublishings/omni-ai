@@ -1,26 +1,26 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
-import { advanceSimulationState, type SimulationContext } from "../omni/simulation/engine.ts";
-import { loadIdentityKernel, evolveIdentityKernel } from "../omni/intelligence/identityKernel.ts";
-import { runInternalSimulation } from "../omni/intelligence/internalSimulation.ts";
-import type { OmniReasoningMessage } from "../omni/intelligence/reasoningStack.ts";
+import { advanceSimulationState, type SimulationContext } from "../ION/simulation/engine.ts";
+import { loadIdentityKernel, evolveIdentityKernel } from "../ION/intelligence/identityKernel.ts";
+import { runInternalSimulation } from "../ION/intelligence/internalSimulation.ts";
+import type { IONReasoningMessage } from "../ION/intelligence/reasoningStack.ts";
 import { buildPerceptionSnapshot } from "./retrieval.ts";
 import { resolveRuntimeRoute } from "./router.ts";
 
-export interface OmniLoopMessage {
+export interface IONLoopMessage {
   role: string;
   content: string;
 }
 
-export interface OmniLoopContext {
+export interface IONLoopContext {
   mode: string;
   model: string;
-  messages: OmniLoopMessage[];
+  messages: IONLoopMessage[];
   maxOutputTokens?: number;
   simulationContext?: SimulationContext | null;
   preferStreaming?: boolean;
 }
 
-export interface OmniLoopResult {
+export interface IONLoopResult {
   response: string;
   modelUsed: string;
   fallbackUsed: boolean;
@@ -29,13 +29,13 @@ export interface OmniLoopResult {
   stream?: ReadableStream;
 }
 
-type OmniRuntimeEnv = {
+type IONRuntimeEnv = {
   AI?: { run?: (model: string, input: unknown) => Promise<any> };
   MIND?: KVNamespace;
   MEMORY?: KVNamespace;
-  MODEL_OMNI?: string;
+  MODEL_ION?: string;
   MODEL_SIMULATION?: string;
-  OMNI_SIMULATION_PATHS?: string;
+  ION_SIMULATION_PATHS?: string;
 };
 
 const MAX_CONTEXT_MESSAGES = 20;
@@ -54,7 +54,7 @@ function compactText(value: unknown, maxChars: number): string {
   return `${text.slice(0, head)} ... [truncated] ... ${text.slice(-tail)}`;
 }
 
-function capMessageByRole(message: OmniReasoningMessage): OmniReasoningMessage {
+function capMessageByRole(message: IONReasoningMessage): IONReasoningMessage {
   if (message.role === "system") {
     return { ...message, content: compactText(message.content, MAX_SYSTEM_MESSAGE_CHARS) };
   }
@@ -66,7 +66,7 @@ function capMessageByRole(message: OmniReasoningMessage): OmniReasoningMessage {
   return { ...message, content: compactText(message.content, MAX_USER_MESSAGE_CHARS) };
 }
 
-function compactContextMessages(messages: OmniReasoningMessage[]): OmniReasoningMessage[] {
+function compactContextMessages(messages: IONReasoningMessage[]): IONReasoningMessage[] {
   const normalized = messages
     .map((message) => ({ role: normalizeRole(message.role), content: String(message.content || "") }))
     .map(capMessageByRole)
@@ -111,9 +111,9 @@ function isPromptBudgetError(error: unknown): boolean {
   );
 }
 
-function buildEmergencyContext(messages: OmniReasoningMessage[], latestUserText: string): OmniReasoningMessage[] {
+function buildEmergencyContext(messages: IONReasoningMessage[], latestUserText: string): IONReasoningMessage[] {
   const latestAssistant = [...messages].reverse().find((message) => message.role === "assistant");
-  const emergency: OmniReasoningMessage[] = [
+  const emergency: IONReasoningMessage[] = [
     {
       role: "system",
       content:
@@ -148,12 +148,12 @@ function extractResponseText(raw: any): string {
   );
 }
 
-function normalizeRole(role: string): OmniReasoningMessage["role"] {
+function normalizeRole(role: string): IONReasoningMessage["role"] {
   if (role === "system" || role === "assistant" || role === "user") return role;
   return "user";
 }
 
-function makeSystemMessage(content: string): OmniReasoningMessage {
+function makeSystemMessage(content: string): IONReasoningMessage {
   return { role: "system", content };
 }
 
@@ -161,10 +161,10 @@ function isReadableByteStream(value: unknown): value is ReadableStream {
   return !!value && typeof (value as any).getReader === "function";
 }
 
-export async function omniBrainLoop(
-  env: OmniRuntimeEnv,
-  ctx: OmniLoopContext
-): Promise<OmniLoopResult> {
+export async function IONBrainLoop(
+  env: IONRuntimeEnv,
+  ctx: IONLoopContext
+): Promise<IONLoopResult> {
   const diagnostics: string[] = [];
 
   try {
@@ -183,7 +183,7 @@ export async function omniBrainLoop(
         ? Math.floor(Number(ctx.maxOutputTokens))
         : 2048;
 
-    const safeMessages: OmniReasoningMessage[] = (ctx.messages || [])
+    const safeMessages: IONReasoningMessage[] = (ctx.messages || [])
       .map((message) => ({
         role: normalizeRole(String(message.role || "")),
         content: String(message.content || "")
@@ -221,7 +221,7 @@ export async function omniBrainLoop(
 
     const identity = await loadIdentityKernel(env);
 
-    const systemMessages: OmniReasoningMessage[] = [
+    const systemMessages: IONReasoningMessage[] = [
       makeSystemMessage([
         "Cognitive phases: perception -> deliberation -> simulation -> decision -> update.",
         `Route capability: ${route.capability}.`,

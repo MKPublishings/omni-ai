@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping
 
-from omni_ai.envelope.arms import ArmsEnvelope
-from omni_ai.envelope.legs import LegsEnvelope
-from omni_ai.envelope.torso import TorsoEnvelope
+from ION_ai.envelope.arms import ArmsEnvelope
+from ION_ai.envelope.legs import LegsEnvelope
+from ION_ai.envelope.torso import TorsoEnvelope
 
 
 @dataclass

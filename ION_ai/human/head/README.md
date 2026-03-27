@@ -1,6 +1,6 @@
-# omni_ai.human.head
+# ION_ai.human.head
 
-A structured, queryable model of the human head inside Omni Ai.
+A structured, queryable model of the human head inside ION Ai.
 
 ## Subsystems
 
@@ -16,7 +16,7 @@ A structured, queryable model of the human head inside Omni Ai.
 ## Core API
 
 ```python
-from omni_ai.human import head_api
+from ION_ai.human import head_api
 
 # Explain a function
 resp = head_api("integration", "explain_function", {"name": "smile"})

@@ -34,7 +34,7 @@ function createTaskToken(input) {
     summary: String(input.summary || "").trim(),
     acceptanceCriteria: Array.isArray(input.acceptanceCriteria) ? input.acceptanceCriteria : [],
     priority: input.priority || "medium",
-    createdBy: input.createdBy || "omni",
+    createdBy: input.createdBy || "ION",
     status: normalizeStatus(input.status || "open"),
     createdAt: now,
     updatedAt: now,
@@ -290,7 +290,7 @@ function createEscalationTokenFromBaseToken(baseToken, nowIso) {
       "Resolve both base task and escalation task once stable."
     ],
     priority: "high",
-    createdBy: "omni",
+    createdBy: "ION",
     metadata: {
       source: "token-maintenance-escalation",
       escalationForTokenId: String(baseToken?.id || ""),
@@ -384,7 +384,7 @@ function buildEvaluationTaskTokens(input) {
         "Findings list shrinks for recurring reliability issues"
       ],
       priority: "high",
-      createdBy: "omni",
+      createdBy: "ION",
       metadata: {
         source: "mind-loop",
         score,
@@ -403,7 +403,7 @@ function buildEvaluationTaskTokens(input) {
         "No unresolved high-priority tokens remain from previous cycle"
       ],
       priority: "low",
-      createdBy: "omni",
+      createdBy: "ION",
       metadata: {
         source: "mind-loop",
         score,
@@ -429,7 +429,7 @@ function buildAutoDebugTaskTokens(input) {
           "No unresolved high-priority debug token remains"
         ],
         priority: "low",
-        createdBy: "omni",
+        createdBy: "ION",
         metadata: {
           source: "auto-debugger",
           command: input.command,
@@ -449,7 +449,7 @@ function buildAutoDebugTaskTokens(input) {
         "Typecheck and smoke tests remain green"
       ],
       priority: "high",
-      createdBy: "omni",
+      createdBy: "ION",
       metadata: {
         source: "auto-debugger",
         command: input.command,

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from omni_media.contracts import GenerateRequest, GenerationParams
-from omni_media.pipeline import OmniMediaPipeline
+from ION_media.contracts import GenerateRequest, GenerationParams
+from ION_media.pipeline import IONMediaPipeline
 
 
 def main() -> None:
-    pipeline = OmniMediaPipeline()
+    pipeline = IONMediaPipeline()
 
     request = GenerateRequest(
         id=str(uuid.uuid4()),

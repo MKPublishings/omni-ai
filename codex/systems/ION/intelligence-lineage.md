@@ -1,10 +1,10 @@
 ---
-id: system.omni.intelligence-lineage
-title: Omni Intelligence Lineage
+id: system.ION.intelligence-lineage
+title: ION Intelligence Lineage
 type: system
-category: systems/omni
-tags: [omni, intelligence, lineage]
-links: [system.omni.overview, law.quantum.02, law.cognitive.02]
+category: systems/ION
+tags: [ION, intelligence, lineage]
+links: [system.ION.overview, law.quantum.02, law.cognitive.02]
 lineage: [system.mind-os.lineage]
 ---
 

@@ -1,4 +1,4 @@
-# Omni Ship Readiness (2026-03-02T10:27:37.872Z)
+# ION Ship Readiness (2026-03-02T10:27:37.872Z)
 
 - Status: **YELLOW**
 - Baseline score: 0.795

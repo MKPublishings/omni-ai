@@ -5,8 +5,8 @@ import importlib
 import os
 import unittest
 
-from omni_media.api_contracts import GenerateApiResponse, OutputItem
-from omni_media.http_fastapi import create_fastapi_app
+from ION_media.api_contracts import GenerateApiResponse, OutputItem
+from ION_media.http_fastapi import create_fastapi_app
 
 
 def _has_fastapi_testclient() -> bool:
@@ -50,10 +50,10 @@ class FakeService:
 class TestHttpIntegration(unittest.TestCase):
     def setUp(self) -> None:
         self._env_backup = dict(os.environ)
-        os.environ["OMNI_MEDIA_API_KEYS"] = "test-key"
-        os.environ["OMNI_MEDIA_RATE_LIMIT_IMAGE"] = "2"
-        os.environ["OMNI_MEDIA_RATE_LIMIT_WINDOW_IMAGE"] = "60"
-        os.environ["OMNI_MEDIA_AUDIT_ENABLED"] = "false"
+        os.environ["ION_MEDIA_API_KEYS"] = "test-key"
+        os.environ["ION_MEDIA_RATE_LIMIT_IMAGE"] = "2"
+        os.environ["ION_MEDIA_RATE_LIMIT_WINDOW_IMAGE"] = "60"
+        os.environ["ION_MEDIA_AUDIT_ENABLED"] = "false"
 
         fastapi_testclient = importlib.import_module("fastapi.testclient")
         TestClient = getattr(fastapi_testclient, "TestClient")

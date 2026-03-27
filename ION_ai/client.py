@@ -9,7 +9,7 @@ from .__version__ import __version__
 from .analysis import AnalysisClient
 from .cinematic import CinematicClient
 from .constants import Modes, Tasks
-from .errors import OmniError, map_http_error
+from .errors import IONError, map_http_error
 from .models import Input, Request, Response
 from .reasoning import ReasoningClient
 from .routing import RoutingClient
@@ -20,12 +20,12 @@ class Client:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://api.mkomni.com/api/omni",
+        base_url: str = "https://api.mkION.com/api/ION",
         timeout: float = 30.0,
         http_client: Optional[httpx.Client] = None,
     ):
         self.api_key = api_key
-        self.base_url = os.getenv("OMNI_AI_BASE_URL", base_url)
+        self.base_url = os.getenv("ION_AI_BASE_URL", base_url)
         self.timeout = timeout
         self._owns_client = http_client is None
         self._http = http_client or httpx.Client(timeout=timeout)
@@ -77,7 +77,7 @@ class Client:
                 headers=self._headers(),
             )
         except httpx.HTTPError as exc:
-            raise OmniError(f"Transport failure: {exc}") from exc
+            raise IONError(f"Transport failure: {exc}") from exc
 
         if response.status_code >= 400:
             payload: Any

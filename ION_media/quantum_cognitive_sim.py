@@ -448,7 +448,7 @@ def export_json(result: dict[str, Any], json_out: str) -> Path:
 
 
 def parse_args() -> SimulationConfig:
-    parser = argparse.ArgumentParser(description="Run the Omni quantum-cognitive toy simulation")
+    parser = argparse.ArgumentParser(description="Run the ION quantum-cognitive toy simulation")
     parser.add_argument("--mode", type=str, choices=("single", "avalanche"), default="single")
     parser.add_argument("--alpha", type=float, default=0.01)
     parser.add_argument("--beta", type=float, default=0.8)

@@ -2,7 +2,7 @@ import type { DurableObjectNamespace, KVNamespace } from "@cloudflare/workers-ty
 
 type WorkingMemoryEnv = {
   MEMORY?: KVNamespace;
-  OMNI_SESSION?: DurableObjectNamespace;
+  ION_SESSION?: DurableObjectNamespace;
 };
 
 export interface WorkingMemoryState {
@@ -14,7 +14,7 @@ export interface WorkingMemoryState {
   updatedAt: number;
 }
 
-const SESSION_PREFIX = "omni:session:";
+const SESSION_PREFIX = "ION:session:";
 const MAX_WINDOW_ITEMS = 8;
 const MAX_GOALS = 5;
 
@@ -65,12 +65,12 @@ function sanitizeState(sessionId: string, state?: Partial<WorkingMemoryState> | 
 }
 
 async function loadFromDurableObject(env: WorkingMemoryEnv, sessionId: string): Promise<WorkingMemoryState | null> {
-  if (!env.OMNI_SESSION?.idFromName || !env.OMNI_SESSION?.get) return null;
+  if (!env.ION_SESSION?.idFromName || !env.ION_SESSION?.get) return null;
 
   try {
-    const id = env.OMNI_SESSION.idFromName(sessionId);
-    const stub = env.OMNI_SESSION.get(id);
-    const response = await stub.fetch("https://omni-session/get");
+    const id = env.ION_SESSION.idFromName(sessionId);
+    const stub = env.ION_SESSION.get(id);
+    const response = await stub.fetch("https://ION-session/get");
     if (!response.ok) return null;
 
     const payload = (await response.json()) as Partial<WorkingMemoryState>;
@@ -81,12 +81,12 @@ async function loadFromDurableObject(env: WorkingMemoryEnv, sessionId: string): 
 }
 
 async function saveToDurableObject(env: WorkingMemoryEnv, sessionId: string, state: WorkingMemoryState): Promise<boolean> {
-  if (!env.OMNI_SESSION?.idFromName || !env.OMNI_SESSION?.get) return false;
+  if (!env.ION_SESSION?.idFromName || !env.ION_SESSION?.get) return false;
 
   try {
-    const id = env.OMNI_SESSION.idFromName(sessionId);
-    const stub = env.OMNI_SESSION.get(id);
-    const response = await stub.fetch("https://omni-session/set", {
+    const id = env.ION_SESSION.idFromName(sessionId);
+    const stub = env.ION_SESSION.get(id);
+    const response = await stub.fetch("https://ION-session/set", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(state)
@@ -146,7 +146,7 @@ export async function updateWorkingMemoryFromTurn(
     contextWindow: [
       ...current.contextWindow,
       `USER: ${compactLine(options.userText, 220)}`,
-      `OMNI: ${compactLine(options.assistantText, 220)}`
+      `ION: ${compactLine(options.assistantText, 220)}`
     ].filter(Boolean).slice(-MAX_WINDOW_ITEMS),
     updatedAt: nowTs()
   };

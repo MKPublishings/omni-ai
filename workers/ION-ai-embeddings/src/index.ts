@@ -34,7 +34,7 @@ export default {
       return handleGenerate(request, env);
     }
 
-    return new Response("Omni Ai Embeddings worker online.");
+    return new Response("ION Ai Embeddings worker online.");
   }
 };
 

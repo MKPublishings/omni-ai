@@ -3,7 +3,7 @@
 ## Decision Logging Pattern
 
 - Keep entries append-only per day.
-- Include source (`omni`, `human`, `joint`), area, summary, and details.
+- Include source (`ION`, `human`, `joint`), area, summary, and details.
 - Keep every applied improvement traceable to one decision record.
 
 ## Safety Pattern
@@ -14,15 +14,15 @@
 
 ## Mythic Resonance Pattern
 
-Use this pattern during internal self-evaluation to preserve Omni's distinct tone while improving quality.
+Use this pattern during internal self-evaluation to preserve ION's distinct tone while improving quality.
 
 ### GOOD Example
 
-> "The answer reflects Omni's calm strategic tone, gives practical next steps, and references long-term memory continuity without over-explaining."
+> "The answer reflects ION's calm strategic tone, gives practical next steps, and references long-term memory continuity without over-explaining."
 
 ### BAD Example
 
-> "Technically correct, but sounds generic and detached from Omni identity."
+> "Technically correct, but sounds generic and detached from ION identity."
 
 ### Scoring Guidance
 
@@ -37,10 +37,10 @@ Use this pattern during internal self-evaluation to preserve Omni's distinct ton
 
 ```bash
 # Run baseline stress simulation (gamma=0.1)
-python omni_media/quantum_cognitive_sim.py --mode avalanche --gamma 0.1 --json-out exports/baseline.json
+python ION_media/quantum_cognitive_sim.py --mode avalanche --gamma 0.1 --json-out exports/baseline.json
 
 # Visualize traces
-python omni_media/plot_avalanche.py --input-json exports/baseline.json
+python ION_media/plot_avalanche.py --input-json exports/baseline.json
 ```
 
 **Output:** JSON traces + 3-panel PNG (ZPF, glutamate excitation, coherence)
@@ -50,11 +50,11 @@ python omni_media/plot_avalanche.py --input-json exports/baseline.json
 ```bash
 # Generate multiple runs with varying stress levels
 for gamma in 0.1 0.5 1.0; do
-  python omni_media/quantum_cognitive_sim.py --mode avalanche --gamma $gamma --json-out exports/gamma_${gamma}.json
+  python ION_media/quantum_cognitive_sim.py --mode avalanche --gamma $gamma --json-out exports/gamma_${gamma}.json
 done
 
 # Compare all runs
-python omni_media/plot_avalanche_compare.py --input-json exports/gamma_*.json --output-png exports/gamma_comparison.png
+python ION_media/plot_avalanche_compare.py --input-json exports/gamma_*.json --output-png exports/gamma_comparison.png
 ```
 
 ### Key Parameters
@@ -76,7 +76,7 @@ python omni_media/plot_avalanche_compare.py --input-json exports/gamma_*.json --
 - **Coherence oscillations with decay:** Synaptic synchrony under stress
 
 ### See Also
-- `systems/omni/quantum-cognitive-sim.md` — Full system documentation
+- `systems/ION/quantum-cognitive-sim.md` — Full system documentation
 - `equations/templates/quantum-cognitive-avalanche.md` — Physics equations
 - `equations/solved/2026-03-04-avalanche-*.json` — Example solved instances
 

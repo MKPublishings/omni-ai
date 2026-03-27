@@ -1,4 +1,4 @@
-const omniImageGenerator = require("./core/omniImageGenerator");
+const IONImageGenerator = require("./core/IONImageGenerator");
 const { Laws } = require("./core/lawRegistry");
 const logger = require("./utils/logger");
 const { ensureString } = require("./utils/validator");
@@ -20,7 +20,7 @@ function enforceSafety(prompt, options = {}) {
     return report;
 }
 
-async function omniImageGenerate(userPrompt, options = {}) {
+async function IONImageGenerate(userPrompt, options = {}) {
     const normalizedPrompt = ensureString(userPrompt).trim();
     if (!normalizedPrompt) {
         throw new Error("Image generation requires a non-empty prompt string");
@@ -37,7 +37,7 @@ async function omniImageGenerate(userPrompt, options = {}) {
 
     logger.info("User prompt:", validation.normalizedPrompt);
 
-    const result = await omniImageGenerator.generate(validation.normalizedPrompt, {
+    const result = await IONImageGenerator.generate(validation.normalizedPrompt, {
         ...options,
         generation_mode: "image"
     });
@@ -50,7 +50,7 @@ async function omniImageGenerate(userPrompt, options = {}) {
     };
 }
 
-async function omniGenerate(userPrompt, options = {}) {
+async function IONGenerate(userPrompt, options = {}) {
     const normalizedPrompt = ensureString(userPrompt).trim();
     if (!normalizedPrompt) {
         throw new Error("Generation requires a non-empty prompt string");
@@ -65,7 +65,7 @@ async function omniGenerate(userPrompt, options = {}) {
         strictRouting: true
     });
 
-    const result = await omniImageGenerate(validation.normalizedPrompt, options);
+    const result = await IONImageGenerate(validation.normalizedPrompt, options);
     return {
         ...result,
         policy
@@ -73,7 +73,7 @@ async function omniGenerate(userPrompt, options = {}) {
 }
 
 module.exports = {
-    omniGenerate,
-    omniImageGenerate,
+    IONGenerate,
+    IONImageGenerate,
     Laws
 };

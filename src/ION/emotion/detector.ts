@@ -1,12 +1,12 @@
-export type OmniEmotion = "neutral" | "apologetic" | "frustrated" | "positive" | "confused";
+export type IONEmotion = "neutral" | "apologetic" | "frustrated" | "positive" | "confused";
 
 export interface EmotionDetectionResult {
-  emotion: OmniEmotion;
+  emotion: IONEmotion;
   confidence: number;
   signals: string[];
 }
 
-const EMOTION_PATTERNS: Array<{ emotion: OmniEmotion; patterns: RegExp[] }> = [
+const EMOTION_PATTERNS: Array<{ emotion: IONEmotion; patterns: RegExp[] }> = [
   {
     emotion: "frustrated",
     patterns: [
@@ -38,7 +38,7 @@ export function detectEmotionDetailed(text: string): EmotionDetectionResult {
     return { emotion: "neutral", confidence: 0.5, signals: ["empty-input"] };
   }
 
-  const matches: Array<{ emotion: OmniEmotion; hits: number; samples: string[] }> = [];
+  const matches: Array<{ emotion: IONEmotion; hits: number; samples: string[] }> = [];
 
   for (const entry of EMOTION_PATTERNS) {
     const samples: string[] = [];
@@ -70,6 +70,6 @@ export function detectEmotionDetailed(text: string): EmotionDetectionResult {
   };
 }
 
-export function detectEmotion(text: string): OmniEmotion {
+export function detectEmotion(text: string): IONEmotion {
   return detectEmotionDetailed(text).emotion;
 }

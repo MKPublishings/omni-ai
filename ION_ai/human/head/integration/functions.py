@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse
-from omni_ai.human.head.integration.graphs import supported_graphs
-from omni_ai.human.head.integration.search import search_head
-from omni_ai.human.head.integration.trace import trace_structure
-from omni_ai.human.head.integration.validate import validate_graph
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse
+from ION_ai.human.head.integration.graphs import supported_graphs
+from ION_ai.human.head.integration.search import search_head
+from ION_ai.human.head.integration.trace import trace_structure
+from ION_ai.human.head.integration.validate import validate_graph
 
 FUNCTION_DESCRIPTIONS: Dict[str, str] = {
     "smile": "Elevation of mouth corners and associated eye expression.",

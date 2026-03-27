@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import Muscle
+from ION_ai.human.head.models import Muscle
 
 TONGUE_MUSCLES: Dict[str, Muscle] = {
     "genioglossus": Muscle(

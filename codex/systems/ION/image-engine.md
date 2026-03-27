@@ -1,11 +1,11 @@
 ---
-id: system.omni.image-engine
-title: Omni Image Engine Chamber
+id: system.ION.image-engine
+title: ION Image Engine Chamber
 type: system
-category: systems/omni
+category: systems/ION
 tags: [image, engine, multimodal]
-links: [system.omni.overview, visual.motifs.neon-thread]
-lineage: [system.omni.intelligence-lineage]
+links: [system.ION.overview, visual.motifs.neon-thread]
+lineage: [system.ION.intelligence-lineage]
 ---
 
 Reference chamber for image generation style, rendering controls, and visual language integration points.

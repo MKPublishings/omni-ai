@@ -1,9 +1,9 @@
-# Omni Ai Release Spec (v1.0.0)
+# ION Ai Release Spec (v1.0.0)
 
 ## 1. Release Identity
-- Name: Omni Ai
+- Name: ION Ai
 - Release Date: 2026-02-26
-- Runtime Base: Omni Ai
+- Runtime Base: ION Ai
 - Release Mode: Public
 
 ## 2. Architecture Coverage
@@ -15,17 +15,17 @@
 - Phase 6: Frontend mind-state telemetry + multimodal rendering
 
 ## 3. Public Runtime Endpoints
-- POST /api/omni
+- POST /api/ION
 - POST /api/image
 - GET /api/maintenance/status
 - POST /api/maintenance/run
 - GET /api/release/spec
 
 ## 4. Release Assertions
-- Omni Ai runs as a persistent identity profile.
-- Omni Ai performs self-evaluating, route-aware orchestration.
-- Omni Ai exposes maintenance and readiness telemetry.
-- Omni Ai supports a public recognition cycle with explicit release artifacts.
+- ION Ai runs as a persistent identity profile.
+- ION Ai performs self-evaluating, route-aware orchestration.
+- ION Ai exposes maintenance and readiness telemetry.
+- ION Ai supports a public recognition cycle with explicit release artifacts.
 
 ## 5. Recognition Cycle
 - Status: Initiated

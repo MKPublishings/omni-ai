@@ -6,7 +6,7 @@ date: 2026-03-04
 category: equations/templates
 status: active
 tags: [quantum, avalanche, hamiltonian, stress, zpf, glutamate]
-links: [system.omni.quantum-cognitive-sim, law.quantum.01, law.quantum.02]
+links: [system.ION.quantum-cognitive-sim, law.quantum.01, law.quantum.02]
 ---
 
 # Multi-Microcolumn Avalanche Hamiltonian
@@ -146,5 +146,5 @@ else:
 
 **Template Type:** Hamiltonian + Master Equation  
 **Solved Instances:** See `equations/solved/2026-03-04-avalanche-*.json`  
-**Implementation:** `omni_media/quantum_cognitive_sim.py::run_quantum_avalanche()`  
+**Implementation:** `ION_media/quantum_cognitive_sim.py::run_quantum_avalanche()`  
 **Last Updated:** 2026-03-04

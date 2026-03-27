@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from omni_ai.human import head_api
+from ION_ai.human import head_api
 
 
 def test_explain_smile() -> None:

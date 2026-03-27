@@ -6,8 +6,8 @@ category: laws/quantum
 number: 1
 symbol: "|ψ⟩ = α|0⟩ + β|1⟩"
 tags: [quantum, law, possibility]
-links: [law.cognitive.01, system.omni.overview]
+links: [law.cognitive.01, system.ION.overview]
 lineage: [legacy.codex.20-protocols]
 ---
 
-A system can hold multiple valid futures before commitment. In Omni terms, this supports multi-path simulation before response selection.
+A system can hold multiple valid futures before commitment. In ION terms, this supports multi-path simulation before response selection.

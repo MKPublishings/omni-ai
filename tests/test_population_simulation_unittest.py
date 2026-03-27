@@ -3,10 +3,10 @@ from __future__ import annotations
 import unittest
 from random import Random
 
-from omni_ai.human.environment import Environment
-from omni_ai.human.population import PopulationManager
-from omni_ai.human.scenario import Scenario
-from omni_ai.human.simulate import simulate_population
+from ION_ai.human.environment import Environment
+from ION_ai.human.population import PopulationManager
+from ION_ai.human.scenario import Scenario
+from ION_ai.human.simulate import simulate_population
 
 
 class PopulationSimulationTests(unittest.TestCase):

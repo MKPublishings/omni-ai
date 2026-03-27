@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { omniBrainLoop } from "../loop.ts";
+import { IONBrainLoop } from "../loop.ts";
 
 class MemoryNamespace {
   store = new Map<string, string>();
@@ -17,23 +17,23 @@ class MemoryNamespace {
   }
 }
 
-test("omniBrainLoop attaches simulation context for simulation mode", async () => {
+test("IONBrainLoop attaches simulation context for simulation mode", async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
 
-  const result = await omniBrainLoop(
+  const result = await IONBrainLoop(
     {
       AI: {
         run: async () => ({ response: "Simulation response stable." })
       },
       MEMORY: memory as any,
       MIND: mind as any,
-      MODEL_OMNI: "primary-model",
+      MODEL_ION: "primary-model",
       MODEL_SIMULATION: "simulation-model"
     },
     {
       mode: "simulation",
-      model: "omni",
+      model: "ION",
       messages: [{ role: "user", content: "simulate system recovery under pressure" }],
       maxOutputTokens: 256
     }
@@ -45,13 +45,13 @@ test("omniBrainLoop attaches simulation context for simulation mode", async () =
   assert.ok(result.diagnostics.some((entry) => entry.startsWith("simulation:")));
 });
 
-test("omniBrainLoop recovers from prompt budget overflow for long user input", async () => {
+test("IONBrainLoop recovers from prompt budget overflow for long user input", async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
 
   const longPrompt = `${"This is a long planning paragraph with multiple constraints and dependencies. ".repeat(220)}Final objective: provide an answer.`;
 
-  const result = await omniBrainLoop(
+  const result = await IONBrainLoop(
     {
       AI: {
         run: async (_model: string, input: any) => {
@@ -68,11 +68,11 @@ test("omniBrainLoop recovers from prompt budget overflow for long user input", a
       },
       MEMORY: memory as any,
       MIND: mind as any,
-      MODEL_OMNI: "primary-model"
+      MODEL_ION: "primary-model"
     },
     {
       mode: "analysis",
-      model: "omni",
+      model: "ION",
       messages: [{ role: "user", content: longPrompt }],
       maxOutputTokens: 512
     }
@@ -83,7 +83,7 @@ test("omniBrainLoop recovers from prompt budget overflow for long user input", a
   assert.ok(result.diagnostics.includes("runtime:compact-retry-succeeded"));
 });
 
-test("omniBrainLoop returns native stream when preferStreaming is enabled", async () => {
+test("IONBrainLoop returns native stream when preferStreaming is enabled", async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
   const encoder = new TextEncoder();
@@ -95,18 +95,18 @@ test("omniBrainLoop returns native stream when preferStreaming is enabled", asyn
     }
   });
 
-  const result = await omniBrainLoop(
+  const result = await IONBrainLoop(
     {
       AI: {
         run: async () => modelStream
       },
       MEMORY: memory as any,
       MIND: mind as any,
-      MODEL_OMNI: "primary-model"
+      MODEL_ION: "primary-model"
     },
     {
       mode: "auto",
-      model: "omni",
+      model: "ION",
       messages: [{ role: "user", content: "Respond fast." }],
       maxOutputTokens: 256,
       preferStreaming: true

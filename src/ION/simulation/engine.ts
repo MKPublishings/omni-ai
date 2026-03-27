@@ -40,7 +40,7 @@ export type SimulationContext = {
   logsSummary: string;
 };
 
-const SIMULATION_MEMORY_KEY = "omni:simulation:state";
+const SIMULATION_MEMORY_KEY = "ION:simulation:state";
 const MAX_LOG_ENTRIES = 24;
 const SIMULATION_ENGINE = new SimulationEngine();
 const DEFAULT_RULES = [
@@ -210,7 +210,7 @@ function detectControlAction(messages: SimulationMessage[]): "start" | "pause" |
 
 function buildSystemPrompt(state: SimulationState): string {
   return [
-    "You are Omni in Simulation Mode.",
+    "You are ION in Simulation Mode.",
     "Simulation profile: system-state simulator.",
     "Operate as a contained reality engine with strict rule adherence.",
     "Output must include: state summary, key transitions, and concise simulation log entries.",

@@ -1,4 +1,4 @@
-// omni-ai/src/utils/httpClient.js
+// ION-ai/src/utils/httpClient.js
 // Basic HTTP client using node-fetch for internet access
 
 import fetch from 'node-fetch';

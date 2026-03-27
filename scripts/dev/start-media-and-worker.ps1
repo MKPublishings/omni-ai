@@ -51,7 +51,7 @@ function Import-DevVars {
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $devVarsPath = Join-Path $repoRoot ".dev.vars"
 if (Test-Path $devVarsPath) {
-  Write-Output "[omni-dev] Loading environment from .dev.vars"
+  Write-Output "[ION-dev] Loading environment from .dev.vars"
   Import-DevVars -FilePath $devVarsPath
 }
 $pythonExe = Resolve-PythonExecutable
@@ -62,18 +62,18 @@ if ($Local) {
   $wranglerArgs += "--local"
 }
 
-Write-Output "[omni-dev] Starting Omni media service (python -m omni_media.run_server)..."
+Write-Output "[ION-dev] Starting ION media service (python -m ION_media.run_server)..."
 
 try {
-  $mediaProcess = Start-Process -FilePath $pythonExe -ArgumentList @("-m", "omni_media.run_server") -WorkingDirectory $repoRoot -PassThru -NoNewWindow
+  $mediaProcess = Start-Process -FilePath $pythonExe -ArgumentList @("-m", "ION_media.run_server") -WorkingDirectory $repoRoot -PassThru -NoNewWindow
   Start-Sleep -Milliseconds 600
 
   if ($mediaProcess.HasExited) {
-    throw "Omni media service exited immediately with code $($mediaProcess.ExitCode)."
+    throw "ION media service exited immediately with code $($mediaProcess.ExitCode)."
   }
 
-  Write-Output "[omni-dev] Omni media service PID: $($mediaProcess.Id)"
-  Write-Output "[omni-dev] Starting Cloudflare worker (npx $($wranglerArgs -join ' '))..."
+  Write-Output "[ION-dev] ION media service PID: $($mediaProcess.Id)"
+  Write-Output "[ION-dev] Starting Cloudflare worker (npx $($wranglerArgs -join ' '))..."
 
   Push-Location $repoRoot
   try {
@@ -88,7 +88,7 @@ try {
 }
 finally {
   if ($mediaProcess -and -not $mediaProcess.HasExited) {
-    Write-Output "[omni-dev] Stopping Omni media service (PID $($mediaProcess.Id))..."
+    Write-Output "[ION-dev] Stopping ION media service (PID $($mediaProcess.Id))..."
     Stop-Process -Id $mediaProcess.Id -Force -ErrorAction SilentlyContinue
   }
 }

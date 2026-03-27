@@ -5,36 +5,36 @@ console.log("settings.js loaded");
 // ==============================================
 
 const SETTINGS_KEYS = {
-  AUTO_SCROLL: "omni-auto-scroll",
-  FONT_SIZE: "omni-font-size",
-  DEFAULT_MODEL: "omni-default-model",
-  MODE_SELECTION: "omni-mode-selection",
-  DEFAULT_MODE: "omni-default-mode",
-  RESPONSE_LENGTH: "omni-response-length",
-  ANIMATIONS: "omni-animations",
-  SOUND: "omni-sound",
-  SHOW_TIMESTAMPS: "omni-show-timestamps",
-  COMPACT_MODE: "omni-compact-mode",
-  MOBILE_COMPACT_MODE: "omni-mobile-compact-mode",
-  SEND_WITH_ENTER: "omni-send-with-enter",
-  SHOW_ASSISTANT_BADGES: "omni-show-assistant-badges",
-  AUTO_DETECT_MODE: "omni-auto-detect-mode",
-  PERSIST_MANUAL_MODE: "omni-persist-manual-mode",
-  HIGH_CONTRAST_MODE: "omni-high-contrast",
-  REDUCE_GLASS_BLUR: "omni-reduce-glass",
-  API_ENDPOINT: "omni-endpoint",
-  DEBUG_MODE: "omni-debug-mode",
-  REQUEST_TIMEOUT: "omni-request-timeout",
-  API_HEALTH_INTERVAL: "omni-api-health-interval",
-  API_RETRIES: "omni-api-retries",
-  SIMULATION_DEFAULT_RULES: "omni-simulation-default-rules",
-  SIMULATION_MAX_DEPTH: "omni-simulation-max-depth",
-  SIMULATION_MAX_STEPS: "omni-simulation-max-steps",
-  SIMULATION_AUTO_RESET: "omni-simulation-auto-reset",
-  SIMULATION_LOG_VERBOSITY: "omni-simulation-log-verbosity",
-  CHAT_HISTORY: "omni-chat-history"
+  AUTO_SCROLL: "ION-auto-scroll",
+  FONT_SIZE: "ION-font-size",
+  DEFAULT_MODEL: "ION-default-model",
+  MODE_SELECTION: "ION-mode-selection",
+  DEFAULT_MODE: "ION-default-mode",
+  RESPONSE_LENGTH: "ION-response-length",
+  ANIMATIONS: "ION-animations",
+  SOUND: "ION-sound",
+  SHOW_TIMESTAMPS: "ION-show-timestamps",
+  COMPACT_MODE: "ION-compact-mode",
+  MOBILE_COMPACT_MODE: "ION-mobile-compact-mode",
+  SEND_WITH_ENTER: "ION-send-with-enter",
+  SHOW_ASSISTANT_BADGES: "ION-show-assistant-badges",
+  AUTO_DETECT_MODE: "ION-auto-detect-mode",
+  PERSIST_MANUAL_MODE: "ION-persist-manual-mode",
+  HIGH_CONTRAST_MODE: "ION-high-contrast",
+  REDUCE_GLASS_BLUR: "ION-reduce-glass",
+  API_ENDPOINT: "ION-endpoint",
+  DEBUG_MODE: "ION-debug-mode",
+  REQUEST_TIMEOUT: "ION-request-timeout",
+  API_HEALTH_INTERVAL: "ION-api-health-interval",
+  API_RETRIES: "ION-api-retries",
+  SIMULATION_DEFAULT_RULES: "ION-simulation-default-rules",
+  SIMULATION_MAX_DEPTH: "ION-simulation-max-depth",
+  SIMULATION_MAX_STEPS: "ION-simulation-max-steps",
+  SIMULATION_AUTO_RESET: "ION-simulation-auto-reset",
+  SIMULATION_LOG_VERBOSITY: "ION-simulation-log-verbosity",
+  CHAT_HISTORY: "ION-chat-history"
 };
-const CHAT_SESSIONS_KEY = "omni_chat_sessions_v1";
+const CHAT_SESSIONS_KEY = "ION_chat_sessions_v1";
 
 // ==============================================
 // HELPER FUNCTIONS
@@ -62,7 +62,7 @@ function setSettingBool(key, value) {
 
 function broadcastSettingsChange(key, value) {
   // Dispatch custom event for same-page listeners
-  window.dispatchEvent(new CustomEvent("omni-settings-changed", {
+  window.dispatchEvent(new CustomEvent("ION-settings-changed", {
     detail: { key, value }
   }));
   
@@ -115,7 +115,7 @@ const saveSettingsBtn = document.getElementById("save-settings-btn");
 if (saveSettingsBtn) {
   saveSettingsBtn.addEventListener("click", () => {
     // Trigger a manual save event (settings already auto-save)
-    window.dispatchEvent(new CustomEvent("omni-settings-saved"));
+    window.dispatchEvent(new CustomEvent("ION-settings-saved"));
     
     // Visual feedback
     const originalText = saveSettingsBtn.innerHTML;
@@ -517,7 +517,7 @@ const resetSimulationSettingsBtn = document.getElementById("reset-simulation-set
 
 if (apiEndpointInput) {
   apiEndpointInput.value = getSetting(SETTINGS_KEYS.API_ENDPOINT, "");
-  apiEndpointInput.placeholder = "/api/omni/stream";
+  apiEndpointInput.placeholder = "/api/ION/stream";
   
   apiEndpointInput.addEventListener("change", () => {
     setSetting(SETTINGS_KEYS.API_ENDPOINT, apiEndpointInput.value.trim());
@@ -660,7 +660,7 @@ if (exportHistoryBtn) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `omni-chat-history-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `ION-chat-history-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -735,7 +735,7 @@ updateStorageInfo();
 if (resetSettingsBtn) {
   resetSettingsBtn.addEventListener("click", () => {
     if (confirm("Are you sure you want to reset ALL settings to defaults? This cannot be undone.")) {
-      // Clear all omni-related settings but preserve chat history
+      // Clear all ION-related settings but preserve chat history
       const historyBackup = localStorage.getItem(SETTINGS_KEYS.CHAT_HISTORY);
       
       Object.values(SETTINGS_KEYS).forEach(key => {

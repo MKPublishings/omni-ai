@@ -3,7 +3,7 @@ import type { Fetcher, KVNamespace } from "@cloudflare/workers-types";
 type WorkerEnv = {
   ASSETS?: Fetcher;
   MEMORY?: KVNamespace;
-  MODEL_OMNI?: string;
+  MODEL_ION?: string;
 };
 
 export interface IndexedDocument {
@@ -22,7 +22,7 @@ export interface SearchHit {
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const docCache = new Map<string, { ts: number; docs: IndexedDocument[] }>();
-const MEMORY_KEY = "omni:preferences";
+const MEMORY_KEY = "ION:preferences";
 
 function normalizeText(value: unknown): string {
   return String(value || "").trim();
@@ -286,7 +286,7 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
   if (mode === "anatomy") {
     return [
       "Anatomy Mode is active.",
-      "Prioritize Omni's human anatomy and integration modules as authoritative context.",
+      "Prioritize ION's human anatomy and integration modules as authoritative context.",
       "Map user requests to concrete subsystems (head, neck, torso, arms, legs, spine, routing).",
       "When possible, provide operation-oriented guidance (subsystem + operation + payload shape)."
     ].join("\n");
@@ -304,7 +304,7 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
   if (mode === "system-knowledge") {
     return [
       "System Knowledge Mode is active.",
-      "Prioritize Omni internal modules, rules, and documented behavior.",
+      "Prioritize ION internal modules, rules, and documented behavior.",
       "Answer with implementation-aware precision for system questions.",
       "Avoid drifting into unrelated generic guidance when system context is requested."
     ].join("\n");
@@ -345,48 +345,48 @@ export function chooseModelForTask(requestedModel: string, latestUserText: strin
   const taskType = inferTaskType(latestUserText, mode);
   const normalizedMode = normalizeText(mode).toLowerCase();
 
-  if (normalized !== "auto" && normalized === "omni") {
+  if (normalized !== "auto" && normalized === "ION") {
     return {
-      selectedModel: "omni",
+      selectedModel: "ION",
       taskType,
       reason: "manual-model-selection"
     };
   }
 
   if (normalizedMode === "simulation") {
-    return { selectedModel: "omni", taskType, reason: "auto-route:simulation" };
+    return { selectedModel: "ION", taskType, reason: "auto-route:simulation" };
   }
 
   if (taskType === "coding") {
-    return { selectedModel: "omni", taskType, reason: "auto-route:coding" };
+    return { selectedModel: "ION", taskType, reason: "auto-route:coding" };
   }
 
   if (taskType === "math") {
-    return { selectedModel: "omni", taskType, reason: "auto-route:math" };
+    return { selectedModel: "ION", taskType, reason: "auto-route:math" };
   }
 
   if (taskType === "creative") {
-    return { selectedModel: "omni", taskType, reason: "auto-route:creative" };
+    return { selectedModel: "ION", taskType, reason: "auto-route:creative" };
   }
 
-  return { selectedModel: "omni", taskType, reason: "auto-route:general" };
+  return { selectedModel: "ION", taskType, reason: "auto-route:general" };
 }
 
-export interface OmniPreferences {
+export interface IONPreferences {
   preferredMode?: string;
   writingStyle?: string;
   lastUsedSettings?: Record<string, string | boolean | number | null>;
 }
 
-export async function getPreferences(env: WorkerEnv): Promise<OmniPreferences> {
+export async function getPreferences(env: WorkerEnv): Promise<IONPreferences> {
   if (!env.MEMORY?.get) return {};
   const data = await env.MEMORY.get(MEMORY_KEY, "json");
   if (!data || typeof data !== "object") return {};
-  return data as OmniPreferences;
+  return data as IONPreferences;
 }
 
-export async function savePreferences(env: WorkerEnv, payload: OmniPreferences): Promise<OmniPreferences> {
-  const nextValue: OmniPreferences = {
+export async function savePreferences(env: WorkerEnv, payload: IONPreferences): Promise<IONPreferences> {
+  const nextValue: IONPreferences = {
     preferredMode: normalizeText(payload?.preferredMode),
     writingStyle: normalizeText(payload?.writingStyle),
     lastUsedSettings: payload?.lastUsedSettings && typeof payload.lastUsedSettings === "object"

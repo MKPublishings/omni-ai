@@ -17,7 +17,7 @@ function appendDecision(summary, details) {
   const header = `# Decisions for ${date}\n\n`;
   const block = [
     `## ${now} – auto-debugger`,
-    "**Source:** omni",
+    "**Source:** ION",
     `**Summary:** ${summary}`,
     "",
     details,
@@ -75,7 +75,7 @@ async function main() {
   }
 
   const trace = (result.stderr || result.stdout || "No output captured").slice(0, 6000);
-  const patch = "// TODO: replace placeholder with Omni-generated diff";
+  const patch = "// TODO: replace placeholder with ION-generated diff";
 
   appendDecision(
     "Proposed patch for failing test command",

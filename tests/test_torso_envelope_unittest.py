@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.anatomy.torso import (
+from ION_ai.anatomy.torso import (
     AbdominalWall,
     BackMuscles,
     CirculatorySystem,
@@ -22,7 +22,7 @@ from omni_ai.anatomy.torso import (
     Stomach,
     Torso,
 )
-from omni_ai.envelope import OrganLoadModel, TorsoEnvelope, TorsoRequest
+from ION_ai.envelope import OrganLoadModel, TorsoEnvelope, TorsoRequest
 
 
 def build_test_torso() -> Torso:

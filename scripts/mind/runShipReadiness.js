@@ -104,7 +104,7 @@ function evaluateReadiness(baseline, risks) {
 
 function toMarkdown(report) {
   const lines = [
-    `# Omni Ship Readiness (${report.generatedAt})`,
+    `# ION Ship Readiness (${report.generatedAt})`,
     "",
     `- Status: **${String(report.readiness.status).toUpperCase()}**`,
     `- Baseline score: ${report.readiness.baselineScore}`,
@@ -199,7 +199,7 @@ function main() {
 
   const report = {
     generatedAt: new Date().toISOString(),
-    kind: "omni-intelligence-ship-readiness",
+    kind: "ION-intelligence-ship-readiness",
     version: "v1",
     baselineRef: path.relative(ROOT, BASELINE_LATEST).replace(/\\/g, "/"),
     baselineGeneratedAt: String(baseline.generatedAt || ""),
@@ -212,7 +212,7 @@ function main() {
   const files = writeOutputs(report);
   appendRuntimeSignal(report);
 
-  console.log("Omni ship readiness check complete.");
+  console.log("ION ship readiness check complete.");
   console.log(`Status: ${readiness.status.toUpperCase()}`);
   console.log(`Adjusted score: ${readiness.adjustedScore}`);
   console.log(`Readiness report: ${files.latestJsonFile}`);

@@ -1,10 +1,10 @@
-name = "omni-ai-dashboard"
+name = "ION-ai-dashboard"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
 [vars]
-ORCHESTRATOR_URL = "https://omni-ai.omni-ai.workers.dev"
-IMAGES_URL = "https://omni-ai-images.omni-ai.workers.dev"
-AUDIO_URL = "https://omni-ai-audio.omni-ai.workers.dev"
-EMBEDDINGS_URL = "https://omni-ai-embeddings.omni-ai.workers.dev"
-ROUTER_URL = "https://omni-ai-router.omni-ai.workers.dev"
+ORCHESTRATOR_URL = "https://ION-ai.ION-ai.workers.dev"
+IMAGES_URL = "https://ION-ai-images.ION-ai.workers.dev"
+AUDIO_URL = "https://ION-ai-audio.ION-ai.workers.dev"
+EMBEDDINGS_URL = "https://ION-ai-embeddings.ION-ai.workers.dev"
+ROUTER_URL = "https://ION-ai-router.ION-ai.workers.dev"

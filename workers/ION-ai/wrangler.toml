@@ -1,4 +1,4 @@
-name = "omni-ai"
+name = "ION-ai"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
@@ -6,23 +6,23 @@ compatibility_date = "2024-12-01"
 binding = "AI"
 
 [vars]
-IMAGES_URL = "https://omni-ai-images.omni-ai.workers.dev"
-AUDIO_URL = "https://omni-ai-audio.omni-ai.workers.dev"
-EMBED_URL = "https://omni-ai-embeddings.omni-ai.workers.dev"
+IMAGES_URL = "https://ION-ai-images.ION-ai.workers.dev"
+AUDIO_URL = "https://ION-ai-audio.ION-ai.workers.dev"
+EMBED_URL = "https://ION-ai-embeddings.ION-ai.workers.dev"
 
 [[services]]
 binding = "IMAGES_SERVICE"
-service = "omni-ai-images"
+service = "ION-ai-images"
 
 [[services]]
 binding = "AUDIO_SERVICE"
-service = "omni-ai-audio"
+service = "ION-ai-audio"
 
 [[services]]
 binding = "EMBED_SERVICE"
-service = "omni-ai-embeddings"
+service = "ION-ai-embeddings"
 
 [[d1_databases]]
-binding = "OMNI_DB"
+binding = "ION_DB"
 database_name = "mkptri-codex"
 database_id = "e01ef925-3875-478f-b83e-9a5e05297c48"

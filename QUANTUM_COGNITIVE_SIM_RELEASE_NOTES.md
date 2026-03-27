@@ -6,12 +6,12 @@
 
 ## Overview
 
-The Quantum-Cognitive Simulation Engine is now fully integrated into Omni Ai, providing a physics-based computational framework for modeling neural stress dynamics, E-I balance, and avalanche propagation in multi-microcolumn networks.
+The Quantum-Cognitive Simulation Engine is now fully integrated into ION Ai, providing a physics-based computational framework for modeling neural stress dynamics, E-I balance, and avalanche propagation in multi-microcolumn networks.
 
 ## New Modules
 
 ### Core Simulation
-- **`omni_media/quantum_cognitive_sim.py`**
+- **`ION_media/quantum_cognitive_sim.py`**
   - Multi-microcolumn avalanche stress simulation
   - QuTiP-based quantum open systems dynamics
   - ZPF-glutamate coupling with configurable parameters
@@ -20,12 +20,12 @@ The Quantum-Cognitive Simulation Engine is now fully integrated into Omni Ai, pr
   - JSON/CSV export with comprehensive metadata
 
 ### Visualization Tools
-- **`omni_media/plot_avalanche.py`**
+- **`ION_media/plot_avalanche.py`**
   - Single-run 3-panel PNG traces
   - ZPF occupancy, glutamate excitation, coherence oscillations
   - Annotated with solver metadata, parameters, graph metrics
 
-- **`omni_media/plot_avalanche_compare.py`**
+- **`ION_media/plot_avalanche_compare.py`**
   - Multi-run overlay comparison
   - Gamma sweep analysis
   - Custom labeling support
@@ -33,7 +33,7 @@ The Quantum-Cognitive Simulation Engine is now fully integrated into Omni Ai, pr
 ## Codex Artifacts
 
 ### Systems Documentation
-- **`codex/systems/omni/quantum-cognitive-sim.md`**
+- **`codex/systems/ION/quantum-cognitive-sim.md`**
   - Complete system architecture
   - Physics model equations
   - Usage examples and CLI reference
@@ -76,13 +76,13 @@ The Quantum-Cognitive Simulation Engine is now fully integrated into Omni Ai, pr
 - Included usage examples for simulation CLI
 - Added output descriptions
 
-### omni_media README
+### ION_media README
 - Expanded scope to include simulation modules
 - Added module descriptions for quantum simulation
 - Included usage examples
 
 ### Dependencies
-- **`omni_media/requirements.txt`** updated with:
+- **`ION_media/requirements.txt`** updated with:
   - `qutip>=5.0.0` — Quantum Toolbox in Python
   - `networkx>=3.0` — Graph analytics
   - `matplotlib>=3.5.0` — Plotting
@@ -122,21 +122,21 @@ The Quantum-Cognitive Simulation Engine is now fully integrated into Omni Ai, pr
 
 ### Quick Start
 ```bash
-python omni_media/quantum_cognitive_sim.py --mode avalanche --gamma 0.1 --json-out baseline.json
-python omni_media/plot_avalanche.py --input-json baseline.json
+python ION_media/quantum_cognitive_sim.py --mode avalanche --gamma 0.1 --json-out baseline.json
+python ION_media/plot_avalanche.py --input-json baseline.json
 ```
 
 ### Gamma Sweep
 ```bash
 for gamma in 0.1 0.5 1.0; do
-  python omni_media/quantum_cognitive_sim.py --mode avalanche --gamma $gamma --json-out gamma_${gamma}.json
+  python ION_media/quantum_cognitive_sim.py --mode avalanche --gamma $gamma --json-out gamma_${gamma}.json
 done
-python omni_media/plot_avalanche_compare.py --input-json gamma_*.json --output-png comparison.png
+python ION_media/plot_avalanche_compare.py --input-json gamma_*.json --output-png comparison.png
 ```
 
 ### High-Resolution Run
 ```bash
-python omni_media/quantum_cognitive_sim.py --mode avalanche --levels 30 --num-cols 5 --gamma 0.5 --points 100 --t-end 5e-12 --ntraj 48 --json-out high_res.json
+python ION_media/quantum_cognitive_sim.py --mode avalanche --levels 30 --num-cols 5 --gamma 0.5 --points 100 --t-end 5e-12 --ntraj 48 --json-out high_res.json
 ```
 
 ## Physical Interpretation
@@ -177,7 +177,7 @@ python omni_media/quantum_cognitive_sim.py --mode avalanche --levels 30 --num-co
 3. Higher-order coupling topologies (lattice, small-world)
 
 ### Mid-Term
-1. Self-reflection loop: Omni derives Laws 104+ from simulation anomalies
+1. Self-reflection loop: ION derives Laws 104+ from simulation anomalies
 2. Visual-motif integration: Coherence traces → image latent transformations
 3. Multi-modal stress profiles: Unified neuro-visual mappings
 
@@ -189,7 +189,7 @@ python omni_media/quantum_cognitive_sim.py --mode avalanche --levels 30 --num-co
 ## Installation
 
 ```bash
-cd omni-ai/omni_media
+cd ION-ai/ION_media
 pip install -r requirements.txt
 ```
 
@@ -209,24 +209,24 @@ All modules validated on:
 ## Artifacts Generated
 
 ### Simulation Outputs
-- `omni_image_exports/avalanche_stress_run_20260304.json`
-- `omni_image_exports/run_gamma_*.json` (multiple gamma values)
+- `ION_image_exports/avalanche_stress_run_20260304.json`
+- `ION_image_exports/run_gamma_*.json` (multiple gamma values)
 
 ### Visualization Outputs
-- `omni_image_exports/avalanche_stress_run_20260304_traces.png`
-- `omni_image_exports/avalanche_compare.png`
-- `omni_image_exports/avalanche_compare_gamma_sweep.png`
-- `omni_image_exports/avalanche_compare_gamma_high_sensitivity.png`
+- `ION_image_exports/avalanche_stress_run_20260304_traces.png`
+- `ION_image_exports/avalanche_compare.png`
+- `ION_image_exports/avalanche_compare_gamma_sweep.png`
+- `ION_image_exports/avalanche_compare_gamma_high_sensitivity.png`
 
 ## Support
 
-**Documentation:** See `codex/systems/omni/quantum-cognitive-sim.md`  
+**Documentation:** See `codex/systems/ION/quantum-cognitive-sim.md`  
 **Equations:** See `codex/equations/templates/quantum-cognitive-avalanche.md`  
 **Patterns:** See `codex/30-patterns.md` (Quantum-Cognitive Simulation Workflow)  
 **Examples:** See solved instances in `codex/equations/solved/2026-03-04-*.json`
 
 ---
 
-**Release Coordinator:** Omni Ai + Slizz (Mirnes)  
+**Release Coordinator:** ION Ai + Slizz (Mirnes)  
 **Approval Status:** Production Ready  
 **Next Review:** 2026-03-11 (1 week)

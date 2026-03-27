@@ -5,7 +5,7 @@ interface Env {
   IMAGES_SERVICE?: Fetcher;
   AUDIO_SERVICE?: Fetcher;
   EMBED_SERVICE?: Fetcher;
-  OMNI_DB?: D1Database;
+  ION_DB?: D1Database;
   AI: Ai;
 }
 
@@ -376,17 +376,17 @@ export default {
       try {
         const result = generateTaskShardsFromBody(body);
 
-        if (!env.OMNI_DB) {
+        if (!env.ION_DB) {
           return Response.json(
             {
               ok: false,
-              error: "OMNI_DB D1 binding is not configured for this worker"
+              error: "ION_DB D1 binding is not configured for this worker"
             },
             { status: 503 }
           );
         }
 
-        await persistTaskShardGeneration(env.OMNI_DB, result);
+        await persistTaskShardGeneration(env.ION_DB, result);
 
         return Response.json({
           ok: true,
@@ -430,7 +430,7 @@ export default {
       return forward(request, env.EMBED_SERVICE, env.EMBED_URL, "/generate");
     }
 
-    return new Response("Omni Ai orchestrator online.");
+    return new Response("ION Ai orchestrator online.");
   }
 };
 
@@ -467,7 +467,7 @@ async function forward(
     };
 
     if (service) {
-      upstreamResponse = await service.fetch("https://omni-internal" + path, {
+      upstreamResponse = await service.fetch("https://ION-internal" + path, {
         method,
         headers,
         body: bodyText || undefined

@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from omni_ai.anatomy.routing import RoutingEngine
-from omni_ai.anatomy.spine import Spine
+from ION_ai.anatomy.routing import RoutingEngine
+from ION_ai.anatomy.spine import Spine
 
 from .full_state import FullBodyState
 from .limb_contracts import BodyLimbRequest, BodyLimbState

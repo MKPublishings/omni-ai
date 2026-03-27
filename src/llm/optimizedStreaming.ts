@@ -1,5 +1,5 @@
 // ============================================================
-// Omni Ai — Optimized Token Streaming for Cloudflare Workers
+// ION Ai — Optimized Token Streaming for Cloudflare Workers
 // Converted from Python multi-threading to async TypeScript
 // Features: Request Queue, Connection Pooling, Caching, Error Handling
 // ============================================================

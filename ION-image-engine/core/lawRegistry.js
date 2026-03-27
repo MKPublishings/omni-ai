@@ -1,4 +1,4 @@
-const dataset = require("../../src/omni/laws/laws.json");
+const dataset = require("../../src/ION/laws/laws.json");
 
 function normalizeTag(tag) {
     return String(tag || "").trim().toLowerCase();

@@ -2,19 +2,19 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.anatomy.arms import BilateralArms
-from omni_ai.anatomy.body import Body
-from omni_ai.anatomy.body import BodyLimbRequest, BodyLimbState
-from omni_ai.anatomy.legs import BilateralLegs
-from omni_ai.anatomy.routing import (
+from ION_ai.anatomy.arms import BilateralArms
+from ION_ai.anatomy.body import Body
+from ION_ai.anatomy.body import BodyLimbRequest, BodyLimbState
+from ION_ai.anatomy.legs import BilateralLegs
+from ION_ai.anatomy.routing import (
     CirculatoryRouter,
     MetabolicRouter,
     NeuralRouter,
     RoutingEngine,
     StateRouter,
 )
-from omni_ai.anatomy.spine import Spine, SpinalCord, SpinalCoupling, Vertebrae
-from omni_ai.anatomy.torso import (
+from ION_ai.anatomy.spine import Spine, SpinalCord, SpinalCoupling, Vertebrae
+from ION_ai.anatomy.torso import (
     AbdominalWall,
     BackMuscles,
     CirculatorySystem,
@@ -34,8 +34,8 @@ from omni_ai.anatomy.torso import (
     Stomach,
     Torso,
 )
-from omni_ai.envelope import OrganLoadModel, TorsoRequest
-from omni_ai.registry import EnvelopeRegistry
+from ION_ai.envelope import OrganLoadModel, TorsoRequest
+from ION_ai.registry import EnvelopeRegistry
 
 
 def build_test_torso() -> Torso:

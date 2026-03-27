@@ -1,4 +1,4 @@
-// omni chat.js — Style C (Full Omni Ai)
+// ION chat.js — Style C (Full ION Ai)
 // Features:
 // - SSE streaming with [DONE] sentinel
 // - No early cutoffs, robust parsing
@@ -47,31 +47,31 @@
   // =========================
   // 2. STATE ENGINE
   // =========================
-  const STORAGE_KEY = "omni_chat_sessions_v1";
+  const STORAGE_KEY = "ION_chat_sessions_v1";
   const SETTINGS_KEYS = {
-    AUTO_SCROLL: "omni-auto-scroll",
-    FONT_SIZE: "omni-font-size",
-    DEFAULT_MODEL: "omni-default-model",
-    MODE_SELECTION: "omni-mode-selection",
-    DEFAULT_MODE: "omni-default-mode",
-    SIMULATION_DEFAULT_RULES: "omni-simulation-default-rules",
-    SIMULATION_MAX_DEPTH: "omni-simulation-max-depth",
-    SIMULATION_MAX_STEPS: "omni-simulation-max-steps",
-    SIMULATION_AUTO_RESET: "omni-simulation-auto-reset",
-    SIMULATION_LOG_VERBOSITY: "omni-simulation-log-verbosity",
-    SOUND: "omni-sound",
-    SHOW_TIMESTAMPS: "omni-show-timestamps",
-    COMPACT_MODE: "omni-compact-mode",
-    MOBILE_COMPACT_MODE: "omni-mobile-compact-mode",
-    SEND_WITH_ENTER: "omni-send-with-enter",
-    SHOW_ASSISTANT_BADGES: "omni-show-assistant-badges",
-    AUTO_DETECT_MODE: "omni-auto-detect-mode",
-    PERSIST_MANUAL_MODE: "omni-persist-manual-mode",
-    REQUEST_TIMEOUT: "omni-request-timeout",
-    API_HEALTH_INTERVAL: "omni-api-health-interval",
-    API_RETRIES: "omni-api-retries"
+    AUTO_SCROLL: "ION-auto-scroll",
+    FONT_SIZE: "ION-font-size",
+    DEFAULT_MODEL: "ION-default-model",
+    MODE_SELECTION: "ION-mode-selection",
+    DEFAULT_MODE: "ION-default-mode",
+    SIMULATION_DEFAULT_RULES: "ION-simulation-default-rules",
+    SIMULATION_MAX_DEPTH: "ION-simulation-max-depth",
+    SIMULATION_MAX_STEPS: "ION-simulation-max-steps",
+    SIMULATION_AUTO_RESET: "ION-simulation-auto-reset",
+    SIMULATION_LOG_VERBOSITY: "ION-simulation-log-verbosity",
+    SOUND: "ION-sound",
+    SHOW_TIMESTAMPS: "ION-show-timestamps",
+    COMPACT_MODE: "ION-compact-mode",
+    MOBILE_COMPACT_MODE: "ION-mobile-compact-mode",
+    SEND_WITH_ENTER: "ION-send-with-enter",
+    SHOW_ASSISTANT_BADGES: "ION-show-assistant-badges",
+    AUTO_DETECT_MODE: "ION-auto-detect-mode",
+    PERSIST_MANUAL_MODE: "ION-persist-manual-mode",
+    REQUEST_TIMEOUT: "ION-request-timeout",
+    API_HEALTH_INTERVAL: "ION-api-health-interval",
+    API_RETRIES: "ION-api-retries"
   };
-  const KNOWN_MODELS = ["omni"];
+  const KNOWN_MODELS = ["ION"];
   const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "anatomy", "environment", "simulation"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
@@ -88,8 +88,8 @@
   const KNOWN_CAMERA_PROFILES = ["prime-85mm", "wide-35mm", "macro", "telephoto-135mm"];
   const KNOWN_LIGHTING_PROFILES = ["studio-soft", "studio-hard", "natural-daylight", "cinematic-lowkey"];
   const KNOWN_MATERIAL_PROFILES = ["skin", "fabric", "metal", "glass"];
-  const AGE_PROFILE_KEY = "omni-age-profile-v1";
-  const LEGAL_PROFILE_KEY = "omni-legal-attestation-v1";
+  const AGE_PROFILE_KEY = "ION-age-profile-v1";
+  const LEGAL_PROFILE_KEY = "ION-legal-attestation-v1";
 
   let state = {
     activeSessionId: null,
@@ -169,8 +169,8 @@
   }
 
   function getDefaultModelFromSettings() {
-    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "omni"));
-    return candidate || "omni";
+    const candidate = normalizeModel(getSetting(SETTINGS_KEYS.DEFAULT_MODEL, "ION"));
+    return candidate || "ION";
   }
 
   function formatMessageTimestamp(timestamp) {
@@ -218,7 +218,7 @@
 
   function normalizeModel(model) {
     const normalized = typeof model === "string" ? model.trim().toLowerCase() : "";
-    return KNOWN_MODELS.includes(normalized) ? normalized : "omni";
+    return KNOWN_MODELS.includes(normalized) ? normalized : "ION";
   }
 
   function normalizeImageStyle(style) {
@@ -421,7 +421,7 @@
       }
 
       window.dispatchEvent(
-        new CustomEvent("omni-legal-attestation-changed", {
+        new CustomEvent("ION-legal-attestation-changed", {
           detail: nextProfile
         })
       );
@@ -748,7 +748,7 @@
   }
 
   function toModelLabel(model) {
-    const normalized = normalizeModel(model) || "omni";
+    const normalized = normalizeModel(model) || "ION";
     if (normalized === "auto") return "Ion";
     return "Ion";
   }
@@ -1152,7 +1152,7 @@
       title: "New conversation",
       messages: [],
       mode: getSelectedModeFromSettings(),
-      model: "omni",
+      model: "ION",
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -1249,7 +1249,7 @@
 
     const activeMode = getActiveMode(session);
     session.mode = activeMode;
-    session.model = "omni";
+    session.model = "ION";
 
     updateModelButton(session.model);
     updateModeButton(activeMode);
@@ -1323,7 +1323,7 @@
     return slug || fallback;
   }
 
-  function buildOmniExportFilename(kind, ext, timestamp, prompt) {
+  function buildIONExportFilename(kind, ext, timestamp, prompt) {
     const ts = Number(timestamp);
     const date = Number.isFinite(ts) ? new Date(ts) : new Date();
     const iso = date.toISOString().replace(/[:.]/g, "-");
@@ -1353,7 +1353,7 @@
 
     const generatedAt = Number(meta.generatedAt || Date.now());
     const prompt = String(meta.imagePrompt || "Generated image").trim() || "Generated image";
-    const filename = buildOmniExportFilename("image", "png", generatedAt, prompt);
+    const filename = buildIONExportFilename("image", "png", generatedAt, prompt);
     const resolution = String(meta.imageResolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
     const styleId = String(meta.imageStyleId || "").trim();
     const createdLabel = formatGeneratedTimestamp(generatedAt);
@@ -1484,7 +1484,7 @@
     for (const msg of session.messages) {
       const activeMode = getActiveMode(session);
       appendMessage(msg.role, msg.content, {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: activeMode,
         timestamp: msg.timestamp || msg.ts || null,
         generatedAt: msg.generatedAt || msg.timestamp || msg.ts || null,
@@ -1516,10 +1516,10 @@
 
   function getApiEndpoint() {
     try {
-      const saved = localStorage.getItem("omni-endpoint") || "";
-      return saved.trim() || "/api/omni";
+      const saved = localStorage.getItem("ION-endpoint") || "";
+      return saved.trim() || "/api/ION";
     } catch {
-      return "/api/omni";
+      return "/api/ION";
     }
   }
 
@@ -1527,8 +1527,8 @@
     const chatEndpoint = getApiEndpoint();
     try {
       const url = new URL(chatEndpoint, window.location.origin);
-      if (/\/api\/omni$/i.test(url.pathname)) {
-        url.pathname = url.pathname.replace(/\/api\/omni$/i, "/api/image");
+      if (/\/api\/ION$/i.test(url.pathname)) {
+        url.pathname = url.pathname.replace(/\/api\/ION$/i, "/api/image");
       } else {
         url.pathname = "/api/image";
       }
@@ -1678,7 +1678,7 @@
       imageDataUrl,
       filename: String(data?.filename || "generated-image.png").trim() || "generated-image.png",
       metadata: data?.metadata || {},
-      modelUsed: String(res.headers.get("X-Omni-Image-Model") || data?.metadata?.model || "").trim()
+      modelUsed: String(res.headers.get("X-ION-Image-Model") || data?.metadata?.model || "").trim()
     };
   }
 
@@ -1767,7 +1767,7 @@
 
     const viewportHeight = Number(window.visualViewport?.height || window.innerHeight || 0);
     if (viewportHeight > 0) {
-      root.style.setProperty("--omni-vvh", `${viewportHeight}px`);
+      root.style.setProperty("--ION-vvh", `${viewportHeight}px`);
     }
 
     const baselineHeight = Number(window.innerHeight || viewportHeight || 0);
@@ -1848,12 +1848,12 @@
     return compact.reverse();
   }
 
-  async function streamOmniResponse(session, onChunk, onMeta, safetyProfile = null, modeOverride = "", conversationHints = null) {
+  async function streamIONResponse(session, onChunk, onMeta, safetyProfile = null, modeOverride = "", conversationHints = null) {
     const activeMode = normalizeMode(modeOverride) || getActiveMode(session);
     const outboundMessages = buildNetworkMessages(session);
     const payload = {
       messages: outboundMessages,
-      model: "omni",
+      model: "ION",
       mode: activeMode,
       safetyProfile: safetyProfile || buildSafetyProfile(),
       conversationHints: conversationHints && typeof conversationHints === "object" ? conversationHints : undefined
@@ -1861,7 +1861,7 @@
 
     const requestHeaders = { "Content-Type": "application/json" };
     if (session?.id) {
-      requestHeaders["x-omni-session-id"] = String(session.id);
+      requestHeaders["x-ION-session-id"] = String(session.id);
     }
 
     const controller = new AbortController();
@@ -1918,19 +1918,19 @@
 
     if (typeof onMeta === "function") {
       onMeta({
-        modelUsed: (res.headers.get("X-Omni-Model-Used") || "").trim(),
-        routeReason: (res.headers.get("X-Omni-Route-Reason") || "").trim(),
-        orchestratorRoute: (res.headers.get("X-Omni-Orchestrator-Route") || "").trim(),
-        orchestratorReason: (res.headers.get("X-Omni-Orchestrator-Reason") || "").trim(),
-        personaTone: (res.headers.get("X-Omni-Persona-Tone") || "").trim(),
-        userEmotion: (res.headers.get("X-Omni-Emotion-User") || "").trim(),
-        omniEmotion: (res.headers.get("X-Omni-Emotion-Omni") || "").trim(),
-        internetMode: (res.headers.get("X-Omni-Internet-Mode") || "").trim(),
-        internetProfile: (res.headers.get("X-Omni-Internet-Profile") || "").trim(),
-        internetCount: Number(res.headers.get("X-Omni-Internet-Count") || "0"),
-        simulationId: (res.headers.get("X-Omni-Simulation-Id") || "").trim(),
-        simulationStatus: (res.headers.get("X-Omni-Simulation-Status") || "").trim(),
-        simulationSteps: Number(res.headers.get("X-Omni-Simulation-Steps") || "0")
+        modelUsed: (res.headers.get("X-ION-Model-Used") || "").trim(),
+        routeReason: (res.headers.get("X-ION-Route-Reason") || "").trim(),
+        orchestratorRoute: (res.headers.get("X-ION-Orchestrator-Route") || "").trim(),
+        orchestratorReason: (res.headers.get("X-ION-Orchestrator-Reason") || "").trim(),
+        personaTone: (res.headers.get("X-ION-Persona-Tone") || "").trim(),
+        userEmotion: (res.headers.get("X-ION-Emotion-User") || "").trim(),
+        IONEmotion: (res.headers.get("X-ION-Emotion-ION") || "").trim(),
+        internetMode: (res.headers.get("X-ION-Internet-Mode") || "").trim(),
+        internetProfile: (res.headers.get("X-ION-Internet-Profile") || "").trim(),
+        internetCount: Number(res.headers.get("X-ION-Internet-Count") || "0"),
+        simulationId: (res.headers.get("X-ION-Simulation-Id") || "").trim(),
+        simulationStatus: (res.headers.get("X-ION-Simulation-Status") || "").trim(),
+        simulationSteps: Number(res.headers.get("X-ION-Simulation-Steps") || "0")
       });
     }
 
@@ -2012,7 +2012,7 @@
 
     if (!hasVerifiedLegalAttestation()) {
       appendMessage("assistant", "Legal attestation is required before chat can run. Please confirm jurisdiction eligibility and truthful/responsible use.", {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: getActiveMode(session),
         timestamp: Date.now()
       });
@@ -2036,7 +2036,7 @@
 
       const activeMode = getActiveMode(session);
       appendMessage("user", trimmed, {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: activeMode,
         timestamp: commandTimestamp
       });
@@ -2212,7 +2212,7 @@
         }
       } else {
         appendMessage("assistant", assistantText, {
-          model: session.model || "omni",
+          model: session.model || "ION",
           mode: getActiveMode(session),
           timestamp: Date.now(),
           ...(assistantMediaMeta || {})
@@ -2243,13 +2243,13 @@
       const blockTs = Date.now();
       session.messages.push({ role: "user", content: trimmed, timestamp: blockTs });
       appendMessage("user", trimmed, {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: getActiveMode(session),
         timestamp: blockTs
       });
 
       appendMessage("assistant", policy.message, {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: getActiveMode(session),
         timestamp: Date.now()
       });
@@ -2284,7 +2284,7 @@
       const detected = detectModeFromContent(trimmed, session);
       if (detected?.mode) {
         activeMode = normalizeMode(detected.mode) || "auto";
-        updateModelInspector(session.model || "omni", `mode:${activeMode}`);
+        updateModelInspector(session.model || "ION", `mode:${activeMode}`);
       }
     }
 
@@ -2303,7 +2303,7 @@
     }
     
     appendMessage("user", trimmed, {
-      model: session.model || "omni",
+      model: session.model || "ION",
       mode: activeMode,
       timestamp: Date.now()
     });
@@ -2317,7 +2317,7 @@
     const shouldGenerateImage = mediaIntent.kind === "image";
     if (shouldGenerateImage) {
       const assistantMessage = appendMessage("assistant", "Generating image...", {
-        model: session.model || "omni",
+        model: session.model || "ION",
         mode: activeMode
       });
       const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2334,7 +2334,7 @@
         const resolution = String(imageResult?.metadata?.resolution || "").trim() || IMAGE_EXPORT_RESOLUTION_LABEL;
         const styleId = String(imageResult?.metadata?.style_id || "").trim();
 
-        updateModelInspector(imageResult.modelUsed || session.model || "omni", "image-generated");
+        updateModelInspector(imageResult.modelUsed || session.model || "ION", "image-generated");
 
         if (assistantBodyEl) {
           assistantBodyEl.innerHTML = renderMarkdown(`Generated image for: **${imagePrompt}**`);
@@ -2375,7 +2375,7 @@
           renderActiveSessionMessages();
         }
       } catch (err) {
-        console.error("Omni image generation error:", err);
+        console.error("ION image generation error:", err);
         const reason = String(err?.message || "").trim();
         updateAssistantMessageBody(
           assistantBodyEl,
@@ -2398,7 +2398,7 @@
 
     // Prepare assistant placeholder
     const assistantMessage = appendMessage("assistant", "", {
-      model: session.model || "omni",
+      model: session.model || "ION",
       mode: activeMode
     });
     const assistantBodyEl = assistantMessage ? assistantMessage.body : null;
@@ -2418,7 +2418,7 @@
     };
 
     try {
-      await streamOmniResponse(
+      await streamIONResponse(
         session,
         (chunk) => {
           if (chunk && typeof chunk === "object") {
@@ -2450,7 +2450,7 @@
           }
         },
         (meta) => {
-          updateModelInspector(meta?.modelUsed || session.model || "omni", meta?.routeReason || "");
+          updateModelInspector(meta?.modelUsed || session.model || "ION", meta?.routeReason || "");
 
           if (getActiveMode(session) === "simulation") {
             const simulation = ensureSimulationState(session);
@@ -2524,7 +2524,7 @@
         cancelAnimationFrame(streamingRenderFrameId);
         streamingRenderFrameId = 0;
       }
-      console.error("Omni streaming error:", err);
+      console.error("ION streaming error:", err);
       updateAssistantMessageBody(
         assistantBodyEl,
         "[Error] Something went wrong while streaming the response."
@@ -2795,7 +2795,7 @@
     renderSessionsSidebar();
     renderActiveSessionMessages();
     startApiChecks();
-    updateModelInspector("omni", "omni-locked");
+    updateModelInspector("ION", "ION-locked");
     loadPreferences();
     updateSimulationUI();
     updateAgeGateComposerNotice();
@@ -2854,7 +2854,7 @@
     });
 
     // Listen for same-page settings events
-    window.addEventListener("omni-settings-changed", (e) => {
+    window.addEventListener("ION-settings-changed", (e) => {
       const { key } = e.detail;
       if (key === STORAGE_KEY) {
         resetToFreshChat();
@@ -2906,13 +2906,13 @@
       }
     });
 
-    window.addEventListener("omni-age-profile-changed", () => {
+    window.addEventListener("ION-age-profile-changed", () => {
       const session = getActiveSession();
       updateAgeGateComposerNotice();
       if (!session) return;
     });
 
-    window.addEventListener("omni-legal-attestation-changed", () => {
+    window.addEventListener("ION-legal-attestation-changed", () => {
       updateLegalAttestationComposerNotice();
     });
 
@@ -2931,7 +2931,7 @@
         if (!optionBtn) return;
         const session = getActiveSession();
         if (!session) return;
-        session.model = normalizeModel(optionBtn.dataset.value) || "omni";
+        session.model = normalizeModel(optionBtn.dataset.value) || "ION";
         session.updatedAt = Date.now();
         saveState();
         updateModelButton(session.model);
@@ -3026,10 +3026,10 @@
       autoResizeInput();
 
       try {
-        const queuedPrompt = localStorage.getItem("omni-tools-prompt") || "";
+        const queuedPrompt = localStorage.getItem("ION-tools-prompt") || "";
         if (queuedPrompt.trim()) {
           inputEl.value = queuedPrompt;
-          localStorage.removeItem("omni-tools-prompt");
+          localStorage.removeItem("ION-tools-prompt");
           autoResizeInput();
         }
       } catch {

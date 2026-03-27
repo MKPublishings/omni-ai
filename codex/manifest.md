@@ -1,4 +1,4 @@
-# Omni Living Codex (v1)
+# ION Living Codex (v1)
 
 The codex is a living knowledge graph.
 

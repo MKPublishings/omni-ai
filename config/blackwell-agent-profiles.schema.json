@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://omni-ai.local/schemas/blackwell-agent-profiles.schema.json",
+  "$id": "https://ION-ai.local/schemas/blackwell-agent-profiles.schema.json",
   "title": "Blackwell Agent Profiles",
   "type": "object",
   "required": [

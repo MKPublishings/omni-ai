@@ -7,18 +7,18 @@ from dataclasses import asdict
 from typing import Any
 
 from .contracts import GenerateRequest, GenerateResponse, MediaOutput
-from .engine import OmniMediaEngine
+from .engine import IONMediaEngine
 from .model_registry import ModelRegistry
 
 
-class OmniMediaPipeline:
+class IONMediaPipeline:
     def __init__(
         self,
         registry: ModelRegistry | None = None,
-        engine: OmniMediaEngine | None = None,
+        engine: IONMediaEngine | None = None,
     ) -> None:
         self.registry = registry or ModelRegistry()
-        self.engine = engine or OmniMediaEngine()
+        self.engine = engine or IONMediaEngine()
 
     def _normalize_input(self, request: GenerateRequest) -> GenerateRequest:
         prompt = request.prompt.strip()
@@ -88,7 +88,7 @@ class OmniMediaPipeline:
                     )
 
             else:
-                raise ValueError(f"Unsupported modality: {request.modality}. Omni media currently supports image only.")
+                raise ValueError(f"Unsupported modality: {request.modality}. ION media currently supports image only.")
 
             self._post_safety_check(request, outputs)
             outputs = self._package_data(request, outputs)

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.anatomy.arms import Arm, BilateralArms
-from omni_ai.anatomy.arms import ArmCommand
-from omni_ai.anatomy.legs import BilateralLegs, Leg
-from omni_ai.anatomy.legs import LegCommand
-from omni_ai.envelope.arms import ArmsEnvelope
-from omni_ai.envelope.arms_request import ArmsBilateralRequest
-from omni_ai.envelope.legs import LegsEnvelope
-from omni_ai.envelope.legs_request import LegsBilateralRequest
-from omni_ai.registry import EnvelopeRegistry
+from ION_ai.anatomy.arms import Arm, BilateralArms
+from ION_ai.anatomy.arms import ArmCommand
+from ION_ai.anatomy.legs import BilateralLegs, Leg
+from ION_ai.anatomy.legs import LegCommand
+from ION_ai.envelope.arms import ArmsEnvelope
+from ION_ai.envelope.arms_request import ArmsBilateralRequest
+from ION_ai.envelope.legs import LegsEnvelope
+from ION_ai.envelope.legs_request import LegsBilateralRequest
+from ION_ai.registry import EnvelopeRegistry
 
 
 class LimbEnvelopeTests(unittest.TestCase):

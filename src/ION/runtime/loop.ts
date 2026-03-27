@@ -1,16 +1,16 @@
-import type { OmniMessage } from "../../omni/mindos-core";
-import { omniBrainLoop as authoritativeLoop, type OmniLoopContext } from "../../runtime/loop";
+import type { IONMessage } from "../../ION/mindos-core";
+import { IONBrainLoop as authoritativeLoop, type IONLoopContext } from "../../runtime/loop";
 
-export type OmniBrainContext = {
+export type IONBrainContext = {
   mode: string;
   model?: string;
-  messages: OmniMessage[];
+  messages: IONMessage[];
 };
 
-export async function omniBrainLoop(env: any, ctx: OmniBrainContext): Promise<string> {
-  const runtimeCtx: OmniLoopContext = {
+export async function IONBrainLoop(env: any, ctx: IONBrainContext): Promise<string> {
+  const runtimeCtx: IONLoopContext = {
     mode: ctx.mode,
-    model: ctx.model || "omni",
+    model: ctx.model || "ION",
     messages: ctx.messages,
     maxOutputTokens: 2048
   };

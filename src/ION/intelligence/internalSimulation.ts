@@ -1,18 +1,18 @@
-import type { OmniIdentityKernel } from "./identityKernel.ts";
-import { runReasoningStack, type OmniReasoningMessage } from "./reasoningStack.ts";
+import type { IONIdentityKernel } from "./identityKernel.ts";
+import { runReasoningStack, type IONReasoningMessage } from "./reasoningStack.ts";
 import type { KVNamespace } from "@cloudflare/workers-types";
 
 type SimulationEnv = {
   AI?: { run?: (model: string, input: unknown) => Promise<unknown> };
   MEMORY?: KVNamespace;
-  OMNI_SIMULATION_PATHS?: string;
+  ION_SIMULATION_PATHS?: string;
 };
 
 export interface InternalSimulationInput {
   env: SimulationEnv;
   model: string;
-  identity: OmniIdentityKernel;
-  messages: OmniReasoningMessage[];
+  identity: IONIdentityKernel;
+  messages: IONReasoningMessage[];
   maxOutputTokens: number;
 }
 
@@ -54,7 +54,7 @@ function scoreResponse(text: string): number {
 }
 
 function resolvePathCount(env: SimulationEnv): number {
-  const requested = Number(env.OMNI_SIMULATION_PATHS || 1);
+  const requested = Number(env.ION_SIMULATION_PATHS || 1);
   if (!Number.isFinite(requested)) return 1;
   return clamp(Math.floor(requested), 1, 4);
 }

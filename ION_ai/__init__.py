@@ -5,7 +5,7 @@ from .analysis import AnalysisClient
 from .cinematic import CinematicClient
 from .client import Client
 from .constants import Modes, Tasks
-from .errors import OmniAuthError, OmniError, OmniRateLimitError, OmniServerError
+from .errors import IONAuthError, IONError, IONRateLimitError, IONServerError
 from .models import Input, Meta, Output, Request, Response
 from .reasoning import ReasoningClient
 from .routing import RoutingClient
@@ -21,10 +21,10 @@ __all__ = [
     "Input",
     "Meta",
     "Modes",
-    "OmniAuthError",
-    "OmniError",
-    "OmniRateLimitError",
-    "OmniServerError",
+    "IONAuthError",
+    "IONError",
+    "IONRateLimitError",
+    "IONServerError",
     "Output",
     "ReasoningClient",
     "Request",

@@ -16,14 +16,14 @@ function ensurePanel(id, title) {
   return el;
 }
 
-export function mountOmniPanels() {
-  mountModesPanel(ensurePanel("omni-modes-panel", "Modes"));
-  mountMemoryPanel(ensurePanel("omni-memory-panel", "Memory"));
-  mountRouterInspector(ensurePanel("omni-router-panel", "Router Inspector"));
-  mountConfidenceMeter(ensurePanel("omni-confidence-panel", "Confidence"));
-  mountSettingsPanel(ensurePanel("omni-settings-panel", "Settings"));
+export function mountIONPanels() {
+  mountModesPanel(ensurePanel("ION-modes-panel", "Modes"));
+  mountMemoryPanel(ensurePanel("ION-memory-panel", "Memory"));
+  mountRouterInspector(ensurePanel("ION-router-panel", "Router Inspector"));
+  mountConfidenceMeter(ensurePanel("ION-confidence-panel", "Confidence"));
+  mountSettingsPanel(ensurePanel("ION-settings-panel", "Settings"));
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("DOMContentLoaded", mountOmniPanels);
+  window.addEventListener("DOMContentLoaded", mountIONPanels);
 }

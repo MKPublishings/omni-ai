@@ -22,16 +22,16 @@ const ignoredDirs = new Set([
   ".git",
   ".wrangler",
   ".vscode",
-  "omni_image_exports"
+  "ION_image_exports"
 ]);
 
 const disallowedPatterns = [
-  /\bOmni\s+Mind\/OS\b/g,
+  /\bION\s+Mind\/OS\b/g,
   /\bMind\/OS\b/g,
-  /\bOMNI\s+MIND\/OS\b/g,
-  /\bOmni\s+Mind\b/g,
-  /\bOmni\s+AI\b/g,
-  /\bOMNI\s+AI\b/g
+  /\bION\s+MIND\/OS\b/g,
+  /\bION\s+Mind\b/g,
+  /\bION\s+AI\b/g,
+  /\bION\s+AI\b/g
 ];
 
 function walk(dirPath, files = []) {
@@ -81,7 +81,7 @@ const files = walk(rootDir);
 const violations = files.flatMap(findViolations);
 
 if (violations.length > 0) {
-  console.error("\nBranding consistency check failed. Use 'Omni Ai' brand casing.\n");
+  console.error("\nBranding consistency check failed. Use 'ION Ai' brand casing.\n");
   for (const violation of violations.slice(0, 80)) {
     const rel = path.relative(rootDir, violation.filePath).replace(/\\/g, "/");
     console.error(`- ${rel}:${violation.lineNumber}  ${violation.line}`);

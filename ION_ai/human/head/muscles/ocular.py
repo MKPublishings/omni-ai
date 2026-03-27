@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import Muscle
+from ION_ai.human.head.models import Muscle
 
 OCULAR_MUSCLES: Dict[str, Muscle] = {
     "superior_rectus": Muscle(id="superior_rectus", name="Superior Rectus", group="ocular", actions=["elevate eye"], innervation=[3]),

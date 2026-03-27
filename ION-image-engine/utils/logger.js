@@ -1,9 +1,9 @@
 function info(...args) {
-    console.log("[OMNI-IMAGE-ENGINE]", ...args);
+    console.log("[ION-IMAGE-ENGINE]", ...args);
 }
 
 function error(...args) {
-    console.error("[OMNI-IMAGE-ENGINE][ERROR]", ...args);
+    console.error("[ION-IMAGE-ENGINE][ERROR]", ...args);
 }
 
 module.exports = {

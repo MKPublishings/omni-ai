@@ -46,7 +46,7 @@ assert.equal(typeof detectAutoMediaIntent, "function", "detectAutoMediaIntent sh
 
 const conversationalCases = [
   "create a plan for my startup",
-  "we should create better docs for Omni",
+  "we should create better docs for ION",
   "I want to make this project faster",
   "imagine we improve onboarding next week",
   "create, for me, a roadmap for the next sprint"

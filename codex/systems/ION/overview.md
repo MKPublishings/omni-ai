@@ -1,11 +1,11 @@
 ---
-id: system.omni.overview
-title: Omni System Overview
+id: system.ION.overview
+title: ION System Overview
 type: system
-category: systems/omni
-tags: [omni, system, orchestrator]
-links: [system.omni.intelligence-lineage, system.omni.image-engine]
+category: systems/ION
+tags: [ION, system, orchestrator]
+links: [system.ION.intelligence-lineage, system.ION.image-engine]
 lineage: [system.mind-os.overview]
 ---
 
-Omni Ai is the active cognitive operating system with modular reasoning, memory, safety, multimodal routing, and autonomy layers.
+ION Ai is the active cognitive operating system with modular reasoning, memory, safety, multimodal routing, and autonomy layers.

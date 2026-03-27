@@ -1,7 +1,7 @@
-const { omniImageGenerate } = require("../index");
+const { IONImageGenerate } = require("../index");
 
 async function codexMode(prompt, options = {}) {
-    const result = await omniImageGenerate(prompt, { ...options, mode: "codex" });
+    const result = await IONImageGenerate(prompt, { ...options, mode: "codex" });
 
     return {
         userPrompt: result.orchestrated.userPrompt,

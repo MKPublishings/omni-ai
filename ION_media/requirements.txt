@@ -1,4 +1,4 @@
-vllm-omni
+vllm-ION
 Pillow
 fastapi
 uvicorn

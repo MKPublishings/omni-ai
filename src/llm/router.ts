@@ -1,5 +1,5 @@
 // This file defines the logic for selecting and routing to different LLM models based on the provided model ID.
-import { omniAdapter } from "./omniAdapter";
+import { IONAdapter } from "./IONAdapter";
 
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 type ModelAdapter = { generate: (env: any, messages: ChatMessage[]) => Promise<{ text: string }> };
@@ -14,7 +14,7 @@ function isValidMessage(m: any): m is ChatMessage {
 }
 
 export async function routeModel(body: any, env: any) {
-  const model = String(body?.model ?? "omni").toLowerCase();
+  const model = String(body?.model ?? "ION").toLowerCase();
   const mode = typeof body?.mode === "string" ? body.mode : "Architect";
   const messages = Array.isArray(body?.messages) ? body.messages.filter(isValidMessage) : [];
 
@@ -29,6 +29,6 @@ export async function routeModel(body: any, env: any) {
 export function selectModel(modelId: string, mode = "Architect"): ModelAdapter {
   void modelId;
   return {
-    generate: (env, messages) => omniAdapter(messages, mode, env)
+    generate: (env, messages) => IONAdapter(messages, mode, env)
   };
 }

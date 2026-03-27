@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse
 
 from .facial import FACIAL_MUSCLES
 from .mastication import MASTICATION_MUSCLES

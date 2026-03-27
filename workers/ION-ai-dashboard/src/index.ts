@@ -152,6 +152,6 @@ export default {
       return Response.json(payload, { status: 200 });
     }
 
-    return new Response("Omni Ai Dashboard worker online. Endpoints: /health, /overview");
+    return new Response("ION Ai Dashboard worker online. Endpoints: /health, /overview");
   }
 };

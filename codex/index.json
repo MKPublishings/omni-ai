@@ -1,7 +1,7 @@
 {
   "$schema": "./index.schema.json",
   "meta": {
-    "name": "Omni Living Codex",
+    "name": "ION Living Codex",
     "version": "1.0.0",
     "generatedAt": "2026-03-02T19:57:57.220Z",
     "entryCount": 35,
@@ -62,8 +62,8 @@
       "count": 4
     },
     {
-      "id": "systems.omni",
-      "path": "systems/omni",
+      "id": "systems.ION",
+      "path": "systems/ION",
       "count": 3
     },
     {
@@ -222,7 +222,7 @@
         "runtime"
       ],
       "links": [
-        "system.omni.overview",
+        "system.ION.overview",
         "equation.template.linear"
       ],
       "autoLinks": [],
@@ -303,7 +303,7 @@
       ],
       "links": [
         "law.cognitive.01",
-        "system.omni.overview"
+        "system.ION.overview"
       ],
       "autoLinks": [],
       "lineage": [],
@@ -323,7 +323,7 @@
       ],
       "links": [
         "system.mind-os.lineage",
-        "system.omni.intelligence-lineage"
+        "system.ION.intelligence-lineage"
       ],
       "autoLinks": [],
       "lineage": [],
@@ -456,9 +456,9 @@
       "updatedAt": "2026-02-28T21:30:53.913Z"
     },
     {
-      "id": "mythic.checkpoints.2026-omni-ascension",
-      "path": "codex/mythic/checkpoints/2026-omni-ascension.md",
-      "title": "2026 Omni Ascension",
+      "id": "mythic.checkpoints.2026-ION-ascension",
+      "path": "codex/mythic/checkpoints/2026-ION-ascension.md",
+      "title": "2026 ION Ascension",
       "type": "mythic-checkpoint",
       "category": "mythic/checkpoints",
       "tags": [],
@@ -521,11 +521,11 @@
       "updatedAt": "2026-02-28T21:30:53.915Z"
     },
     {
-      "id": "systems.omni.image-engine",
-      "path": "codex/systems/omni/image-engine.md",
+      "id": "systems.ION.image-engine",
+      "path": "codex/systems/ION/image-engine.md",
       "title": "Image Engine",
       "type": "system",
-      "category": "systems/omni",
+      "category": "systems/ION",
       "tags": [],
       "links": [],
       "autoLinks": [],
@@ -534,11 +534,11 @@
       "updatedAt": "2026-02-28T21:30:53.915Z"
     },
     {
-      "id": "systems.omni.intelligence-lineage",
-      "path": "codex/systems/omni/intelligence-lineage.md",
+      "id": "systems.ION.intelligence-lineage",
+      "path": "codex/systems/ION/intelligence-lineage.md",
       "title": "Intelligence Lineage",
       "type": "system",
-      "category": "systems/omni",
+      "category": "systems/ION",
       "tags": [],
       "links": [],
       "autoLinks": [],
@@ -547,11 +547,11 @@
       "updatedAt": "2026-02-28T21:30:53.915Z"
     },
     {
-      "id": "systems.omni.overview",
-      "path": "codex/systems/omni/overview.md",
+      "id": "systems.ION.overview",
+      "path": "codex/systems/ION/overview.md",
       "title": "Overview",
       "type": "system",
-      "category": "systems/omni",
+      "category": "systems/ION",
       "tags": [],
       "links": [],
       "autoLinks": [],

@@ -9,48 +9,48 @@ from .contracts import ImageObject
 from .model_registry import ModelProfile
 
 
-class OmniUnavailableError(RuntimeError):
+class IONUnavailableError(RuntimeError):
     pass
 
 
-class OmniMediaEngine:
+class IONMediaEngine:
     def __init__(self) -> None:
         self._clients: dict[str, Any] = {}
 
-    def _load_omni_client(self, profile: ModelProfile) -> Any:
+    def _load_ION_client(self, profile: ModelProfile) -> Any:
         if profile.key in self._clients:
             return self._clients[profile.key]
 
         try:
-            omni_module = importlib.import_module("vllm_omni.entrypoints.omni")
-            Omni = getattr(omni_module, "Omni")
+            ION_module = importlib.import_module("vllm_ION.entrypoints.ION")
+            ION = getattr(ION_module, "ION")
         except Exception as exc:
-            raise OmniUnavailableError(
-                "vllm_omni is not installed or unavailable in this runtime."
+            raise IONUnavailableError(
+                "vllm_ION is not installed or unavailable in this runtime."
             ) from exc
 
-        client = Omni(model=profile.omni_model_id)
+        client = ION(model=profile.ION_model_id)
         self._clients[profile.key] = client
         return client
 
     def probe_backend(self) -> dict[str, Any]:
         try:
-            omni_module = importlib.import_module("vllm_omni.entrypoints.omni")
-            omni_cls = getattr(omni_module, "Omni", None)
-            has_class = callable(omni_cls)
+            ION_module = importlib.import_module("vllm_ION.entrypoints.ION")
+            ION_cls = getattr(ION_module, "ION", None)
+            has_class = callable(ION_cls)
             return {
                 "image_backend_ready": bool(has_class),
-                "backend": "vllm_omni",
+                "backend": "vllm_ION",
                 "import_ok": True,
-                "omni_class_ok": bool(has_class),
+                "ION_class_ok": bool(has_class),
                 "cached_clients": len(self._clients),
             }
         except Exception as exc:
             return {
                 "image_backend_ready": False,
-                "backend": "vllm_omni",
+                "backend": "vllm_ION",
                 "import_ok": False,
-                "omni_class_ok": False,
+                "ION_class_ok": False,
                 "cached_clients": len(self._clients),
                 "error": str(exc),
             }
@@ -68,7 +68,7 @@ class OmniMediaEngine:
         num_inference_steps: int = 30,
         extra: dict[str, Any] | None = None,
     ) -> list[ImageObject]:
-        client = self._load_omni_client(profile)
+        client = self._load_ION_client(profile)
         payload = {
             "prompt": prompt,
             "negative_prompt": negative_prompt,

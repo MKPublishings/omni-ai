@@ -8,7 +8,7 @@ export interface TaskToken {
   acceptanceCriteria: string[];
   priority: "low" | "medium" | "high";
   status: "open" | "in-progress" | "resolved";
-  createdBy: "omni" | "human";
+  createdBy: "ION" | "human";
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string;

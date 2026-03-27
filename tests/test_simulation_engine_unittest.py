@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from omni_ai.simulation import SimulationEngine, compute_interaction_vectors, run_simulation_tick
-from omni_ai.simulation.intercivilizational import simulate_intercivilizational_dynamics
+from ION_ai.simulation import SimulationEngine, compute_interaction_vectors, run_simulation_tick
+from ION_ai.simulation.intercivilizational import simulate_intercivilizational_dynamics
 
 
 class SimulationEngineTests(unittest.TestCase):

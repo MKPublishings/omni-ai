@@ -2,21 +2,21 @@
 # Copy this file to `.dev.vars` and fill in real secrets/values.
 
 # ===== Worker runtime =====
-OMNI_ENV="development"
+ION_ENV="development"
 # For Cloudflare deployment use your media worker URL, e.g.:
-# OMNI_MEDIA_API_BASE_URL="https://omni-ai-media.omni-ai.workers.dev"
-OMNI_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
-OMNI_MEDIA_API_KEY="replace-with-omni-media-key"
-OMNI_MEDIA_API_TIMEOUT_MS="45000"
+# ION_MEDIA_API_BASE_URL="https://ion-ai-media.ion-ai.workers.dev"
+ION_MEDIA_API_BASE_URL="http://127.0.0.1:8788"
+ION_MEDIA_API_KEY="replace-with-ion-media-key"
+ION_MEDIA_API_TIMEOUT_MS="45000"
 
 # Optional admin protection for maintenance endpoints.
-OMNI_ADMIN_KEY="replace-with-strong-secret"
+ION_ADMIN_KEY="replace-with-strong-secret"
 
 # Optional model aliases.
-MODEL_OMNI="@cf/meta/llama-3.1-8b-instruct"
+MODEL_ION="@cf/meta/llama-3.1-8b-instruct"
 
-# ===== Omni media service (Python process) =====
-# Use the same key as OMNI_MEDIA_API_KEY when API key auth is enabled.
-OMNI_MEDIA_API_KEYS="replace-with-omni-media-key"
-OMNI_MEDIA_HOST="127.0.0.1"
-OMNI_MEDIA_PORT="8788"
+# ===== ION media service (Python process) =====
+# Use the same key as ION_MEDIA_API_KEY when API key auth is enabled.
+ION_MEDIA_API_KEYS="replace-with-ion-media-key"
+ION_MEDIA_HOST="127.0.0.1"
+ION_MEDIA_PORT="8788"

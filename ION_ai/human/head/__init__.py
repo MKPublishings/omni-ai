@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from omni_ai.human.head.brain.ops import handle_brain_request
-from omni_ai.human.head.envelopes import HeadRequest, HeadResponse
-from omni_ai.human.head.glands import handle_glands_request
-from omni_ai.human.head.integration.functions import handle_integration_request
-from omni_ai.human.head.muscles import handle_muscles_request
-from omni_ai.human.head.nerves.ops import handle_nerves_request
-from omni_ai.human.head.senses import handle_senses_request
-from omni_ai.human.head.skeletal import handle_skeletal_request
-from omni_ai.human.head.vascular import handle_vascular_request
+from ION_ai.human.head.brain.ops import handle_brain_request
+from ION_ai.human.head.envelopes import HeadRequest, HeadResponse
+from ION_ai.human.head.glands import handle_glands_request
+from ION_ai.human.head.integration.functions import handle_integration_request
+from ION_ai.human.head.muscles import handle_muscles_request
+from ION_ai.human.head.nerves.ops import handle_nerves_request
+from ION_ai.human.head.senses import handle_senses_request
+from ION_ai.human.head.skeletal import handle_skeletal_request
+from ION_ai.human.head.vascular import handle_vascular_request
 
 
 def handle_head_request(req: HeadRequest) -> HeadResponse:

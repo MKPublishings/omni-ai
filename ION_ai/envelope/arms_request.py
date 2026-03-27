@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from omni_ai.anatomy.arms import ArmCommand
+from ION_ai.anatomy.arms import ArmCommand
 
 
 @dataclass(frozen=True)

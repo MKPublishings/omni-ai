@@ -9,9 +9,9 @@ from typing import Any
 from .api_contracts import GenerateApiResponse, GenerateBody, OutputItem
 from .contracts import GenerateRequest, GenerationParams, MediaOutput
 from .hooks import DefaultMediaHooks
-from .pipeline import OmniMediaPipeline
+from .pipeline import IONMediaPipeline
 from .storage import LocalFileStorageAdapter, StorageAdapter
-from .worker import InMemoryJobQueue, Job, OmniMediaWorker
+from .worker import InMemoryJobQueue, Job, IONMediaWorker
 
 
 def _infer_extension(media_type: str, metadata: dict[str, Any]) -> str:
@@ -48,14 +48,14 @@ class InMemoryJobStore:
 
 
 @dataclass(slots=True)
-class OmniMediaService:
-    pipeline: OmniMediaPipeline = field(default_factory=OmniMediaPipeline)
+class IONMediaService:
+    pipeline: IONMediaPipeline = field(default_factory=IONMediaPipeline)
     storage: StorageAdapter = field(default_factory=LocalFileStorageAdapter)
     job_store: InMemoryJobStore = field(default_factory=InMemoryJobStore)
     queue_backend: InMemoryJobQueue = field(default_factory=InMemoryJobQueue)
     hooks: DefaultMediaHooks = field(default_factory=DefaultMediaHooks)
     signed_url_ttl_sec: int | None = 3600
-    worker: OmniMediaWorker | None = None
+    worker: IONMediaWorker | None = None
     _stats_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
     _stats: dict[str, int] = field(default_factory=dict, init=False, repr=False)
 
@@ -69,7 +69,7 @@ class OmniMediaService:
             "jobs_failed": 0,
         }
         if self.worker is None:
-            self.worker = OmniMediaWorker(self.pipeline, self.queue_backend)
+            self.worker = IONMediaWorker(self.pipeline, self.queue_backend)
             self.worker.start()
 
     def _inc_stat(self, key: str, value: int = 1) -> None:
@@ -79,7 +79,7 @@ class OmniMediaService:
     def get_backend_health(self) -> dict[str, Any]:
         return {
             "image_backend_ready": True,
-            "backend": "omni-image",
+            "backend": "ION-image",
             "video_backend_removed": True,
         }
 

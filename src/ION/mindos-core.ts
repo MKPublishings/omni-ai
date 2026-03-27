@@ -3,14 +3,14 @@ import { lorePrimer } from "./modes/lore";
 import { visualPrimer } from "./modes/visual";
 import { analystPrimer } from "./modes/analyst";
 
-export interface OmniMessage {
+export interface IONMessage {
   role: "user" | "assistant" | "system";
   content: string;
 }
 
-export interface OmniContext {
+export interface IONContext {
   mode: string;
-  messages: OmniMessage[];
+  messages: IONMessage[];
 }
 
 function getModePrimer(mode: string): string {
@@ -23,11 +23,11 @@ function getModePrimer(mode: string): string {
   }
 }
 
-export function buildOmniPrompt(ctx: OmniContext): string {
+export function buildIONPrompt(ctx: IONContext): string {
   const primer = getModePrimer(ctx.mode);
 
   const mentalPathing = `
-You are Omni Ai — a cognitive operating system.
+You are ION Ai — a cognitive operating system.
 You operate using structured mental pathing:
 
 1. Initialization

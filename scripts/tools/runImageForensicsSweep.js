@@ -90,17 +90,17 @@ const FRONTEND_PATTERNS = [
 ];
 
 const IMAGE_RELEVANT_ROOTS = [
-  "omni-image-engine/",
-  "workers/omni-ai-images/",
+  "ION-image-engine/",
+  "workers/ION-ai-images/",
   "src/index.ts",
   "public/scripts/chat.js",
   "scripts/smoke/image",
-  "omni_media/"
+  "ION_media/"
 ];
 
 const STRICT_IMAGE_RELEVANT_ROOTS = [
-  "omni-image-engine/",
-  "workers/omni-ai-images/",
+  "ION-image-engine/",
+  "workers/ION-ai-images/",
   "src/index.ts",
   "public/scripts/chat.js",
   "scripts/smoke/image"
@@ -295,7 +295,7 @@ function gatherForensics(options = {}) {
 
 function toMarkdown(report) {
   const lines = [];
-  lines.push("# Omni Image Forensics Sweep");
+  lines.push("# ION Image Forensics Sweep");
   lines.push("");
   lines.push(`Generated: ${report.generatedAt}`);
   lines.push(`Risk Score: ${report.riskScore}/100`);

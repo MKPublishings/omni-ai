@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from omni_ai.anatomy.spine import Spine
+from ION_ai.anatomy.spine import Spine
 
 from .circulatory import CirculatoryRouter
 from .fastpaths import fast_route

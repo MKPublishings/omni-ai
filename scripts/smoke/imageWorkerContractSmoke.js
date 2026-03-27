@@ -4,14 +4,14 @@ const vm = require("node:vm");
 const ts = require("typescript");
 
 function loadImageWorkerExports() {
-  const workerPath = path.join(__dirname, "..", "..", "workers", "omni-ai-images", "src", "index.ts");
+  const workerPath = path.join(__dirname, "..", "..", "workers", "ION-ai-images", "src", "index.ts");
   const source = fs.readFileSync(workerPath, "utf8");
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2020
     },
-    fileName: "omni-ai-images-index.ts"
+    fileName: "ION-ai-images-index.ts"
   }).outputText;
 
   const moduleRef = { exports: {} };
@@ -32,7 +32,7 @@ function loadImageWorkerExports() {
     crypto
   };
 
-  vm.runInNewContext(transpiled, sandbox, { filename: "omni-ai-images-index.vm.js" });
+  vm.runInNewContext(transpiled, sandbox, { filename: "ION-ai-images-index.vm.js" });
   return moduleRef.exports;
 }
 
@@ -157,11 +157,11 @@ async function run() {
   const response = await handleGenerate(request, env);
   expect(response.status === 200, `expected 200 from handleGenerate, got ${response.status}`);
 
-  const byteHeader = Number(response.headers.get("X-Omni-Image-Bytes") || 0);
-  const statusHeader = String(response.headers.get("X-Omni-Image-Size-Status") || "");
-  const forcedWidthHeader = Number(response.headers.get("X-Omni-Image-Forced-Width") || 0);
-  const forcedHeightHeader = Number(response.headers.get("X-Omni-Image-Forced-Height") || 0);
-  const dimensionLockHeader = String(response.headers.get("X-Omni-Image-Dimension-Lock") || "");
+  const byteHeader = Number(response.headers.get("X-ION-Image-Bytes") || 0);
+  const statusHeader = String(response.headers.get("X-ION-Image-Size-Status") || "");
+  const forcedWidthHeader = Number(response.headers.get("X-ION-Image-Forced-Width") || 0);
+  const forcedHeightHeader = Number(response.headers.get("X-ION-Image-Forced-Height") || 0);
+  const dimensionLockHeader = String(response.headers.get("X-ION-Image-Dimension-Lock") || "");
 
   expect(byteHeader >= 1_048_576 && byteHeader <= 12_582_912, `response header bytes out of range: ${byteHeader}`);
   expect(statusHeader === "within", `response size status should be 'within', got '${statusHeader}'`);

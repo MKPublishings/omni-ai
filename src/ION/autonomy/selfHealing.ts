@@ -17,7 +17,7 @@ export interface SelfHealingReport {
   corrected: boolean;
 }
 
-const HEALING_LOG_KEY = "omni:autonomy:self-healing:last";
+const HEALING_LOG_KEY = "ION:autonomy:self-healing:last";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));

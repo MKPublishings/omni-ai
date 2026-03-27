@@ -1,12 +1,12 @@
 ---
-id: system.omni.quantum-cognitive-sim
+id: system.ION.quantum-cognitive-sim
 title: Quantum-Cognitive Simulation Engine
 version: 1.0.0
 date: 2026-03-04
-category: systems/omni
+category: systems/ION
 status: active
 tags: [quantum, cognitive, simulation, avalanche, stress, e-i-balance]
-links: [law.quantum.01, law.quantum.02, law.cognitive.02, system.omni.overview]
+links: [law.quantum.01, law.quantum.02, law.cognitive.02, system.ION.overview]
 ---
 
 # Quantum-Cognitive Simulation Engine
@@ -74,7 +74,7 @@ where $\gamma$ modulates decoherence (thermal bath, stress-induced damping).
 
 #### Single Avalanche Run
 ```bash
-python omni_media/quantum_cognitive_sim.py \
+python ION_media/quantum_cognitive_sim.py \
   --mode avalanche \
   --levels 20 \
   --num-cols 3 \
@@ -82,7 +82,7 @@ python omni_media/quantum_cognitive_sim.py \
   --points 50 \
   --t-end 1e-12 \
   --ntraj 24 \
-  --json-out omni_image_exports/stress_run.json
+  --json-out ION_image_exports/stress_run.json
 ```
 
 #### Parameters
@@ -105,19 +105,19 @@ python omni_media/quantum_cognitive_sim.py \
 
 #### Single-Run Traces
 ```bash
-python omni_media/plot_avalanche.py \
-  --input-json omni_image_exports/stress_run.json \
-  --output-png omni_image_exports/stress_run_traces.png
+python ION_media/plot_avalanche.py \
+  --input-json ION_image_exports/stress_run.json \
+  --output-png ION_image_exports/stress_run_traces.png
 ```
 
 #### Multi-Run Comparison (Gamma Sweep)
 ```bash
-python omni_media/plot_avalanche_compare.py \
-  --input-json omni_image_exports/run_gamma_01.json \
-               omni_image_exports/run_gamma_05.json \
-               omni_image_exports/run_gamma_10.json \
+python ION_media/plot_avalanche_compare.py \
+  --input-json ION_image_exports/run_gamma_01.json \
+               ION_image_exports/run_gamma_05.json \
+               ION_image_exports/run_gamma_10.json \
   --labels gamma_0.1 gamma_0.5 gamma_1.0 \
-  --output-png omni_image_exports/gamma_sweep_compare.png
+  --output-png ION_image_exports/gamma_sweep_compare.png
 ```
 
 ## JSON Output Schema
@@ -213,7 +213,7 @@ pip install qutip networkx matplotlib numpy scipy
 
 ## Integration Points
 
-**Omni Image Engine**
+**ION Image Engine**
 - Avalanche outputs can feed visual motifs (neon-thread excitation patterns)
 - Stress-coherence mappings inform emotional registers
 
@@ -232,7 +232,7 @@ pip install qutip networkx matplotlib numpy scipy
 - Long-term potentiation modeling
 
 **Self-Reflection Loop**
-- Omni derives new laws from simulation anomalies
+- ION derives new laws from simulation anomalies
 - Auto-register discoveries into Laws 104+
 
 **Multi-Modal Integration**
@@ -246,7 +246,7 @@ pip install qutip networkx matplotlib numpy scipy
 ---
 
 **Runtime Status:** Active  
-**Module Path:** `omni_media/quantum_cognitive_sim.py`  
-**Visualization:** `omni_media/plot_avalanche.py`, `omni_media/plot_avalanche_compare.py`  
-**Export Directory:** `omni_image_exports/`  
+**Module Path:** `ION_media/quantum_cognitive_sim.py`  
+**Visualization:** `ION_media/plot_avalanche.py`, `ION_media/plot_avalanche_compare.py`  
+**Export Directory:** `ION_image_exports/`  
 **Last Updated:** 2026-03-04

@@ -8,7 +8,7 @@
   "status": "validated",
   "tags": ["quantum", "avalanche", "stress", "solved", "mcsolve"],
   "links": [
-    "system.omni.quantum-cognitive-sim",
+    "system.ION.quantum-cognitive-sim",
     "equation.quantum-cognitive-avalanche",
     "law.quantum.02"
   ],
@@ -77,8 +77,8 @@
     "laws_coupling": "Scale-free graph with hubs (Laws 1-21) drives avalanche cascades to cognitive extensions (Laws 22-103)."
   },
   "artifacts": {
-    "json_export": "omni_image_exports/avalanche_stress_run_20260304.json",
-    "trace_png": "omni_image_exports/avalanche_stress_run_20260304_traces.png"
+    "json_export": "ION_image_exports/avalanche_stress_run_20260304.json",
+    "trace_png": "ION_image_exports/avalanche_stress_run_20260304_traces.png"
   },
   "validation": {
     "nan_count": 0,

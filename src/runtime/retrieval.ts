@@ -1,4 +1,4 @@
-import type { SimulationContext } from "../omni/simulation/engine.ts";
+import type { SimulationContext } from "../ION/simulation/engine.ts";
 
 export interface RetrievalMessage {
   role: string;

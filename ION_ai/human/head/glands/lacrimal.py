@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import Gland
+from ION_ai.human.head.models import Gland
 
 LACRIMAL_GLANDS: Dict[str, Gland] = {
     "lacrimal": Gland(

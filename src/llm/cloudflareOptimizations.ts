@@ -1,5 +1,5 @@
 // ============================================================
-// Omni Ai — Cloudflare Workers Optimizations
+// ION Ai — Cloudflare Workers Optimizations
 // Cloudflare-specific API optimizations and utilities
 // ============================================================
 
@@ -9,7 +9,7 @@ import { optimizedFetch, getStreamingEngine } from "./optimizedStreaming";
  * Cloudflare Workers Cache API wrapper for API responses
  */
 export class CloudflareCacheManager {
-  private cacheName: string = "omni-api-cache";
+  private cacheName: string = "ION-api-cache";
 
   async get(key: string): Promise<any | null> {
     if (typeof caches === "undefined") return null;
@@ -115,7 +115,7 @@ export async function cloudflareOptimizedFetch(
   const optimizedOptions: RequestInit = {
     ...options,
     headers: {
-      "User-Agent": "Omni-Mind-OS/1.0",
+      "User-Agent": "ION-Mind-OS/1.0",
       "Connection": "keep-alive",
       ...options.headers
     },

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from omni_ai.human.head.models import BrainRegion
+from ION_ai.human.head.models import BrainRegion
 
 BRAIN_REGIONS: Dict[str, BrainRegion] = {
     "prefrontal_cortex": BrainRegion(

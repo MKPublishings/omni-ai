@@ -6,8 +6,8 @@ Connection: keep-alive
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Headers: Content-Type
 Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS
-Access-Control-Expose-Headers: X-Omni-Image-Model
-X-Omni-Image-Model: @cf/black-forest-labs/flux-1-schnell
+Access-Control-Expose-Headers: X-ION-Image-Model
+X-ION-Image-Model: @cf/black-forest-labs/flux-1-schnell
 Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=KmUt6lpvQbX09QTKjZF%2Fdumr9uV7jBqh%2FR%2F2FQ8fdgLklcq8rB2pS6MVbpXcSeDjoZHHLfT95LHLxCPn4pLfOkClCYF5GRxlla%2B0bdoamPNjVgJC4mk4kj4GkPdzxWDi2dH7AB014w%3D%3D"}]}
 Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
 Server: cloudflare

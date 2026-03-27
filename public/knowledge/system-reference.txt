@@ -1,4 +1,4 @@
-Omni System Reference
+ION System Reference
 
 Mode keys:
 - auto
@@ -12,10 +12,10 @@ Mode keys:
 - system-knowledge
 
 Router defaults:
-- coding => omni
-- math => omni
-- creative => omni
-- general => omni
+- coding => ION
+- math => ION
+- creative => ION
+- general => ION
 
 Memory endpoint:
 - GET /api/preferences

@@ -1,4 +1,4 @@
-name = "omni-ai-audio"
+name = "ION-ai-audio"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 

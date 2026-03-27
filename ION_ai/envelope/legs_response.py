@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from omni_ai.anatomy.legs import BalanceState, BilateralLegBalance, BilateralLegState, LegState
+from ION_ai.anatomy.legs import BalanceState, BilateralLegBalance, BilateralLegState, LegState
 
 
 @dataclass(frozen=True)

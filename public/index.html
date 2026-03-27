@@ -38,7 +38,7 @@
       padding-top: 370px;
     }
 
-    .home-omni-art {
+    .home-ION-art {
       position: fixed;
       inset: 0;
       z-index: 0;
@@ -55,7 +55,7 @@
       scroll-behavior: smooth;
     }
 
-    .modes-main > *:not(.home-omni-art) {
+    .modes-main > *:not(.home-ION-art) {
       position: relative;
       z-index: 2;
     }
@@ -81,7 +81,7 @@
       letter-spacing: 0.05em;
       text-transform: none;
       line-height: 0.92;
-      animation: omni-title-spectrum 14s linear infinite, omni-title-pulse 5.8s ease-in-out infinite;
+      animation: ION-title-spectrum 14s linear infinite, ION-title-pulse 5.8s ease-in-out infinite;
       position: absolute;
       left: 50%;
       top: 44%;
@@ -93,7 +93,7 @@
       filter: none;
     }
 
-    @keyframes omni-title-spectrum {
+    @keyframes ION-title-spectrum {
       0% {
         background-position: 0% 50%, 100% 50%;
       }
@@ -105,7 +105,7 @@
       }
     }
 
-    @keyframes omni-title-pulse {
+    @keyframes ION-title-pulse {
       0%,
       100% {
         text-shadow:
@@ -146,14 +146,14 @@
       z-index: 2;
     }
 
-    .home-omni-canvas {
+    .home-ION-canvas {
       width: 100%;
       height: 100%;
       display: block;
       filter: drop-shadow(0 0 26px rgba(59, 122, 255, 0.32));
     }
 
-    .home-omni-fallback {
+    .home-ION-fallback {
       position: absolute;
       opacity: 0;
       pointer-events: none;
@@ -446,9 +446,9 @@
     </aside>
 
     <main id="main" class="modes-main">
-      <div class="home-omni-art" aria-hidden="true">
-        <canvas id="hero-omni-canvas" class="home-omni-canvas"></canvas>
-        <span class="home-omni-fallback">3D Ionirix Emblem</span>
+      <div class="home-ION-art" aria-hidden="true">
+        <canvas id="hero-ION-canvas" class="home-ION-canvas"></canvas>
+        <span class="home-ION-fallback">3D Ionirix Emblem</span>
       </div>
 
       <!-- HERO SECTION -->
@@ -696,7 +696,7 @@
     </main>
   </div>
 
-  <script type="module" src="/omni-visual/main.js"></script>
+  <script type="module" src="/ION-visual/main.js"></script>
   <script src="/scripts/modes.js"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>

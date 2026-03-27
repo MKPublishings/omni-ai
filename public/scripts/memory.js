@@ -5,8 +5,8 @@ const refreshMemoriesBtn = document.getElementById("refresh-memories");
 const clearMemoriesBtn = document.getElementById("clear-memories");
 const persistSimulationMemoryToggle = document.getElementById("persist-simulation-memory");
 const clearSimulationMemoryBtn = document.getElementById("clear-simulation-memory");
-const SIM_MEMORY_PERSIST_KEY = "omni-simulation-persist-memory";
-const CHAT_SESSIONS_KEY = "omni_chat_sessions_v1";
+const SIM_MEMORY_PERSIST_KEY = "ION-simulation-persist-memory";
+const CHAT_SESSIONS_KEY = "ION_chat_sessions_v1";
 
 async function loadMemories() {
   if (!memoryList) return;

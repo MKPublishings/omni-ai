@@ -20,19 +20,44 @@
       { id: "automation.pipelines", path: "automation/pipelines" },
       { id: "governance.policies", path: "governance/policies" },
       { id: "integrations.workers", path: "integrations/workers" },
-      { id: "site.pages", path: "site/pages" }
+      { id: "site.pages", path: "site/pages" },
+      { id: "site.modules", path: "site/modules" },
+      { id: "site.declarations", path: "site/declarations" },
+      { id: "releases.public", path: "releases/public" },
+      { id: "systems.environment", path: "systems/environment" },
+      { id: "integrations.docs", path: "integrations/docs" }
     ],
     entries: [
       {
-        id: "automation.codex.auto-orchestrator",
-        path: "scripts/codex/indexCodex.js",
-        title: "Auto-Codex Orchestrator",
+        id: "automation.codex.reindex",
+        path: "scripts/codex/reindex.js",
+        title: "Codex Reindex Orchestrator",
         type: "automation",
         category: "automation/pipelines",
         tags: ["automation", "codex", "orchestrator", "reindex"],
-        links: ["system.omni.overview", "legacy.codex.10-architecture"],
-        autoLinks: ["automation.codex.web-mirror-sync"],
+        links: ["system.ION.overview", "legacy.codex.10-architecture"],
+        autoLinks: ["automation.codex.web-mirror-sync", "automation.codex.watch"],
         lineage: ["legacy.codex.50-mind-path-map"]
+      },
+      {
+        id: "automation.codex.watch",
+        path: "scripts/codex/watch.js",
+        title: "Codex Watch Runtime",
+        type: "automation",
+        category: "automation/pipelines",
+        tags: ["automation", "codex", "watch", "live-update"],
+        links: ["automation.codex.reindex", "automation.codex.register"],
+        autoLinks: ["automation.codex.web-mirror-sync"]
+      },
+      {
+        id: "automation.codex.register",
+        path: "scripts/codex/registerArtifact.js",
+        title: "Codex Artifact Registrar",
+        type: "automation",
+        category: "automation/pipelines",
+        tags: ["automation", "codex", "register", "artifact"],
+        links: ["automation.codex.reindex", "legacy.codex.00-index"],
+        autoLinks: []
       },
       {
         id: "automation.codex.web-mirror-sync",
@@ -41,7 +66,7 @@
         type: "automation",
         category: "automation/pipelines",
         tags: ["automation", "web", "mirror", "index"],
-        links: ["automation.codex.auto-orchestrator", "legacy.codex.00-index"],
+        links: ["automation.codex.reindex", "legacy.codex.00-index"],
         autoLinks: []
       },
       {
@@ -52,7 +77,7 @@
         category: "governance/policies",
         tags: ["legal", "policy", "jurisdiction", "truthfulness"],
         links: ["governance.safety.attestation-flow"],
-        autoLinks: ["system.omni.guardrails"]
+        autoLinks: ["system.ION.guardrails"]
       },
       {
         id: "governance.safety.attestation-flow",
@@ -61,38 +86,211 @@
         type: "policy-runtime",
         category: "governance/policies",
         tags: ["safety", "attestation", "age-gate", "jurisdiction"],
-        links: ["governance.legal.responsible-use", "system.omni.guardrails"],
+        links: ["governance.legal.responsible-use", "system.ION.guardrails"],
         autoLinks: []
       },
       {
+        id: "governance.legal.notice-page",
+        path: "public/legal.html",
+        title: "Ionirix Legal Notice Page",
+        type: "policy-page",
+        category: "governance/policies",
+        tags: ["legal", "responsible-use", "liability", "terms"],
+        links: ["governance.legal.responsible-use", "site.page.about"],
+        autoLinks: ["governance.safety.attestation-flow"]
+      },
+      {
         id: "integrations.workers.routing-mesh",
-        path: "workers/omni-ai/src/index.ts",
+        path: "workers/ION-ai/src/index.ts",
         title: "Worker Routing Mesh",
         type: "integration",
         category: "integrations/workers",
         tags: ["workers", "routing", "api", "edge"],
-        links: ["system.omni.overview", "system.mind-os.runtime-loop"],
+        links: ["system.ION.overview", "system.mind-os.runtime-loop"],
+        autoLinks: []
+      },
+      {
+        id: "integrations.workers.router-gateway",
+        path: "workers/ION-ai-router/src/index.ts",
+        title: "Router Worker Gateway",
+        type: "integration",
+        category: "integrations/workers",
+        tags: ["workers", "router", "gateway", "edge"],
+        links: ["integrations.workers.routing-mesh", "site.page.chat"],
+        autoLinks: []
+      },
+      {
+        id: "integrations.workers.images-worker",
+        path: "workers/ION-ai-images/src/index.ts",
+        title: "Images Worker",
+        type: "integration",
+        category: "integrations/workers",
+        tags: ["workers", "image", "generation", "edge"],
+        links: ["integrations.media.pipeline-fabric", "system.ION.image-engine"],
         autoLinks: []
       },
       {
         id: "integrations.media.pipeline-fabric",
-        path: "omni_media/pipeline.py",
+        path: "ION_media/pipeline.py",
         title: "Media Pipeline Fabric",
         type: "integration",
         category: "integrations/workers",
         tags: ["media", "pipeline", "image"],
-        links: ["system.omni.overview", "governance.safety.attestation-flow"],
+        links: ["system.ION.overview", "governance.safety.attestation-flow"],
+        autoLinks: []
+      },
+      {
+        id: "integrations.docs.implementation-guide",
+        path: "IMPLEMENTATION-GUIDE.md",
+        title: "Environment Mode Implementation Guide",
+        type: "integration-doc",
+        category: "integrations/docs",
+        tags: ["environment", "implementation", "guide", "ionirix"],
+        links: ["system.environment.engine", "site.page.modes"],
+        autoLinks: ["system.environment.types"]
+      },
+      {
+        id: "system.environment.types",
+        path: "src/modes/environment/types/environment.types.ts",
+        title: "Environment Mode Types",
+        type: "system-module",
+        category: "systems/environment",
+        tags: ["environment", "types", "simulation", "mode"],
+        links: ["system.environment.engine", "site.page.modes"],
+        autoLinks: []
+      },
+      {
+        id: "system.environment.engine",
+        path: "src/modes/environment/core/environment-engine.ts",
+        title: "Environment Engine Core",
+        type: "system-module",
+        category: "systems/environment",
+        tags: ["environment", "engine", "simulation", "orchestrator"],
+        links: ["system.environment.scale-manager", "system.environment.earth-initializer"],
+        autoLinks: ["integrations.docs.implementation-guide"]
+      },
+      {
+        id: "system.environment.scale-manager",
+        path: "src/modes/environment/core/scale-manager.ts",
+        title: "Environment Scale Manager",
+        type: "system-module",
+        category: "systems/environment",
+        tags: ["environment", "scale", "planetary", "hierarchy"],
+        links: ["system.environment.engine"],
+        autoLinks: []
+      },
+      {
+        id: "system.environment.earth-initializer",
+        path: "src/modes/environment/core/earth-initializer.ts",
+        title: "Environment Earth Initializer",
+        type: "system-module",
+        category: "systems/environment",
+        tags: ["environment", "earth", "seed", "regions"],
+        links: ["system.environment.engine", "system.environment.scale-manager"],
+        autoLinks: []
+      },
+      {
+        id: "site.module.simulation-capabilities",
+        path: "public/modules/simulation-capabilities.md",
+        title: "Simulation Capabilities Module",
+        type: "site-module",
+        category: "site/modules",
+        tags: ["site", "module", "simulation", "capabilities"],
+        links: ["system.environment.engine", "system.ION.quantum-cognitive-sim"],
+        autoLinks: []
+      },
+      {
+        id: "site.module.anatomy-capabilities",
+        path: "public/modules/anatomy-capabilities.md",
+        title: "Anatomy Capabilities Module",
+        type: "site-module",
+        category: "site/modules",
+        tags: ["site", "module", "anatomy", "capabilities"],
+        links: ["system.ION.overview", "site.page.about"],
+        autoLinks: []
+      },
+      {
+        id: "site.module.system-rules",
+        path: "public/modules/system-rules.md",
+        title: "System Rules Module",
+        type: "site-module",
+        category: "site/modules",
+        tags: ["site", "module", "rules", "governance"],
+        links: ["governance.legal.responsible-use", "system.ION.overview"],
+        autoLinks: []
+      },
+      {
+        id: "site.declaration.ionirix",
+        path: "public/ionirix-declaration.md",
+        title: "Ionirix Public Declaration",
+        type: "declaration",
+        category: "site/declarations",
+        tags: ["declaration", "ionirix", "public-profile", "lineage"],
+        links: ["release.ionirix.public", "system.ION.intelligence-lineage"],
+        autoLinks: []
+      },
+      {
+        id: "site.declaration.ION-alias",
+        path: "public/ION-ai-declaration.md",
+        title: "ION Ai Declaration Alias",
+        type: "declaration",
+        category: "site/declarations",
+        tags: ["declaration", "alias", "ionirix", "ION"],
+        links: ["site.declaration.ionirix", "release.ION.public"],
+        autoLinks: []
+      },
+      {
+        id: "release.ionirix.public",
+        path: "public/ionirix-release.json",
+        title: "Ionirix Public Release Spec",
+        type: "release-spec",
+        category: "releases/public",
+        tags: ["release", "ionirix", "spec", "public"],
+        links: ["site.declaration.ionirix", "system.ION.intelligence-lineage"],
+        autoLinks: []
+      },
+      {
+        id: "release.ION.public",
+        path: "public/ION-ai-release.json",
+        title: "ION Ai Public Release Spec",
+        type: "release-spec",
+        category: "releases/public",
+        tags: ["release", "ION", "spec", "public"],
+        links: ["release.ionirix.public", "site.declaration.ION-alias"],
         autoLinks: []
       }
     ],
     crossLinks: [
-      { source: "automation.codex.auto-orchestrator", target: "automation.codex.web-mirror-sync", reason: "automation-flow", score: 0.98 },
-      { source: "automation.codex.auto-orchestrator", target: "legacy.codex.10-architecture", reason: "lineage-anchor", score: 0.84 },
+      { source: "automation.codex.reindex", target: "automation.codex.web-mirror-sync", reason: "automation-flow", score: 0.98 },
+      { source: "automation.codex.reindex", target: "legacy.codex.10-architecture", reason: "lineage-anchor", score: 0.84 },
+      { source: "automation.codex.watch", target: "automation.codex.reindex", reason: "sync-loop", score: 0.91 },
+      { source: "automation.codex.register", target: "automation.codex.reindex", reason: "artifact-registration", score: 0.89 },
       { source: "governance.legal.responsible-use", target: "governance.safety.attestation-flow", reason: "policy-enforcement", score: 0.96 },
       { source: "integrations.workers.routing-mesh", target: "integrations.media.pipeline-fabric", reason: "runtime-integration", score: 0.87 },
-      { source: "integrations.media.pipeline-fabric", target: "governance.safety.attestation-flow", reason: "safety-constraint", score: 0.82 }
+      { source: "integrations.media.pipeline-fabric", target: "governance.safety.attestation-flow", reason: "safety-constraint", score: 0.82 },
+      { source: "system.environment.engine", target: "system.environment.types", reason: "engine-contract", score: 0.94 },
+      { source: "system.environment.engine", target: "system.environment.scale-manager", reason: "orchestration", score: 0.92 },
+      { source: "system.environment.engine", target: "system.environment.earth-initializer", reason: "seed-initialization", score: 0.9 },
+      { source: "site.declaration.ionirix", target: "release.ionirix.public", reason: "release-attestation", score: 0.95 },
+      { source: "site.declaration.ION-alias", target: "release.ION.public", reason: "release-attestation", score: 0.93 },
+      { source: "site.module.simulation-capabilities", target: "system.environment.engine", reason: "capability-alignment", score: 0.88 },
+      { source: "site.module.system-rules", target: "governance.legal.responsible-use", reason: "rules-to-policy", score: 0.86 },
+      { source: "integrations.docs.implementation-guide", target: "system.environment.engine", reason: "implementation-lineage", score: 0.89 }
     ]
   };
+
+  const KNOWN_SITE_ROUTES = [
+    "/index.html",
+    "/chat.html",
+    "/codex.html",
+    "/modes.html",
+    "/settings.html",
+    "/about.html",
+    "/legal.html",
+    "/memory.html",
+    "/system.html",
+    "/tools.html"
+  ];
 
   const state = {
     index: null,
@@ -206,6 +404,10 @@
     const links = Array.from(document.querySelectorAll(".nav .nav-link[href]"));
     const uniquePaths = new Set();
 
+    for (const path of KNOWN_SITE_ROUTES) {
+      uniquePaths.add(normalizeSiteRoutePath(path));
+    }
+
     for (const link of links) {
       const href = String(link.getAttribute("href") || "").trim();
       if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) continue;
@@ -224,12 +426,24 @@
       const routeTitle = titleFromRouteKey(routeKey);
       const id = `site.page.${routeKey}`;
 
-      const linksOut = ["automation.codex.auto-orchestrator", "system.omni.overview"];
+      const linksOut = ["automation.codex.reindex", "system.ION.overview"];
       if (routeKey === "legal") {
         linksOut.push("governance.legal.responsible-use");
       }
       if (routeKey === "chat") {
         linksOut.push("governance.safety.attestation-flow");
+      }
+      if (routeKey === "modes") {
+        linksOut.push("system.environment.engine", "system.environment.types");
+      }
+      if (routeKey === "about") {
+        linksOut.push("site.declaration.ionirix", "release.ionirix.public");
+      }
+      if (routeKey === "tools" || routeKey === "system") {
+        linksOut.push("integrations.workers.routing-mesh", "integrations.media.pipeline-fabric");
+      }
+      if (routeKey === "memory") {
+        linksOut.push("system.mind-os.memory-ring");
       }
 
       entries.push({
@@ -249,13 +463,13 @@
       crossLinks.push(
         {
           source: id,
-          target: "automation.codex.auto-orchestrator",
+          target: "automation.codex.reindex",
           reason: "site-route-hydration",
           score: 0.73
         },
         {
           source: id,
-          target: routeKey === "legal" ? "governance.legal.responsible-use" : "system.omni.overview",
+          target: routeKey === "legal" ? "governance.legal.responsible-use" : "system.ION.overview",
           reason: "site-route-context",
           score: 0.7
         }

@@ -400,7 +400,7 @@ export default {
       return handleGenerate(request, env);
     }
 
-    return new Response("Omni Ai Images worker online.");
+    return new Response("ION Ai Images worker online.");
   }
 };
 
@@ -453,15 +453,15 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
         {
           status: 500,
           headers: {
-            "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
-            "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
-            "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
-            "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
-            "X-Omni-Image-Dimension-Lock": "strict",
-            "X-Omni-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
-            "X-Omni-Image-Render-Width": String(MODEL_RENDER_WIDTH),
-            "X-Omni-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
-            "X-Omni-Image-Render-Resolution": MODEL_RENDER_RESOLUTION
+            "X-ION-Image-Forced-Width": String(FORCED_WIDTH),
+            "X-ION-Image-Forced-Height": String(FORCED_HEIGHT),
+            "X-ION-Image-Forced-Resolution": FORCED_RESOLUTION,
+            "X-ION-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
+            "X-ION-Image-Dimension-Lock": "strict",
+            "X-ION-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
+            "X-ION-Image-Render-Width": String(MODEL_RENDER_WIDTH),
+            "X-ION-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
+            "X-ION-Image-Render-Resolution": MODEL_RENDER_RESOLUTION
           }
         }
       );
@@ -498,23 +498,23 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
       headers: {
         "Content-Type": mime,
         "Cache-Control": "no-store",
-        "X-Omni-Image-Bytes": String(generated.bytes),
-        "X-Omni-Image-Size-Status": generated.status,
-        "X-Omni-Image-Width": String(generated.width),
-        "X-Omni-Image-Height": String(generated.height),
-        "X-Omni-Image-Forced-Width": String(FORCED_WIDTH),
-        "X-Omni-Image-Forced-Height": String(FORCED_HEIGHT),
-        "X-Omni-Image-Forced-Resolution": FORCED_RESOLUTION,
-        "X-Omni-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
-        "X-Omni-Image-Dimension-Lock": "strict",
-        "X-Omni-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
-        "X-Omni-Image-Render-Width": String(MODEL_RENDER_WIDTH),
-        "X-Omni-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
-        "X-Omni-Image-Render-Resolution": MODEL_RENDER_RESOLUTION,
-        "X-Omni-Image-Attempts": String(generated.attempts),
-        "X-Omni-Image-Dimension-Source": generated.dimensionSource,
-        "X-Omni-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`,
-        "X-Omni-Image-Quality-Profile": QUALITY_PROFILE
+        "X-ION-Image-Bytes": String(generated.bytes),
+        "X-ION-Image-Size-Status": generated.status,
+        "X-ION-Image-Width": String(generated.width),
+        "X-ION-Image-Height": String(generated.height),
+        "X-ION-Image-Forced-Width": String(FORCED_WIDTH),
+        "X-ION-Image-Forced-Height": String(FORCED_HEIGHT),
+        "X-ION-Image-Forced-Resolution": FORCED_RESOLUTION,
+        "X-ION-Image-Forced-Aspect-Ratio": FORCED_ASPECT_RATIO,
+        "X-ION-Image-Dimension-Lock": "strict",
+        "X-ION-Image-Model-Max-Edge": String(MODEL_MAX_EDGE),
+        "X-ION-Image-Render-Width": String(MODEL_RENDER_WIDTH),
+        "X-ION-Image-Render-Height": String(MODEL_RENDER_HEIGHT),
+        "X-ION-Image-Render-Resolution": MODEL_RENDER_RESOLUTION,
+        "X-ION-Image-Attempts": String(generated.attempts),
+        "X-ION-Image-Dimension-Source": generated.dimensionSource,
+        "X-ION-Image-Target-Range": `${MIN_EXPORT_BYTES}-${MAX_EXPORT_BYTES}`,
+        "X-ION-Image-Quality-Profile": QUALITY_PROFILE
       }
     });
   } catch (error: any) {
