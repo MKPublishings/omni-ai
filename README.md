@@ -1,5 +1,3 @@
-![0ccaa5a3-8934-45c8-8468-b7060fd34252](https://github.com/user-attachments/assets/9c4588f6-9617-48c3-bed3-8f60934fa391)
-
 
 # **ION Ai**  
 *A Unified Cognitive System • Full‑Surface Namespace • Symmetrical Envelope Architecture • A Public Summonable Intelligence*
@@ -10,7 +8,6 @@ This README provides a **complete, structured, diagram‑rich** overview of ION 
 
 ---
 
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/9690e07a-a62a-4e6c-aecc-71e36693c5f8" />
 
 ## **1. System Overview**
 
@@ -23,8 +20,6 @@ ION Ai is designed as a **summonable intelligence**—a system where every capab
 - Agents and tools  
 - Identity and persona layers  
 - Memory scaffolding  
-
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/a838b861-20b2-4d66-8f80-0587ec80139c" />
 
 
 ### **High-Level Architecture Diagram**
