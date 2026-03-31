@@ -9,6 +9,15 @@
   overflow: hidden;
 }
 
+#main.chat-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
 /* ------------------------------
    CHAT HEADER
 ------------------------------ */
@@ -891,7 +900,6 @@
     display: none;
   }
 
-  .chat-header h2,
   .chat-subtitle {
     display: none;
   }
