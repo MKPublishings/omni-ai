@@ -725,46 +725,12 @@ function getRequestCountryCode(request: Request): string {
 }
 
 function evaluateLegalAttestation(
-  safetyProfile: SafetyProfile,
+  _safetyProfile: SafetyProfile,
   request: Request
 ): { blocked: boolean; code: string; error: string } {
-  const legal = safetyProfile.legalAttestation;
-  if (!legal.accepted) {
-    return {
-      blocked: true,
-      code: "legal-attestation-required",
-      error: "Legal attestation is required before using ION Ai chat features."
-    };
-  }
-
-  if (!legal.jurisdiction) {
-    return {
-      blocked: true,
-      code: "jurisdiction-required",
-      error: "Jurisdiction confirmation is required before proceeding."
-    };
-  }
-
-  if (!legal.truthfulIdentity || !legal.lawfulUse || !legal.userDirected) {
-    return {
-      blocked: true,
-      code: "legal-attestation-incomplete",
-      error: "Complete all legal confirmations (truthfulness, lawful use, and user responsibility) to continue."
-    };
-  }
-
-  const requestCountryCode = getRequestCountryCode(request);
-  if (requestCountryCode && legal.jurisdiction !== requestCountryCode) {
-    return {
-      blocked: true,
-      code: "jurisdiction-mismatch",
-      error: `Jurisdiction attestation (${legal.jurisdiction}) does not match detected request region (${requestCountryCode}).`
-    };
-  }
-
   return {
     blocked: false,
-    code: "allowed",
+    code: getRequestCountryCode(request) || "allowed",
     error: ""
   };
 }

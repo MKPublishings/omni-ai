@@ -313,15 +313,7 @@
   }
 
   function hasVerifiedLegalAttestation() {
-    const profile = getLegalAttestationProfile();
-    if (!profile) return false;
-    return Boolean(
-      profile.accepted &&
-      profile.truthfulIdentity &&
-      profile.lawfulUse &&
-      profile.userDirected &&
-      profile.jurisdiction
-    );
+    return true;
   }
 
   function updateAgeGateComposerNotice() {
@@ -331,115 +323,24 @@
 
   function updateLegalAttestationComposerNotice() {
     if (!legalAttestationComposerNoticeEl) return;
-    legalAttestationComposerNoticeEl.hidden = hasVerifiedLegalAttestation();
+    legalAttestationComposerNoticeEl.hidden = true;
   }
 
   function openLegalAttestationModal() {
-    const existing = document.getElementById("legal-attestation-overlay");
-    if (existing) return;
+    // Legal attestation UI intentionally disabled.
+  }
 
-    const profile = getLegalAttestationProfile();
-
-    const overlay = document.createElement("div");
-    overlay.id = "legal-attestation-overlay";
-    overlay.className = "age-gate-overlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-labelledby", "legal-attestation-title");
-
-    overlay.innerHTML = `
-      <div class="age-gate-modal">
-        <h2 id="legal-attestation-title">Legal Attestation Required</h2>
-        <p class="age-gate-copy">Before using chat, confirm your jurisdiction eligibility, truthful information, and responsible-use acceptance.</p>
-        <form id="legal-attestation-form" class="legal-attestation-form" novalidate>
-          <div class="legal-attestation-jurisdiction">
-            <label class="age-gate-label" for="legal-jurisdiction">Jurisdiction (2-letter country code)</label>
-            <input id="legal-jurisdiction" type="text" autocomplete="country-name" maxlength="2" placeholder="Example: US, CA, DE" />
-          </div>
-          <div class="legal-attestation-checks">
-            <label><input id="legal-eligible" type="checkbox" /> I confirm I am legally allowed to use Ionirix in my jurisdiction.</label>
-            <label><input id="legal-truthful" type="checkbox" /> I confirm age/identity details I provide are truthful and accurate.</label>
-            <label><input id="legal-user-directed" type="checkbox" /> I understand Ionirix acts on user input and my actions remain my responsibility.</label>
-          </div>
-          <p class="legal-attestation-links">See <a href="/legal.html" target="_blank" rel="noopener noreferrer">Legal Notice & Responsible Use</a> for full terms.</p>
-          <p id="legal-attestation-status" class="age-gate-status" aria-live="polite"></p>
-          <button id="legal-attestation-submit" type="submit" class="age-gate-submit">Accept & Continue</button>
-        </form>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    const form = overlay.querySelector("#legal-attestation-form");
-    const jurisdictionEl = overlay.querySelector("#legal-jurisdiction");
-    const eligibleEl = overlay.querySelector("#legal-eligible");
-    const truthfulEl = overlay.querySelector("#legal-truthful");
-    const userDirectedEl = overlay.querySelector("#legal-user-directed");
-    const statusEl = overlay.querySelector("#legal-attestation-status");
-    const submitBtn = overlay.querySelector("#legal-attestation-submit");
-
-    if (jurisdictionEl) jurisdictionEl.value = String(profile?.jurisdiction || "");
-    if (eligibleEl) eligibleEl.checked = profile?.lawfulUse === true;
-    if (truthfulEl) truthfulEl.checked = profile?.truthfulIdentity === true;
-    if (userDirectedEl) userDirectedEl.checked = profile?.userDirected === true;
-
-    form?.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      const jurisdiction = normalizeJurisdiction(jurisdictionEl?.value || "");
-      const lawfulUse = Boolean(eligibleEl?.checked);
-      const truthfulIdentity = Boolean(truthfulEl?.checked);
-      const userDirected = Boolean(userDirectedEl?.checked);
-
-      if (!jurisdiction) {
-        if (statusEl) statusEl.textContent = "Enter a valid 2-letter country code (for example: US, CA, DE).";
-        return;
-      }
-
-      if (!lawfulUse || !truthfulIdentity || !userDirected) {
-        if (statusEl) statusEl.textContent = "All confirmations are required to continue.";
-        return;
-      }
-
-      if (submitBtn) submitBtn.disabled = true;
-
-      const nextProfile = {
-        accepted: true,
-        jurisdiction,
-        truthfulIdentity,
-        lawfulUse,
-        userDirected,
-        acceptedAt: Date.now()
-      };
-
-      try {
-        localStorage.setItem(LEGAL_PROFILE_KEY, JSON.stringify(nextProfile));
-      } catch {
-        if (statusEl) statusEl.textContent = "Unable to save attestation. Check browser storage settings.";
-        if (submitBtn) submitBtn.disabled = false;
-        return;
-      }
-
-      window.dispatchEvent(
-        new CustomEvent("ION-legal-attestation-changed", {
-          detail: nextProfile
-        })
-      );
-
-      if (statusEl) statusEl.textContent = "Legal attestation complete.";
-      updateLegalAttestationComposerNotice();
-
-      setTimeout(() => {
-        overlay.remove();
-      }, 180);
-    });
+  function detectCountryFromLocale() {
+    const locale = String(navigator.language || "").trim();
+    const match = locale.match(/[-_]([A-Za-z]{2})\b/);
+    return match ? String(match[1]).toUpperCase() : "";
   }
 
   function buildSafetyProfile() {
     const profile = getAgeProfile() || {};
-    const legalProfile = getLegalAttestationProfile();
     const ageTier = String(profile.ageTier || "minor").toLowerCase() === "adult" ? "adult" : "minor";
     const adultAccess = Boolean(profile.adultAccess) && ageTier === "adult";
+    const jurisdiction = detectCountryFromLocale();
     return {
       ageTier,
       humanVerified: Boolean(profile.humanVerified),
@@ -447,12 +348,12 @@
       explicitAllowed: adultAccess,
       illegalBlocked: true,
       legalAttestation: {
-        accepted: hasVerifiedLegalAttestation(),
-        jurisdiction: String(legalProfile?.jurisdiction || ""),
-        truthfulIdentity: Boolean(legalProfile?.truthfulIdentity),
-        lawfulUse: Boolean(legalProfile?.lawfulUse),
-        userDirected: Boolean(legalProfile?.userDirected),
-        acceptedAt: Number(legalProfile?.acceptedAt || 0)
+        accepted: true,
+        jurisdiction,
+        truthfulIdentity: true,
+        lawfulUse: true,
+        userDirected: true,
+        acceptedAt: Date.now()
       }
     };
   }
@@ -2009,16 +1910,6 @@
 
     const trimmed = content.trim();
     if (!trimmed) return;
-
-    if (!hasVerifiedLegalAttestation()) {
-      appendMessage("assistant", "Legal attestation is required before chat can run. Please confirm jurisdiction eligibility and truthful/responsible use.", {
-        model: session.model || "ION",
-        mode: getActiveMode(session),
-        timestamp: Date.now()
-      });
-      openLegalAttestationModal();
-      return;
-    }
 
     const styleCommand = parseStyleCommand(trimmed);
     const cameraCommand = parseCameraCommand(trimmed);
