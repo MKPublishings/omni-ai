@@ -35,7 +35,9 @@
     const withoutHtml = normalized.replace(/\.html$/, "");
     if (withoutHtml === "/" || withoutHtml === "/index") return "index";
     const parts = withoutHtml.split("/").filter(Boolean);
-    return parts[parts.length - 1] || "index";
+    const routeKey = parts[parts.length - 1] || "index";
+    if (routeKey === "spec-document") return "specs";
+    return routeKey;
   }
 
   function syncActiveNavLink() {
