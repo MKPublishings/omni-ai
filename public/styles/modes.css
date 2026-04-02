@@ -102,6 +102,30 @@
   background: linear-gradient(135deg, rgba(15, 82, 186, 0.16), rgba(0, 0, 0, 0.2));
 }
 
+.mode-section[data-mode="cosmic"] {
+  position: relative;
+}
+
+.mode-section[data-mode="cosmic"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(160, 150, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(99, 168, 255, 0.1), transparent 28%);
+  opacity: 0.8;
+}
+
+.mode-section[data-mode="cosmic"]:hover {
+  border-color: rgba(149, 134, 255, 0.62);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.45), 0 0 26px rgba(124, 116, 255, 0.25);
+}
+
+.mode-section[data-mode="cosmic"] .mode-header {
+  background: linear-gradient(135deg, rgba(69, 55, 148, 0.24), rgba(14, 18, 42, 0.28));
+}
+
 /* ------------------------------
    MODE HEADER
 ------------------------------ */

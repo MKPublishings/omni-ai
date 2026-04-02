@@ -47,7 +47,7 @@ export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): 
   let reason = requested && requested !== "ION" ? "explicit-model-request" : "default-primary-model";
   const constraints = ["single-authoritative-runtime", "ts-first-control-loop"];
 
-  if (mode === "simulation" || input.hasSimulationContext) {
+  if (mode === "simulation" || mode === "multiverse" || input.hasSimulationContext) {
     capability = "simulation-assist";
     selectedModel = simulationModel;
     fallbackModel = baseModel;

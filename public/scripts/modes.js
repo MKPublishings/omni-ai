@@ -230,6 +230,8 @@ const modeColors = {
   lore: { primary: "244, 208, 161", name: "Lore" },
   reasoning: { primary: "20, 184, 166", name: "Reasoning" },
   simulation: { primary: "15, 82, 186", name: "Simulation" },
+  cosmic: { primary: "99, 102, 241", name: "Cosmic" },
+  multiverse: { primary: "16, 185, 129", name: "Multiverse" },
   coding: { primary: "99, 102, 241", name: "Coding" },
   knowledge: { primary: "234, 179, 8", name: "Knowledge" },
   "system-knowledge": { primary: "148, 163, 184", name: "System Knowledge" },

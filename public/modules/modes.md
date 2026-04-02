@@ -8,3 +8,5 @@
 - Coding: logic explanation + fenced code + self-review.
 - Knowledge: retrieval-augmented factual answers.
 - System Knowledge: uses internal module references.
+- Cosmic: deterministic Milky Way-scale simulation with galactic diagnostics.
+- Multiverse: deterministic observable-universe hierarchy with LOD-based generation.

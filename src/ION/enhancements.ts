@@ -283,6 +283,26 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
     ].join("\n");
   }
 
+  if (mode === "cosmic") {
+    return [
+      "Cosmic Mode is active.",
+      "Primary profile: deterministic Milky Way-scale simulation.",
+      "Prioritize physical consistency, typed state transitions, and diagnostics.",
+      "Return output with: galactic state snapshot, key dynamics, and concise engine log entries.",
+      "When assumptions are required, state them explicitly and keep units clear."
+    ].join("\n");
+  }
+
+  if (mode === "multiverse") {
+    return [
+      "Multiverse Mode is active.",
+      "Primary profile: deterministic observable-universe-scale simulation.",
+      "Prioritize hierarchy-aware responses from cosmic web to moons with clear units.",
+      "Return output with: query scope, resolved LOD, deterministic seed path, and concise simulation diagnostics.",
+      "Use LCDM-aligned assumptions and mark extrapolations explicitly."
+    ].join("\n");
+  }
+
   if (mode === "anatomy") {
     return [
       "Anatomy Mode is active.",
@@ -353,7 +373,7 @@ export function chooseModelForTask(requestedModel: string, latestUserText: strin
     };
   }
 
-  if (normalizedMode === "simulation") {
+  if (normalizedMode === "simulation" || normalizedMode === "cosmic" || normalizedMode === "multiverse") {
     return { selectedModel: "ION", taskType, reason: "auto-route:simulation" };
   }
 

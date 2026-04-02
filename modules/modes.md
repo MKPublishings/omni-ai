@@ -8,3 +8,4 @@
 - Coding: logic explanation + fenced code + self-review.
 - Knowledge: retrieval-augmented factual answers.
 - System Knowledge: uses internal module references.
+- Multiverse: observable-universe-scale deterministic hierarchy and query-based generation.

@@ -16,6 +16,8 @@
   --env-radius: 12px;
   --env-radius-sm: 8px;
   --env-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --cosmic-primary-rgb: 124, 116, 255;
+  --cosmic-accent-rgb: 90, 176, 255;
 }
 
 /* -- Homepage Mode Card --------------------------------------- */
@@ -84,6 +86,26 @@
 
 .mode-card[data-mode="environment"] .mode-card__status--active {
   color: var(--env-accent);
+}
+
+.mode-card[data-mode="cosmic"] {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(var(--cosmic-primary-rgb), 0.22);
+  background:
+    radial-gradient(circle at 20% 14%, rgba(var(--cosmic-primary-rgb), 0.14), transparent 32%),
+    radial-gradient(circle at 84% 18%, rgba(var(--cosmic-accent-rgb), 0.1), transparent 30%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.mode-card[data-mode="cosmic"]:hover {
+  border-color: rgba(var(--cosmic-primary-rgb), 0.5);
+  box-shadow: 0 8px 32px rgba(var(--cosmic-primary-rgb), 0.26);
+}
+
+.mode-card[data-mode="cosmic"] .mode-card-icon,
+.mode-card[data-mode="cosmic"] .mode-card-title {
+  text-shadow: 0 0 10px rgba(var(--cosmic-primary-rgb), 0.26);
 }
 
 /* -- Modes Page Section --------------------------------------- */

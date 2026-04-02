@@ -29,7 +29,7 @@ function selectModuleByQuery(userInput = "", mode = "") {
   const text = `${userInput} ${mode}`.toLowerCase();
   if (/\b(identity|who are you|ION)\b/.test(text)) return "identity_layer.md";
   if (/\b(rule|policy|system)\b/.test(text)) return "system_rules.md";
-  if (/\b(mode|architect|reasoning|coding|creative)\b/.test(text)) return "modes_reference.md";
+  if (/\b(mode|architect|reasoning|coding|creative|cosmic|multiverse)\b/.test(text)) return "modes_reference.md";
   return "ION_philosophy.md";
 }
 

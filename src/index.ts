@@ -1,4 +1,8 @@
 import { IONLogger } from "./logging/logger";
+export * from "./modes/cosmic/index";
+export * from "./modes/multiverse/index";
+import { initializeCosmicMode } from "./modes/cosmic/cosmic_mode";
+import { initializeMultiverseMode } from "./modes/multiverse/multiverse_mode";
 import { IONSafety } from "./stability/safety";
 import { IONBrainLoop } from "./runtime/loop";
 import { ping as apiPing } from "./api/ping";
@@ -523,6 +527,118 @@ function getLatestUserText(messages: IONMessage[]): string {
   return "";
 }
 
+function buildCosmicSimulationContext(messages: IONMessage[]): {
+  systemPrompt: string;
+  logsSummary: string;
+  state: {
+    simulationId: string;
+    status: string;
+    stepsExecuted: number;
+  };
+} {
+  const latestUserText = getLatestUserText(messages);
+  const stepBudget = Math.max(1, Math.min(5, Math.ceil(String(latestUserText || "").length / 120)));
+  const adapter = initializeCosmicMode({
+    seed: 42,
+    timestep: 1.0,
+    total_duration: Math.max(10, stepBudget + 1),
+    output_interval: 5.0
+  });
+
+  for (let i = 0; i < stepBudget; i++) {
+    adapter.stepOnce();
+  }
+
+  const state = adapter.getState();
+  const d = state.diagnostics;
+
+  const systemPrompt = [
+    "Cosmic Simulation Mode active.",
+    "Treat this as deterministic Milky Way-scale simulation context.",
+    `Current t=${state.current_time.toFixed(1)} Myr, step=${state.step_count}.`,
+    `Mass summary (M_sun): total=${d.total_mass.toExponential(3)}, stellar=${d.total_stellar_mass.toExponential(3)}, gas=${d.total_gas_mass.toExponential(3)}.`
+  ].join("\n");
+
+  const logsSummary = [
+    `Cosmic engine advanced ${state.step_count} step(s).`,
+    `Virial ratio=${d.virial_ratio.toFixed(3)}.`,
+    `Formation events=${state.formation_events.length}, death events=${state.death_events.length}.`
+  ].join("\n");
+
+  return {
+    systemPrompt,
+    logsSummary,
+    state: {
+      simulationId: `cosmic-${Date.now()}`,
+      status: "running",
+      stepsExecuted: state.step_count
+    }
+  };
+}
+
+async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise<{
+  systemPrompt: string;
+  logsSummary: string;
+  state: {
+    simulationId: string;
+    status: string;
+    stepsExecuted: number;
+  };
+}> {
+  const latestUserText = getLatestUserText(messages);
+  const textSize = Math.max(1, String(latestUserText || "").length);
+  const lodLevel = Math.max(1, Math.min(7, Math.ceil(textSize / 180))) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  const queryRadius = Number((0.5 + lodLevel * 0.75).toFixed(2));
+  const bootstrap = initializeMultiverseMode(0x7a3f9c2e1b8d4f06n);
+
+  const result = await bootstrap.engine.query({
+    type: "sphere",
+    coordinates: { system: "cartesian_mpc", values: [0, 0, 0], radius: queryRadius },
+    lodLevel,
+    maxResults: 128
+  });
+
+  const queryResult = {
+    entities: result.entities.map((entry) => ({
+      id: entry.id,
+      entityType: entry.entityType,
+      redshift: entry.redshift
+    })),
+    metadata: {
+      generatedCount: result.metadata.generatedCount,
+      seedPath: result.metadata.seedPath
+    }
+  };
+
+  const sampled = queryResult.entities.slice(0, 3);
+  const sampleSummary = sampled.length
+    ? sampled.map((item) => `${item.id}:${item.entityType}@z=${item.redshift.toFixed(3)}`).join(", ")
+    : "pending deterministic sample";
+
+  const systemPrompt = [
+    "Multiverse Mode active.",
+    "Treat this as deterministic observable-universe-scale simulation context.",
+    `LOD=${lodLevel}, queryRadius=${queryRadius} Mpc, coverage=98-99% scoped generation.`,
+    `Seed path root: ${queryResult.metadata.seedPath}.`
+  ].join("\n");
+
+  const logsSummary = [
+    `Multiverse engine initialized with sovereign deterministic seed.`,
+    `Generated entities (request scope): ${queryResult.metadata.generatedCount}.`,
+    `Sample entities: ${sampleSummary}.`
+  ].join("\n");
+
+  return {
+    systemPrompt,
+    logsSummary,
+    state: {
+      simulationId: `multiverse-${Date.now()}`,
+      status: "running",
+      stepsExecuted: 1
+    }
+  };
+}
+
 function summarizeConversationSnippet(value: string, maxLen = 200): string {
   const compact = sanitizePromptText(String(value || "")).trim();
   if (!compact) return "";
@@ -827,7 +943,9 @@ const INTERNET_MODE_PROFILES: Record<string, InternetSearchProfile> = {
   knowledge: { queryPrefix: "reference", querySuffix: "facts", limit: 5 },
   "system-knowledge": { queryPrefix: "systems engineering", querySuffix: "best practices", limit: 5 },
   anatomy: { queryPrefix: "human anatomy systems", querySuffix: "integration", limit: 4 },
-  simulation: { queryPrefix: "simulation methods", querySuffix: "models", limit: 3 }
+  simulation: { queryPrefix: "simulation methods", querySuffix: "models", limit: 3 },
+  cosmic: { queryPrefix: "galactic dynamics", querySuffix: "milky way simulation", limit: 3 },
+  multiverse: { queryPrefix: "cosmology and large scale structure", querySuffix: "lcdm planck 2018", limit: 3 }
 };
 
 function normalizeInternetMode(mode: string): keyof typeof INTERNET_MODE_PROFILES {
@@ -963,7 +1081,8 @@ async function performModeAwareInternetSearch(mode: string, userText: string): P
 function shouldUseInternetSearch(userText: string, mode: string): boolean {
   const value = String(userText || "").trim();
   if (!value) return false;
-  if (normalizeInternetMode(mode) === "simulation") return false;
+  const normalized = normalizeInternetMode(mode);
+  if (normalized === "simulation" || normalized === "cosmic" || normalized === "multiverse") return false;
   const intentPattern = /\b(latest|current|today|news|recent|what is|how to|documentation|docs|guide|compare|vs\.?|benchmark|release|update)\b/i;
   return intentPattern.test(value);
 }
@@ -3614,9 +3733,18 @@ export default {
           }))
         };
 
-        const simulationContext = normalizedMode === "simulation"
+        const isStatefulSimulationMode = normalizedMode === "simulation" || normalizedMode === "cosmic" || normalizedMode === "multiverse";
+
+        const engineSimulationContext = normalizedMode === "simulation"
           ? await advanceSimulationState(env, requestCtx.messages)
           : null;
+        const cosmicSimulationContext = normalizedMode === "cosmic"
+          ? buildCosmicSimulationContext(requestCtx.messages)
+          : null;
+        const multiverseSimulationContext = normalizedMode === "multiverse"
+          ? await buildMultiverseSimulationContext(requestCtx.messages)
+          : null;
+        const simulationContext = engineSimulationContext || cosmicSimulationContext || multiverseSimulationContext;
         const sessionId = resolveSessionId(request);
         const workingMemory = await loadWorkingMemory(env, sessionId);
         const requestCountryCode = getRequestCountryCode(request);
@@ -3665,10 +3793,10 @@ export default {
         const promptSystemMessages: IONMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;
         let internetHitCount = 0;
-        const savedMemory = normalizedMode === "simulation" ? {} : await getPreferences(env);
+        const savedMemory = isStatefulSimulationMode ? {} : await getPreferences(env);
         const personaProfile = await personaProfilePromise;
         const emotionalResonance = await emotionalResonancePromise;
-        if (normalizedMode !== "simulation" && savedMemory && Object.keys(savedMemory).length > 0) {
+        if (!isStatefulSimulationMode && savedMemory && Object.keys(savedMemory).length > 0) {
           promptSystemMessages.push(
             makeContextSystemMessage("User Memory", JSON.stringify(savedMemory, null, 2))
           );
@@ -3735,7 +3863,7 @@ export default {
           )
         );
 
-        const shouldLoadMemoryArc = normalizedMode !== "simulation" && !fastChatEnabled;
+        const shouldLoadMemoryArc = !isStatefulSimulationMode && !fastChatEnabled;
         const shouldLoadInternetLearning = !fastChatEnabled;
         const shouldLoadWeather = !fastChatEnabled && shouldUseWeatherContext(latestUserText);
         const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
@@ -3762,7 +3890,7 @@ export default {
           ? performModeAwareInternetSearch(normalizedMode, latestUserText)
           : Promise.resolve(null);
 
-        if (normalizedMode !== "simulation") {
+        if (!isStatefulSimulationMode) {
           const workingMemoryPrompt = formatWorkingMemoryPrompt(workingMemory);
           if (workingMemoryPrompt) {
             promptSystemMessages.push(
@@ -3915,7 +4043,7 @@ export default {
           model: routeSelection.selectedModel,
           messages: enrichedMessages,
           maxOutputTokens: outputTokenLimit,
-          simulationContext,
+          simulationContext: engineSimulationContext,
           preferStreaming: nativeStreamingEnabled
         };
 
@@ -3976,7 +4104,7 @@ export default {
                 route: orchestratorDecision.route,
                 multimodalPayload,
                 onComplete: (fullText) => {
-                  if (normalizedMode !== "simulation" && latestUserTurn && fullText) {
+                  if (!isStatefulSimulationMode && latestUserTurn && fullText) {
                     ctx.waitUntil(
                       Promise.all([
                         persistEmotionalResonance(env, emotionalResonance),
@@ -4094,7 +4222,7 @@ export default {
             });
 
             const latestUserTurn = getLatestUserText(requestCtx.messages);
-            if (normalizedMode !== "simulation" && latestUserTurn && finalResponse) {
+            if (!isStatefulSimulationMode && latestUserTurn && finalResponse) {
               ctx.waitUntil(
                 Promise.all([
                   persistEmotionalResonance(env, emotionalResonance),

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Ionirix LLC - Chat</title>
-  <meta name="description" content="Chat with Ionirix across reasoning, coding, visual, lore, simulation, and environment workflows." />
+  <meta name="description" content="Chat with Ionirix across reasoning, coding, visual, lore, simulation, cosmic, and environment workflows." />
   <meta property="og:title" content="Ionirix LLC - Chat" />
   <meta property="og:description" content="Use Ionirix LLC chat for live reasoning, architecture, coding, and multimodal workflows." />
   <meta property="og:site_name" content="Ionirix LLC" />
@@ -66,6 +66,8 @@
               <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="anatomy">Anatomy</button>
               <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="environment">Environment</button>
               <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="simulation">Simulation</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="cosmic">Cosmic</button>
+              <button type="button" class="chat-dropdown-item" role="option" aria-selected="false" data-value="multiverse">Multiverse</button>
             </div>
           </div>
         </div>
@@ -79,14 +81,14 @@
         </div>
 
         <details id="simulation-panel" class="simulation-panel" hidden>
-          <summary>Simulation Mode Controls</summary>
+          <summary>Simulation and Cosmic Controls</summary>
           <div class="simulation-controls">
             <button id="simulation-start-btn" type="button" class="chat-action-btn">Start Simulation</button>
             <button id="simulation-pause-btn" type="button" class="chat-action-btn">Pause Simulation</button>
             <button id="simulation-reset-btn" type="button" class="chat-action-btn">Reset Simulation</button>
             <button id="simulation-export-btn" type="button" class="chat-action-btn">Export Simulation State</button>
           </div>
-          <label for="simulation-rules-editor" class="simulation-rules-label">Simulation Mode Rules Editor</label>
+          <label for="simulation-rules-editor" class="simulation-rules-label">Simulation and Cosmic Rules Editor</label>
           <textarea id="simulation-rules-editor" class="simulation-rules-editor" rows="5" placeholder="rules:
 - domain: system-state
 - time: linear

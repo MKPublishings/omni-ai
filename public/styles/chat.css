@@ -187,6 +187,19 @@
   box-shadow: 0 0 0 2px rgba(15, 82, 186, 0.18), 0 0 12px var(--accent-glow);
 }
 
+.chat-control-btn[data-mode="cosmic"] {
+  border-color: rgba(132, 118, 255, 0.52);
+  background: linear-gradient(135deg, rgba(76, 62, 156, 0.38) 0%, rgba(28, 20, 72, 0.38) 52%, rgba(5, 8, 20, 0.42) 100%);
+  box-shadow: inset 0 1px 0 rgba(197, 186, 255, 0.12), 0 0 14px rgba(124, 116, 255, 0.18);
+}
+
+.chat-control-btn[data-mode="cosmic"]:hover,
+.chat-control-btn[data-mode="cosmic"]:focus {
+  border-color: rgba(172, 164, 255, 0.76);
+  background: linear-gradient(135deg, rgba(92, 74, 182, 0.5) 0%, rgba(36, 26, 86, 0.46) 52%, rgba(9, 10, 26, 0.5) 100%);
+  box-shadow: 0 0 0 2px rgba(124, 116, 255, 0.2), 0 0 18px rgba(124, 116, 255, 0.24);
+}
+
 .chat-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -312,6 +325,12 @@
   background: rgba(15, 82, 186, 0.16);
 }
 
+.simulation-badge.cosmic {
+  border-color: rgba(148, 133, 255, 0.56);
+  background: linear-gradient(135deg, rgba(70, 54, 148, 0.42), rgba(18, 23, 58, 0.4));
+  box-shadow: 0 0 12px rgba(124, 116, 255, 0.24);
+}
+
 
 .simulation-panel {
   border-top: 1px solid var(--border);
@@ -385,6 +404,17 @@
 
 #chat-area.simulation-active {
   box-shadow: 0 0 0 1px rgba(15, 82, 186, 0.34), 0 0 24px rgba(15, 82, 186, 0.18) inset;
+}
+
+#chat-area.cosmic-mode {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(146, 135, 255, 0.14), transparent 36%),
+    radial-gradient(circle at 84% 14%, rgba(96, 168, 255, 0.1), transparent 38%),
+    linear-gradient(180deg, rgba(12, 15, 34, 0.92), rgba(8, 11, 24, 0.96));
+}
+
+#chat-area.cosmic-active {
+  box-shadow: 0 0 0 1px rgba(140, 125, 255, 0.46), 0 0 28px rgba(124, 116, 255, 0.24) inset;
 }
 
 /* ------------------------------

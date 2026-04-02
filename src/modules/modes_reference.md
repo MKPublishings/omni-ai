@@ -15,4 +15,7 @@ Narrative and concept generation with coherent style control.
 ## System Knowledge (OS)
 Behavior anchored to ION identity and internal rules/modules.
 
+## Multiverse
+Observable-universe-scale deterministic simulation with hierarchical LOD and seed-path reproducibility.
+
 Mode selection can be explicit from the UI or inferred by the router when automatic routing is enabled.

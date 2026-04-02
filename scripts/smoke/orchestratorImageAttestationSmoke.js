@@ -1,46 +1,110 @@
-const ORCHESTRATOR_URL =
-  String(process.env.ION_ORCHESTRATOR_URL || "https://ION-ai.ION-ai.workers.dev").replace(/\/+$/, "");
+const DEFAULT_ORCHESTRATOR_URL = "https://ion-ai.ion-ai.workers.dev";
+const ORCHESTRATOR_URL = String(process.env.ION_ORCHESTRATOR_URL || DEFAULT_ORCHESTRATOR_URL).replace(/\/+$/, "");
+const ORCHESTRATOR_FALLBACK_URLS = String(process.env.ION_ORCHESTRATOR_FALLBACK_URLS || "")
+  .split(",")
+  .map((value) => value.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
 const REQUEST_TIMEOUT_MS = Number(process.env.ION_SMOKE_TIMEOUT_MS || 90_000);
+const FETCH_RETRIES = Math.max(1, Number(process.env.ION_SMOKE_FETCH_RETRIES || 3));
+const FETCH_RETRY_DELAY_MS = Math.max(100, Number(process.env.ION_SMOKE_FETCH_RETRY_DELAY_MS || 1_250));
+const REQUIRE_ORCHESTRATOR = process.env.ION_SMOKE_REQUIRE_ORCHESTRATOR
+  ? ["1", "true", "yes"].includes(String(process.env.ION_SMOKE_REQUIRE_ORCHESTRATOR).trim().toLowerCase())
+  : ["1", "true"].includes(String(process.env.CI || "").trim().toLowerCase());
 const RUN_LONG_PROMPT_CLAMP_CHECK = ["1", "true", "yes"].includes(
   String(process.env.ION_SMOKE_LONG_PROMPT || "").trim().toLowerCase()
 );
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function buildCandidateUrls() {
+  const candidates = [ORCHESTRATOR_URL, ...ORCHESTRATOR_FALLBACK_URLS];
+  if (!process.env.ION_ORCHESTRATOR_URL) {
+    candidates.push("http://127.0.0.1:8787", "http://localhost:8787");
+  }
+  return Array.from(new Set(candidates.map((value) => value.replace(/\/+$/, "")).filter(Boolean)));
+}
+
+async function resolveReachableOrchestratorUrl() {
+  const errors = [];
+  for (const candidate of buildCandidateUrls()) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), Math.min(REQUEST_TIMEOUT_MS, 8_000));
+    try {
+      // Reachability probe: any HTTP response indicates the endpoint is reachable.
+      await fetch(`${candidate}/`, {
+        method: "GET",
+        headers: { Accept: "application/json,text/plain,*/*" },
+        signal: controller.signal
+      });
+      return candidate;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${candidate} -> ${message}`);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  throw new Error(`No reachable orchestrator endpoint. Attempts: ${errors.join(" | ")}`);
+}
 
 function expect(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-async function postJson(path, payload) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+async function postJson(baseUrl, path, payload) {
+  let lastError = null;
 
-  try {
-    const response = await fetch(`${ORCHESTRATOR_URL}${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
+  for (let attempt = 1; attempt <= FETCH_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    const text = await response.text();
-    let data = null;
     try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = null;
-    }
+      const response = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
 
-    return {
-      status: response.status,
-      headers: response.headers,
-      data,
-      rawText: text
-    };
-  } finally {
-    clearTimeout(timeout);
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      const result = {
+        status: response.status,
+        headers: response.headers,
+        data,
+        rawText: text
+      };
+
+      if (response.status >= 500 && attempt < FETCH_RETRIES) {
+        await sleep(FETCH_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+
+      return result;
+    } catch (error) {
+      lastError = error;
+      if (attempt < FETCH_RETRIES) {
+        await sleep(FETCH_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError || "fetch failed"));
 }
 
 function buildAttestedSafetyProfile() {
@@ -82,6 +146,25 @@ function expectPromptDoesNotUseNegativeLabel(result, label) {
 }
 
 async function run() {
+  let orchestratorUrl = "";
+  try {
+    orchestratorUrl = await resolveReachableOrchestratorUrl();
+  } catch (error) {
+    if (REQUIRE_ORCHESTRATOR) {
+      throw error;
+    }
+
+    console.log("• orchestrator endpoint unreachable; skipping attestation smoke test in non-strict mode");
+    console.log(
+      `• set ION_SMOKE_REQUIRE_ORCHESTRATOR=1 to enforce this check locally (reason: ${
+        error instanceof Error ? error.message : String(error)
+      })`
+    );
+    return;
+  }
+
+  console.log(`• using orchestrator endpoint: ${orchestratorUrl}`);
+
   const commonPayload = {
     userId: "smoke-orchestrator-attestation",
     feedback: "",
@@ -93,7 +176,7 @@ async function run() {
     height: 3840
   };
 
-  const unattested = await postJson("/api/image", {
+  const unattested = await postJson(orchestratorUrl, "/api/image", {
     ...commonPayload,
     prompt: "Photorealistic portrait of an astronaut in a greenhouse, vertical 9:16, high detail"
   });
@@ -105,7 +188,7 @@ async function run() {
   );
   console.log("✓ orchestrator legal gate blocks unattested /api/image requests");
 
-  const attested = await postJson("/api/image", {
+  const attested = await postJson(orchestratorUrl, "/api/image", {
     ...commonPayload,
     prompt: "Photorealistic portrait of a smiling astronaut in a white suit standing in a bright botanical greenhouse, vertical 9:16, 4k, high detail",
     safetyProfile: buildAttestedSafetyProfile()
@@ -117,7 +200,7 @@ async function run() {
 
   if (RUN_LONG_PROMPT_CLAMP_CHECK) {
     const longPrompt = `Photorealistic portrait of a smiling astronaut in a white suit standing in a bright botanical greenhouse, vertical 9:16, 4k, high detail. ${"highly detailed textures, physically plausible lighting, realistic skin detail, cinematic composition, ultra crisp focus, depth-rich environment, high dynamic range, careful material response, atmospheric perspective, premium color grading, ".repeat(20)}`;
-    const longPromptResult = await postJson("/api/image", {
+    const longPromptResult = await postJson(orchestratorUrl, "/api/image", {
       ...commonPayload,
       userId: "smoke-orchestrator-attestation-long-prompt",
       prompt: longPrompt,
@@ -131,7 +214,7 @@ async function run() {
     console.log("• long prompt clamp regression check skipped (set ION_SMOKE_LONG_PROMPT=1 to enable)");
   }
 
-  const dogRegression = await postJson("/api/image", {
+  const dogRegression = await postJson(orchestratorUrl, "/api/image", {
     ...commonPayload,
     userId: "smoke-orchestrator-attestation-dog",
     prompt: "create an image of a photo realistic dog.",
@@ -142,7 +225,7 @@ async function run() {
   expectPromptDoesNotUseNegativeLabel(dogRegression, "dog regression prompt");
   console.log("✓ dog regression prompt no longer fails on false NSFW block");
 
-  const warriorRegression = await postJson("/api/image", {
+  const warriorRegression = await postJson(orchestratorUrl, "/api/image", {
     ...commonPayload,
     userId: "smoke-orchestrator-attestation-warrior",
     prompt: "create an image of a ultra-detailed digital painting of a warrior",

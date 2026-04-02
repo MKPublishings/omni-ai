@@ -3,8 +3,8 @@
   "meta": {
     "name": "ION Living Codex",
     "version": "1.0.0",
-    "generatedAt": "2026-03-02T19:57:57.220Z",
-    "entryCount": 35,
+    "generatedAt": "2026-04-02T09:36:47.033Z",
+    "entryCount": 42,
     "lineage": [
       "legacy.codex.00-index",
       "legacy.codex.10-architecture",
@@ -19,12 +19,12 @@
     {
       "id": "equations.solved",
       "path": "equations/solved",
-      "count": 2
+      "count": 4
     },
     {
       "id": "equations.templates",
       "path": "equations/templates",
-      "count": 3
+      "count": 5
     },
     {
       "id": "glossary.terms",
@@ -57,14 +57,14 @@
       "count": 2
     },
     {
+      "id": "systems.ION",
+      "path": "systems/ION",
+      "count": 6
+    },
+    {
       "id": "systems.mind-os",
       "path": "systems/mind-os",
       "count": 4
-    },
-    {
-      "id": "systems.ION",
-      "path": "systems/ION",
-      "count": 3
     },
     {
       "id": "visual-dialect.motifs",
@@ -97,8 +97,8 @@
         "legacy.codex.60-internal-mind-contracts"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.904Z",
-      "updatedAt": "2026-03-02T19:50:37.624Z"
+      "createdAt": "2026-02-27T10:24:25.264Z",
+      "updatedAt": "2026-03-27T22:23:22.576Z"
     },
     {
       "id": "legacy.codex.10-architecture",
@@ -119,8 +119,8 @@
         "legacy.codex.60-internal-mind-contracts"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.906Z",
-      "updatedAt": "2026-02-28T21:30:53.906Z"
+      "createdAt": "2026-02-27T10:24:25.375Z",
+      "updatedAt": "2026-03-27T22:23:22.578Z"
     },
     {
       "id": "legacy.codex.20-protocols",
@@ -141,8 +141,8 @@
         "legacy.codex.60-internal-mind-contracts"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.906Z",
-      "updatedAt": "2026-02-28T21:30:53.906Z"
+      "createdAt": "2026-02-27T10:24:25.455Z",
+      "updatedAt": "2026-03-27T22:23:22.578Z"
     },
     {
       "id": "legacy.codex.30-patterns",
@@ -163,8 +163,8 @@
         "legacy.codex.60-internal-mind-contracts"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.906Z",
-      "updatedAt": "2026-02-28T21:30:53.906Z"
+      "createdAt": "2026-02-27T10:24:25.537Z",
+      "updatedAt": "2026-03-27T22:23:22.579Z"
     },
     {
       "id": "legacy.codex.50-mind-path-map",
@@ -185,8 +185,8 @@
         "legacy.codex.60-internal-mind-contracts"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.907Z",
-      "updatedAt": "2026-02-28T21:30:53.907Z"
+      "createdAt": "2026-02-27T10:46:12.542Z",
+      "updatedAt": "2026-03-27T22:23:22.581Z"
     },
     {
       "id": "legacy.codex.60-internal-mind-contracts",
@@ -207,8 +207,8 @@
         "legacy.codex.50-mind-path-map"
       ],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.907Z",
-      "updatedAt": "2026-02-28T21:30:53.907Z"
+      "createdAt": "2026-02-27T10:46:12.772Z",
+      "updatedAt": "2026-03-27T22:23:22.581Z"
     },
     {
       "id": "equation.2026-02-27-001",
@@ -253,6 +253,67 @@
       "updatedAt": "2026-02-27T00:00:00.000Z"
     },
     {
+      "id": "equation.solved.2026-03-04-avalanche-gamma-sweep",
+      "path": "codex/equations/solved/2026-03-04-avalanche-gamma-sweep.json",
+      "title": "Avalanche Gamma Sweep (0.1, 0.5, 1.0)",
+      "type": "equation-solved",
+      "category": "equations/solved",
+      "tags": [
+        "quantum",
+        "avalanche",
+        "stress",
+        "sweep",
+        "comparison"
+      ],
+      "links": [
+        "system.ION.quantum-cognitive-sim",
+        "equation.quantum-cognitive-avalanche",
+        "equation.solved.2026-03-04-avalanche-stress-001"
+      ],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-03-27T22:23:22.584Z",
+      "updatedAt": "2026-03-27T22:23:22.584Z"
+    },
+    {
+      "id": "equation.solved.2026-03-04-avalanche-stress-001",
+      "path": "codex/equations/solved/2026-03-04-avalanche-stress-001.json",
+      "title": "Avalanche Stress Run (gamma=0.1, N=20, cols=3)",
+      "type": "equation-solved",
+      "category": "equations/solved",
+      "tags": [
+        "quantum",
+        "avalanche",
+        "stress",
+        "solved",
+        "mcsolve"
+      ],
+      "links": [
+        "system.ION.quantum-cognitive-sim",
+        "equation.quantum-cognitive-avalanche",
+        "law.quantum.02"
+      ],
+      "autoLinks": [
+        "equation.solved.2026-03-04-avalanche-gamma-sweep"
+      ],
+      "lineage": [],
+      "createdAt": "2026-03-27T22:23:22.584Z",
+      "updatedAt": "2026-03-27T22:23:22.584Z"
+    },
+    {
+      "id": "equations.templates.cosmic-virial-and-rotation",
+      "path": "codex/equations/templates/cosmic-virial-and-rotation.md",
+      "title": "Cosmic Virial And Rotation",
+      "type": "equation-template",
+      "category": "equations/templates",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-04-02T08:58:36.106Z",
+      "updatedAt": "2026-04-02T08:59:15.501Z"
+    },
+    {
       "id": "equations.templates.differential",
       "path": "codex/equations/templates/differential.md",
       "title": "Differential",
@@ -262,8 +323,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.907Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z"
+      "createdAt": "2026-02-27T15:58:41.380Z",
+      "updatedAt": "2026-02-27T15:58:46.146Z"
     },
     {
       "id": "equations.templates.linear",
@@ -275,8 +336,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.909Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z"
+      "createdAt": "2026-02-27T15:58:25.194Z",
+      "updatedAt": "2026-02-27T15:58:37.782Z"
     },
     {
       "id": "equations.templates.quadratic",
@@ -288,8 +349,21 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.909Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z"
+      "createdAt": "2026-02-27T15:58:41.302Z",
+      "updatedAt": "2026-02-27T15:58:46.146Z"
+    },
+    {
+      "id": "equations.templates.quantum-cognitive-avalanche",
+      "path": "codex/equations/templates/quantum-cognitive-avalanche.md",
+      "title": "Quantum Cognitive Avalanche",
+      "type": "equation-template",
+      "category": "equations/templates",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-03-27T22:23:22.584Z",
+      "updatedAt": "2026-03-27T22:23:22.586Z"
     },
     {
       "id": "glossary.context-window",
@@ -307,8 +381,8 @@
       ],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.909Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z",
+      "createdAt": "2026-02-27T15:58:41.621Z",
+      "updatedAt": "2026-03-27T22:23:22.586Z",
       "symbol": "C_t"
     },
     {
@@ -327,8 +401,8 @@
       ],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.909Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z",
+      "createdAt": "2026-02-27T15:58:41.621Z",
+      "updatedAt": "2026-03-27T22:23:22.586Z",
       "symbol": "L"
     },
     {
@@ -347,8 +421,8 @@
       ],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.909Z",
-      "updatedAt": "2026-02-28T21:30:53.909Z",
+      "createdAt": "2026-02-27T15:58:41.621Z",
+      "updatedAt": "2026-03-27T22:23:22.586Z",
       "symbol": "R"
     },
     {
@@ -361,8 +435,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.910Z",
-      "updatedAt": "2026-02-28T21:30:53.910Z"
+      "createdAt": "2026-02-27T15:57:41.688Z",
+      "updatedAt": "2026-02-27T15:57:48.099Z"
     },
     {
       "id": "laws.cognitive.02-memory",
@@ -374,8 +448,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.910Z",
-      "updatedAt": "2026-02-28T21:30:53.910Z"
+      "createdAt": "2026-02-27T15:57:41.733Z",
+      "updatedAt": "2026-02-27T15:57:48.099Z"
     },
     {
       "id": "laws.quantum.01-superposition",
@@ -387,8 +461,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.910Z",
-      "updatedAt": "2026-02-28T21:30:53.910Z"
+      "createdAt": "2026-02-27T15:57:41.548Z",
+      "updatedAt": "2026-03-27T22:23:22.589Z"
     },
     {
       "id": "laws.quantum.02-entanglement",
@@ -400,8 +474,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.910Z",
-      "updatedAt": "2026-02-28T21:30:53.912Z"
+      "createdAt": "2026-02-27T15:57:41.627Z",
+      "updatedAt": "2026-03-27T22:23:22.589Z"
     },
     {
       "id": "mythic.archetypes.architect",
@@ -413,8 +487,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.912Z",
-      "updatedAt": "2026-02-28T21:30:53.912Z"
+      "createdAt": "2026-02-27T15:58:13.273Z",
+      "updatedAt": "2026-02-27T15:58:37.781Z"
     },
     {
       "id": "mythic.archetypes.sovereign",
@@ -426,8 +500,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.912Z",
-      "updatedAt": "2026-02-28T21:30:53.912Z"
+      "createdAt": "2026-02-27T15:58:13.386Z",
+      "updatedAt": "2026-03-27T22:23:22.590Z"
     },
     {
       "id": "mythic.archetypes.witness",
@@ -439,21 +513,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.912Z",
-      "updatedAt": "2026-02-28T21:30:53.912Z"
-    },
-    {
-      "id": "mythic.checkpoints.2026-mkp-tri-closure",
-      "path": "codex/mythic/checkpoints/2026-mkp-tri-closure.md",
-      "title": "2026 Mkp Tri Closure",
-      "type": "mythic-checkpoint",
-      "category": "mythic/checkpoints",
-      "tags": [],
-      "links": [],
-      "autoLinks": [],
-      "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.913Z",
-      "updatedAt": "2026-02-28T21:30:53.913Z"
+      "createdAt": "2026-02-27T15:58:13.341Z",
+      "updatedAt": "2026-02-27T15:58:37.781Z"
     },
     {
       "id": "mythic.checkpoints.2026-ION-ascension",
@@ -465,60 +526,34 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.913Z",
-      "updatedAt": "2026-02-28T21:30:53.913Z"
+      "createdAt": "2026-03-27T22:23:22.591Z",
+      "updatedAt": "2026-03-27T22:23:22.591Z"
     },
     {
-      "id": "systems.mind-os.architecture",
-      "path": "codex/systems/mind-os/architecture.md",
-      "title": "Architecture",
-      "type": "system",
-      "category": "systems/mind-os",
+      "id": "mythic.checkpoints.2026-mkp-tri-closure",
+      "path": "codex/mythic/checkpoints/2026-mkp-tri-closure.md",
+      "title": "2026 Mkp Tri Closure",
+      "type": "mythic-checkpoint",
+      "category": "mythic/checkpoints",
       "tags": [],
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.913Z",
-      "updatedAt": "2026-02-28T21:30:53.913Z"
+      "createdAt": "2026-02-27T15:58:13.184Z",
+      "updatedAt": "2026-02-27T15:58:37.780Z"
     },
     {
-      "id": "systems.mind-os.blackwell-agent-lifecycle",
-      "path": "codex/systems/mind-os/blackwell-agent-lifecycle.md",
-      "title": "Blackwell Agent Lifecycle",
+      "id": "systems.ION.cosmic-mode",
+      "path": "codex/systems/ION/cosmic-mode.md",
+      "title": "Cosmic Mode",
       "type": "system",
-      "category": "systems/mind-os",
+      "category": "systems/ION",
       "tags": [],
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-03-01T06:14:08.210Z",
-      "updatedAt": "2026-03-01T06:14:35.376Z"
-    },
-    {
-      "id": "systems.mind-os.lineage",
-      "path": "codex/systems/mind-os/lineage.md",
-      "title": "Lineage",
-      "type": "system",
-      "category": "systems/mind-os",
-      "tags": [],
-      "links": [],
-      "autoLinks": [],
-      "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.913Z",
-      "updatedAt": "2026-02-28T21:30:53.913Z"
-    },
-    {
-      "id": "systems.mind-os.overview",
-      "path": "codex/systems/mind-os/overview.md",
-      "title": "Overview",
-      "type": "system",
-      "category": "systems/mind-os",
-      "tags": [],
-      "links": [],
-      "autoLinks": [],
-      "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.913Z",
-      "updatedAt": "2026-02-28T21:30:53.915Z"
+      "createdAt": "2026-04-02T08:58:35.993Z",
+      "updatedAt": "2026-04-02T08:59:15.485Z"
     },
     {
       "id": "systems.ION.image-engine",
@@ -530,8 +565,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.915Z",
-      "updatedAt": "2026-02-28T21:30:53.915Z"
+      "createdAt": "2026-03-27T22:23:22.591Z",
+      "updatedAt": "2026-03-27T22:23:22.591Z"
     },
     {
       "id": "systems.ION.intelligence-lineage",
@@ -543,8 +578,21 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.915Z",
-      "updatedAt": "2026-02-28T21:30:53.915Z"
+      "createdAt": "2026-03-27T22:23:22.591Z",
+      "updatedAt": "2026-03-27T22:23:22.591Z"
+    },
+    {
+      "id": "systems.ION.multiverse-mode",
+      "path": "codex/systems/ION/multiverse-mode.md",
+      "title": "Multiverse Mode",
+      "type": "system",
+      "category": "systems/ION",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-04-02T09:19:10.557Z",
+      "updatedAt": "2026-04-02T09:21:14.067Z"
     },
     {
       "id": "systems.ION.overview",
@@ -556,8 +604,73 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.915Z",
-      "updatedAt": "2026-03-02T19:50:37.624Z"
+      "createdAt": "2026-03-27T22:23:22.593Z",
+      "updatedAt": "2026-03-27T22:23:22.593Z"
+    },
+    {
+      "id": "systems.ION.quantum-cognitive-sim",
+      "path": "codex/systems/ION/quantum-cognitive-sim.md",
+      "title": "Quantum Cognitive Sim",
+      "type": "system",
+      "category": "systems/ION",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-03-27T22:23:22.593Z",
+      "updatedAt": "2026-03-27T22:23:22.593Z"
+    },
+    {
+      "id": "systems.mind-os.architecture",
+      "path": "codex/systems/mind-os/architecture.md",
+      "title": "Architecture",
+      "type": "system",
+      "category": "systems/mind-os",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-02-27T15:57:55.273Z",
+      "updatedAt": "2026-03-27T22:23:22.593Z"
+    },
+    {
+      "id": "systems.mind-os.blackwell-agent-lifecycle",
+      "path": "codex/systems/mind-os/blackwell-agent-lifecycle.md",
+      "title": "Blackwell Agent Lifecycle",
+      "type": "system",
+      "category": "systems/mind-os",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-03-27T22:23:22.594Z",
+      "updatedAt": "2026-03-27T22:23:22.594Z"
+    },
+    {
+      "id": "systems.mind-os.lineage",
+      "path": "codex/systems/mind-os/lineage.md",
+      "title": "Lineage",
+      "type": "system",
+      "category": "systems/mind-os",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-02-27T15:57:55.340Z",
+      "updatedAt": "2026-03-27T22:23:22.594Z"
+    },
+    {
+      "id": "systems.mind-os.overview",
+      "path": "codex/systems/mind-os/overview.md",
+      "title": "Overview",
+      "type": "system",
+      "category": "systems/mind-os",
+      "tags": [],
+      "links": [],
+      "autoLinks": [],
+      "lineage": [],
+      "createdAt": "2026-02-27T15:57:55.212Z",
+      "updatedAt": "2026-03-27T22:23:22.596Z"
     },
     {
       "id": "visual-dialect.motifs.crown",
@@ -569,8 +682,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.916Z",
-      "updatedAt": "2026-02-28T21:30:53.917Z"
+      "createdAt": "2026-02-27T15:58:25.056Z",
+      "updatedAt": "2026-02-27T15:58:37.782Z"
     },
     {
       "id": "visual-dialect.motifs.flame",
@@ -582,8 +695,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.917Z",
-      "updatedAt": "2026-02-28T21:30:53.917Z"
+      "createdAt": "2026-02-27T15:58:25.003Z",
+      "updatedAt": "2026-02-27T15:58:37.782Z"
     },
     {
       "id": "visual-dialect.motifs.neon-thread",
@@ -595,8 +708,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.917Z",
-      "updatedAt": "2026-02-28T21:30:53.917Z"
+      "createdAt": "2026-02-27T15:58:25.113Z",
+      "updatedAt": "2026-03-27T22:23:22.597Z"
     },
     {
       "id": "visual-dialect.registers.color-register",
@@ -608,8 +721,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.917Z",
-      "updatedAt": "2026-02-28T21:30:53.918Z"
+      "createdAt": "2026-02-27T15:58:24.743Z",
+      "updatedAt": "2026-03-27T22:23:22.599Z"
     },
     {
       "id": "visual-dialect.registers.emotional-register",
@@ -621,8 +734,8 @@
       "links": [],
       "autoLinks": [],
       "lineage": [],
-      "createdAt": "2026-02-28T21:30:53.918Z",
-      "updatedAt": "2026-02-28T21:30:53.918Z"
+      "createdAt": "2026-02-27T15:58:24.901Z",
+      "updatedAt": "2026-02-27T15:58:37.782Z"
     }
   ],
   "crossLinks": [
@@ -631,6 +744,24 @@
       "target": "glossary.resonance",
       "reason": "tag-overlap:emotion,behavior",
       "score": 0.667
+    },
+    {
+      "source": "equation.solved.2026-03-04-avalanche-gamma-sweep",
+      "target": "equation.solved.2026-03-04-avalanche-stress-001",
+      "reason": "explicit",
+      "score": 1
+    },
+    {
+      "source": "equation.solved.2026-03-04-avalanche-gamma-sweep",
+      "target": "equation.solved.2026-03-04-avalanche-stress-001",
+      "reason": "tag-overlap:quantum,avalanche,stress",
+      "score": 0.6
+    },
+    {
+      "source": "equation.solved.2026-03-04-avalanche-stress-001",
+      "target": "equation.solved.2026-03-04-avalanche-gamma-sweep",
+      "reason": "tag-overlap:quantum,avalanche,stress",
+      "score": 0.6
     },
     {
       "source": "glossary.resonance",

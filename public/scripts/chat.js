@@ -72,7 +72,7 @@
     API_RETRIES: "ION-api-retries"
   };
   const KNOWN_MODELS = ["ION"];
-  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "anatomy", "environment", "simulation"];
+  const KNOWN_MODES = ["auto", "architect", "analyst", "visual", "lore", "reasoning", "coding", "knowledge", "system-knowledge", "anatomy", "environment", "simulation", "cosmic", "multiverse"];
   const KNOWN_RENDER_STYLES = [
     "hyper-real",
     "3d",
@@ -660,7 +660,13 @@
     if (normalized === "anatomy") return "Anatomy";
     if (normalized === "environment") return "Environment";
     if (normalized === "simulation") return "Simulation";
+    if (normalized === "cosmic") return "Cosmic";
+    if (normalized === "multiverse") return "Multiverse";
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+
+  function isSimulationLikeMode(mode) {
+    return mode === "simulation" || mode === "cosmic" || mode === "multiverse";
   }
 
   function getSimulationDefaults() {
@@ -746,7 +752,7 @@
   function updateSimulationUI(session = getActiveSession()) {
     const mode = getActiveMode(session);
     const simulation = ensureSimulationState(session);
-    const isSimulationMode = mode === "simulation";
+    const isSimulationMode = isSimulationLikeMode(mode);
     const isRunning = isSimulationMode && simulation?.status === "active";
 
     if (simulationPanelEl) {
@@ -758,10 +764,16 @@
       simulationBadgeEl.hidden = !isSimulationMode;
       const stateLabel = simulation?.status === "active" ? "Running" : simulation?.status === "paused" ? "Paused" : "Inactive";
       const steps = Number.isFinite(simulation?.steps) ? simulation.steps : 0;
-      simulationBadgeEl.textContent = `Simulation: ${stateLabel} · Steps ${steps}`;
+      const modeLabel = mode === "cosmic" ? "Cosmic" : mode === "multiverse" ? "Multiverse" : "Simulation";
+      simulationBadgeEl.textContent = `${modeLabel}: ${stateLabel} · Steps ${steps}`;
+      simulationBadgeEl.classList.toggle("cosmic", isSimulationMode && mode === "cosmic");
     }
 
     if (chatAreaEl) {
+      chatAreaEl.classList.toggle("cosmic-mode", isSimulationMode && mode === "cosmic");
+      chatAreaEl.classList.toggle("cosmic-active", isRunning && mode === "cosmic");
+      chatAreaEl.classList.toggle("multiverse-mode", isSimulationMode && mode === "multiverse");
+      chatAreaEl.classList.toggle("multiverse-active", isRunning && mode === "multiverse");
       chatAreaEl.classList.toggle("simulation-active", !!isRunning);
     }
 
@@ -803,6 +815,8 @@
         reasoning: 0,
         anatomy: 0,
         environment: 0,
+        cosmic: 0,
+        multiverse: 0,
         "system-knowledge": 0
       };
     }
@@ -827,6 +841,14 @@
       simulation: [
         { pattern: /\b(simulate|simulation|state\s+transition|run\s+scenario|sandbox|what\s+if)\b/g, weight: 2 },
         { pattern: /\b(rules:|system-state|agent-based|scenario)\b/g, weight: 1 }
+      ],
+      cosmic: [
+        { pattern: /\b(cosmic|galaxy|galactic|milky\s*way|stellar|star\s+formation|dark\s+matter|spiral\s+arm|nfw|hernquist|toomre)\b/g, weight: 2 },
+        { pattern: /\b(virial|orbital\s+dynamics|interstellar\s+medium|imf|deterministic\s+simulation)\b/g, weight: 1 }
+      ],
+      multiverse: [
+        { pattern: /\b(multiverse|observable\s+universe|cosmic\s+web|supercluster|galaxy\s+cluster|lod\s*[0-7]|octree)\b/g, weight: 2 },
+        { pattern: /\b(press\s*-?schechter|schechter\s+function|planck\s+2018|lcdm|seed\s+cascade|splitmix64)\b/g, weight: 1 }
       ],
       coding: [
         { pattern: /\b(code|coding|refactor|typescript|javascript|python|bug|stack\s+trace|compile|lint|test)\b/g, weight: 2 },
@@ -960,6 +982,7 @@
     if (!modeBtn) return;
     const label = toModeLabel(mode);
     modeBtn.textContent = label;
+    modeBtn.dataset.mode = normalizeMode(mode) || "auto";
     modeBtn.setAttribute("aria-label", `Change chat mode. Current mode: ${label}`);
   }
 
@@ -2181,11 +2204,11 @@
 
     const conversationHints = buildConversationHints(session, activeMode, trimmed);
 
-    if (activeMode === "simulation") {
+    if (isSimulationLikeMode(activeMode)) {
       const simulation = ensureSimulationState(session);
       if (simulation.status !== "active") {
         simulation.status = "active";
-        appendSimulationLog(session, "Simulation started from chat input.");
+        appendSimulationLog(session, `${toModeLabel(activeMode)} mode started from chat input.`);
       }
 
       simulation.steps = Number(simulation.steps || 0) + 1;
@@ -2343,7 +2366,7 @@
         (meta) => {
           updateModelInspector(meta?.modelUsed || session.model || "ION", meta?.routeReason || "");
 
-          if (getActiveMode(session) === "simulation") {
+          if (isSimulationLikeMode(getActiveMode(session))) {
             const simulation = ensureSimulationState(session);
             if (meta?.simulationId) simulation.id = meta.simulationId;
             if (meta?.simulationStatus) simulation.status = meta.simulationStatus;
@@ -2398,7 +2421,7 @@
         generatedAt: streamedMeta.generatedAt || Date.now()
       });
       session.messages[session.messages.length - 1].timestamp = Date.now();
-      if (getActiveMode(session) === "simulation") {
+      if (isSimulationLikeMode(getActiveMode(session))) {
         appendSimulationLog(session, "Assistant produced simulation state update.");
       }
       delete session._streamingAssistantText;
@@ -2618,7 +2641,7 @@
 
   function startSimulation() {
     const session = getActiveSession();
-    if (!session || getActiveMode(session) !== "simulation") return;
+    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
     const simulation = ensureSimulationState(session);
     simulation.status = "active";
     appendSimulationLog(session, "Simulation started.");
@@ -2629,7 +2652,7 @@
 
   function pauseSimulation() {
     const session = getActiveSession();
-    if (!session || getActiveMode(session) !== "simulation") return;
+    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
     const simulation = ensureSimulationState(session);
     simulation.status = "paused";
     appendSimulationLog(session, "Simulation paused.");
@@ -2640,7 +2663,7 @@
 
   function resetSimulation() {
     const session = getActiveSession();
-    if (!session || getActiveMode(session) !== "simulation") return;
+    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
     const simulation = ensureSimulationState(session);
     simulation.id = `sim_${Date.now()}`;
     simulation.status = "inactive";
@@ -2654,7 +2677,7 @@
 
   function exportSimulationState() {
     const session = getActiveSession();
-    if (!session || getActiveMode(session) !== "simulation") return;
+    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
     const simulation = ensureSimulationState(session);
     const payload = {
       sessionId: session.id,
@@ -2881,7 +2904,7 @@
     if (simulationRulesEditorEl) {
       simulationRulesEditorEl.addEventListener("change", () => {
         const session = getActiveSession();
-        if (!session || getActiveMode(session) !== "simulation") return;
+        if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
         const simulation = ensureSimulationState(session);
         simulation.rules = String(simulationRulesEditorEl.value || "").trim();
         appendSimulationLog(session, "Simulation rules updated from editor.");

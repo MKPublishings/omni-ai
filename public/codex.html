@@ -123,13 +123,13 @@ npm run codex:register -- &lt;path-inside-codex&gt;</code></pre>
         <h3>New Ionirix Additions Now Indexed</h3>
         <p>
           The codex explorer now hydrates a wider Ionirix surface: release declarations, public runtime specs,
-          Environment Mode modules, module capability docs, worker integrations, and additional public site routes.
+          Environment, Cosmic, and Multiverse mode modules, capability docs, worker integrations, and additional public site routes.
         </p>
         <ul>
-          <li><strong>New chambers:</strong> systems/environment, site/modules, site/declarations, releases/public, integrations/docs.</li>
+          <li><strong>New chambers:</strong> systems/environment, systems/cosmic, systems/multiverse, site/modules, site/declarations, releases/public, integrations/docs.</li>
           <li><strong>Auto-artifacts:</strong> page-route artifacts now include index, chat, codex, modes, settings, about, legal, memory, system, and tools.</li>
-          <li><strong>New cross-links:</strong> environment engine to type contracts, declaration to release specs, and rules/capabilities to governance/runtime systems.</li>
-          <li><strong>Expanded Ionirix coverage:</strong> codex scripts, public declarations, release JSON specs, module docs, and Environment Mode source entries now appear in Artifact Explorer.</li>
+          <li><strong>New cross-links:</strong> multiverse engine to seed-cascade/schema, cosmic engine to diagnostics/schema, environment engine to type contracts, and declarations to release specs.</li>
+          <li><strong>Expanded Ionirix coverage:</strong> codex scripts, public declarations, release JSON specs, capability docs, and Environment/Cosmic/Multiverse source entries now appear in Artifact Explorer.</li>
         </ul>
       </section>
 
@@ -173,6 +173,8 @@ auto-codex/
   integrations/workers     # worker mesh + media pipeline bindings
   integrations/docs        # implementation guides and integration docs
   systems/environment      # Environment Mode source modules
+  systems/cosmic           # Cosmic Mode source modules
+  systems/multiverse       # Multiverse Mode source modules
   site/pages               # route-level page artifacts
   site/modules             # public module capability docs
   site/declarations        # public declaration artifacts
@@ -235,6 +237,78 @@ auto-codex/
                 <tr><td>economy</td><td>modes/environment/systems/economy-system.ts</td><td>Solow growth, 20 sectors, 28 commodities, macro state</td></tr>
                 <tr><td>governance</td><td>modes/environment/systems/governance-system.ts</td><td>15 gov types, elections, diplomacy, treaties, military</td></tr>
                 <tr><td>transport</td><td>modes/environment/systems/transport-system.ts</td><td>24 modes, chokepoints, aviation, logistics, emissions</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="env-codex-entry" id="codex-cosmic" style="margin-top: 2rem;">
+          <h3 class="env-section__subtitle" style="margin-top: 0;">Cosmic Mode - Lineage</h3>
+          <div class="env-lineage-chain">
+            <span class="env-lineage-chain__node">Simulation Mode</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node">Deterministic State Engine</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node">Galactic Dynamics</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node env-lineage-chain__node--current">Cosmic Mode</span>
+          </div>
+
+          <h4 style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 1.5rem 0 0.75rem 0;">Cosmic Module Registry</h4>
+          <div style="overflow-x: auto;">
+            <table class="env-registry-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Path</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>constants</td><td>src/modes/cosmic/cosmic_constants.ts</td><td>Physical constants and Milky Way parameters</td></tr>
+                <tr><td>schema</td><td>src/modes/cosmic/cosmic_schema.ts</td><td>Typed simulation config/state and validation contracts</td></tr>
+                <tr><td>gravity</td><td>src/modes/cosmic/gravitational_architecture.ts</td><td>Hernquist, Miyamoto-Nagai, and NFW potential architecture</td></tr>
+                <tr><td>dynamics</td><td>src/modes/cosmic/galactic_dynamics.ts</td><td>Rotation curves, Toomre Q, and orbital diagnostics</td></tr>
+                <tr><td>stellar</td><td>src/modes/cosmic/stellar_formation.ts</td><td>SFR, IMF, stellar evolution, and death events</td></tr>
+                <tr><td>ism</td><td>src/modes/cosmic/interstellar_medium.ts</td><td>Cooling/heating equilibrium and ISM phase state evolution</td></tr>
+                <tr><td>engine</td><td>src/modes/cosmic/cosmic_engine.ts</td><td>Core deterministic orchestration loop and snapshot flow</td></tr>
+                <tr><td>integration</td><td>src/modes/cosmic/cosmic_integration.ts</td><td>Adapter/event bus bridge used by runtime mode integration</td></tr>
+                <tr><td>diagnostics</td><td>src/modes/cosmic/diagnostics.ts</td><td>Mass, virial, profile diagnostics and reporting helpers</td></tr>
+                <tr><td>public API</td><td>src/modes/cosmic/cosmic_mode.ts</td><td>Initialize mode and expose typed public entry surface</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="env-codex-entry" id="codex-multiverse" style="margin-top: 2rem;">
+          <h3 class="env-section__subtitle" style="margin-top: 0;">Multiverse Mode - Lineage</h3>
+          <div class="env-lineage-chain">
+            <span class="env-lineage-chain__node">Simulation Mode</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node">Cosmic Mode</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node">Hierarchical LOD</span>
+            <span class="env-lineage-chain__arrow">→</span>
+            <span class="env-lineage-chain__node env-lineage-chain__node--current">Multiverse Mode</span>
+          </div>
+
+          <h4 style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 1.5rem 0 0.75rem 0;">Multiverse Module Registry</h4>
+          <div style="overflow-x: auto;">
+            <table class="env-registry-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Path</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>schema</td><td>src/modes/multiverse/multiverse_schema.ts</td><td>Canonical config, cosmology, query, and entity contracts</td></tr>
+                <tr><td>seed cascade</td><td>src/modes/multiverse/seed_cascade.ts</td><td>SHA-256 derivation and SplitMix64 deterministic RNG primitives</td></tr>
+                <tr><td>octree</td><td>src/modes/multiverse/octree.ts</td><td>Adaptive octree spatial indexing and sphere-query traversal</td></tr>
+                <tr><td>engine</td><td>src/modes/multiverse/multiverse_engine.ts</td><td>LOD-aware generation, bounded query execution, and cache policy</td></tr>
+                <tr><td>public API</td><td>src/modes/multiverse/multiverse_mode.ts</td><td>Initialize mode and expose sovereign deterministic bootstrap surface</td></tr>
+                <tr><td>runtime contract</td><td>codex/systems/ION/multiverse-mode.md</td><td>Operational guarantees and integration policy reference</td></tr>
               </tbody>
             </table>
           </div>

@@ -16,7 +16,9 @@ const MODE_INFOS: ModeInfo[] = [
   { id: "knowledge", label: "Knowledge", summary: "Reference-driven responses from indexed sources.", aliases: ["retrieval"] },
   { id: "system-knowledge", label: "System Knowledge", summary: "Internal module/protocol-aware responses.", aliases: ["system knowledge"] },
   { id: "anatomy", label: "Anatomy", summary: "Human anatomy and subsystem integration from ION internals.", aliases: ["human", "bio"] },
-  { id: "simulation", label: "Simulation", summary: "Stateful simulation and controlled scenario exploration.", aliases: ["sim"] }
+  { id: "simulation", label: "Simulation", summary: "Stateful simulation and controlled scenario exploration.", aliases: ["sim"] },
+  { id: "cosmic", label: "Cosmic", summary: "Milky Way-scale deterministic galactic simulation and diagnostics.", aliases: ["galaxy", "cosmic-mode"] },
+  { id: "multiverse", label: "Multiverse", summary: "Observable-universe-scale deterministic hierarchical simulation and querying.", aliases: ["multiverse-mode", "universe"] }
 ];
 
 function json(payload: unknown, status = 200): Response {

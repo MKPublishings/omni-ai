@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Ionirix LLC - Modes</title>
-  <meta name="description" content="Explore Ionirix cognitive modes for architecture, analysis, coding, visuals, lore, simulation, and environment." />
+  <meta name="description" content="Explore Ionirix cognitive modes for architecture, analysis, coding, visuals, lore, simulation, cosmic, multiverse, and environment." />
   <meta property="og:title" content="Ionirix LLC - Modes" />
   <meta property="og:description" content="Switch between Ionirix LLC cognitive modes for different reasoning and creative tasks." />
   <meta property="og:site_name" content="Ionirix LLC" />
@@ -57,7 +57,7 @@
         <div class="mode-content">
           <div class="mode-description">
             <h4>Overview</h4>
-            <p>Auto mode acts as the <strong>router profile</strong>. It infers user intent from the latest prompt and routes to the most suitable mode (architect, analyst, visual, lore, reasoning, coding, knowledge, system knowledge, anatomy, simulation, or environment) while preserving stable conversation flow.</p>
+            <p>Auto mode acts as the <strong>router profile</strong>. It infers user intent from the latest prompt and routes to the most suitable mode (architect, analyst, visual, lore, reasoning, coding, knowledge, system knowledge, anatomy, simulation, cosmic, multiverse, or environment) while preserving stable conversation flow.</p>
           </div>
 
           <div class="mode-features">
@@ -956,6 +956,110 @@ rules:
         </div>
       </section>
 
+      <!-- MODE: COSMIC -->
+      <section class="mode-section" data-mode="cosmic" id="cosmic">
+        <div class="mode-header">
+          <div class="mode-icon">🌌</div>
+          <div class="mode-title-group">
+            <h3 class="mode-title">Cosmic</h3>
+            <p class="mode-tagline">Deterministic Milky Way-scale galactic simulation and diagnostics</p>
+          </div>
+        </div>
+
+        <div class="mode-content">
+          <div class="mode-description">
+            <h4>What It Is</h4>
+            <p>Cosmic Mode extends simulation into a <strong>galactic runtime</strong> with deterministic seeded evolution. It models mass distributions, rotation dynamics, spiral structure, interstellar medium state, stellar formation/evolution, and emergent feedback loops.</p>
+          </div>
+
+          <div class="mode-features">
+            <h4>How It Works</h4>
+            <ul class="feature-list">
+              <li><span class="feature-icon">🌠</span><div><strong>Deterministic Engine</strong><p>Seeded execution with reproducible state transitions and snapshots</p></div></li>
+              <li><span class="feature-icon">🌀</span><div><strong>Galactic Dynamics</strong><p>Rotation curve, potentials, escape metrics, and stability profiles</p></div></li>
+              <li><span class="feature-icon">⭐</span><div><strong>Stellar Lifecycle</strong><p>Formation events, IMF-based populations, evolution, and death events</p></div></li>
+              <li><span class="feature-icon">📉</span><div><strong>Diagnostics Pipeline</strong><p>Mass closure, virial ratio, and event-driven runtime logs</p></div></li>
+            </ul>
+          </div>
+
+          <div class="mode-use-cases">
+            <h4>Example Workloads</h4>
+            <div class="use-case-tags">
+              <span class="use-case-tag">Milky Way Evolution Runs</span>
+              <span class="use-case-tag">Rotation Curve Analysis</span>
+              <span class="use-case-tag">Stellar Population Stress Tests</span>
+              <span class="use-case-tag">Deterministic Physics Replay</span>
+            </div>
+          </div>
+
+          <div class="mode-tech">
+            <h4>Invocation Example</h4>
+            <pre><code>/cosmic
+seed: 42
+timestep_myr: 1.0
+duration_myr: 120
+diagnostics: virial,mass,sfr</code></pre>
+          </div>
+
+          <div class="mode-use-cases mode-actions">
+            <a href="/chat.html" class="use-case-tag">Try in Chat</a>
+            <a href="/codex.html#codex-cosmic" class="use-case-tag">View Codex</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODE: MULTIVERSE -->
+      <section class="mode-section" data-mode="multiverse" id="multiverse">
+        <div class="mode-header">
+          <div class="mode-icon">🪐</div>
+          <div class="mode-title-group">
+            <h3 class="mode-title">Multiverse</h3>
+            <p class="mode-tagline">Observable-universe-scale deterministic hierarchy and query-driven generation</p>
+          </div>
+        </div>
+
+        <div class="mode-content">
+          <div class="mode-description">
+            <h4>What It Is</h4>
+            <p>Multiverse Mode extends cosmic simulation into a <strong>full observable-universe runtime</strong> using an eight-level hierarchy (Universe -> Moon), SHA-256 seed cascade determinism, and lazy octree-backed query execution.</p>
+          </div>
+
+          <div class="mode-features">
+            <h4>How It Works</h4>
+            <ul class="feature-list">
+              <li><span class="feature-icon">🔐</span><div><strong>Seed Cascade</strong><p>SHA-256(parentSeed || childIndex) with deterministic SplitMix64 streams</p></div></li>
+              <li><span class="feature-icon">🧭</span><div><strong>Hierarchical LOD</strong><p>LOD 0-7 resolution from cosmic web summaries to moon-level entities</p></div></li>
+              <li><span class="feature-icon">🌐</span><div><strong>Physics-Bound Scope</strong><p>LCDM Planck 2018 defaults with bounded execution and reproducibility</p></div></li>
+              <li><span class="feature-icon">🧊</span><div><strong>Lazy Generation</strong><p>Only queried regions are instantiated; untouched regions remain latent in seed space</p></div></li>
+            </ul>
+          </div>
+
+          <div class="mode-use-cases">
+            <h4>Example Workloads</h4>
+            <div class="use-case-tags">
+              <span class="use-case-tag">Observable Volume Sampling</span>
+              <span class="use-case-tag">Cross-LOD Drilldowns</span>
+              <span class="use-case-tag">Deterministic Reproduction</span>
+              <span class="use-case-tag">Population Stress Benchmarks</span>
+            </div>
+          </div>
+
+          <div class="mode-tech">
+            <h4>Invocation Example</h4>
+            <pre><code>/multiverse
+query: sphere
+lod: 4
+radius_mpc: 3.5
+seed: 0x7A3F9C2E1B8D4F06</code></pre>
+          </div>
+
+          <div class="mode-use-cases mode-actions">
+            <a href="/chat.html" class="use-case-tag">Try in Chat</a>
+            <a href="/codex.html#codex-multiverse" class="use-case-tag">View Codex</a>
+          </div>
+        </div>
+      </section>
+
       <section id="environment" class="mode-section env-section">
         <div class="mode-section__container">
 
@@ -966,7 +1070,7 @@ rules:
             <div class="env-section__title-group">
               <h2 class="env-section__title">Environment Mode</h2>
               <div class="env-section__badges">
-                <span class="env-badge env-badge--primary">Mode #12</span>
+                <span class="env-badge env-badge--primary">Mode #13</span>
                 <span class="env-badge env-badge--accent">Planetary Scale</span>
                 <span class="env-badge env-badge--outline">v1.0</span>
               </div>

@@ -25,6 +25,8 @@
       { id: "site.declarations", path: "site/declarations" },
       { id: "releases.public", path: "releases/public" },
       { id: "systems.environment", path: "systems/environment" },
+      { id: "systems.cosmic", path: "systems/cosmic" },
+      { id: "systems.multiverse", path: "systems/multiverse" },
       { id: "integrations.docs", path: "integrations/docs" }
     ],
     entries: [
@@ -190,6 +192,196 @@
         autoLinks: []
       },
       {
+        id: "system.cosmic.schema",
+        path: "src/modes/cosmic/cosmic_schema.ts",
+        title: "Cosmic Mode Schema",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "schema", "simulation", "mode"],
+        links: ["system.cosmic.engine", "system.cosmic.diagnostics", "site.page.modes"],
+        autoLinks: []
+      },
+      {
+        id: "system.cosmic.engine",
+        path: "src/modes/cosmic/cosmic_engine.ts",
+        title: "Cosmic Engine Core",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "engine", "deterministic", "galactic-dynamics"],
+        links: ["system.cosmic.schema", "system.cosmic.gravity", "system.cosmic.stellar"],
+        autoLinks: ["integrations.docs.cosmic-implementation"]
+      },
+      {
+        id: "system.cosmic.gravity",
+        path: "src/modes/cosmic/gravitational_architecture.ts",
+        title: "Cosmic Gravitational Architecture",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "gravity", "nfw", "hernquist", "miyamoto-nagai"],
+        links: ["system.cosmic.engine", "system.cosmic.diagnostics"],
+        autoLinks: []
+      },
+      {
+        id: "system.cosmic.stellar",
+        path: "src/modes/cosmic/stellar_formation.ts",
+        title: "Cosmic Stellar Formation",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "stellar", "imf", "sfr", "evolution"],
+        links: ["system.cosmic.engine", "system.cosmic.schema"],
+        autoLinks: []
+      },
+      {
+        id: "system.cosmic.diagnostics",
+        path: "src/modes/cosmic/diagnostics.ts",
+        title: "Cosmic Diagnostics",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "diagnostics", "virial", "mass-profile"],
+        links: ["system.cosmic.engine", "system.cosmic.schema"],
+        autoLinks: []
+      },
+      {
+        id: "system.cosmic.integration",
+        path: "src/modes/cosmic/cosmic_integration.ts",
+        title: "Cosmic Integration Adapter",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "adapter", "event-bus", "integration"],
+        links: ["system.cosmic.engine", "system.ION.cosmic-mode-contract", "site.page.chat"],
+        autoLinks: []
+      },
+      {
+        id: "system.cosmic.rng",
+        path: "src/modes/cosmic/rng.ts",
+        title: "Cosmic Seeded RNG",
+        type: "system-module",
+        category: "systems/cosmic",
+        tags: ["cosmic", "rng", "determinism", "mulberry32"],
+        links: ["system.cosmic.engine", "system.cosmic.stellar"],
+        autoLinks: []
+      },
+      {
+        id: "system.ION.cosmic-mode-contract",
+        path: "codex/systems/ION/cosmic-mode.md",
+        title: "Cosmic Mode Runtime Contract",
+        type: "codex-system",
+        category: "systems/cosmic",
+        tags: ["codex", "cosmic", "runtime", "contract"],
+        links: ["system.cosmic.engine", "system.cosmic.schema", "site.page.codex"],
+        autoLinks: ["integrations.docs.cosmic-implementation"]
+      },
+      {
+        id: "equations.template.cosmic-virial-rotation",
+        path: "codex/equations/templates/cosmic-virial-and-rotation.md",
+        title: "Cosmic Virial and Rotation Template",
+        type: "equation-template",
+        category: "equations/templates",
+        tags: ["equations", "cosmic", "virial", "rotation"],
+        links: ["system.cosmic.diagnostics", "system.cosmic.engine"],
+        autoLinks: []
+      },
+      {
+        id: "integrations.docs.cosmic-implementation",
+        path: "ION_COSMIC_MODE_COMPLETE_IMPLEMENTATION_CONTINUATION.md",
+        title: "Cosmic Mode Implementation Continuation",
+        type: "integration-doc",
+        category: "integrations/docs",
+        tags: ["cosmic", "implementation", "guide", "ionirix"],
+        links: ["system.cosmic.engine", "site.module.cosmic-capabilities"],
+        autoLinks: ["system.cosmic.schema"]
+      },
+      {
+        id: "integrations.docs.multiverse-spec",
+        path: "IONIRIX_MULTIVERSE_MODE_TECHNICAL_SPECIFICATION.md",
+        title: "Multiverse Mode Technical Specification",
+        type: "integration-doc",
+        category: "integrations/docs",
+        tags: ["multiverse", "spec", "lcdm", "implementation"],
+        links: ["system.multiverse.engine", "site.module.multiverse-capabilities"],
+        autoLinks: ["system.multiverse.schema"]
+      },
+      {
+        id: "system.multiverse.schema",
+        path: "src/modes/multiverse/multiverse_schema.ts",
+        title: "Multiverse Mode Schema",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "schema", "lod", "cosmology"],
+        links: ["system.multiverse.engine", "system.multiverse.seed-cascade", "site.page.modes"],
+        autoLinks: []
+      },
+      {
+        id: "system.multiverse.seed-cascade",
+        path: "src/modes/multiverse/seed_cascade.ts",
+        title: "Multiverse Seed Cascade",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "sha256", "splitmix64", "determinism"],
+        links: ["system.multiverse.engine", "system.multiverse.schema"],
+        autoLinks: []
+      },
+      {
+        id: "system.multiverse.engine",
+        path: "src/modes/multiverse/multiverse_engine.ts",
+        title: "Multiverse Engine Core",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "engine", "octree", "query"],
+        links: ["system.multiverse.schema", "system.multiverse.seed-cascade", "system.multiverse.contract"],
+        autoLinks: ["integrations.docs.multiverse-spec"]
+      },
+      {
+        id: "system.multiverse.octree",
+        path: "src/modes/multiverse/octree.ts",
+        title: "Multiverse Adaptive Octree",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "octree", "spatial-index", "query"],
+        links: ["system.multiverse.engine", "system.multiverse.schema"],
+        autoLinks: []
+      },
+      {
+        id: "system.multiverse.bootstrap",
+        path: "src/modes/multiverse/multiverse_mode.ts",
+        title: "Multiverse Bootstrap API",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "bootstrap", "api", "runtime"],
+        links: ["system.multiverse.engine", "system.multiverse.contract", "site.page.chat"],
+        autoLinks: ["integrations.docs.multiverse-spec"]
+      },
+      {
+        id: "system.multiverse.barrel",
+        path: "src/modes/multiverse/index.ts",
+        title: "Multiverse Barrel Exports",
+        type: "system-module",
+        category: "systems/multiverse",
+        tags: ["multiverse", "exports", "api", "module"],
+        links: ["system.multiverse.bootstrap", "system.multiverse.engine", "system.multiverse.schema"],
+        autoLinks: []
+      },
+      {
+        id: "system.multiverse.seed-test",
+        path: "src/modes/multiverse/__tests__/multiverse_seed.test.ts",
+        title: "Multiverse Seed Determinism Test",
+        type: "system-test",
+        category: "systems/multiverse",
+        tags: ["multiverse", "test", "determinism", "seed"],
+        links: ["system.multiverse.seed-cascade", "system.multiverse.engine"],
+        autoLinks: ["test.multiverse.npm-script"]
+      },
+      {
+        id: "system.multiverse.contract",
+        path: "codex/systems/ION/multiverse-mode.md",
+        title: "Multiverse Mode Runtime Contract",
+        type: "codex-system",
+        category: "systems/multiverse",
+        tags: ["codex", "multiverse", "contract"],
+        links: ["system.multiverse.engine", "integrations.docs.multiverse-spec", "site.page.codex"],
+        autoLinks: []
+      },
+      {
         id: "site.module.simulation-capabilities",
         path: "public/modules/simulation-capabilities.md",
         title: "Simulation Capabilities Module",
@@ -198,6 +390,26 @@
         tags: ["site", "module", "simulation", "capabilities"],
         links: ["system.environment.engine", "system.ION.quantum-cognitive-sim"],
         autoLinks: []
+      },
+      {
+        id: "site.module.cosmic-capabilities",
+        path: "public/modules/cosmic-capabilities.md",
+        title: "Cosmic Capabilities Module",
+        type: "site-module",
+        category: "site/modules",
+        tags: ["site", "module", "cosmic", "capabilities"],
+        links: ["system.cosmic.engine", "system.cosmic.diagnostics"],
+        autoLinks: ["integrations.docs.cosmic-implementation"]
+      },
+      {
+        id: "site.module.multiverse-capabilities",
+        path: "public/modules/multiverse-capabilities.md",
+        title: "Multiverse Capabilities Module",
+        type: "site-module",
+        category: "site/modules",
+        tags: ["site", "module", "multiverse", "capabilities"],
+        links: ["system.multiverse.engine", "system.multiverse.schema"],
+        autoLinks: ["integrations.docs.multiverse-spec"]
       },
       {
         id: "site.module.anatomy-capabilities",
@@ -217,6 +429,16 @@
         category: "site/modules",
         tags: ["site", "module", "rules", "governance"],
         links: ["governance.legal.responsible-use", "system.ION.overview"],
+        autoLinks: []
+      },
+      {
+        id: "test.multiverse.npm-script",
+        path: "package.json",
+        title: "Multiverse Test Script",
+        type: "test-runtime",
+        category: "automation/pipelines",
+        tags: ["test", "multiverse", "npm", "tsx"],
+        links: ["system.multiverse.seed-test", "automation.codex.reindex"],
         autoLinks: []
       },
       {
@@ -271,6 +493,24 @@
       { source: "system.environment.engine", target: "system.environment.types", reason: "engine-contract", score: 0.94 },
       { source: "system.environment.engine", target: "system.environment.scale-manager", reason: "orchestration", score: 0.92 },
       { source: "system.environment.engine", target: "system.environment.earth-initializer", reason: "seed-initialization", score: 0.9 },
+      { source: "system.cosmic.engine", target: "system.cosmic.schema", reason: "engine-contract", score: 0.95 },
+      { source: "system.cosmic.engine", target: "system.cosmic.gravity", reason: "potential-dynamics", score: 0.92 },
+      { source: "system.cosmic.engine", target: "system.cosmic.stellar", reason: "stellar-feedback-loop", score: 0.9 },
+      { source: "system.cosmic.diagnostics", target: "system.cosmic.engine", reason: "runtime-observability", score: 0.9 },
+      { source: "system.cosmic.integration", target: "system.cosmic.engine", reason: "runtime-adapter", score: 0.9 },
+      { source: "system.cosmic.rng", target: "system.cosmic.engine", reason: "deterministic-runtime", score: 0.89 },
+      { source: "system.ION.cosmic-mode-contract", target: "system.cosmic.engine", reason: "contract-binding", score: 0.9 },
+      { source: "equations.template.cosmic-virial-rotation", target: "system.cosmic.diagnostics", reason: "diagnostic-template", score: 0.88 },
+      { source: "site.module.cosmic-capabilities", target: "system.cosmic.engine", reason: "capability-alignment", score: 0.9 },
+      { source: "integrations.docs.cosmic-implementation", target: "system.cosmic.engine", reason: "implementation-lineage", score: 0.91 },
+      { source: "system.multiverse.engine", target: "system.multiverse.schema", reason: "engine-contract", score: 0.95 },
+      { source: "system.multiverse.engine", target: "system.multiverse.seed-cascade", reason: "deterministic-seeding", score: 0.93 },
+      { source: "system.multiverse.octree", target: "system.multiverse.engine", reason: "spatial-runtime", score: 0.91 },
+      { source: "system.multiverse.bootstrap", target: "system.multiverse.engine", reason: "mode-bootstrap", score: 0.9 },
+      { source: "system.multiverse.seed-test", target: "system.multiverse.seed-cascade", reason: "determinism-validation", score: 0.94 },
+      { source: "test.multiverse.npm-script", target: "system.multiverse.seed-test", reason: "test-execution", score: 0.9 },
+      { source: "integrations.docs.multiverse-spec", target: "system.multiverse.engine", reason: "implementation-lineage", score: 0.92 },
+      { source: "site.module.multiverse-capabilities", target: "system.multiverse.engine", reason: "capability-alignment", score: 0.9 },
       { source: "site.declaration.ionirix", target: "release.ionirix.public", reason: "release-attestation", score: 0.95 },
       { source: "site.declaration.ION-alias", target: "release.ION.public", reason: "release-attestation", score: 0.93 },
       { source: "site.module.simulation-capabilities", target: "system.environment.engine", reason: "capability-alignment", score: 0.88 },
@@ -345,8 +585,23 @@
     return counts;
   }
 
+  const FEATURED_PREFIXES = [
+    "system.multiverse.",
+    "system.cosmic.",
+    "systems.ion.multiverse",
+    "systems.ion.cosmic",
+    "equations.templates.cosmic"
+  ];
+
+  function featuredTier(entry) {
+    const id = (entry.id || "").toLowerCase();
+    return FEATURED_PREFIXES.some((p) => id.startsWith(p)) ? 0 : 1;
+  }
+
   function sortEntries(entries) {
     return [...entries].sort((a, b) => {
+      const tierDiff = featuredTier(a) - featuredTier(b);
+      if (tierDiff !== 0) return tierDiff;
       const left = new Date(a.updatedAt || a.createdAt || 0).getTime();
       const right = new Date(b.updatedAt || b.createdAt || 0).getTime();
       return right - left;
@@ -434,7 +689,12 @@
         linksOut.push("governance.safety.attestation-flow");
       }
       if (routeKey === "modes") {
-        linksOut.push("system.environment.engine", "system.environment.types");
+        linksOut.push(
+          "system.environment.engine",
+          "system.environment.types",
+          "system.cosmic.engine",
+          "system.multiverse.engine"
+        );
       }
       if (routeKey === "about") {
         linksOut.push("site.declaration.ionirix", "release.ionirix.public");
