@@ -2600,6 +2600,7 @@
       } finally {
         isStreaming = false;
         updateJumpToLatestVisibility();
+        updateSimulationUI();
         if (sendBtn) sendBtn.disabled = false;
         if (inputEl) inputEl.disabled = false;
         if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
@@ -2769,6 +2770,7 @@
     } finally {
       isStreaming = false;
       updateJumpToLatestVisibility();
+      updateSimulationUI();
       if (sendBtn) sendBtn.disabled = false;
       if (inputEl) inputEl.disabled = false;
       if (typingIndicatorEl) typingIndicatorEl.style.display = "none";
