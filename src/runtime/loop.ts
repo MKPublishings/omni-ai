@@ -15,6 +15,7 @@ export interface IONLoopContext {
   mode: string;
   model: string;
   messages: IONLoopMessage[];
+  sessionId?: string;
   maxOutputTokens?: number;
   simulationContext?: SimulationContext | null;
   preferStreaming?: boolean;
@@ -197,7 +198,7 @@ export async function IONBrainLoop(
 
     let simulationContext = ctx.simulationContext ?? null;
     if (!simulationContext && String(ctx.mode || "").toLowerCase() === "simulation") {
-      simulationContext = await advanceSimulationState(env, safeMessages);
+      simulationContext = await advanceSimulationState(env, safeMessages, { sessionId: ctx.sessionId });
       diagnostics.push("simulation:stepped-in-loop");
     }
 

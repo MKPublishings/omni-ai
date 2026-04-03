@@ -45,6 +45,7 @@
       <header class="chat-header">
         <div>
           <h2>Ionirix Chat</h2>
+          <div id="simulation-badge" class="simulation-badge" hidden>Simulation: Inactive</div>
         </div>
         <div class="chat-controls">
           <div class="model-selector dropdown-control" id="mode-dropdown">
@@ -86,11 +87,45 @@
 
         <details id="simulation-panel" class="simulation-panel" hidden>
           <summary>Simulation and Cosmic Controls</summary>
+          <div class="simulation-status-grid">
+            <div class="simulation-status-card">
+              <span class="simulation-status-label">Simulation ID</span>
+              <strong id="simulation-id-value">--</strong>
+            </div>
+            <div class="simulation-status-card">
+              <span class="simulation-status-label">Status</span>
+              <strong id="simulation-status-value">inactive</strong>
+            </div>
+            <div class="simulation-status-card">
+              <span class="simulation-status-label">Progress</span>
+              <strong id="simulation-progress-value">0% · 0/0</strong>
+            </div>
+            <div class="simulation-status-card simulation-status-card--wide">
+              <span class="simulation-status-label">Summary</span>
+              <strong id="simulation-summary-value">No simulation activity yet.</strong>
+            </div>
+          </div>
+          <div class="simulation-parameter-grid">
+            <label class="simulation-param-field" for="simulation-target-steps">
+              <span>Target Steps</span>
+              <input id="simulation-target-steps" type="number" min="1" max="400" step="1" value="12" />
+            </label>
+            <label class="simulation-param-field" for="simulation-step-batch">
+              <span>Advance By</span>
+              <input id="simulation-step-batch" type="number" min="1" max="48" step="1" value="3" />
+            </label>
+          </div>
           <div class="simulation-controls">
             <button id="simulation-start-btn" type="button" class="chat-action-btn">Start Simulation</button>
             <button id="simulation-pause-btn" type="button" class="chat-action-btn">Pause Simulation</button>
+            <button id="simulation-stop-btn" type="button" class="chat-action-btn">Stop Simulation</button>
             <button id="simulation-reset-btn" type="button" class="chat-action-btn">Reset Simulation</button>
             <button id="simulation-export-btn" type="button" class="chat-action-btn">Export Simulation State</button>
+            <button id="simulation-report-btn" type="button" class="chat-action-btn">Write Results to Chat</button>
+          </div>
+          <div class="simulation-export-links">
+            <a id="simulation-export-link" class="simulation-export-link" href="#" hidden>Open Export JSON</a>
+            <a id="simulation-download-link" class="simulation-export-link" href="#" hidden download>Download Latest Export</a>
           </div>
           <label for="simulation-rules-editor" class="simulation-rules-label">Simulation and Cosmic Rules Editor</label>
           <textarea id="simulation-rules-editor" class="simulation-rules-editor" rows="5" placeholder="rules:
@@ -116,7 +151,7 @@
     </main>
   </div>
 
-  <script src="/scripts/chat.js?v=20260314-1"></script>
+  <script src="/scripts/chat.js?v=20260403-2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
   <script src="/scripts/age-gate.js"></script>
   <script src="/scripts/page-transition.js"></script>

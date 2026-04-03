@@ -33,10 +33,20 @@
   const simulationPanelEl = document.getElementById("simulation-panel");
   const simulationStartBtn = document.getElementById("simulation-start-btn");
   const simulationPauseBtn = document.getElementById("simulation-pause-btn");
+  const simulationStopBtn = document.getElementById("simulation-stop-btn");
   const simulationResetBtn = document.getElementById("simulation-reset-btn");
   const simulationExportBtn = document.getElementById("simulation-export-btn");
+  const simulationReportBtn = document.getElementById("simulation-report-btn");
   const simulationRulesEditorEl = document.getElementById("simulation-rules-editor");
   const simulationLogEl = document.getElementById("simulation-log");
+  const simulationIdValueEl = document.getElementById("simulation-id-value");
+  const simulationStatusValueEl = document.getElementById("simulation-status-value");
+  const simulationProgressValueEl = document.getElementById("simulation-progress-value");
+  const simulationSummaryValueEl = document.getElementById("simulation-summary-value");
+  const simulationTargetStepsEl = document.getElementById("simulation-target-steps");
+  const simulationStepBatchEl = document.getElementById("simulation-step-batch");
+  const simulationExportLinkEl = document.getElementById("simulation-export-link");
+  const simulationDownloadLinkEl = document.getElementById("simulation-download-link");
 
   const sessionsSidebarEl = document.getElementById("sessions-sidebar");
   const newSessionBtn = document.getElementById("new-session-btn");
@@ -690,6 +700,31 @@
     };
   }
 
+  function clampSimulationNumber(value, min, max, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.max(min, Math.min(max, Math.floor(numeric)));
+  }
+
+  function getSimulationTargetSteps(session = getActiveSession()) {
+    const simulation = ensureSimulationState(session);
+    return clampSimulationNumber(simulation?.targetSteps, 1, 400, getSimulationDefaults().maxSteps || 12);
+  }
+
+  function getSimulationBatchSteps(session = getActiveSession()) {
+    const simulation = ensureSimulationState(session);
+    return clampSimulationNumber(simulation?.batchSteps, 1, 48, 3);
+  }
+
+  function getSimulationProgressText(simulation) {
+    const steps = Number.isFinite(simulation?.steps) ? simulation.steps : 0;
+    const targetSteps = getSimulationTargetSteps({ simulation });
+    const completion = Number.isFinite(simulation?.completionPercentage)
+      ? Math.max(0, Math.min(100, Math.floor(simulation.completionPercentage)))
+      : 0;
+    return `${completion}% · ${steps}/${targetSteps}`;
+  }
+
   function ensureSimulationState(session) {
     if (!session) return null;
     if (!session.simulation || typeof session.simulation !== "object") {
@@ -698,8 +733,15 @@
         id: `sim_${Date.now()}`,
         status: "inactive",
         steps: 0,
+        targetSteps: defaults.maxSteps,
+        batchSteps: 3,
+        completionPercentage: 0,
         rules: defaults.rules,
-        logs: [{ ts: Date.now(), message: "Simulation profile initialized (system-state)." }],
+        summary: "Simulation profile initialized. Awaiting first run.",
+        chatReport: "No simulation report yet.",
+        exportUrl: "",
+        downloadUrl: "",
+        logs: [{ ts: Date.now(), level: "info", message: "Simulation profile initialized (system-state)." }],
         maxDepth: defaults.maxDepth,
         maxSteps: defaults.maxSteps,
         autoReset: defaults.autoReset,
@@ -709,12 +751,129 @@
     return session.simulation;
   }
 
-  function appendSimulationLog(session, message) {
+  function appendSimulationLog(session, message, level = "info") {
     const simulation = ensureSimulationState(session);
     if (!simulation) return;
     simulation.logs = Array.isArray(simulation.logs) ? simulation.logs : [];
-    simulation.logs.push({ ts: Date.now(), message: String(message || "").trim() || "Simulation event" });
+    simulation.logs.push({ ts: Date.now(), level, message: String(message || "").trim() || "Simulation event" });
     simulation.logs = simulation.logs.slice(-40);
+  }
+
+  function replaceSimulationLogs(session, logs) {
+    const simulation = ensureSimulationState(session);
+    if (!simulation) return;
+    simulation.logs = Array.isArray(logs)
+      ? logs
+          .map((entry) => ({
+            ts: Number.isFinite(entry?.ts) ? entry.ts : Date.now(),
+            level: String(entry?.level || "info") === "warn" ? "warn" : "info",
+            message: String(entry?.message || "").trim()
+          }))
+          .filter((entry) => entry.message)
+          .slice(-40)
+      : simulation.logs;
+  }
+
+  function syncSimulationState(session, source = {}) {
+    const simulation = ensureSimulationState(session);
+    if (!simulation || !source || typeof source !== "object") return simulation;
+
+    if (source.simulationId) simulation.id = String(source.simulationId).trim() || simulation.id;
+    if (source.status) simulation.status = String(source.status).trim().toLowerCase() || simulation.status;
+    if (Number.isFinite(source.stepsExecuted)) simulation.steps = Math.max(0, Math.floor(source.stepsExecuted));
+    if (Number.isFinite(source.targetSteps)) simulation.targetSteps = clampSimulationNumber(source.targetSteps, 1, 400, simulation.targetSteps || 12);
+    if (Number.isFinite(source.batchSteps)) simulation.batchSteps = clampSimulationNumber(source.batchSteps, 1, 48, simulation.batchSteps || 3);
+    if (Number.isFinite(source.completionPercentage)) {
+      simulation.completionPercentage = Math.max(0, Math.min(100, Math.floor(source.completionPercentage)));
+    }
+    if (typeof source.resultSummary === "string" && source.resultSummary.trim()) simulation.summary = source.resultSummary.trim();
+    if (typeof source.chatReport === "string" && source.chatReport.trim()) simulation.chatReport = source.chatReport.trim();
+    if (typeof source.rules === "string" && source.rules.trim()) simulation.rules = source.rules.trim();
+    if (Array.isArray(source.rules)) simulation.rules = source.rules.join("\n");
+    if (typeof source.exportUrl === "string") simulation.exportUrl = source.exportUrl.trim();
+    if (typeof source.downloadUrl === "string") simulation.downloadUrl = source.downloadUrl.trim();
+    if (Array.isArray(source.logs)) replaceSimulationLogs(session, source.logs);
+
+    return simulation;
+  }
+
+  async function fetchSimulationExport(session, download = false) {
+    const headers = {};
+    if (session?.id) {
+      headers["x-ION-session-id"] = String(session.id);
+    }
+
+    const url = new URL("/api/ION/simulation/export", window.location.origin);
+    if (download) url.searchParams.set("download", "1");
+    if (session?.simulation?.id) url.searchParams.set("simulationId", String(session.simulation.id));
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok || !payload?.ok) {
+      throw new Error(String(payload?.error || "Simulation export failed"));
+    }
+
+    return payload;
+  }
+
+  async function refreshSimulationFromBackend(session) {
+    if (!session || getActiveMode(session) !== "simulation") return null;
+    const payload = await fetchSimulationExport(session, false);
+    syncSimulationState(session, {
+      simulationId: payload.simulationId,
+      status: payload.status,
+      stepsExecuted: payload.progress?.stepsExecuted,
+      targetSteps: payload.progress?.targetSteps,
+      completionPercentage: payload.progress?.completionPercentage,
+      resultSummary: payload.results?.summary,
+      chatReport: payload.chatReport,
+      rules: payload.state?.rules,
+      exportUrl: payload.exportUrl,
+      downloadUrl: payload.downloadUrl,
+      logs: payload.state?.logs
+    });
+    saveState();
+    updateSimulationUI(session);
+    return payload;
+  }
+
+  function getSimulationCommandOptions(session = getActiveSession()) {
+    const simulation = ensureSimulationState(session);
+    const rules = simulationRulesEditorEl ? String(simulationRulesEditorEl.value || "").trim() : String(simulation?.rules || "").trim();
+    const targetSteps = clampSimulationNumber(simulationTargetStepsEl?.value, 1, 400, getSimulationTargetSteps(session));
+    const batchSteps = clampSimulationNumber(simulationStepBatchEl?.value, 1, 48, getSimulationBatchSteps(session));
+
+    simulation.targetSteps = targetSteps;
+    simulation.batchSteps = batchSteps;
+    if (rules) simulation.rules = rules;
+    saveState();
+
+    return { rules, targetSteps, batchSteps };
+  }
+
+  function buildSimulationStartCommand(session = getActiveSession()) {
+    const { rules, targetSteps, batchSteps } = getSimulationCommandOptions(session);
+    const ruleBlock = rules ? `\nrules:\n${rules}` : "";
+    return `/simulation start target ${targetSteps} steps /simulation advance ${batchSteps} steps${ruleBlock}`;
+  }
+
+  async function dispatchSimulationControl(command, optimisticMessage, level = "info") {
+    const session = getActiveSession();
+    if (!session || getActiveMode(session) !== "simulation" || isStreaming) return;
+    appendSimulationLog(session, optimisticMessage, level);
+    saveState();
+    updateSimulationUI(session);
+    await sendMessage(command);
   }
 
   function renderSimulationLog(session) {
@@ -731,6 +890,11 @@
     for (const entry of logs.slice(-20)) {
       const row = document.createElement("div");
       row.className = "simulation-log-entry";
+      if (entry?.level === "warn") {
+        row.classList.add("is-warning");
+      } else if (/\b\d+%\b/.test(String(entry?.message || ""))) {
+        row.classList.add("is-progress");
+      }
       const timestamp = Number.isFinite(entry?.ts)
         ? new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
         : "--:--:--";
@@ -747,13 +911,20 @@
     if (simulationRulesEditorEl.value !== nextValue) {
       simulationRulesEditorEl.value = nextValue;
     }
+    if (simulationTargetStepsEl) {
+      simulationTargetStepsEl.value = String(getSimulationTargetSteps(session));
+    }
+    if (simulationStepBatchEl) {
+      simulationStepBatchEl.value = String(getSimulationBatchSteps(session));
+    }
   }
 
   function updateSimulationUI(session = getActiveSession()) {
     const mode = getActiveMode(session);
     const simulation = ensureSimulationState(session);
     const isSimulationMode = isSimulationLikeMode(mode);
-    const isRunning = isSimulationMode && simulation?.status === "active";
+    const supportsLifecycleControls = mode === "simulation";
+    const isRunning = supportsLifecycleControls && simulation?.status === "active";
 
     if (simulationPanelEl) {
       simulationPanelEl.hidden = !isSimulationMode;
@@ -762,11 +933,37 @@
 
     if (simulationBadgeEl) {
       simulationBadgeEl.hidden = !isSimulationMode;
-      const stateLabel = simulation?.status === "active" ? "Running" : simulation?.status === "paused" ? "Paused" : "Inactive";
+      const stateLabel = simulation?.status === "active"
+        ? "Running"
+        : simulation?.status === "paused"
+          ? "Paused"
+          : simulation?.status === "stopped"
+            ? "Stopped"
+            : simulation?.status === "completed"
+              ? "Completed"
+              : "Inactive";
       const steps = Number.isFinite(simulation?.steps) ? simulation.steps : 0;
       const modeLabel = mode === "cosmic" ? "Cosmic" : mode === "multiverse" ? "Multiverse" : "Simulation";
-      simulationBadgeEl.textContent = `${modeLabel}: ${stateLabel} · Steps ${steps}`;
+      const progress = Number.isFinite(simulation?.completionPercentage) ? `${simulation.completionPercentage}%` : "0%";
+      simulationBadgeEl.textContent = `${modeLabel}: ${stateLabel} · ${progress} · Steps ${steps}`;
       simulationBadgeEl.classList.toggle("cosmic", isSimulationMode && mode === "cosmic");
+    }
+
+    if (simulationIdValueEl) simulationIdValueEl.textContent = String(simulation?.id || "--");
+    if (simulationStatusValueEl) simulationStatusValueEl.textContent = String(simulation?.status || "inactive");
+    if (simulationProgressValueEl) simulationProgressValueEl.textContent = getSimulationProgressText(simulation);
+    if (simulationSummaryValueEl) simulationSummaryValueEl.textContent = String(simulation?.summary || "No simulation activity yet.");
+
+    if (simulationExportLinkEl) {
+      const hasExport = !!String(simulation?.exportUrl || "").trim();
+      simulationExportLinkEl.hidden = !hasExport;
+      simulationExportLinkEl.href = hasExport ? simulation.exportUrl : "#";
+    }
+
+    if (simulationDownloadLinkEl) {
+      const hasDownload = !!String(simulation?.downloadUrl || "").trim();
+      simulationDownloadLinkEl.hidden = !hasDownload;
+      simulationDownloadLinkEl.href = hasDownload ? simulation.downloadUrl : "#";
     }
 
     if (chatAreaEl) {
@@ -777,10 +974,14 @@
       chatAreaEl.classList.toggle("simulation-active", !!isRunning);
     }
 
-    if (simulationStartBtn) simulationStartBtn.disabled = !isSimulationMode || isRunning;
-    if (simulationPauseBtn) simulationPauseBtn.disabled = !isSimulationMode || !isRunning;
-    if (simulationResetBtn) simulationResetBtn.disabled = !isSimulationMode;
-    if (simulationExportBtn) simulationExportBtn.disabled = !isSimulationMode;
+    if (simulationStartBtn) simulationStartBtn.disabled = !supportsLifecycleControls || isRunning || isStreaming;
+    if (simulationPauseBtn) simulationPauseBtn.disabled = !supportsLifecycleControls || !isRunning || isStreaming;
+    if (simulationStopBtn) simulationStopBtn.disabled = !supportsLifecycleControls || (!isRunning && simulation?.status !== "paused") || isStreaming;
+    if (simulationResetBtn) simulationResetBtn.disabled = !supportsLifecycleControls || isStreaming;
+    if (simulationExportBtn) simulationExportBtn.disabled = !isSimulationMode || isStreaming;
+    if (simulationReportBtn) simulationReportBtn.disabled = !isSimulationMode || isStreaming;
+    if (simulationTargetStepsEl) simulationTargetStepsEl.disabled = !supportsLifecycleControls || isStreaming;
+    if (simulationStepBatchEl) simulationStepBatchEl.disabled = !supportsLifecycleControls || isStreaming;
 
     syncSimulationEditor(session);
     renderSimulationLog(session);
@@ -1854,7 +2055,11 @@
         internetCount: Number(res.headers.get("X-ION-Internet-Count") || "0"),
         simulationId: (res.headers.get("X-ION-Simulation-Id") || "").trim(),
         simulationStatus: (res.headers.get("X-ION-Simulation-Status") || "").trim(),
-        simulationSteps: Number(res.headers.get("X-ION-Simulation-Steps") || "0")
+        simulationSteps: Number(res.headers.get("X-ION-Simulation-Steps") || "0"),
+        simulationTargetSteps: Number(res.headers.get("X-ION-Simulation-Target-Steps") || "0"),
+        simulationProgress: Number(res.headers.get("X-ION-Simulation-Progress") || "0"),
+        simulationExportUrl: (res.headers.get("X-ION-Simulation-Export-Url") || "").trim(),
+        simulationDownloadUrl: (res.headers.get("X-ION-Simulation-Download-Url") || "").trim()
       });
     }
 
@@ -2206,13 +2411,7 @@
 
     if (isSimulationLikeMode(activeMode)) {
       const simulation = ensureSimulationState(session);
-      if (simulation.status !== "active") {
-        simulation.status = "active";
-        appendSimulationLog(session, `${toModeLabel(activeMode)} mode started from chat input.`);
-      }
-
-      simulation.steps = Number(simulation.steps || 0) + 1;
-      appendSimulationLog(session, `Step ${simulation.steps}: user input processed.`);
+      appendSimulationLog(session, `${toModeLabel(activeMode)} request queued for backend simulation engine.`);
       updateSimulationUI(session);
     }
     
@@ -2337,6 +2536,21 @@
         (chunk) => {
           if (chunk && typeof chunk === "object") {
             const payload = chunk;
+            if (payload.simulation && typeof payload.simulation === "object") {
+              syncSimulationState(session, {
+                simulationId: payload.simulation.simulationId,
+                status: payload.simulation.status,
+                stepsExecuted: payload.simulation.stepsExecuted,
+                targetSteps: payload.simulation.targetSteps,
+                completionPercentage: payload.simulation.completionPercentage,
+                resultSummary: payload.simulation.resultSummary,
+                chatReport: payload.simulation.chatReport,
+                exportUrl: payload.simulation.export?.url,
+                downloadUrl: payload.simulation.export?.downloadUrl
+              });
+              saveState();
+              updateSimulationUI(session);
+            }
             session._streamingMeta = {
               route: String(payload.route || "").trim(),
               imageDataUrl: String(payload.imageDataUrl || "").trim(),
@@ -2368,12 +2582,17 @@
 
           if (isSimulationLikeMode(getActiveMode(session))) {
             const simulation = ensureSimulationState(session);
-            if (meta?.simulationId) simulation.id = meta.simulationId;
-            if (meta?.simulationStatus) simulation.status = meta.simulationStatus;
-            if (Number.isFinite(meta?.simulationSteps) && meta.simulationSteps >= 0) {
-              simulation.steps = meta.simulationSteps;
-            }
-            appendSimulationLog(session, `Backend sync: ${simulation.status}, steps ${simulation.steps}.`);
+            syncSimulationState(session, {
+              simulationId: meta?.simulationId,
+              status: meta?.simulationStatus,
+              stepsExecuted: meta?.simulationSteps,
+              targetSteps: meta?.simulationTargetSteps,
+              completionPercentage: meta?.simulationProgress,
+              exportUrl: meta?.simulationExportUrl,
+              downloadUrl: meta?.simulationDownloadUrl
+            });
+            appendSimulationLog(session, `Backend sync: ${simulation.status}, ${getSimulationProgressText(simulation)}.`);
+            saveState();
             updateSimulationUI(session);
           }
         },
@@ -2423,6 +2642,9 @@
       session.messages[session.messages.length - 1].timestamp = Date.now();
       if (isSimulationLikeMode(getActiveMode(session))) {
         appendSimulationLog(session, "Assistant produced simulation state update.");
+        if (getActiveMode(session) === "simulation") {
+          await refreshSimulationFromBackend(session).catch(() => {});
+        }
       }
       delete session._streamingAssistantText;
       delete session._streamingMeta;
@@ -2639,62 +2861,107 @@
     renderSessionsSidebar();
   }
 
-  function startSimulation() {
+  async function startSimulation() {
     const session = getActiveSession();
-    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
-    const simulation = ensureSimulationState(session);
-    simulation.status = "active";
-    appendSimulationLog(session, "Simulation started.");
-    session.updatedAt = Date.now();
-    saveState();
-    updateSimulationUI(session);
+    if (!session || getActiveMode(session) !== "simulation") return;
+    await dispatchSimulationControl(buildSimulationStartCommand(session), "Simulation start requested.");
   }
 
-  function pauseSimulation() {
-    const session = getActiveSession();
-    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
-    const simulation = ensureSimulationState(session);
-    simulation.status = "paused";
-    appendSimulationLog(session, "Simulation paused.");
-    session.updatedAt = Date.now();
-    saveState();
-    updateSimulationUI(session);
+  async function pauseSimulation() {
+    await dispatchSimulationControl("/simulation pause", "Simulation pause requested.");
   }
 
-  function resetSimulation() {
-    const session = getActiveSession();
-    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
-    const simulation = ensureSimulationState(session);
-    simulation.id = `sim_${Date.now()}`;
-    simulation.status = "inactive";
-    simulation.steps = 0;
-    simulation.logs = [];
-    appendSimulationLog(session, "Simulation reset.");
-    session.updatedAt = Date.now();
-    saveState();
-    updateSimulationUI(session);
+  async function stopSimulation() {
+    await dispatchSimulationControl("/simulation stop", "Simulation stop requested.", "warn");
   }
 
-  function exportSimulationState() {
+  async function resetSimulation() {
+    const session = getActiveSession();
+    if (!session || getActiveMode(session) !== "simulation") return;
+    const { rules, targetSteps } = getSimulationCommandOptions(session);
+    const command = `/simulation reset target ${targetSteps} steps${rules ? `\nrules:\n${rules}` : ""}`;
+    await dispatchSimulationControl(command, "Simulation reset requested.", "warn");
+  }
+
+  async function exportSimulationState() {
     const session = getActiveSession();
     if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
-    const simulation = ensureSimulationState(session);
-    const payload = {
-      sessionId: session.id,
-      exportedAt: new Date().toISOString(),
-      simulation
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = `${simulation.id || "simulation"}-state.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(href);
-    appendSimulationLog(session, "Simulation state exported.");
-    updateSimulationUI(session);
+    try {
+      const payload = getActiveMode(session) === "simulation"
+        ? await fetchSimulationExport(session, true)
+        : {
+            chatReport: ensureSimulationState(session)?.chatReport || "No simulation export available yet.",
+            downloadUrl: ensureSimulationState(session)?.downloadUrl || "",
+            exportUrl: ensureSimulationState(session)?.exportUrl || "",
+            simulationId: ensureSimulationState(session)?.id || "simulation",
+            fileName: `${ensureSimulationState(session)?.id || "simulation"}.json`
+          };
+
+      if (getActiveMode(session) === "simulation") {
+        syncSimulationState(session, {
+          simulationId: payload.simulationId,
+          status: payload.status,
+          stepsExecuted: payload.progress?.stepsExecuted,
+          targetSteps: payload.progress?.targetSteps,
+          completionPercentage: payload.progress?.completionPercentage,
+          resultSummary: payload.results?.summary,
+          chatReport: payload.chatReport,
+          exportUrl: payload.exportUrl,
+          downloadUrl: payload.downloadUrl,
+          logs: payload.state?.logs
+        });
+      }
+
+      const downloadTarget = String(payload.downloadUrl || payload.exportUrl || "").trim();
+      if (downloadTarget) {
+        const link = document.createElement("a");
+        link.href = downloadTarget;
+        link.download = String(payload.fileName || `${ensureSimulationState(session)?.id || "simulation"}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      appendSimulationLog(session, "Simulation export downloaded.");
+      saveState();
+      updateSimulationUI(session);
+    } catch (error) {
+      appendSimulationLog(session, `Export failed: ${error instanceof Error ? error.message : "unknown error"}`, "warn");
+      updateSimulationUI(session);
+    }
+  }
+
+  async function writeSimulationResultsToChat() {
+    const session = getActiveSession();
+    if (!session || !isSimulationLikeMode(getActiveMode(session))) return;
+
+    try {
+      if (getActiveMode(session) === "simulation") {
+        await refreshSimulationFromBackend(session);
+      }
+
+      const simulation = ensureSimulationState(session);
+      const report = String(simulation?.chatReport || simulation?.summary || "No simulation report available yet.").trim();
+      if (!report) return;
+
+      appendMessage("assistant", report, {
+        model: session.model || "ION",
+        mode: getActiveMode(session),
+        timestamp: Date.now()
+      });
+      session.messages.push({
+        role: "assistant",
+        content: report,
+        timestamp: Date.now()
+      });
+      appendSimulationLog(session, "Simulation report written to chat.");
+      updateSessionMetaFromMessages(session);
+      saveState();
+      renderSessionsSidebar();
+    } catch (error) {
+      appendSimulationLog(session, `Unable to write simulation report: ${error instanceof Error ? error.message : "unknown error"}`, "warn");
+      updateSimulationUI(session);
+    }
   }
 
   // =========================
@@ -2893,12 +3160,20 @@
       simulationPauseBtn.addEventListener("click", pauseSimulation);
     }
 
+    if (simulationStopBtn) {
+      simulationStopBtn.addEventListener("click", stopSimulation);
+    }
+
     if (simulationResetBtn) {
       simulationResetBtn.addEventListener("click", resetSimulation);
     }
 
     if (simulationExportBtn) {
       simulationExportBtn.addEventListener("click", exportSimulationState);
+    }
+
+    if (simulationReportBtn) {
+      simulationReportBtn.addEventListener("click", writeSimulationResultsToChat);
     }
 
     if (simulationRulesEditorEl) {
@@ -2909,6 +3184,28 @@
         simulation.rules = String(simulationRulesEditorEl.value || "").trim();
         appendSimulationLog(session, "Simulation rules updated from editor.");
         session.updatedAt = Date.now();
+        saveState();
+        updateSimulationUI(session);
+      });
+    }
+
+    if (simulationTargetStepsEl) {
+      simulationTargetStepsEl.addEventListener("change", () => {
+        const session = getActiveSession();
+        if (!session) return;
+        const simulation = ensureSimulationState(session);
+        simulation.targetSteps = clampSimulationNumber(simulationTargetStepsEl.value, 1, 400, getSimulationTargetSteps(session));
+        saveState();
+        updateSimulationUI(session);
+      });
+    }
+
+    if (simulationStepBatchEl) {
+      simulationStepBatchEl.addEventListener("change", () => {
+        const session = getActiveSession();
+        if (!session) return;
+        const simulation = ensureSimulationState(session);
+        simulation.batchSteps = clampSimulationNumber(simulationStepBatchEl.value, 1, 48, getSimulationBatchSteps(session));
         saveState();
         updateSimulationUI(session);
       });

@@ -22,7 +22,7 @@ import { listAvailableStyles, resolveStyleName } from "./ION/rendering/styles/st
 import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./ION/laws/imageLawBridge";
 import { Laws, type LawDomain } from "./ION/laws/lawRegistry";
 import { warmupConnections, getConnectionStats } from "./llm/cloudflareOptimizations";
-import { advanceSimulationState } from "./ION/simulation/engine";
+import { advanceSimulationState, exportSimulationState } from "./ION/simulation/engine";
 import { ensureIONMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
 import { formatWorkingMemoryPrompt, loadWorkingMemory, updateWorkingMemoryFromTurn } from "./memory/workingMemory";
 import { runSelfMaintenance } from "./maintenance/selfMaintenance";
@@ -543,10 +543,18 @@ function safeExponential(value: unknown, digits: number, fallback = "0.000e+0"):
 function buildCosmicSimulationContext(messages: IONMessage[]): {
   systemPrompt: string;
   logsSummary: string;
+  statusSummary: string;
+  chatSummary: string;
+  exportPayload: {
+    fileName: string;
+  };
   state: {
     simulationId: string;
     status: string;
     stepsExecuted: number;
+    targetSteps: number;
+    completionPercentage: number;
+    resultSummary: string;
   };
 } {
   try {
@@ -570,6 +578,9 @@ function buildCosmicSimulationContext(messages: IONMessage[]): {
     const stepCount = Math.max(0, Math.floor(safeNumber(state?.step_count, 0)));
     const formationEvents = Array.isArray(state?.formation_events) ? state.formation_events.length : 0;
     const deathEvents = Array.isArray(state?.death_events) ? state.death_events.length : 0;
+    const completionPercentage = Math.round((stepCount / stepBudget) * 100);
+    const simulationId = `cosmic-${Date.now()}`;
+    const resultSummary = `Cosmic simulation reached step ${stepCount}/${stepBudget} with virial ratio ${safeFixed(d.virial_ratio, 3)}.`;
 
     const systemPrompt = [
       "Cosmic Simulation Mode active.",
@@ -584,16 +595,39 @@ function buildCosmicSimulationContext(messages: IONMessage[]): {
       `Formation events=${formationEvents}, death events=${deathEvents}.`
     ].join("\n");
 
+    const statusSummary = [
+      `Simulation ID: ${simulationId}`,
+      "Status: completed",
+      `Progress: ${completionPercentage}% (${stepCount}/${stepBudget} steps)`,
+      `Summary: ${resultSummary}`
+    ].join("\n");
+
+    const chatSummary = [
+      `Cosmic simulation completed ${completionPercentage}% of the current request budget.`,
+      resultSummary,
+      "Export is available as a JSON snapshot for chat or download."
+    ].join("\n");
+
     return {
       systemPrompt,
       logsSummary,
+      statusSummary,
+      chatSummary,
+      exportPayload: {
+        fileName: `${simulationId}.json`
+      },
       state: {
-        simulationId: `cosmic-${Date.now()}`,
-        status: "running",
-        stepsExecuted: stepCount
+        simulationId,
+        status: "completed",
+        stepsExecuted: stepCount,
+        targetSteps: stepBudget,
+        completionPercentage,
+        resultSummary
       }
     };
   } catch (error) {
+    const simulationId = `cosmic-${Date.now()}`;
+    const resultSummary = `Cosmic simulation fallback active: ${String((error as Error)?.message || "unknown error")}`;
     return {
       systemPrompt: [
         "Cosmic Simulation Mode active.",
@@ -601,10 +635,27 @@ function buildCosmicSimulationContext(messages: IONMessage[]): {
         "Treat this as deterministic Milky Way-scale simulation context with conservative defaults."
       ].join("\n"),
       logsSummary: `Cosmic simulation bootstrap fallback: ${String((error as Error)?.message || "unknown error")}`,
+      statusSummary: [
+        `Simulation ID: ${simulationId}`,
+        "Status: degraded",
+        "Progress: 0% (0/1 steps)",
+        `Summary: ${resultSummary}`
+      ].join("\n"),
+      chatSummary: [
+        "Cosmic simulation is in degraded fallback mode.",
+        resultSummary,
+        "Export still returns the fallback context snapshot."
+      ].join("\n"),
+      exportPayload: {
+        fileName: `${simulationId}.json`
+      },
       state: {
-        simulationId: `cosmic-${Date.now()}`,
+        simulationId,
         status: "degraded",
-        stepsExecuted: 0
+        stepsExecuted: 0,
+        targetSteps: 1,
+        completionPercentage: 0,
+        resultSummary
       }
     };
   }
@@ -613,10 +664,18 @@ function buildCosmicSimulationContext(messages: IONMessage[]): {
 async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise<{
   systemPrompt: string;
   logsSummary: string;
+  statusSummary: string;
+  chatSummary: string;
+  exportPayload: {
+    fileName: string;
+  };
   state: {
     simulationId: string;
     status: string;
     stepsExecuted: number;
+    targetSteps: number;
+    completionPercentage: number;
+    resultSummary: string;
   };
 }> {
   try {
@@ -649,6 +708,8 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
     const sampleSummary = sampled.length
       ? sampled.map((item) => `${item.id}:${item.entityType}@z=${safeFixed(item.redshift, 3)}`).join(", ")
       : "pending deterministic sample";
+    const simulationId = `multiverse-${Date.now()}`;
+    const resultSummary = `Multiverse query generated ${queryResult.metadata.generatedCount} scoped entities at LOD ${lodLevel}.`;
 
     const systemPrompt = [
       "Multiverse Mode active.",
@@ -663,16 +724,40 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
       `Sample entities: ${sampleSummary}.`
     ].join("\n");
 
+    const statusSummary = [
+      `Simulation ID: ${simulationId}`,
+      "Status: completed",
+      "Progress: 100% (1/1 steps)",
+      `Summary: ${resultSummary}`
+    ].join("\n");
+
+    const chatSummary = [
+      "Multiverse simulation completed for the current query scope.",
+      resultSummary,
+      `Sample entities: ${sampleSummary}`,
+      "Export is available as a JSON snapshot for chat or download."
+    ].join("\n");
+
     return {
       systemPrompt,
       logsSummary,
+      statusSummary,
+      chatSummary,
+      exportPayload: {
+        fileName: `${simulationId}.json`
+      },
       state: {
-        simulationId: `multiverse-${Date.now()}`,
-        status: "running",
-        stepsExecuted: 1
+        simulationId,
+        status: "completed",
+        stepsExecuted: 1,
+        targetSteps: 1,
+        completionPercentage: 100,
+        resultSummary
       }
     };
   } catch (error) {
+    const simulationId = `multiverse-${Date.now()}`;
+    const resultSummary = `Multiverse simulation fallback active: ${String((error as Error)?.message || "unknown error")}`;
     return {
       systemPrompt: [
         "Multiverse Mode active.",
@@ -680,10 +765,27 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
         "Treat this as deterministic observable-universe-scale context with conservative defaults."
       ].join("\n"),
       logsSummary: `Multiverse simulation bootstrap fallback: ${String((error as Error)?.message || "unknown error")}`,
+      statusSummary: [
+        `Simulation ID: ${simulationId}`,
+        "Status: degraded",
+        "Progress: 0% (0/1 steps)",
+        `Summary: ${resultSummary}`
+      ].join("\n"),
+      chatSummary: [
+        "Multiverse simulation is in degraded fallback mode.",
+        resultSummary,
+        "Export still returns the fallback context snapshot."
+      ].join("\n"),
+      exportPayload: {
+        fileName: `${simulationId}.json`
+      },
       state: {
-        simulationId: `multiverse-${Date.now()}`,
+        simulationId,
         status: "degraded",
-        stepsExecuted: 0
+        stepsExecuted: 0,
+        targetSteps: 1,
+        completionPercentage: 0,
+        resultSummary
       }
     };
   }
@@ -1186,6 +1288,7 @@ function createIONSseFromProviderStream(options: {
   providerStream: ReadableStream;
   route: string;
   multimodalPayload?: Record<string, unknown> | null;
+  initialPayload?: Record<string, unknown> | null;
   onComplete?: (fullText: string) => void;
 }): ReadableStream {
   const encoder = new TextEncoder();
@@ -1203,7 +1306,7 @@ function createIONSseFromProviderStream(options: {
         fullText += content;
         const payload = firstChunkSent
           ? { content }
-          : { content, route: options.route, ...(options.multimodalPayload || {}) };
+          : { content, route: options.route, ...(options.multimodalPayload || {}), ...(options.initialPayload || {}) };
         firstChunkSent = true;
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
       };
@@ -1244,6 +1347,59 @@ function createIONSseFromProviderStream(options: {
       void reader.cancel();
     }
   });
+}
+
+function buildSimulationExportUrls(request: Request, sessionId: string): { exportUrl: string; downloadUrl: string } {
+  const exportUrl = new URL("/api/ION/simulation/export", request.url);
+  if (sessionId && sessionId !== "anon") {
+    exportUrl.searchParams.set("sid", sessionId);
+  }
+
+  const downloadUrl = new URL(exportUrl.toString());
+  downloadUrl.searchParams.set("download", "1");
+
+  return {
+    exportUrl: exportUrl.toString(),
+    downloadUrl: downloadUrl.toString()
+  };
+}
+
+function buildSimulationClientPayload(
+  request: Request,
+  sessionId: string,
+  simulationContext: {
+    state: {
+      simulationId: string;
+      status: string;
+      stepsExecuted: number;
+      targetSteps: number;
+      completionPercentage: number;
+      resultSummary: string;
+    };
+    chatSummary: string;
+    exportPayload: {
+      fileName: string;
+    };
+  }
+): Record<string, unknown> {
+  const urls = buildSimulationExportUrls(request, sessionId);
+
+  return {
+    simulation: {
+      simulationId: simulationContext.state.simulationId,
+      status: simulationContext.state.status,
+      stepsExecuted: simulationContext.state.stepsExecuted,
+      targetSteps: simulationContext.state.targetSteps,
+      completionPercentage: simulationContext.state.completionPercentage,
+      resultSummary: simulationContext.state.resultSummary,
+      chatReport: simulationContext.chatSummary,
+      export: {
+        url: urls.exportUrl,
+        downloadUrl: urls.downloadUrl,
+        fileName: simulationContext.exportPayload.fileName
+      }
+    }
+  };
 }
 
 function inferWeatherLocation(userText: string, request: Request): string {
@@ -2963,6 +3119,48 @@ export default {
         });
       }
 
+      if (url.pathname === "/api/ION/simulation/export" && request.method === "GET") {
+        const sessionId = resolveSessionId(request);
+        const payload = await exportSimulationState(env, { sessionId });
+        const requestedSimulationId = sanitizePromptText(String(url.searchParams.get("simulationId") || "")).trim();
+        if (requestedSimulationId && requestedSimulationId !== payload.simulationId) {
+          return new Response(JSON.stringify({ ok: false, error: "Simulation not found for session." }), {
+            status: 404,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const downloadRequested = /^(1|true|yes)$/i.test(String(url.searchParams.get("download") || ""));
+        const { exportUrl, downloadUrl } = buildSimulationExportUrls(request, sessionId);
+
+        return new Response(JSON.stringify({ ok: true, ...payload, exportUrl, downloadUrl }), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json",
+            "X-ION-Simulation-Id": payload.simulationId,
+            "X-ION-Simulation-Status": payload.status,
+            "X-ION-Simulation-Steps": String(payload.progress.stepsExecuted),
+            "X-ION-Simulation-Target-Steps": String(payload.progress.targetSteps),
+            "X-ION-Simulation-Progress": String(payload.progress.completionPercentage),
+            "X-ION-Simulation-Export-Url": exportUrl,
+            "X-ION-Simulation-Download-Url": downloadUrl,
+            ...(downloadRequested ? { "Content-Disposition": `attachment; filename="${payload.fileName}"` } : {}),
+            "Access-Control-Expose-Headers": [
+              "X-ION-Simulation-Id",
+              "X-ION-Simulation-Status",
+              "X-ION-Simulation-Steps",
+              "X-ION-Simulation-Target-Steps",
+              "X-ION-Simulation-Progress",
+              "X-ION-Simulation-Export-Url",
+              "X-ION-Simulation-Download-Url"
+            ].join(", ")
+          }
+        });
+      }
+
       if (url.pathname === "/api/ping" && request.method === "GET") {
         return withCors(await apiPing());
       }
@@ -3774,6 +3972,7 @@ export default {
         }
 
         const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
+        const sessionId = resolveSessionId(request);
         const requestCtx = {
           mode: normalizedMode,
           model: "ION",
@@ -3786,7 +3985,7 @@ export default {
         const isStatefulSimulationMode = normalizedMode === "simulation" || normalizedMode === "cosmic" || normalizedMode === "multiverse";
 
         const engineSimulationContext = normalizedMode === "simulation"
-          ? await advanceSimulationState(env, requestCtx.messages)
+          ? await advanceSimulationState(env, requestCtx.messages, { sessionId })
           : null;
         const cosmicSimulationContext = normalizedMode === "cosmic"
           ? buildCosmicSimulationContext(requestCtx.messages)
@@ -3795,7 +3994,6 @@ export default {
           ? await buildMultiverseSimulationContext(requestCtx.messages)
           : null;
         const simulationContext = engineSimulationContext || cosmicSimulationContext || multiverseSimulationContext;
-        const sessionId = resolveSessionId(request);
         const workingMemory = await loadWorkingMemory(env, sessionId);
         const requestCountryCode = getRequestCountryCode(request);
         const fastChatEnabled =
@@ -3857,7 +4055,13 @@ export default {
             makeContextSystemMessage("Simulation Engine", simulationContext.systemPrompt)
           );
           promptSystemMessages.push(
+            makeContextSystemMessage("Simulation Status", simulationContext.statusSummary)
+          );
+          promptSystemMessages.push(
             makeContextSystemMessage("Simulation Log", simulationContext.logsSummary)
+          );
+          promptSystemMessages.push(
+            makeContextSystemMessage("Simulation Report", simulationContext.chatSummary)
           );
         }
 
@@ -4091,6 +4295,7 @@ export default {
         const runtimeCtx = {
           ...requestCtx,
           model: routeSelection.selectedModel,
+          sessionId,
           messages: enrichedMessages,
           maxOutputTokens: outputTokenLimit,
           simulationContext: engineSimulationContext,
@@ -4147,12 +4352,16 @@ export default {
 
           if (result) {
             const nativeProviderStream = (result as any)?.stream;
+            const simulationClientPayload = simulationContext
+              ? buildSimulationClientPayload(request, sessionId, simulationContext)
+              : null;
             if (isReadableByteStream(nativeProviderStream)) {
               const latestUserTurn = getLatestUserText(requestCtx.messages);
               const stream = createIONSseFromProviderStream({
                 providerStream: nativeProviderStream,
                 route: orchestratorDecision.route,
                 multimodalPayload,
+                initialPayload: simulationClientPayload,
                 onComplete: (fullText) => {
                   if (!isStatefulSimulationMode && latestUserTurn && fullText) {
                     ctx.waitUntil(
@@ -4198,8 +4407,18 @@ export default {
               ];
 
               if (simulationContext) {
-                exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
+                exposeHeaders.push(
+                  "X-ION-Simulation-Id",
+                  "X-ION-Simulation-Status",
+                  "X-ION-Simulation-Steps",
+                  "X-ION-Simulation-Target-Steps",
+                  "X-ION-Simulation-Progress",
+                  "X-ION-Simulation-Export-Url",
+                  "X-ION-Simulation-Download-Url"
+                );
               }
+
+              const simulationUrls = simulationContext ? buildSimulationExportUrls(request, sessionId) : null;
 
               return new Response(stream, {
                 headers: {
@@ -4225,7 +4444,11 @@ export default {
                     ? {
                         "X-ION-Simulation-Id": simulationContext.state.simulationId,
                         "X-ION-Simulation-Status": simulationContext.state.status,
-                        "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                        "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted),
+                        "X-ION-Simulation-Target-Steps": String(simulationContext.state.targetSteps),
+                        "X-ION-Simulation-Progress": String(simulationContext.state.completionPercentage),
+                        "X-ION-Simulation-Export-Url": String(simulationUrls?.exportUrl || ""),
+                        "X-ION-Simulation-Download-Url": String(simulationUrls?.downloadUrl || "")
                       }
                     : {}),
                   "Access-Control-Expose-Headers": exposeHeaders.join(", ")
@@ -4255,7 +4478,7 @@ export default {
                 if (responseChunks.length > 0) {
                   controller.enqueue(
                     encoder.encode(
-                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload })}\n\n`
+                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload, ...simulationClientPayload })}\n\n`
                     )
                   );
                   for (let index = 1; index < responseChunks.length; index += 1) {
@@ -4314,12 +4537,22 @@ export default {
             ];
 
             if (simulationContext) {
-              exposeHeaders.push("X-ION-Simulation-Id", "X-ION-Simulation-Status", "X-ION-Simulation-Steps");
+              exposeHeaders.push(
+                "X-ION-Simulation-Id",
+                "X-ION-Simulation-Status",
+                "X-ION-Simulation-Steps",
+                "X-ION-Simulation-Target-Steps",
+                "X-ION-Simulation-Progress",
+                "X-ION-Simulation-Export-Url",
+                "X-ION-Simulation-Download-Url"
+              );
             }
 
             if (debugEnabled) {
               exposeHeaders.push("X-ION-Response-Cap", "X-ION-Output-Token-Cap");
             }
+
+            const simulationUrls = simulationContext ? buildSimulationExportUrls(request, sessionId) : null;
 
             return new Response(stream, {
               headers: {
@@ -4345,7 +4578,11 @@ export default {
                   ? {
                       "X-ION-Simulation-Id": simulationContext.state.simulationId,
                       "X-ION-Simulation-Status": simulationContext.state.status,
-                      "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                      "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted),
+                      "X-ION-Simulation-Target-Steps": String(simulationContext.state.targetSteps),
+                      "X-ION-Simulation-Progress": String(simulationContext.state.completionPercentage),
+                      "X-ION-Simulation-Export-Url": String(simulationUrls?.exportUrl || ""),
+                      "X-ION-Simulation-Download-Url": String(simulationUrls?.downloadUrl || "")
                     }
                   : {}),
                 ...(debugEnabled
@@ -4403,7 +4640,16 @@ export default {
               ? {
                   "X-ION-Simulation-Id": simulationContext.state.simulationId,
                   "X-ION-Simulation-Status": simulationContext.state.status,
-                  "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted)
+                  "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted),
+                  "X-ION-Simulation-Target-Steps": String(simulationContext.state.targetSteps),
+                  "X-ION-Simulation-Progress": String(simulationContext.state.completionPercentage),
+                  ...(() => {
+                    const simulationUrls = buildSimulationExportUrls(request, sessionId);
+                    return {
+                      "X-ION-Simulation-Export-Url": simulationUrls.exportUrl,
+                      "X-ION-Simulation-Download-Url": simulationUrls.downloadUrl
+                    };
+                  })()
                 }
               : {}),
             ...(debugEnabled
@@ -4411,12 +4657,12 @@ export default {
                   "X-ION-Response-Cap": String(responseLimit),
                   "X-ION-Output-Token-Cap": String(outputTokenLimit),
                 "Access-Control-Expose-Headers": simulationContext
-                  ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps, X-ION-Response-Cap, X-ION-Output-Token-Cap"
+                  ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps, X-ION-Simulation-Target-Steps, X-ION-Simulation-Progress, X-ION-Simulation-Export-Url, X-ION-Simulation-Download-Url, X-ION-Response-Cap, X-ION-Output-Token-Cap"
                   : "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Response-Cap, X-ION-Output-Token-Cap"
                 }
               : {
                   "Access-Control-Expose-Headers": simulationContext
-                    ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps"
+                    ? "X-ION-Model-Used, X-ION-Route-Reason, X-ION-Simulation-Id, X-ION-Simulation-Status, X-ION-Simulation-Steps, X-ION-Simulation-Target-Steps, X-ION-Simulation-Progress, X-ION-Simulation-Export-Url, X-ION-Simulation-Download-Url"
                     : "X-ION-Model-Used, X-ION-Route-Reason"
                 })
           }
