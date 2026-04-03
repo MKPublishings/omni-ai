@@ -1,6 +1,4 @@
 import { IONLogger } from "./logging/logger";
-export * from "./modes/cosmic/index";
-export * from "./modes/multiverse/index";
 import { initializeCosmicMode } from "./modes/cosmic/cosmic_mode";
 import { initializeMultiverseMode } from "./modes/multiverse/multiverse_mode";
 import { IONSafety } from "./stability/safety";
@@ -527,6 +525,21 @@ function getLatestUserText(messages: IONMessage[]): string {
   return "";
 }
 
+function safeNumber(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function safeFixed(value: unknown, digits: number, fallback = "0.000"): string {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(digits) : fallback;
+}
+
+function safeExponential(value: unknown, digits: number, fallback = "0.000e+0"): string {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toExponential(digits) : fallback;
+}
+
 function buildCosmicSimulationContext(messages: IONMessage[]): {
   systemPrompt: string;
   logsSummary: string;
@@ -536,44 +549,65 @@ function buildCosmicSimulationContext(messages: IONMessage[]): {
     stepsExecuted: number;
   };
 } {
-  const latestUserText = getLatestUserText(messages);
-  const stepBudget = Math.max(1, Math.min(5, Math.ceil(String(latestUserText || "").length / 120)));
-  const adapter = initializeCosmicMode({
-    seed: 42,
-    timestep: 1.0,
-    total_duration: Math.max(10, stepBudget + 1),
-    output_interval: 5.0
-  });
+  try {
+    const latestUserText = getLatestUserText(messages);
+    const stepBudget = Math.max(1, Math.min(5, Math.ceil(String(latestUserText || "").length / 120)));
+    const adapter = initializeCosmicMode({
+      seed: 42,
+      timestep: 1.0,
+      total_duration: Math.max(10, stepBudget + 1),
+      output_interval: 5.0
+    });
 
-  for (let i = 0; i < stepBudget; i++) {
-    adapter.stepOnce();
-  }
-
-  const state = adapter.getState();
-  const d = state.diagnostics;
-
-  const systemPrompt = [
-    "Cosmic Simulation Mode active.",
-    "Treat this as deterministic Milky Way-scale simulation context.",
-    `Current t=${state.current_time.toFixed(1)} Myr, step=${state.step_count}.`,
-    `Mass summary (M_sun): total=${d.total_mass.toExponential(3)}, stellar=${d.total_stellar_mass.toExponential(3)}, gas=${d.total_gas_mass.toExponential(3)}.`
-  ].join("\n");
-
-  const logsSummary = [
-    `Cosmic engine advanced ${state.step_count} step(s).`,
-    `Virial ratio=${d.virial_ratio.toFixed(3)}.`,
-    `Formation events=${state.formation_events.length}, death events=${state.death_events.length}.`
-  ].join("\n");
-
-  return {
-    systemPrompt,
-    logsSummary,
-    state: {
-      simulationId: `cosmic-${Date.now()}`,
-      status: "running",
-      stepsExecuted: state.step_count
+    for (let i = 0; i < stepBudget; i++) {
+      adapter.stepOnce();
     }
-  };
+
+    const state = adapter.getState();
+    const d = state?.diagnostics || ({} as any);
+
+    const currentTime = safeNumber(state?.current_time, 0);
+    const stepCount = Math.max(0, Math.floor(safeNumber(state?.step_count, 0)));
+    const formationEvents = Array.isArray(state?.formation_events) ? state.formation_events.length : 0;
+    const deathEvents = Array.isArray(state?.death_events) ? state.death_events.length : 0;
+
+    const systemPrompt = [
+      "Cosmic Simulation Mode active.",
+      "Treat this as deterministic Milky Way-scale simulation context.",
+      `Current t=${safeFixed(currentTime, 1, "0.0")} Myr, step=${stepCount}.`,
+      `Mass summary (M_sun): total=${safeExponential(d.total_mass, 3)}, stellar=${safeExponential(d.total_stellar_mass, 3)}, gas=${safeExponential(d.total_gas_mass, 3)}.`
+    ].join("\n");
+
+    const logsSummary = [
+      `Cosmic engine advanced ${stepCount} step(s).`,
+      `Virial ratio=${safeFixed(d.virial_ratio, 3)}.`,
+      `Formation events=${formationEvents}, death events=${deathEvents}.`
+    ].join("\n");
+
+    return {
+      systemPrompt,
+      logsSummary,
+      state: {
+        simulationId: `cosmic-${Date.now()}`,
+        status: "running",
+        stepsExecuted: stepCount
+      }
+    };
+  } catch (error) {
+    return {
+      systemPrompt: [
+        "Cosmic Simulation Mode active.",
+        "Cosmic simulation bootstrap encountered a runtime issue and switched to safe fallback context.",
+        "Treat this as deterministic Milky Way-scale simulation context with conservative defaults."
+      ].join("\n"),
+      logsSummary: `Cosmic simulation bootstrap fallback: ${String((error as Error)?.message || "unknown error")}`,
+      state: {
+        simulationId: `cosmic-${Date.now()}`,
+        status: "degraded",
+        stepsExecuted: 0
+      }
+    };
+  }
 }
 
 async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise<{
@@ -585,58 +619,74 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
     stepsExecuted: number;
   };
 }> {
-  const latestUserText = getLatestUserText(messages);
-  const textSize = Math.max(1, String(latestUserText || "").length);
-  const lodLevel = Math.max(1, Math.min(7, Math.ceil(textSize / 180))) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  const queryRadius = Number((0.5 + lodLevel * 0.75).toFixed(2));
-  const bootstrap = initializeMultiverseMode(0x7a3f9c2e1b8d4f06n);
+  try {
+    const latestUserText = getLatestUserText(messages);
+    const textSize = Math.max(1, String(latestUserText || "").length);
+    const lodLevel = Math.max(1, Math.min(7, Math.ceil(textSize / 180))) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    const queryRadius = Number((0.5 + lodLevel * 0.75).toFixed(2));
+    const bootstrap = initializeMultiverseMode(0x7a3f9c2e1b8d4f06n);
 
-  const result = await bootstrap.engine.query({
-    type: "sphere",
-    coordinates: { system: "cartesian_mpc", values: [0, 0, 0], radius: queryRadius },
-    lodLevel,
-    maxResults: 128
-  });
+    const result = await bootstrap.engine.query({
+      type: "sphere",
+      coordinates: { system: "cartesian_mpc", values: [0, 0, 0], radius: queryRadius },
+      lodLevel,
+      maxResults: 128
+    });
 
-  const queryResult = {
-    entities: result.entities.map((entry) => ({
-      id: entry.id,
-      entityType: entry.entityType,
-      redshift: entry.redshift
-    })),
-    metadata: {
-      generatedCount: result.metadata.generatedCount,
-      seedPath: result.metadata.seedPath
-    }
-  };
+    const queryResult = {
+      entities: (result?.entities || []).map((entry) => ({
+        id: String(entry?.id || "entity"),
+        entityType: String(entry?.entityType || "unknown"),
+        redshift: safeNumber(entry?.redshift, 0)
+      })),
+      metadata: {
+        generatedCount: Math.max(0, Math.floor(safeNumber(result?.metadata?.generatedCount, 0))),
+        seedPath: String(result?.metadata?.seedPath || "master -> unknown")
+      }
+    };
 
-  const sampled = queryResult.entities.slice(0, 3);
-  const sampleSummary = sampled.length
-    ? sampled.map((item) => `${item.id}:${item.entityType}@z=${item.redshift.toFixed(3)}`).join(", ")
-    : "pending deterministic sample";
+    const sampled = queryResult.entities.slice(0, 3);
+    const sampleSummary = sampled.length
+      ? sampled.map((item) => `${item.id}:${item.entityType}@z=${safeFixed(item.redshift, 3)}`).join(", ")
+      : "pending deterministic sample";
 
-  const systemPrompt = [
-    "Multiverse Mode active.",
-    "Treat this as deterministic observable-universe-scale simulation context.",
-    `LOD=${lodLevel}, queryRadius=${queryRadius} Mpc, coverage=98-99% scoped generation.`,
-    `Seed path root: ${queryResult.metadata.seedPath}.`
-  ].join("\n");
+    const systemPrompt = [
+      "Multiverse Mode active.",
+      "Treat this as deterministic observable-universe-scale simulation context.",
+      `LOD=${lodLevel}, queryRadius=${queryRadius} Mpc, coverage=98-99% scoped generation.`,
+      `Seed path root: ${queryResult.metadata.seedPath}.`
+    ].join("\n");
 
-  const logsSummary = [
-    `Multiverse engine initialized with sovereign deterministic seed.`,
-    `Generated entities (request scope): ${queryResult.metadata.generatedCount}.`,
-    `Sample entities: ${sampleSummary}.`
-  ].join("\n");
+    const logsSummary = [
+      `Multiverse engine initialized with sovereign deterministic seed.`,
+      `Generated entities (request scope): ${queryResult.metadata.generatedCount}.`,
+      `Sample entities: ${sampleSummary}.`
+    ].join("\n");
 
-  return {
-    systemPrompt,
-    logsSummary,
-    state: {
-      simulationId: `multiverse-${Date.now()}`,
-      status: "running",
-      stepsExecuted: 1
-    }
-  };
+    return {
+      systemPrompt,
+      logsSummary,
+      state: {
+        simulationId: `multiverse-${Date.now()}`,
+        status: "running",
+        stepsExecuted: 1
+      }
+    };
+  } catch (error) {
+    return {
+      systemPrompt: [
+        "Multiverse Mode active.",
+        "Multiverse simulation bootstrap encountered a runtime issue and switched to safe fallback context.",
+        "Treat this as deterministic observable-universe-scale context with conservative defaults."
+      ].join("\n"),
+      logsSummary: `Multiverse simulation bootstrap fallback: ${String((error as Error)?.message || "unknown error")}`,
+      state: {
+        simulationId: `multiverse-${Date.now()}`,
+        status: "degraded",
+        stepsExecuted: 0
+      }
+    };
+  }
 }
 
 function summarizeConversationSnippet(value: string, maxLen = 200): string {
@@ -4334,10 +4384,10 @@ export default {
             start(controller) {
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ content: "Runtime loop failed. Please try again.", error: true })}\\n\\n`
+                  `data: ${JSON.stringify({ content: "Runtime loop failed. Please try again.", error: true })}\n\n`
                 )
               );
-              controller.enqueue(encoder.encode("data: [DONE]\\n\\n"));
+              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
               controller.close();
             }
           });
