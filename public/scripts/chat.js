@@ -826,6 +826,56 @@
     return payload;
   }
 
+  async function requestSimulationControl(session, command) {
+    const headers = { "Content-Type": "application/json" };
+    if (session?.id) {
+      headers["x-ION-session-id"] = String(session.id);
+    }
+
+    const simulation = ensureSimulationState(session);
+    const payloadBody = {
+      command: String(command || "").trim(),
+      rules: String(simulation?.rules || "").trim(),
+      targetSteps: getSimulationTargetSteps(session),
+      batchSteps: getSimulationBatchSteps(session)
+    };
+
+    const response = await fetch("/api/ION/simulation/control", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payloadBody)
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok || !payload?.ok) {
+      throw new Error(String(payload?.error || "Simulation control request failed"));
+    }
+
+    syncSimulationState(session, {
+      simulationId: payload.state?.simulationId,
+      status: payload.state?.status,
+      stepsExecuted: payload.state?.stepsExecuted,
+      targetSteps: payload.state?.targetSteps,
+      completionPercentage: payload.state?.completionPercentage,
+      resultSummary: payload.state?.resultSummary,
+      chatReport: payload.chatSummary,
+      rules: payload.state?.rules,
+      exportUrl: payload.export?.exportUrl,
+      downloadUrl: payload.export?.downloadUrl,
+      logs: payload.state?.logs
+    });
+
+    saveState();
+    updateSimulationUI(session);
+    return payload;
+  }
+
   async function refreshSimulationFromBackend(session) {
     if (!session || getActiveMode(session) !== "simulation") return null;
     const payload = await fetchSimulationExport(session, false);
@@ -870,10 +920,51 @@
   async function dispatchSimulationControl(command, optimisticMessage, level = "info") {
     const session = getActiveSession();
     if (!session || getActiveMode(session) !== "simulation" || isStreaming) return;
+
+    const commandTimestamp = Date.now();
+    session.messages.push({ role: "user", content: command, timestamp: commandTimestamp });
+    updateSessionMetaFromMessages(session);
+    saveState();
+    appendMessage("user", command, {
+      model: session.model || "ION",
+      mode: getActiveMode(session),
+      timestamp: commandTimestamp
+    });
+
     appendSimulationLog(session, optimisticMessage, level);
     saveState();
     updateSimulationUI(session);
-    await sendMessage(command);
+
+    const assistantMessage = appendMessage("assistant", "Applying simulation control...", {
+      model: session.model || "ION",
+      mode: getActiveMode(session),
+      timestamp: Date.now()
+    });
+
+    try {
+      const payload = await requestSimulationControl(session, command);
+      const responseText = String(payload?.chatSummary || payload?.statusSummary || "Simulation control applied.").trim();
+      if (assistantMessage?.body) {
+        updateAssistantMessageBody(assistantMessage.body, responseText);
+      }
+      session.messages.push({
+        role: "assistant",
+        content: responseText,
+        timestamp: Date.now()
+      });
+      updateSessionMetaFromMessages(session);
+      saveState();
+      renderSessionsSidebar();
+      playNotificationSound("assistant");
+    } catch (error) {
+      const message = `Simulation control failed: ${error instanceof Error ? error.message : "unknown error"}`;
+      if (assistantMessage?.body) {
+        updateAssistantMessageBody(assistantMessage.body, message);
+      }
+      appendSimulationLog(session, message, "warn");
+      updateSimulationUI(session);
+      playNotificationSound("error");
+    }
   }
 
   function renderSimulationLog(session) {
@@ -2139,6 +2230,15 @@
     const trimmed = content.trim();
     if (!trimmed) return;
 
+    if (getActiveMode(session) === "simulation" && isSimulationControlCommand(trimmed)) {
+      await dispatchSimulationControl(trimmed, "Simulation command received.");
+      if (inputEl) {
+        inputEl.value = "";
+        focusInputIfAppropriate();
+      }
+      return;
+    }
+
     const styleCommand = parseStyleCommand(trimmed);
     const cameraCommand = parseCameraCommand(trimmed);
     const lightCommand = parseLightCommand(trimmed);
@@ -2962,6 +3062,10 @@
       appendSimulationLog(session, `Unable to write simulation report: ${error instanceof Error ? error.message : "unknown error"}`, "warn");
       updateSimulationUI(session);
     }
+  }
+
+  function isSimulationControlCommand(text) {
+    return /^\s*\/simulation\b/i.test(String(text || ""));
   }
 
   // =========================

@@ -3161,6 +3161,59 @@ export default {
         });
       }
 
+      if (url.pathname === "/api/ION/simulation/control" && request.method === "POST") {
+        const sessionId = resolveSessionId(request);
+        const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+        const command = String(body?.command || "/simulation start").trim().slice(0, 1600);
+        const rules = sanitizePromptText(String(body?.rules || "")).trim();
+        const content = rules ? `${command}\nrules:\n${rules}` : command;
+
+        const simulationContext = await advanceSimulationState(
+          env,
+          [{ role: "user", content }],
+          { sessionId }
+        );
+
+        const { exportUrl, downloadUrl } = buildSimulationExportUrls(request, sessionId);
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            state: simulationContext.state,
+            logsSummary: simulationContext.logsSummary,
+            statusSummary: simulationContext.statusSummary,
+            chatSummary: simulationContext.chatSummary,
+            export: {
+              ...simulationContext.exportPayload,
+              exportUrl,
+              downloadUrl
+            }
+          }),
+          {
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json",
+              "X-ION-Simulation-Id": simulationContext.state.simulationId,
+              "X-ION-Simulation-Status": simulationContext.state.status,
+              "X-ION-Simulation-Steps": String(simulationContext.state.stepsExecuted),
+              "X-ION-Simulation-Target-Steps": String(simulationContext.state.targetSteps),
+              "X-ION-Simulation-Progress": String(simulationContext.state.completionPercentage),
+              "X-ION-Simulation-Export-Url": exportUrl,
+              "X-ION-Simulation-Download-Url": downloadUrl,
+              "Access-Control-Expose-Headers": [
+                "X-ION-Simulation-Id",
+                "X-ION-Simulation-Status",
+                "X-ION-Simulation-Steps",
+                "X-ION-Simulation-Target-Steps",
+                "X-ION-Simulation-Progress",
+                "X-ION-Simulation-Export-Url",
+                "X-ION-Simulation-Download-Url"
+              ].join(", ")
+            }
+          }
+        );
+      }
+
       if (url.pathname === "/api/ping" && request.method === "GET") {
         return withCors(await apiPing());
       }
