@@ -40,6 +40,9 @@ export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): 
   const text = normalizeText(input.latestUserText).toLowerCase();
   const baseModel = defaultModel(env);
   const simulationModel = normalizeText(env.MODEL_SIMULATION) || baseModel;
+  const hasSimulationIntent = /\b(simulate|simulation|scenario|stress[ -]?test|play out|run through|step through|forecast|project forward|model(?: this| the| a)?|counterfactual|what if)\b/.test(text);
+  const hasCosmicIntent = /\b(cosmic|galactic|galaxy|milky way|stellar|star system|orbit(?:al)?|nebula|astrophysical|n-?body)\b/.test(text);
+  const hasMultiverseIntent = /\b(multiverse|observable universe|cosmic web|large[ -]?scale structure|supercluster|galaxy cluster|comoving|redshift|lcdm|cosmology)\b/.test(text);
 
   let capability: RuntimeCapability = "chat";
   let selectedModel = requested && requested !== "ION" ? requested : baseModel;
@@ -47,12 +50,29 @@ export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): 
   let reason = requested && requested !== "ION" ? "explicit-model-request" : "default-primary-model";
   const constraints = ["single-authoritative-runtime", "ts-first-control-loop"];
 
-  if (mode === "simulation" || mode === "multiverse" || input.hasSimulationContext) {
+  if (
+    mode === "simulation" ||
+    mode === "cosmic" ||
+    mode === "multiverse" ||
+    input.hasSimulationContext ||
+    hasSimulationIntent ||
+    hasCosmicIntent ||
+    hasMultiverseIntent
+  ) {
     capability = "simulation-assist";
     selectedModel = simulationModel;
     fallbackModel = baseModel;
-    reason = "simulation-mode-policy";
+    reason =
+      mode === "simulation" || mode === "cosmic" || mode === "multiverse" || input.hasSimulationContext
+        ? "simulation-mode-policy"
+        : "simulation-intent-policy";
     constraints.push("simulation-aware-response");
+    if (hasCosmicIntent || mode === "cosmic") {
+      constraints.push("cosmic-aware-response");
+    }
+    if (hasMultiverseIntent || mode === "multiverse") {
+      constraints.push("multiverse-aware-response");
+    }
   } else if (/\b(tool|execute|call tool|run tool)\b/.test(text)) {
     capability = "tooling";
     selectedModel = baseModel;

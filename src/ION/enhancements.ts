@@ -278,8 +278,10 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
       "Simulation Mode is active.",
       "Primary profile: system-state simulator.",
       "Model a contained environment with explicit state transitions and rule adherence.",
+      "Accept natural-language prompts like simulate, play this out, run through, stress test, forecast, or scenario analysis as valid simulation requests.",
+      "If the user omits formal rules, derive a minimal set of conservative assumptions, state them, and still render a result.",
       "Return output with: current state, transitions executed, and concise simulation log entries.",
-      "If rules are missing, ask for constraints before broad assumptions."
+      "Keep the answer chat-ready: deliver the simulation result first, then include optional controls or follow-up steps."
     ].join("\n");
   }
 

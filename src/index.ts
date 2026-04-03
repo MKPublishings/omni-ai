@@ -791,6 +791,84 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
   }
 }
 
+function canonicalizeIONMode(value: string): string {
+  const normalized = sanitizePromptText(String(value || "")).trim().toLowerCase();
+
+  if (normalized === "default") return "auto";
+  if (normalized === "sim") return "simulation";
+  if (normalized === "galaxy" || normalized === "cosmic-mode") return "cosmic";
+  if (normalized === "universe" || normalized === "multiverse-mode") return "multiverse";
+
+  return normalized || "auto";
+}
+
+function extractExplicitSimulationMode(value: string): "simulation" | "cosmic" | "multiverse" | null {
+  const normalized = canonicalizeIONMode(value);
+  if (normalized === "simulation" || normalized === "cosmic" || normalized === "multiverse") {
+    return normalized;
+  }
+
+  return null;
+}
+
+function inferSimulationModeFromPrompt(text: string): "simulation" | "cosmic" | "multiverse" | null {
+  const normalized = sanitizePromptText(String(text || "")).trim().toLowerCase();
+  if (!normalized) return null;
+
+  const hasSimulationIntent =
+    /^\/simulation\b/.test(normalized) ||
+    /\b(simulate|simulation mode|scenario|stress[ -]?test|forecast|project forward|play out|run through|step through|model(?: this| the| a)?|counterfactual|what if)\b/.test(normalized);
+  const hasCosmicScope =
+    /\b(cosmic|galactic|galaxy|milky way|stellar|star system|orbit(?:al)?|nebula|astrophysical|n-?body)\b/.test(normalized);
+  const hasMultiverseScope =
+    /\b(multiverse|observable universe|cosmic web|large[ -]?scale structure|supercluster|galaxy cluster|comoving|redshift|lcdm|cosmology)\b/.test(normalized);
+
+  if (hasMultiverseScope && (hasSimulationIntent || /\b(query|map|render|explore)\b/.test(normalized))) {
+    return "multiverse";
+  }
+
+  if (hasCosmicScope && (hasSimulationIntent || /\b(diagnostics?|evolve|orbit|trajectory|mode)\b/.test(normalized))) {
+    return "cosmic";
+  }
+
+  if (hasSimulationIntent) {
+    return "simulation";
+  }
+
+  return null;
+}
+
+function resolveEffectiveIONMode(input: {
+  requestedMode: string;
+  latestUserText: string;
+  conversationHints: ReturnType<typeof normalizeConversationHints>;
+}): string {
+  const requestedMode = canonicalizeIONMode(input.requestedMode);
+  if (requestedMode !== "auto") {
+    return requestedMode;
+  }
+
+  const explicitHintMode =
+    extractExplicitSimulationMode(input.conversationHints.inferredMode) ||
+    extractExplicitSimulationMode(input.conversationHints.requestedOutput);
+
+  if (explicitHintMode) {
+    return explicitHintMode;
+  }
+
+  const inferredMode = inferSimulationModeFromPrompt(
+    [
+      input.latestUserText,
+      input.conversationHints.latestUserIntent,
+      ...input.conversationHints.recentUserFocus
+    ]
+      .filter(Boolean)
+      .join("\n")
+  );
+
+  return inferredMode || requestedMode;
+}
+
 function summarizeConversationSnippet(value: string, maxLen = 200): string {
   const compact = sanitizePromptText(String(value || "")).trim();
   if (!compact) return "";
@@ -4024,15 +4102,23 @@ export default {
           return new Response("Invalid message format", { status: 400 });
         }
 
-        const normalizedMode = String(body.mode || "auto").trim().toLowerCase();
+        const requestedMode = canonicalizeIONMode(String(body.mode || "auto"));
         const sessionId = resolveSessionId(request);
+        const sanitizedMessages = (body.messages || []).map((m) => ({
+          role: (m?.role || "user") as IONRole,
+          content: IONSafety.sanitizeInput(m?.content || "")
+        }));
+        const latestUserText = getLatestUserText(sanitizedMessages);
+        const conversationHints = normalizeConversationHints(body?.conversationHints);
+        const normalizedMode = resolveEffectiveIONMode({
+          requestedMode,
+          latestUserText,
+          conversationHints
+        });
         const requestCtx = {
           mode: normalizedMode,
           model: "ION",
-          messages: (body.messages || []).map((m) => ({
-            role: (m?.role || "user") as IONRole,
-            content: IONSafety.sanitizeInput(m?.content || "")
-          }))
+          messages: sanitizedMessages
         };
 
         const isStatefulSimulationMode = normalizedMode === "simulation" || normalizedMode === "cosmic" || normalizedMode === "multiverse";
@@ -4055,8 +4141,6 @@ export default {
           String(url.searchParams.get("fast") || "").toLowerCase() === "true";
         const nativeStreamingEnabled = isEnabledFlag(env.ION_NATIVE_STREAMING) || fastChatEnabled;
 
-        const latestUserText = getLatestUserText(requestCtx.messages);
-        const conversationHints = normalizeConversationHints(body?.conversationHints);
         const conversationDigest = buildConversationDigest(requestCtx.messages, 6);
         const safetyDecision = evaluateSexualSafetyPrompt(latestUserText, safetyProfile);
         if (safetyDecision.blocked) {
@@ -4670,11 +4754,20 @@ export default {
         } catch (streamErr: any) {
           logger.error("stream_error", streamErr);
           const encoder = new TextEncoder();
+          const simulationClientPayload = simulationContext
+            ? buildSimulationClientPayload(request, sessionId, simulationContext)
+            : {};
+          const fallbackMessage = simulationContext
+            ? [
+                simulationContext.chatSummary,
+                `Streaming fallback activated: ${String((streamErr as Error)?.message || "runtime loop failed")}`
+              ].join("\n")
+            : "Runtime loop failed. Please try again.";
           const errorStream = new ReadableStream({
             start(controller) {
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ content: "Runtime loop failed. Please try again.", error: true })}\n\n`
+                  `data: ${JSON.stringify({ content: fallbackMessage, error: true, ...simulationClientPayload })}\n\n`
                 )
               );
               controller.enqueue(encoder.encode("data: [DONE]\n\n"));

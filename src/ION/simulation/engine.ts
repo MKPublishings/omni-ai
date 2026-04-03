@@ -106,6 +106,10 @@ function nowTs() {
   return Date.now();
 }
 
+function createSimulationId(sessionIdRaw?: string): string {
+  return `sim_${normalizeSessionId(sessionIdRaw)}_${nowTs()}`;
+}
+
 function normalizeSessionId(value: unknown): string {
   return String(value || DEFAULT_SESSION_ID).replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 120) || DEFAULT_SESSION_ID;
 }
@@ -186,6 +190,8 @@ function getLatestUserMessage(messages: SimulationMessage[]): string {
 function parseSimulationCommand(messages: SimulationMessage[]): ParsedSimulationCommand {
   const raw = getLatestUserMessage(messages);
   const text = raw.toLowerCase();
+  const naturalRunIntent = /\b(simulate|stress[ -]?test|play out|run through|step through|forecast|project forward|model(?: this| the| a)?)\b/.test(text);
+  const reportOrExportIntent = /\b(status|progress|completion|current state|how far|where are we|what step|export|download)\b/.test(text);
 
   let action: SimulationControlAction = "none";
   if (/(reset simulation|\/simulation\s+reset|restart simulation|terminate simulation)\b/.test(text)) {
@@ -194,19 +200,23 @@ function parseSimulationCommand(messages: SimulationMessage[]): ParsedSimulation
     action = "stop";
   } else if (/(pause simulation|\/simulation\s+pause)\b/.test(text)) {
     action = "pause";
-  } else if (/(start simulation|resume simulation|continue simulation|\/simulation\s+start|\/simulation\s+resume)\b/.test(text)) {
+  } else if (/(start simulation|resume simulation|continue simulation|run simulation|\/simulation\s+start|\/simulation\s+resume)\b/.test(text)) {
+    action = "start";
+  } else if (naturalRunIntent && !reportOrExportIntent) {
     action = "start";
   }
 
-  const targetMatch = text.match(/(?:\/simulation\s+target\s+|target(?:ing)?\s+|simulate(?:\s+for)?\s+|complete(?:\s+in)?\s+)(\d{1,4})\s*steps?/i);
-  const batchMatch = text.match(/(?:\/simulation\s+(?:run|step|advance)\s+|(?:run|advance|step(?:\s+through)?|process)\s+)(\d{1,3})\s*steps?/i);
+  const targetMatch =
+    text.match(/(?:\/simulation\s+target\s+|target(?:ing)?\s+|complete(?:\s+in)?\s+)(\d{1,4})\s*steps?\b/i) ||
+    text.match(/\b(?:for|over|across|within|through)\s+(\d{1,4})\s*steps?\b/i);
+  const batchMatch = text.match(/(?:\/simulation\s+(?:run|step|advance)\s+|(?:run|advance|step(?:\s+through)?|process|continue|resume)\s+(?:by\s+)?)\s*(\d{1,3})\s*(?:more\s+)?steps?\b/i);
   const targetSteps = targetMatch ? clampInteger(targetMatch[1], 1, MAX_TARGET_STEPS, DEFAULT_TARGET_STEPS) : undefined;
   const batchSteps = batchMatch ? clampInteger(batchMatch[1], 1, MAX_BATCH_STEPS, DEFAULT_BATCH_STEPS) : undefined;
 
   const exportRequested = /(export simulation|export results|download simulation|\/simulation\s+export)\b/.test(text);
   const writeResultsRequested = /\b(write out (?:the )?results|show (?:the )?results|summari[sz]e (?:the )?results|report (?:the )?results)\b/.test(text);
   const progressRequested = /\b(status|progress|completion|current state|how far|where are we|what step)\b/.test(text);
-  const runIntent = /\b(run|advance|step|process|continue|resume|start|simulate)\b/.test(text);
+  const runIntent = /\b(run|advance|step|process|continue|resume|start|simulate|forecast|model|stress[ -]?test|play out|run through|step through)\b/.test(text);
   const reportOnly = (exportRequested || writeResultsRequested || progressRequested) && !runIntent && action === "none";
 
   return {
@@ -360,7 +370,7 @@ function makeInitialState(sessionIdRaw?: string): SimulationState {
   const world = SIMULATION_ENGINE.serialize(SIMULATION_ENGINE.bootstrapWorld({ rules: DEFAULT_RULES }));
   const base: Omit<SimulationState, "memoryUsageBytes"> = {
     sessionId,
-    simulationId: `sim_${nowTs()}`,
+    simulationId: createSimulationId(sessionId),
     status: "active",
     stepsExecuted: 0,
     targetSteps: DEFAULT_TARGET_STEPS,
@@ -472,6 +482,8 @@ function buildSystemPrompt(state: SimulationState): string {
     "You are ION in Simulation Mode.",
     "Simulation profile: system-state simulator.",
     "Operate as a contained reality engine with strict rule adherence.",
+    "Treat natural-language requests such as simulate, stress test, play out, run through, forecast, or scenario analysis as valid simulation directives.",
+    "If exact rules are missing, infer the minimum conservative assumptions needed to produce a result and label them clearly.",
     "Output must include: current lifecycle state, percent complete, key transitions, concise simulation log entries, and a note that exportable results are available.",
     `Simulation ID: ${state.simulationId}`,
     `Session ID: ${state.sessionId}`,
@@ -554,7 +566,7 @@ export async function advanceSimulationState(
 
   const action = command.action;
   if (action === "reset") {
-    state.simulationId = `sim_${nowTs()}`;
+    state.simulationId = createSimulationId(state.sessionId);
     state.status = "active";
     state.stepsExecuted = 0;
     state.completionPercentage = 0;

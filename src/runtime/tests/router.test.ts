@@ -20,3 +20,22 @@ test("resolveRuntimeRoute prefers simulation policy for simulation requests", ()
   assert.equal(route.selectedModel, "simulation-model");
   assert.equal(route.fallbackModel, "primary-model");
 });
+
+test("resolveRuntimeRoute infers simulation policy from natural language prompts", () => {
+  const route = resolveRuntimeRoute(
+    {
+      mode: "auto",
+      latestUserText: "Play out a supply chain stress test over 5 steps and summarize the state changes.",
+      requestedModel: "ION",
+      hasSimulationContext: false
+    },
+    {
+      MODEL_ION: "primary-model",
+      MODEL_SIMULATION: "simulation-model"
+    }
+  );
+
+  assert.equal(route.capability, "simulation-assist");
+  assert.equal(route.selectedModel, "simulation-model");
+  assert.equal(route.reason, "simulation-intent-policy");
+});

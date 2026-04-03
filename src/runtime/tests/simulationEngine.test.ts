@@ -104,3 +104,18 @@ test("advanceSimulationState isolates sessions and respects pause or stop contro
   assert.equal(stopped.state.status, "stopped");
   assert.equal(stopped.state.stepsExecuted, beta.state.stepsExecuted);
 });
+
+test("advanceSimulationState interprets natural language simulation prompts", async () => {
+  const memory = new MemoryNamespace();
+
+  const result = await advanceSimulationState(
+    { MEMORY: memory as any },
+    [{ role: "user", content: "Play out a resilience stress test over 5 steps with rules:\n- stability: high\n- resources: preserve" }],
+    { sessionId: "natural-language" }
+  );
+
+  assert.equal(result.state.targetSteps, 5);
+  assert.equal(result.state.stepsExecuted, 3);
+  assert.equal(result.state.status, "active");
+  assert.match(result.chatSummary, /Progress: 60% \(3\/5 steps\)/);
+});
