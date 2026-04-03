@@ -2181,8 +2181,14 @@
           token = parsed;
         } else if (parsed && typeof parsed.token === "string") {
           token = parsed.token;
+        } else if (parsed && typeof parsed.content === "string") {
+          token = parsed.content;
+        } else if (parsed && parsed.choices?.[0]?.delta?.content) {
+          token = parsed.choices[0].delta.content;
+        } else if (parsed && parsed.choices?.[0]?.message?.content) {
+          token = parsed.choices[0].message.content;
         } else if (parsed && typeof parsed === "object") {
-          token = parsed;
+          token = JSON.stringify(parsed);
         }
       } catch {
         // raw token

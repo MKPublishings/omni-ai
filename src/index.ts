@@ -1356,7 +1356,24 @@ function extractProviderToken(rawLine: string): string {
       fromChoices?.delta?.content ??
       fromChoices?.message?.content ??
       "";
-    return typeof value === "string" ? value : "";
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.filter((item: unknown) => typeof item === "string").join("");
+    }
+
+    if (value && typeof value === "object") {
+      if (typeof value.text === "string") return value.text;
+      if (typeof value.content === "string") return value.content;
+      if (Array.isArray(value.parts)) {
+        return value.parts.filter((item: unknown) => typeof item === "string").join("");
+      }
+    }
+
+    return "";
   } catch {
     return line;
   }
