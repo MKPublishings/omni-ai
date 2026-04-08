@@ -47,11 +47,21 @@ export class ToolExecutor {
     }
 
     // Step 1: Validate input against tool's JSON Schema
-    const validation = tool.validate(input);
-    if (!validation.valid) {
+    const validation = tool.validate ? tool.validate(input) : { valid: true, errors: [] };
+    
+    // Handle both sync and async validation
+    const validationResult = validation instanceof Promise 
+      ? await validation 
+      : (validation as any);
+
+    if (!validationResult.valid) {
       const durationMs = Date.now() - startTime;
 
       // Create failed execution record
+      const errorMessages = Array.isArray(validationResult.errors)
+        ? validationResult.errors.map((e: any) => typeof e === 'string' ? e : e.message).join('; ')
+        : 'Unknown validation error';
+
       await this.createRecord({
         id: executionId,
         sessionId: context.sessionId,
@@ -60,7 +70,7 @@ export class ToolExecutor {
         inputPayload: JSON.stringify(input),
         outputPayload: null,
         status: 'error',
-        errorMessage: `Validation failed: ${validation.errors.map((e) => e.message).join('; ')}`,
+        errorMessage: `Validation failed: ${errorMessages}`,
         durationMs,
         mode: context.mode,
         simulationId: context.simulationId,
@@ -72,7 +82,7 @@ export class ToolExecutor {
         executionId,
         success: false,
         output: null,
-        logs: [`Validation failed:`, ...validation.errors.map((e) => `  ${e.path}: ${e.message}`)],
+        logs: [`Validation failed:`, ...Array.isArray(validationResult.errors) ? validationResult.errors.map((e: any) => typeof e === 'string' ? `  ${e}` : `  ${e.path}: ${e.message}`) : []],
         duration_ms: durationMs,
         metadata: { validationErrors: validation.errors },
       };

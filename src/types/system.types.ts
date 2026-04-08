@@ -130,7 +130,7 @@ export interface DeploymentInfo {
  */
 export interface HealthScoreDetails {
   latencyScore: number; // 30% weight: 0-100
-  errorRate Score: number; // 30% weight: 0-100
+  errorRateScore: number; // 30% weight: 0-100
   bindingScore: number; // 25% weight: 0-100
   storageScore: number; // 15% weight: 0-100
   composite: number; // overall 0-100

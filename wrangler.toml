@@ -1,5 +1,5 @@
 name = 'ion-ai'
-main = "src/index.ts"
+main = "src/worker.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -24,44 +24,28 @@ ION_ENV = "production"
 # ION_MAX_OUTPUT_TOKENS = "8192"
 # ION_ENV = "development" # set to "production" to disable debug response headers
 
-[[kv_namespaces]]
-binding = "MIND"
-id = "ddf695e484604a5a974ba5d4165f7102"
-preview_id = "mind_kv_preview"
+# KV namespaces for phase 2-3 systems (commented out - create in Cloudflare dashboard first)
+# [[kv_namespaces]]
+# binding = "MIND"
+# id = "ddf695e484604a5a974ba5d4165f7102"
+# preview_id = "mind_kv_preview"
 
-[[kv_namespaces]]
-binding = "MEMORY"
-id = "355f713328174c48aff53fad8d81d73e"
-preview_id = "memory_kv_preview"
-
-[[kv_namespaces]]
-binding = "SESSION"
-id = "session_kv_prod"
-preview_id = "session_kv_preview"
-
-[[kv_namespaces]]
-binding = "CACHE"
-id = "cache_kv_prod"
-preview_id = "cache_kv_preview"
-
-[[kv_namespaces]]
-binding = "CONFIG"
-id = "config_kv_prod"
-preview_id = "config_kv_preview"
-
-[observability]
-enabled = true
+# [[kv_namespaces]]
+# binding = "MEMORY"
+# id = "355f713328174c48aff53fad8d81d73e"
+# preview_id = "memory_kv_preview"
+# enabled = true
 
 [assets]
 directory = "./public"
 binding = "ASSETS"
 
-# D1 database binding for v2.0.0 subsystems
-[[d1_databases]]
-binding = "IONIRIX_DB"
-database_name = "ionirix"
-database_id = "ionirix_db_prod"
-migrations_dir = "migrations"
+# D1 database binding for v2.0.0 subsystems (commented out - create in Cloudflare dashboard first)
+# [[d1_databases]]
+# binding = "IONIRIX_DB"
+# database_name = "ionirix"
+# database_id = "00000000-0000-0000-0000-000000000001"
+# migrations_dir = "migrations"
 
 # Optional Durable Object session binding.
 # [[durable_objects.bindings]]

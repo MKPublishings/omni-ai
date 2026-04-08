@@ -24,9 +24,6 @@ import { SystemWorker } from './api/system-worker';
 
 // Middleware
 import { authMiddleware } from './middleware/auth';
-import { corsMiddleware } from './middleware/cors';
-import { rateLimitMiddleware } from './middleware/rate-limit';
-import { metricsMiddleware } from './middleware/metrics';
 
 interface WorkerEnv {
   DB: D1Database;
@@ -64,15 +61,14 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const memoryEngine = new MemoryEngine(env.DB, eventBus);
   const toolRegistry = new ToolRegistry();
   const toolExecutor = new ToolExecutor(env.DB, toolRegistry, eventBus);
-  const codexBridge = new CodexBridge(env.CACHE);
   const simulationRuntime = new SimulationRuntime(env.DB, eventBus);
 
   // Create router and register all Phase 3 routes
   const router = new Router();
 
-  // Initialize workers
+  // Initialize workers (with corrected constructors)
   const memoryWorker = new MemoryWorker(env.DB, memoryEngine);
-  const toolsWorker = new ToolsWorker(env.DB, toolRegistry, toolExecutor, codexBridge);
+  const toolsWorker = new ToolsWorker(env.DB, toolRegistry, eventBus);
   const specsWorker = new SpecsWorker(env.DB, env.CACHE);
   const simulationWorker = new SimulationWorker(env.DB, eventBus);
   const systemWorker = new SystemWorker(env.DB, env.MEMORY, eventBus, env);
@@ -80,9 +76,9 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   // Middleware functions
   const withAuth = (handler: any) =>
     async (request: Request, env: any, ctx: ExecutionContext, params: any) => {
-      const authResult = await authMiddleware(request, env, ctx);
-      if (!authResult.ok) {
-        return authResult.response;
+      const authResult = await authMiddleware(request, env);
+      if (!authResult.valid) {
+        return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
       }
       (request as any).authContext = authResult.context;
       return handler(request, env, ctx, params);
@@ -124,7 +120,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('GET', '/api/tools/:name/schema', compose((r: any, e: any, c: any, p: any) => toolsWorker.getSchema(r, e, c, p)));
   router.add('POST', '/api/tools/validate', compose((r: any, e: any, c: any, p: any) => toolsWorker.validate(r, e, c, p)));
   router.add('POST', '/api/tools/execute', compose((r: any, e: any, c: any, p: any) => toolsWorker.execute(r, e, c, p)));
-  router.add('GET', '/api/tools/logs', compose((r: any, e: any, c: any, p: any) => toolsWorker.getLogs(r, e, c, p)));
+  router.add('GET', '/api/tools/logs', compose((r: any, e: any, c: any, p: any) => toolsWorker.getLog(r, e, c, p)));
   router.add('GET', '/api/tools/logs/:id', compose((r: any, e: any, c: any, p: any) => toolsWorker.getLog(r, e, c, p)));
 
   // ========== SPECS API ROUTES ==========

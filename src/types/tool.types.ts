@@ -9,7 +9,7 @@
 import type { MemoryEngine } from '../engines/memory-engine';
 import type { CodexBridge } from '../engines/codex-bridge';
 
-export type ToolCategory = 'simulation' | 'analysis' | 'generation' | 'diagnostics' | 'codex' | 'system';
+export type ToolCategory = 'simulation' | 'analysis' | 'generation' | 'diagnostics' | 'codex' | 'system' | 'utility';
 export type ExecutionStatus = 'pending' | 'running' | 'success' | 'error' | 'timeout';
 
 /**
@@ -21,10 +21,12 @@ export interface ToolModule {
   version: string; // semver
   category: ToolCategory;
   description: string;
-  inputSchema: Record<string, unknown>; // JSON Schema for input validation
-  outputSchema: Record<string, unknown>; // JSON Schema for output shape
-  execute: (input: unknown, context: ToolContext) => Promise<ToolResult>;
-  validate: (input: unknown) => ValidationResult;
+  schema?: Record<string, unknown>; // JSON Schema for input validation (deprecated)
+  inputSchema?: Record<string, unknown>; // JSON Schema for input validation
+  outputSchema?: Record<string, unknown>; // JSON Schema for output shape
+  enabled?: boolean; // whether tool is enabled
+  execute: (input: unknown, context: ToolContext) => Promise<unknown>; // allow any output
+  validate?: (input: unknown) => ValidationResult | Promise<{ valid: boolean; errors?: string[] }>;
 }
 
 /**
@@ -120,7 +122,7 @@ export interface ToolExecuteResponse {
 /**
  * Tool registry entry with metadata
  */
-export interface ToolRegistry Entry {
+export interface ToolRegistryEntry {
   name: string;
   version: string;
   category: ToolCategory;
