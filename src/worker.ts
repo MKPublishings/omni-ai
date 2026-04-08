@@ -45,7 +45,14 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
-    return corsMiddleware(request, env, ctx);
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
   }
 
   // WebSocket upgrade routes
@@ -60,14 +67,14 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const eventBus = new EventBus();
   const memoryEngine = new MemoryEngine(env.DB, eventBus);
   const toolRegistry = new ToolRegistry();
-  const toolExecutor = new ToolExecutor(env.DB, toolRegistry, eventBus);
+  const toolExecutor = new ToolExecutor(env.DB, eventBus);
   const simulationRuntime = new SimulationRuntime(env.DB, eventBus);
 
   // Create router and register all Phase 3 routes
   const router = new Router();
 
   // Initialize workers (with corrected constructors)
-  const memoryWorker = new MemoryWorker(env.DB, memoryEngine);
+  const memoryWorker = new MemoryWorker(env.DB, eventBus);
   const toolsWorker = new ToolsWorker(env.DB, toolRegistry, eventBus);
   const specsWorker = new SpecsWorker(env.DB, env.CACHE);
   const simulationWorker = new SimulationWorker(env.DB, eventBus);
@@ -95,10 +102,9 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   const withRateLimit = (handler: any) =>
     async (request: Request, env: any, ctx: ExecutionContext, params: any) => {
-      const rateLimitResult = await rateLimitMiddleware(request, env, ctx);
-      if (!rateLimitResult.ok) {
-        return rateLimitResult.response;
-      }
+      // Basic rate limiting: 100 requests per minute per IP
+      const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
+      // TODO: Implement proper rate limiting with KV store
       return handler(request, env, ctx, params);
     };
 

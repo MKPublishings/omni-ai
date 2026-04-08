@@ -114,10 +114,16 @@ export class ToolsWorker {
 
       // Validate first if dryRun
       if (body.options?.dryRun) {
-        const validation = tool.validate(body.input);
+        const validation = tool.validate ? tool.validate(body.input) : { valid: true, errors: [] };
+        
+        // Handle both sync and async validation
+        const validationResult = validation instanceof Promise 
+          ? await validation 
+          : (validation as any);
+
         return Response.json({
-          valid: validation.valid,
-          errors: validation.errors,
+          valid: validationResult?.valid ?? true,
+          errors: validationResult?.errors ?? [],
         });
       }
 
@@ -171,8 +177,8 @@ export class ToolsWorker {
         : (validation as any);
 
       return Response.json({
-        valid: validationResult.valid,
-        errors: validationResult.errors,
+        valid: validationResult?.valid ?? true,
+        errors: validationResult?.errors ?? [],
       });
     } catch (err: unknown) {
       console.error('[ToolsWorker.validate]', err);

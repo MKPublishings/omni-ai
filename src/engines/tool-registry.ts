@@ -70,15 +70,15 @@ export class ToolRegistry {
    */
   getInputSchema(name: string): object | null {
     const tool = this.tools.get(name);
-    return tool ? tool.inputSchema : null;
+    return tool && tool.inputSchema ? tool.inputSchema : null;
   }
 
   /**
-   * Get the JSON Schema for a tool's output
+   * Get output schema for a tool
    */
   getOutputSchema(name: string): object | null {
     const tool = this.tools.get(name);
-    return tool ? tool.outputSchema : null;
+    return tool && tool.outputSchema ? tool.outputSchema : null;
   }
 
   /**
@@ -114,8 +114,8 @@ export class ToolRegistry {
       version: tool.version,
       category: tool.category,
       description: tool.description,
-      inputSchema: tool.inputSchema,
-      outputSchema: tool.outputSchema,
+      inputSchema: tool.inputSchema || {},
+      outputSchema: tool.outputSchema || {},
     };
   }
 

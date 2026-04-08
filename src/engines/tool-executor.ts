@@ -54,12 +54,13 @@ export class ToolExecutor {
       ? await validation 
       : (validation as any);
 
-    if (!validationResult.valid) {
+    if (!validationResult || !validationResult.valid) {
       const durationMs = Date.now() - startTime;
 
       // Create failed execution record
-      const errorMessages = Array.isArray(validationResult.errors)
-        ? validationResult.errors.map((e: any) => typeof e === 'string' ? e : e.message).join('; ')
+      const validationErrors = validationResult?.errors || [];
+      const errorMessages = Array.isArray(validationErrors)
+        ? validationErrors.map((e: any) => typeof e === 'string' ? e : e.message).join('; ')
         : 'Unknown validation error';
 
       await this.createRecord({
@@ -82,9 +83,9 @@ export class ToolExecutor {
         executionId,
         success: false,
         output: null,
-        logs: [`Validation failed:`, ...Array.isArray(validationResult.errors) ? validationResult.errors.map((e: any) => typeof e === 'string' ? `  ${e}` : `  ${e.path}: ${e.message}`) : []],
+        logs: [`Validation failed:`, ...Array.isArray(validationErrors) ? validationErrors.map((e: any) => typeof e === 'string' ? `  ${e}` : `  ${e.path}: ${e.message}`) : []],
         duration_ms: durationMs,
-        metadata: { validationErrors: validation.errors },
+        metadata: { validationErrors },
       };
     }
 
@@ -117,8 +118,12 @@ export class ToolExecutor {
 
       const durationMs = Date.now() - startTime;
 
+      // Normalize result to ensure it's an object
+      const normalizedResult = result && typeof result === 'object' ? result : { output: result };
+      const output = (normalizedResult as any).output || result;
+
       // Step 4: Record success
-      await this.completeRecord(executionId, 'success', result.output, durationMs, null);
+      await this.completeRecord(executionId, 'success', JSON.stringify(output), durationMs, undefined);
 
       // Emit event
       await this.eventBus.emit('tool.executed', 'tool-executor', {
@@ -128,7 +133,7 @@ export class ToolExecutor {
         durationMs,
       });
 
-      return { executionId, ...result, duration_ms: durationMs };
+      return { executionId, success: true, output, duration_ms: durationMs, logs: [], metadata: {} };
     } catch (error: unknown) {
       const durationMs = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : String(error);
