@@ -43,7 +43,12 @@
     "sim:quantum:export": ".\\.venv\\Scripts\\python.exe ./ION_media/quantum_cognitive_sim.py --csv-out ./data/evaluations/quantum_cognitive_sim_latest.csv --json-out ./data/evaluations/quantum_cognitive_sim_latest.json",
     "codex:reindex": "node ./scripts/codex/reindex.js",
     "codex:register": "node ./scripts/codex/registerArtifact.js",
-    "codex:watch": "node ./scripts/codex/watch.js"
+    "codex:watch": "node ./scripts/codex/watch.js",
+    "db:migrate": "tsx src/scripts/migrate-d1.ts",
+    "db:seed:specs": "tsx src/scripts/sync-specs-from-codex.ts",
+    "db:seed:tools": "tsx src/scripts/seed-tools.ts",
+    "db:reset": "npm run db:migrate && npm run db:seed:specs && npm run db:seed:tools",
+    "v2:setup": "npm run db:migrate && npm run db:seed:specs && npm run db:seed:tools"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260227.0",

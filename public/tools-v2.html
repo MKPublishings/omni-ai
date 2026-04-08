@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ionirix v2.0.0 — Tools</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2c3e50;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      border-top: 1px solid #ecf0f1;
+      padding-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      color: #667eea;
+      transition: all 0.3s;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .content {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .tool-card {
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tool-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .tool-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .tool-desc {
+      font-size: 13px;
+      color: #7f8c8d;
+      margin-bottom: 12px;
+    }
+
+    .tool-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #95a5a6;
+    }
+
+    .tool-category {
+      display: inline-block;
+      background: #f0f4ff;
+      color: #667eea;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .execution-panel {
+      background: #f5f7fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .result {
+      background: white;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .error {
+      color: #e74c3c;
+    }
+
+    .success {
+      color: #27ae60;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚙️ Tool Executor — v2.0.0</h1>
+      <p>Execute and test tool modules with validation</p>
+      <nav class="nav">
+        <a href="index-v2.html">Home</a>
+        <a href="memory-v2.html">Memory</a>
+        <a href="tools-v2.html" class="active">Tools</a>
+        <a href="specs-v2.html">Specs</a>
+        <a href="system-v2.html">System</a>
+      </nav>
+    </header>
+
+    <div class="content">
+      <div class="section">
+        <h2>Available Tools</h2>
+        <div class="tools-grid" id="tools-container">
+          <div class="loading">Loading tools...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Tool Execution</h2>
+        <div class="execution-panel">
+          <div class="form-group">
+            <label for="tool-select">Tool</label>
+            <select id="tool-select" onchange="selectTool()">
+              <option value="">Select a tool...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="tool-input">Input (JSON)</label>
+            <textarea id="tool-input" placeholder='{"param": "value"}'></textarea>
+          </div>
+
+          <div>
+            <button onclick="validateTool()">Validate</button>
+            <button onclick="executeTool()">Execute</button>
+          </div>
+
+          <div id="result" class="result" style="display: none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import apiClient from './api-client.js';
+
+    let availableTools = [];
+
+    async function loadTools() {
+      try {
+        const result = await apiClient.listTools();
+        availableTools = result.tools || [];
+        renderTools();
+        renderSelect();
+      } catch (err) {
+        console.error('Failed to load tools:', err);
+        document.getElementById('tools-container').innerHTML = '<div class="error">Error loading tools: ' + err.message + '</div>';
+      }
+    }
+
+    function renderTools() {
+      const html = availableTools
+        .map(
+          (t) => `
+      <div class="tool-card" onclick="selectToolCard('${t.name}')">
+        <div class="tool-name">${t.name}</div>
+        <div class="tool-desc">${t.description}</div>
+        <div class="tool-meta">
+          <span>${t.version}</span>
+          <span class="tool-category">${t.category}</span>
+        </div>
+      </div>
+    `
+        )
+        .join('');
+
+      document.getElementById('tools-container').innerHTML = html || '<div class="empty">No tools available</div>';
+    }
+
+    function renderSelect() {
+      const select = document.getElementById('tool-select');
+      select.innerHTML =
+        '<option value="">Select a tool...</option>' +
+        availableTools.map((t) => `<option value="${t.name}">${t.name} (${t.category})</option>`).join('');
+    }
+
+    window.selectToolCard = function (name) {
+      document.getElementById('tool-select').value = name;
+      selectTool();
+    };
+
+    window.selectTool = function () {
+      const name = document.getElementById('tool-select').value;
+      const tool = availableTools.find((t) => t.name === name);
+      if (tool && tool.schema) {
+        document.getElementById('tool-input').value = JSON.stringify(tool.schema, null, 2);
+      }
+    };
+
+    window.validateTool = async function () {
+      const name = document.getElementById('tool-select').value;
+      if (!name) {
+        alert('Select a tool first');
+        return;
+      }
+
+      try {
+        const input = JSON.parse(document.getElementById('tool-input').value);
+        const result = await apiClient.validateTool(name, input);
+        showResult(result.valid ? 'Valid: ' + JSON.stringify(result) : 'Invalid: ' + JSON.stringify(result), result.valid);
+      } catch (err) {
+        showResult('Error: ' + err.message, false);
+      }
+    };
+
+    window.executeTool = async function () {
+      const name = document.getElementById('tool-select').value;
+      if (!name) {
+        alert('Select a tool first');
+        return;
+      }
+
+      try {
+        const input = JSON.parse(document.getElementById('tool-input').value);
+        const result = await apiClient.executeTool(name, input);
+        showResult(JSON.stringify(result, null, 2), true);
+      } catch (err) {
+        showResult('Error: ' + err.message, false);
+      }
+    };
+
+    function showResult(text, success) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = 'result ' + (success ? 'success' : 'error');
+      resultDiv.textContent = text;
+      resultDiv.style.display = 'block';
+    }
+
+    // Load tools on page load
+    window.addEventListener('load', loadTools);
+  </script>
+</body>
+</html>

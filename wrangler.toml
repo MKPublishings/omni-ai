@@ -34,6 +34,21 @@ binding = "MEMORY"
 id = "355f713328174c48aff53fad8d81d73e"
 preview_id = "memory_kv_preview"
 
+[[kv_namespaces]]
+binding = "SESSION"
+id = "session_kv_prod"
+preview_id = "session_kv_preview"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "cache_kv_prod"
+preview_id = "cache_kv_preview"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "config_kv_prod"
+preview_id = "config_kv_preview"
+
 [observability]
 enabled = true
 
@@ -41,12 +56,12 @@ enabled = true
 directory = "./public"
 binding = "ASSETS"
 
-# Optional D1 long-term memory binding.
-# [[d1_databases]]
-# binding = "ION_DB"
-# database_name = "ION_memory"
-# database_id = "<replace-with-d1-id>"
-# migrations_dir = "migrations"
+# D1 database binding for v2.0.0 subsystems
+[[d1_databases]]
+binding = "IONIRIX_DB"
+database_name = "ionirix"
+database_id = "ionirix_db_prod"
+migrations_dir = "migrations"
 
 # Optional Durable Object session binding.
 # [[durable_objects.bindings]]
@@ -57,6 +72,6 @@ binding = "ASSETS"
 # tag = "v1"
 # new_sqlite_classes = ["IONSession"]
 
-# Optional self-maintenance cron.
-# [triggers]
-# crons = ["*/30 * * * *"]
+# Scheduled tasks for system maintenance
+[triggers]
+crons = ["*/15 * * * *"]

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ionirix v2.0.0 — Memory</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2c3e50;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      border-top: 1px solid #ecf0f1;
+      padding-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      color: #667eea;
+      transition: all 0.3s;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .content {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      border: 1px solid #bdc3c7;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      border-color: #667eea;
+    }
+
+    .tab.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .data-table-container {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background: #f5f7fa;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #bdc3c7;
+    }
+
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .data-table tbody tr:hover {
+      background: #f5f7fa;
+      cursor: pointer;
+    }
+
+    .data-table-pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #bdc3c7;
+    }
+
+    .prev-btn,
+    .next-btn {
+      padding: 8px 16px;
+      border: 1px solid #bdc3c7;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .prev-btn:hover:not(:disabled),
+    .next-btn:hover:not(:disabled) {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .prev-btn:disabled,
+    .next-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .json-viewer {
+      background: #f5f7fa;
+      border-radius: 4px;
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+
+    .json-controls {
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: 1px solid #bdc3c7;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .json-string {
+      color: #27ae60;
+    }
+
+    .json-number {
+      color: #e74c3c;
+    }
+
+    .json-null {
+      color: #95a5a6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧠 Memory Manager — v2.0.0</h1>
+      <p>Create, search, and manage persistent memory entries</p>
+      <nav class="nav">
+        <a href="index-v2.html">Home</a>
+        <a href="memory-v2.html" class="active">Memory</a>
+        <a href="tools-v2.html">Tools</a>
+        <a href="specs-v2.html">Specs</a>
+        <a href="system-v2.html">System</a>
+      </nav>
+    </header>
+
+    <div class="content">
+      <div class="section">
+        <h2>Search Memory</h2>
+        <div class="search-bar">
+          <input type="text" class="search-input" placeholder="Search memories..." id="search-input" />
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Filter by Category</h2>
+        <div class="category-tabs" id="categories-container">
+          <div class="loading">Loading categories...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Memory Entries</h2>
+        <div class="data-table-container" id="table-container">
+          <div class="loading">Loading...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Details</h2>
+        <div id="details-container" class="json-viewer">
+          <p class="empty">Select a memory entry to view details</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import apiClient from './api-client.js';
+
+    let currentMemories = [];
+    let currentPage = 1;
+    const pageSize = 20;
+
+    async function loadMemories(page = 1) {
+      try {
+        document.getElementById('table-container').innerHTML = '<div class="loading">Loading...</div>';
+        const result = await apiClient.listMemory({ page: page, limit: pageSize });
+        currentMemories = result.memories || [];
+
+        renderTable(currentMemories);
+        renderPagination(result.total || 0, page);
+      } catch (err) {
+        console.error('Failed to load memories:', err);
+        document.getElementById('table-container').innerHTML =
+          '<div class="empty">Error loading memories: ' + err.message + '</div>';
+      }
+    }
+
+    function renderTable(memories) {
+      if (!memories.length) {
+        document.getElementById('table-container').innerHTML =
+          '<div class="empty">No memories found</div>';
+        return;
+      }
+
+      const rows = memories
+        .map(
+          (m, i) => `
+      <tr onclick="selectMemory(${i})">
+        <td>${m.id.substring(0, 8)}</td>
+        <td>${m.type}</td>
+        <td>${m.category}</td>
+        <td>${(m.summary || '').substring(0, 50)}</td>
+      </tr>
+    `
+        )
+        .join('');
+
+      document.getElementById('table-container').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    }
+
+    function renderPagination(total, currentPage) {
+      const pageCount = Math.ceil(total / pageSize);
+      const html = document.createElement('div');
+      html.className = 'data-table-pagination';
+      html.innerHTML = `
+      <button ${currentPage === 1 ? 'disabled' : 'onclick="prevPage()"'}>← Previous</button>
+      <span>Page ${currentPage} of ${pageCount}</span>
+      <button ${currentPage === pageCount ? 'disabled' : 'onclick="nextPage()"'}>Next →</button>
+    `;
+      document.getElementById('table-container').appendChild(html);
+    }
+
+    window.selectMemory = function (index) {
+      const memory = currentMemories[index];
+      const details = document.getElementById('details-container');
+      details.innerHTML =
+        '<pre>' +
+        JSON.stringify(memory, null, 2)
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;') +
+        '</pre>';
+    };
+
+    window.nextPage = function () {
+      loadMemories(currentPage + 1);
+      currentPage++;
+    };
+
+    window.prevPage = function () {
+      if (currentPage > 1) {
+        loadMemories(currentPage - 1);
+        currentPage--;
+      }
+    };
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length > 2) {
+        loadMemories(1); // TODO: Search query support
+      } else if (query.length === 0) {
+        loadMemories(1);
+      }
+    });
+
+    // Load initial data
+    loadMemories(1);
+  </script>
+</body>
+</html>
