@@ -162,6 +162,14 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
     return IONWorker.fetch(req, e as any, c as any);
   });
 
+  // ========== LEGACY ION IMAGE ROUTE (compatibility)
+  router.add('POST', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('ALL', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+
   // Dispatch request through router
   return router.handle(request, env, ctx);
 }
