@@ -21,6 +21,7 @@ import { ToolsWorker } from './api/tools-worker';
 import { SpecsWorker } from './api/specs-worker';
 import { SimulationWorker } from './api/simulation-worker';
 import { SystemWorker } from './api/system-worker';
+import IONWorker from './index.ts';
 
 // Middleware
 import { authMiddleware } from './middleware/auth';
@@ -152,6 +153,14 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('GET', '/api/system/bindings', compose((r: any, e: any, c: any, p: any) => systemWorker.getBindings(r, e, c, p)));
   router.add('GET', '/api/system/metrics', compose((r: any, e: any, c: any, p: any) => systemWorker.getMetrics(r, e, c, p)));
   router.add('GET', '/api/system/events', compose((r: any, e: any, c: any, p: any) => systemWorker.getEvents(r, e, c, p)));
+
+  // ========== LEGACY ION CHAT ROUTE (compatibility)
+  router.add('POST', '/api/ION', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('ALL', '/api/ION', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
 
   // Dispatch request through router
   return router.handle(request, env, ctx);
