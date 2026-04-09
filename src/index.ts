@@ -1412,7 +1412,10 @@ function createIONSseFromProviderStream(options: {
             const { value, done } = await reader.read();
             if (done) break;
 
-            pending += decoder.decode(value, { stream: true });
+            const chunkText = typeof value === "string"
+              ? value
+              : decoder.decode(value, { stream: true });
+            pending += chunkText;
             const lines = pending.split(/\r?\n/);
             pending = lines.pop() || "";
 
@@ -4632,7 +4635,7 @@ export default {
               ?.map((chunk) => chunk)
               .filter((chunk) => chunk.length > 0) || [finalResponse];
             const stream = new ReadableStream({
-              start(controller) {
+              async start(controller) {
                 if (responseChunks.length > 0) {
                   controller.enqueue(
                     encoder.encode(
@@ -4640,6 +4643,7 @@ export default {
                     )
                   );
                   for (let index = 1; index < responseChunks.length; index += 1) {
+                    await Promise.resolve();
                     controller.enqueue(
                       encoder.encode(
                         `data: ${JSON.stringify({ content: responseChunks[index] })}\n\n`
