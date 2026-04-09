@@ -1391,7 +1391,7 @@ function createIONSseFromProviderStream(options: {
   const reader = options.providerStream.getReader();
 
   return new ReadableStream({
-    async start(controller) {
+    start(controller) {
       let pending = "";
       let firstChunkSent = false;
       let fullText = "";
@@ -1406,37 +1406,41 @@ function createIONSseFromProviderStream(options: {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
       };
 
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+      const pump = async () => {
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-          pending += decoder.decode(value, { stream: true });
-          const lines = pending.split(/\r?\n/);
-          pending = lines.pop() || "";
+            pending += decoder.decode(value, { stream: true });
+            const lines = pending.split(/\r?\n/);
+            pending = lines.pop() || "";
 
-          for (const line of lines) {
-            const trimmed = String(line || "").trim();
-            if (!trimmed) continue;
-            const payload = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+            for (const line of lines) {
+              const trimmed = String(line || "").trim();
+              if (!trimmed) continue;
+              const payload = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+              emitChunk(extractProviderToken(payload));
+            }
+          }
+
+          const trailing = pending.trim();
+          if (trailing) {
+            const payload = trailing.startsWith("data:") ? trailing.slice(5).trim() : trailing;
             emitChunk(extractProviderToken(payload));
           }
+        } catch {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: "Streaming interrupted. Continuing with partial output." })}\n\n`)
+          );
+        } finally {
+          options.onComplete?.(fullText);
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
         }
+      };
 
-        const trailing = pending.trim();
-        if (trailing) {
-          const payload = trailing.startsWith("data:") ? trailing.slice(5).trim() : trailing;
-          emitChunk(extractProviderToken(payload));
-        }
-      } catch {
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ content: "Streaming interrupted. Continuing with partial output." })}\n\n`)
-        );
-      } finally {
-        options.onComplete?.(fullText);
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-      }
+      void pump();
     },
     cancel() {
       void reader.cancel();

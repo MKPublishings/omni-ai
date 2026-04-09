@@ -144,3 +144,68 @@ test("worker /api/ION returns simulation report when native streaming setup fail
   assert.equal(simulation.stepsExecuted, 3);
   assert.match(String(simulation.chatReport || ""), /Progress: 60% \(3\/5 steps\)/);
 });
+
+test("worker /api/ION delivers native stream chunks progressively", async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+  const encoder = new TextEncoder();
+
+  const providerStream = new ReadableStream({
+    start(controller) {
+      setTimeout(() => {
+        controller.enqueue(encoder.encode('data: {"response":"hello"}\n\n'));
+      }, 40);
+      setTimeout(() => {
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      }, 120);
+    }
+  });
+
+  const env = {
+    AI: {
+      run: async () => providerStream
+    },
+    MEMORY: memory as any,
+    MIND: mind as any,
+    ASSETS: {
+      fetch: async () => new Response("not-found", { status: 404 })
+    },
+    MODEL_ION: "primary-model"
+  } as any;
+
+  const request = new Request("https://example.test/api/ION?fast=true", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-ION-session-id": "worker-stream-progressive"
+    },
+    body: JSON.stringify({
+      mode: "auto",
+      messages: [
+        {
+          role: "user",
+          content: "Send a streaming response."
+        }
+      ]
+    })
+  });
+
+  const response = await worker.fetch(request, env, createExecutionContext() as any);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Content-Type"), "text/event-stream");
+
+  const reader = response.body?.getReader();
+  assert.ok(reader, "Response body should expose a reader");
+
+  const readPromise = reader.read();
+  const result = await Promise.race([
+    readPromise,
+    new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), 80))
+  ]);
+
+  assert.notEqual((result as any).timeout, true, "Expected first stream chunk before completion");
+  assert.equal((result as any).done, false);
+  const chunkText = new TextDecoder().decode((result as any).value || new Uint8Array());
+  assert.match(chunkText, /data:\s*\{"content":"hello"/);
+});
