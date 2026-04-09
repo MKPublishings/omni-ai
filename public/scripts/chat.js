@@ -2129,7 +2129,18 @@
       if (lastError) {
         throw lastError;
       }
-      throw new Error("Bad response from Ion backend");
+      const status = res ? `${res.status} ${res.statusText}` : "no response";
+      let bodyText = "";
+      if (res?.body) {
+        try {
+          bodyText = await res.text();
+        } catch {
+          bodyText = "";
+        }
+      }
+      throw new Error(
+        `Bad response from Ion backend (${status})${bodyText ? `: ${bodyText}` : ""}`
+      );
     }
 
     if (typeof onMeta === "function") {
@@ -2768,9 +2779,12 @@
         streamingRenderFrameId = 0;
       }
       console.error("ION streaming error:", err);
+      const reason = String(err?.message || err || "").trim();
       updateAssistantMessageBody(
         assistantBodyEl,
-        "[Error] Something went wrong while streaming the response."
+        reason
+          ? `[Error] Something went wrong while streaming the response: ${reason}`
+          : "[Error] Something went wrong while streaming the response."
       );
       playNotificationSound("error");
     } finally {

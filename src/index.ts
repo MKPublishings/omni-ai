@@ -1423,6 +1423,7 @@ function createIONSseFromProviderStream(options: {
               const trimmed = String(line || "").trim();
               if (!trimmed) continue;
               const payload = trimmed.startsWith("data:") ? trimmed.slice(5).trim() : trimmed;
+              if (payload === "[DONE]") continue;
               emitChunk(extractProviderToken(payload));
             }
           }
