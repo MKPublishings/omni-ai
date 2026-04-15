@@ -1,5 +1,6 @@
 const PASSWORD_HASH_VERSION = 'pbkdf2_sha256';
-const PASSWORD_ITERATIONS = 210000;
+const PASSWORD_ITERATIONS = 100000;
+const MAX_SUPPORTED_PASSWORD_ITERATIONS = 100000;
 const PASSWORD_KEY_LENGTH = 32;
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
@@ -146,9 +147,17 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   if (!Number.isFinite(iterations) || iterations <= 0) {
     return false;
   }
+  if (iterations > MAX_SUPPORTED_PASSWORD_ITERATIONS) {
+    return false;
+  }
 
   const salt = Uint8Array.from(atob(saltValue.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0));
-  const hash = await derivePasswordHash(password, salt, iterations);
+  let hash: Uint8Array;
+  try {
+    hash = await derivePasswordHash(password, salt, iterations);
+  } catch {
+    return false;
+  }
   return bytesToBase64Url(hash) === expectedHash;
 }
 

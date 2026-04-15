@@ -44,7 +44,7 @@ INSERT OR IGNORE INTO auth_users (
   '2c4507fd-8afb-4f88-bd1c-fdd7d981fe38',
   'ionadminmirnes',
   'ionadminmirnes@ionirix.local',
-  'pbkdf2_sha256$210000$r6a_dckAhjNj7fwu57IxqQ$lqA6HrorV_GmJgd1z5ZH2lA_nbm0ennCATwk1nhiOwY',
+  'pbkdf2_sha256$100000$wOBqhnzWim-Ym1JaHOyEfQ$t2jGPBXeT74csRHK3_zdKK1ivzvjSNz9wqDGpZfFPSA',
   'ION Admin Mirnes',
   'admin',
   1,
