@@ -13,7 +13,9 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*"]
 }
