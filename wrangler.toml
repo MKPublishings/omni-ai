@@ -40,12 +40,11 @@ ION_ENV = "production"
 directory = "./public"
 binding = "ASSETS"
 
-# D1 database binding for v2.0.0 subsystems (commented out - create in Cloudflare dashboard first)
-# [[d1_databases]]
-# binding = "IONIRIX_DB"
-# database_name = "ionirix"
-# database_id = "00000000-0000-0000-0000-000000000001"
-# migrations_dir = "migrations"
+[[d1_databases]]
+binding = "DB"
+database_name = "ionirix"
+database_id = "7395c7a8-5f61-4a35-b493-bfbebfe3ef36"
+migrations_dir = "migrations"
 
 # Optional Durable Object session binding.
 # [[durable_objects.bindings]]

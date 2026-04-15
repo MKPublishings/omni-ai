@@ -46,13 +46,10 @@ function extractRegexLiteral(functionSource, constName) {
 }
 
 function loadClientPolicyFn() {
-  const chatPath = path.join(__dirname, "..", "..", "public", "scripts", "chat.js");
+  const chatPath = path.join(__dirname, "..", "shared", "chatClientRuntime.js");
   const source = fs.readFileSync(chatPath, "utf8");
-  const fnSource = extractFunctionSource(source, "evaluatePromptPolicy");
-  const script = `${fnSource}\nmodule.exports = evaluatePromptPolicy;`;
-  const sandbox = { module: { exports: null }, exports: {}, console };
-  vm.runInNewContext(script, sandbox, { filename: "client-policy.vm.js" });
-  return { fn: sandbox.module.exports, source: fnSource };
+  const runtime = require(chatPath);
+  return { fn: runtime.evaluatePromptPolicy, source };
 }
 
 function loadServerPolicyFn() {

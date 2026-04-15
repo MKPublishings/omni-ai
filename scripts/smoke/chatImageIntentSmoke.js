@@ -1,44 +1,9 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
 
 const repoRoot = path.resolve(__dirname, "..", "..");
-const chatFile = path.join(repoRoot, "public", "scripts", "chat.js");
-const source = fs.readFileSync(chatFile, "utf8");
-
-function extractBetween(startMarker, endMarker) {
-  const start = source.indexOf(startMarker);
-  if (start < 0) {
-    throw new Error(`Unable to locate start marker: ${startMarker}`);
-  }
-
-  const end = source.indexOf(endMarker, start);
-  if (end < 0) {
-    throw new Error(`Unable to locate end marker: ${endMarker}`);
-  }
-
-  return source.slice(start, end);
-}
-
-const detectSource = extractBetween(
-  "function detectAutoMediaIntent(text)",
-  "function parseStyleCommand(content)"
-);
-const isImageSource = extractBetween(
-  "function isImageGenerationRequest(text)",
-  "function extractImagePrompt(text)"
-);
-const extractPromptSource = extractBetween(
-  "function extractImagePrompt(text)",
-  "function extractBackendErrorReason(data, rawText, fallbackMessage)"
-);
-
-const context = {};
-vm.createContext(context);
-vm.runInContext(`${isImageSource}\n${extractPromptSource}\n${detectSource}`, context);
-
-const { isImageGenerationRequest, extractImagePrompt, detectAutoMediaIntent } = context;
+const chatFile = path.join(repoRoot, "scripts", "shared", "chatClientRuntime.js");
+const { isImageGenerationRequest, extractImagePrompt, detectAutoMediaIntent } = require(chatFile);
 
 assert.equal(typeof isImageGenerationRequest, "function", "isImageGenerationRequest should be available");
 assert.equal(typeof extractImagePrompt, "function", "extractImagePrompt should be available");

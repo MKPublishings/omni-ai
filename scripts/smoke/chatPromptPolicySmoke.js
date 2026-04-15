@@ -1,49 +1,13 @@
-const fs = require("node:fs");
 const path = require("node:path");
-const vm = require("node:vm");
 const { SAFE_PROMPTS, ILLEGAL_PROMPTS, EXPLICIT_PROMPT } = require("./policyPromptFixtures");
 
 function loadEvaluatePromptPolicy() {
-  const chatPath = path.join(__dirname, "..", "..", "public", "scripts", "chat.js");
-  const source = fs.readFileSync(chatPath, "utf8");
-  const startToken = "function evaluatePromptPolicy";
-  const startIndex = source.indexOf(startToken);
-  if (startIndex === -1) {
-    throw new Error("Unable to locate evaluatePromptPolicy in public/scripts/chat.js");
+  const chatPath = path.join(__dirname, "..", "shared", "chatClientRuntime.js");
+  const runtime = require(chatPath);
+  if (typeof runtime.evaluatePromptPolicy !== "function") {
+    throw new Error("Unable to load evaluatePromptPolicy from scripts/shared/chatClientRuntime.js");
   }
-
-  const bodyStart = source.indexOf("{", startIndex);
-  if (bodyStart === -1) {
-    throw new Error("Unable to parse evaluatePromptPolicy body start");
-  }
-
-  let depth = 0;
-  let endIndex = -1;
-  for (let i = bodyStart; i < source.length; i += 1) {
-    const char = source[i];
-    if (char === "{") depth += 1;
-    if (char === "}") {
-      depth -= 1;
-      if (depth === 0) {
-        endIndex = i;
-        break;
-      }
-    }
-  }
-
-  if (endIndex === -1) {
-    throw new Error("Unable to parse evaluatePromptPolicy body end");
-  }
-
-  const functionSource = source.slice(startIndex, endIndex + 1);
-  const scriptSource = `${functionSource}\nmodule.exports = evaluatePromptPolicy;`;
-  const sandbox = {
-    module: { exports: null },
-    exports: {},
-    console
-  };
-  vm.runInNewContext(scriptSource, sandbox, { filename: "chat-evaluatePromptPolicy.vm.js" });
-  return sandbox.module.exports;
+  return runtime.evaluatePromptPolicy;
 }
 
 function expectBlocked(label, fn, prompt, safetyProfile, expectedReason) {

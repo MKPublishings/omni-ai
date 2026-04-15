@@ -2,24 +2,36 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { clearAuthSession, getStoredToken, storeAuthSession } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
 
+type AuthMode = 'login' | 'signup'
+
 export default function LoginPage() {
+  const [mode, setMode] = useState<AuthMode>('login')
+  const [displayName, setDisplayName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
   // Check if already authenticated
   useEffect(() => {
-    const token = localStorage.getItem('ion_token')
+    const token = getStoredToken()
     if (token) {
       router.push('/')
     }
   }, [router])
+
+  const handleModeChange = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setError('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,12 +39,20 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      if (mode === 'signup' && password !== confirmPassword) {
+        throw new Error('Passwords do not match')
+      }
+
+      const response = await fetch(mode === 'signup' ? '/api/auth/signup' : '/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          mode === 'signup'
+            ? { email, password, displayName, username }
+            : { identifier: email, password }
+        ),
       })
 
       const data = await response.json()
@@ -41,14 +61,12 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed')
       }
 
-      // Store token and user data
-      localStorage.setItem('ion_token', data.token)
-      localStorage.setItem('ion_user', JSON.stringify(data.user))
+      storeAuthSession(data)
 
-      // Redirect to dashboard
       router.push('/')
 
     } catch (err) {
+      clearAuthSession()
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setIsLoading(false)
@@ -71,14 +89,61 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-quantum-white mb-2">ION AI Dashboard</h1>
-          <p className="text-quantum-white/64">Enter your credentials to access the system</p>
+          <p className="text-quantum-white/64">
+            {mode === 'signup'
+              ? 'Create your email account to access the system'
+              : 'Enter your email credentials to access the system'}
+          </p>
+        </div>
+
+        <div className="flex bg-quantum-white/5 rounded-md p-1 mb-6">
+          <button
+            type="button"
+            className={`flex-1 rounded-sm py-2 text-sm transition-colors ${mode === 'login' ? 'bg-ion-blue-500 text-quantum-white' : 'text-quantum-white/64 hover:text-quantum-white'}`}
+            onClick={() => handleModeChange('login')}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={`flex-1 rounded-sm py-2 text-sm transition-colors ${mode === 'signup' ? 'bg-ion-blue-500 text-quantum-white' : 'text-quantum-white/64 hover:text-quantum-white'}`}
+            onClick={() => handleModeChange('signup')}
+          >
+            Sign Up
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {mode === 'signup' && (
+            <div>
+              <Input
+                type="text"
+                placeholder="Display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {mode === 'signup' && (
+            <div>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+          )}
+
           <div>
             <Input
-              type="email"
-              placeholder="Email address"
+              type={mode === 'signup' ? 'email' : 'text'}
+              placeholder={mode === 'signup' ? 'Email address' : 'Email or username'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -97,6 +162,19 @@ export default function LoginPage() {
             />
           </div>
 
+          {mode === 'signup' && (
+            <div>
+              <Input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+          )}
+
           {error && (
             <div className="text-amber-signal-500 text-sm text-center bg-amber-signal-500/10 border border-amber-signal-500/20 rounded-md p-3">
               {error}
@@ -109,13 +187,19 @@ export default function LoginPage() {
             disabled={isLoading}
             glow
           >
-            {isLoading ? 'Authenticating...' : 'Access ION AI'}
+            {isLoading
+              ? mode === 'signup'
+                ? 'Creating account...'
+                : 'Authenticating...'
+              : mode === 'signup'
+                ? 'Create Account'
+                : 'Access ION AI'}
           </Button>
         </form>
 
         <div className="mt-8 text-center">
           <p className="text-quantum-white/40 text-sm">
-            Demo credentials: mirnes@ionirix.com / sovereign2026
+            Email sign-up is enabled. Usernames can sign in too. Passwords require at least 8 characters with a letter and a number.
           </p>
         </div>
       </GlassCard>

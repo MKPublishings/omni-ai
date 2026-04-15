@@ -21,13 +21,14 @@ import { ToolsWorker } from './api/tools-worker';
 import { SpecsWorker } from './api/specs-worker';
 import { SimulationWorker } from './api/simulation-worker';
 import { SystemWorker } from './api/system-worker';
+import { AuthWorker } from './api/auth-worker';
 import IONWorker from './index.ts';
 
 // Middleware
 import { authMiddleware } from './middleware/auth';
 
 interface WorkerEnv {
-  DB: D1Database;
+  DB?: D1Database;
   SESSION: KVNamespace;
   CACHE: KVNamespace;
   CONFIG: KVNamespace;
@@ -43,6 +44,7 @@ interface WorkerEnv {
  */
 async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
+  const db = env.DB as D1Database;
 
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
@@ -66,20 +68,21 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // Initialize shared engines (per request)
   const eventBus = new EventBus();
-  const memoryEngine = new MemoryEngine(env.DB, eventBus);
+  const memoryEngine = new MemoryEngine(db, eventBus);
   const toolRegistry = new ToolRegistry();
-  const toolExecutor = new ToolExecutor(env.DB, eventBus);
-  const simulationRuntime = new SimulationRuntime(env.DB, eventBus);
+  const toolExecutor = new ToolExecutor(db, eventBus);
+  const simulationRuntime = new SimulationRuntime(db, eventBus);
 
   // Create router and register all Phase 3 routes
   const router = new Router();
 
   // Initialize workers (with corrected constructors)
-  const memoryWorker = new MemoryWorker(env.DB, eventBus);
-  const toolsWorker = new ToolsWorker(env.DB, toolRegistry, eventBus);
-  const specsWorker = new SpecsWorker(env.DB, env.CACHE);
-  const simulationWorker = new SimulationWorker(env.DB, eventBus);
-  const systemWorker = new SystemWorker(env.DB, env.MEMORY, eventBus, env);
+  const memoryWorker = new MemoryWorker(db, eventBus);
+  const toolsWorker = new ToolsWorker(db, toolRegistry, eventBus);
+  const specsWorker = new SpecsWorker(db, env.CACHE);
+  const simulationWorker = new SimulationWorker(db, eventBus);
+  const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
+  const authWorker = new AuthWorker(env.DB);
 
   // Middleware functions
   const withAuth = (handler: any) =>
@@ -111,6 +114,12 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // Helper to compose middleware
   const compose = (handler: any) => withRateLimit(withMetrics(withAuth(handler)));
+
+  // ========== AUTH API ROUTES ==========
+  router.add('POST', '/api/auth/signup', async (r: Request) => authWorker.signup(r));
+  router.add('POST', '/api/auth/login', async (r: Request) => authWorker.login(r));
+  router.add('GET', '/api/auth/me', async (r: Request) => authWorker.me(r));
+  router.add('POST', '/api/auth/logout', async (r: Request) => authWorker.logout(r));
 
   // ========== MEMORY API ROUTES ==========
   router.add('GET', '/api/memory', compose((r: any, e: any, c: any, p: any) => memoryWorker.list(r, e, c, p)));

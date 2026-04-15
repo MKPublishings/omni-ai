@@ -125,9 +125,9 @@ function deriveSignals() {
   const logSample = latestLogSample();
 
   const srcIndex = safeRead(path.join(ROOT, "src", "index.ts"));
-  const chatScript = safeRead(path.join(ROOT, "public", "scripts", "chat.js"));
+  const chatScript = safeRead(path.join(ROOT, "scripts", "shared", "chatClientRuntime.js"));
 
-  const hasModeAutoRouting = /detectAutoModeFromText|detectModeFromContent/.test(chatScript);
+  const hasModeAutoRouting = /detectAutoMediaIntent|detectAutoModeFromText|detectModeFromContent/.test(chatScript);
   const hasLegalSafety = /evaluateLegalAttestation/.test(srcIndex);
   const hasPromptSafety = /evaluateSexualSafetyPrompt/.test(srcIndex);
   const hasImageFallbackRetry = /fallbackUsed\s*=\s*true/.test(srcIndex);

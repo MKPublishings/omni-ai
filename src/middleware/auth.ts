@@ -7,10 +7,14 @@
  * Attaches sessionId and mode to the request object.
  */
 
+import { getSessionByToken, touchSession } from '../auth/credentials';
+
 export interface AuthContext {
   sessionId: string;
   mode?: string;
   isAdmin?: boolean;
+  userId?: string;
+  email?: string;
 }
 
 declare global {
@@ -43,7 +47,30 @@ export async function authMiddleware(
       }
     }
 
-    // Generate temporary session if needed (for public endpoints)
+    if (sessionId && env.DB) {
+      const auth = await getSessionByToken(env.DB as D1Database, sessionId);
+      if (!auth) {
+        return {
+          valid: false,
+          error: 'Invalid or expired auth token',
+        };
+      }
+
+      await touchSession(env.DB as D1Database, auth.session.id);
+
+      return {
+        valid: true,
+        context: {
+          sessionId: auth.session.id,
+          mode: 'authenticated',
+          isAdmin: auth.user.role === 'admin',
+          userId: auth.user.id,
+          email: auth.user.email,
+        },
+      };
+    }
+
+    // Generate temporary session if needed (for public or legacy endpoints)
     if (!sessionId) {
       sessionId = `session:${crypto.randomUUID()}`;
     }

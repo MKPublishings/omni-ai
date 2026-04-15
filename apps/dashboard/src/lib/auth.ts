@@ -1,0 +1,69 @@
+export interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  role: string;
+  emailVerified: boolean;
+}
+
+export interface AuthResponse {
+  token: string;
+  sessionId: string;
+  expiresAt: string;
+  user: AuthUser;
+}
+
+const TOKEN_KEY = 'ion_token';
+const USER_KEY = 'ion_user';
+
+function safeJsonParse<T>(value: string | null): T | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return window.localStorage.getItem(TOKEN_KEY);
+}
+
+export function getStoredUser(): AuthUser | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return safeJsonParse<AuthUser>(window.localStorage.getItem(USER_KEY));
+}
+
+export function storeAuthSession(payload: AuthResponse): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.setItem(TOKEN_KEY, payload.token);
+  window.localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+}
+
+export function clearAuthSession(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(USER_KEY);
+}
+
+export async function authorizedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const token = getStoredToken();
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return fetch(input, { ...init, headers });
+}

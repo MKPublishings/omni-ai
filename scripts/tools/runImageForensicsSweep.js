@@ -93,7 +93,7 @@ const IMAGE_RELEVANT_ROOTS = [
   "ION-image-engine/",
   "workers/ION-ai-images/",
   "src/index.ts",
-  "public/scripts/chat.js",
+  "scripts/shared/chatClientRuntime.js",
   "scripts/smoke/image",
   "ION_media/"
 ];
@@ -102,7 +102,7 @@ const STRICT_IMAGE_RELEVANT_ROOTS = [
   "ION-image-engine/",
   "workers/ION-ai-images/",
   "src/index.ts",
-  "public/scripts/chat.js",
+  "scripts/shared/chatClientRuntime.js",
   "scripts/smoke/image"
 ];
 

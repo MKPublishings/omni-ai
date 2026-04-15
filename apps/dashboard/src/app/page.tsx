@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { authorizedFetch, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -54,8 +55,7 @@ export default function Home() {
   // Authentication check
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('ion_token')
-      const userData = localStorage.getItem('ion_user')
+      const token = getStoredToken()
 
       if (!token) {
         router.push('/login')
@@ -63,25 +63,19 @@ export default function Home() {
       }
 
       try {
-        // Validate token with server
-        const response = await fetch('/api/auth/login', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        const response = await authorizedFetch('/api/auth/me')
 
         if (response.ok) {
           const data = await response.json()
           setUser(data.user)
           setIsAuthenticated(true)
         } else {
-          // Token invalid, redirect to login
-          localStorage.removeItem('ion_token')
-          localStorage.removeItem('ion_user')
+          clearAuthSession()
           router.push('/login')
         }
       } catch (error) {
         console.error('Auth check failed:', error)
+        clearAuthSession()
         router.push('/login')
       }
     }
@@ -90,9 +84,14 @@ export default function Home() {
   }, [router])
 
   // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem('ion_token')
-    localStorage.removeItem('ion_user')
+  const handleLogout = async () => {
+    try {
+      await authorizedFetch('/api/auth/logout', { method: 'POST' })
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+
+    clearAuthSession()
     setUser(null)
     setIsAuthenticated(false)
     router.push('/login')
@@ -173,7 +172,7 @@ export default function Home() {
     setIsLoadingConversation(true)
 
     try {
-      const token = localStorage.getItem('ion_token')
+      const token = getStoredToken()
 
       // Call real ION AI API
       const response = await fetch(process.env.NEXT_PUBLIC_ION_API_URL || 'https://ion-ai.ion-ai.workers.dev/', {
