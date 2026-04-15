@@ -13,6 +13,7 @@ import { AIConversationPanel } from '@/components/AIConversationPanel'
 import { Modal } from '@/components/Modal'
 import { Toast } from '@/components/Toast'
 import { AmbientBackground } from '@/components/AmbientBackground'
+import { Table } from '@/components/Table'
 import { StatCardSkeleton, TableSkeleton, ConversationSkeleton } from '@/components/Skeleton'
 
 type ZoneFocus = 'sanctuary' | 'performance' | 'transition' | null
@@ -23,7 +24,12 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [zoneFocus, setZoneFocus] = useState<ZoneFocus>(null)
-  const [aiMessages, setAiMessages] = useState([
+  const [aiMessages, setAiMessages] = useState<Array<{
+    id: string
+    type: 'user' | 'ai'
+    content: string
+    timestamp: Date
+  }>>([
     {
       id: '1',
       type: 'ai' as const,
@@ -170,7 +176,7 @@ export default function Home() {
       const token = localStorage.getItem('ion_token')
 
       // Call real ION AI API
-      const response = await fetch('https://ion-ai.ion-ai.workers.dev/', {
+      const response = await fetch(process.env.NEXT_PUBLIC_ION_API_URL || 'https://ion-ai.ion-ai.workers.dev/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

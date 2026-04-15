@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "JWT_SECRET": "@jwt_secret",
+    "ION_API_KEY": "@ion_api_key",
+    "NEXT_PUBLIC_ION_API_URL": "@ion_api_url"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}
