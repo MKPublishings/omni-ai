@@ -17,8 +17,21 @@ const DASHBOARD_DIR = path.join(__dirname, '../apps/dashboard');
 const DASHBOARD_OUT = path.join(DASHBOARD_DIR, 'out');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const VALIDATOR_SCRIPT = path.join(__dirname, '../ION-image-engine/utils/validator.js');
+const TOKENS_DIR = path.join(__dirname, '../packages/tokens');
+const GLASS_DIR = path.join(__dirname, '../packages/glass');
 
 console.log('🚀 ION Build System Starting...\n');
+
+// Step 0: Build shared UI packages
+console.log('🧱 Step 0: Building shared UI packages...');
+try {
+  execSync('npm run build', { cwd: TOKENS_DIR, stdio: 'inherit' });
+  execSync('npm run build', { cwd: GLASS_DIR, stdio: 'inherit' });
+  console.log('✅ Shared UI packages built successfully\n');
+} catch (error) {
+  console.error('❌ Shared UI package build failed');
+  process.exit(1);
+}
 
 // Step 1: Build Dashboard
 console.log('📦 Step 1: Building Dashboard (Next.js)...');
