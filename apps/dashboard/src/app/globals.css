@@ -1,0 +1,19 @@
+@import '@ionirix/tokens';
+@import '@ionirix/glass';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: var(--ix-surface-base);
+    --foreground: var(--ix-text-primary);
+  }
+
+  body {
+    color: var(--ix-text-primary);
+    background: var(--ix-surface-base);
+    font-family: var(--ix-font-body);
+  }
+}

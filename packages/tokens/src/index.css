@@ -1,0 +1,119 @@
+/* ============================================================
+   IONIRIX GLASS UI SYSTEM — Design Token Reference
+   Version: 1.0.0
+   Generated: 2026-04-15
+   ============================================================ */
+
+:root {
+    /* ── Core Palette: Ion Blue ── */
+    --ix-ion-blue-50:  #EFF6FF;
+    --ix-ion-blue-100: #DBEAFE;
+    --ix-ion-blue-200: #BFDBFE;
+    --ix-ion-blue-300: #93C5FD;
+    --ix-ion-blue-400: #60A5FA;
+    --ix-ion-blue-500: #2563EB;
+    --ix-ion-blue-600: #1D4ED8;
+    --ix-ion-blue-700: #1E40AF;
+    --ix-ion-blue-800: #1E3A8A;
+    --ix-ion-blue-900: #172554;
+
+    /* ── Core Palette: Spectral Cyan ── */
+    --ix-spectral-cyan-50:  #ECFEFF;
+    --ix-spectral-cyan-100: #CFFAFE;
+    --ix-spectral-cyan-200: #A5F3FC;
+    --ix-spectral-cyan-300: #67E8F9;
+    --ix-spectral-cyan-400: #22D3EE;
+    --ix-spectral-cyan-500: #06B6D4;
+    --ix-spectral-cyan-600: #0891B2;
+    --ix-spectral-cyan-700: #0E7490;
+    --ix-spectral-cyan-800: #155E75;
+    --ix-spectral-cyan-900: #164E63;
+
+    /* ── Core Palette: Neutrals ── */
+    --ix-quantum-white:      #F8FAFC;
+    --ix-quantum-white-warm:  #FAFAF9;
+    --ix-pine-black-900:      #0A0F1A;
+    --ix-pine-black-800:      #141B2D;
+    --ix-pine-black-700:      #1E293B;
+    --ix-pine-black-600:      #334155;
+
+    /* ── Core Palette: Signals ── */
+    --ix-amber-signal-400: #FBBF24;
+    --ix-amber-signal-500: #F59E0B;
+    --ix-amber-signal-600: #D97706;
+    --ix-success:          #22C55E;
+    --ix-error:            #EF4444;
+
+    /* ── Semantic: Surfaces ── */
+    --ix-surface-base:         #0A0F1A;
+    --ix-surface-elevated:     #141B2D;
+    --ix-surface-glass:        rgba(255, 255, 255, 0.06);
+    --ix-surface-glass-hover:  rgba(255, 255, 255, 0.10);
+    --ix-surface-glass-active: rgba(255, 255, 255, 0.14);
+
+    /* ── Semantic: Borders ── */
+    --ix-border-glass:        rgba(255, 255, 255, 0.12);
+    --ix-border-glass-strong: rgba(255, 255, 255, 0.20);
+
+    /* ── Semantic: Text ── */
+    --ix-text-primary:   #F8FAFC;
+    --ix-text-secondary: rgba(248, 250, 252, 0.64);
+    --ix-text-muted:     rgba(248, 250, 252, 0.40);
+
+    /* ── Semantic: Accents ── */
+    --ix-accent-primary:   #2563EB;
+    --ix-accent-secondary: #06B6D4;
+    --ix-accent-warning:   #F59E0B;
+
+    /* ── Semantic: Glows ── */
+    --ix-glow-primary: rgba(37, 99, 235, 0.24);
+    --ix-glow-cyan:    rgba(6, 182, 212, 0.20);
+    --ix-glow-amber:   rgba(245, 158, 11, 0.20);
+
+    /* ── Typography ── */
+    --ix-font-body:     'Inter', -apple-system, sans-serif;
+    --ix-font-mono:     'JetBrains Mono', 'Consolas', monospace;
+    --ix-font-display:  'Playfair Display', 'Georgia', serif;
+
+    /* ── Spacing (8px base) ── */
+    --ix-space-0-5: 4px;
+    --ix-space-1:   8px;
+    --ix-space-1-5: 12px;
+    --ix-space-2:   16px;
+    --ix-space-3:   24px;
+    --ix-space-4:   32px;
+    --ix-space-6:   48px;
+    --ix-space-8:   64px;
+    --ix-space-12:  96px;
+    --ix-space-16:  128px;
+
+    /* ── Border Radius ── */
+    --ix-radius-sm:   8px;
+    --ix-radius-md:   16px;
+    --ix-radius-lg:   24px;
+    --ix-radius-full: 9999px;
+
+    /* ── Elevation Shadows ── */
+    --ix-shadow-1: 0 1px 3px rgba(10,15,26,0.3),
+                   0 1px 2px rgba(10,15,26,0.2);
+    --ix-shadow-2: 0 4px 6px rgba(10,15,26,0.3),
+                   0 2px 4px rgba(10,15,26,0.2);
+    --ix-shadow-3: 0 10px 15px rgba(10,15,26,0.4),
+                   0 4px 6px rgba(10,15,26,0.2);
+    --ix-shadow-4: 0 20px 25px rgba(10,15,26,0.5),
+                   0 8px 10px rgba(10,15,26,0.2);
+    --ix-shadow-5: 0 25px 50px rgba(10,15,26,0.6);
+
+    /* ── Motion: Timing Curves ── */
+    --ix-ease-sovereign: cubic-bezier(0.22, 0.68, 0.00, 1.0);
+    --ix-ease-ambient:   cubic-bezier(0.4, 0.0, 0.2, 1.0);
+    --ix-ease-grok:      cubic-bezier(0.0, 0.0, 0.2, 1.0);
+    --ix-ease-settle:    cubic-bezier(0.33, 1.0, 0.68, 1.0);
+
+    /* ── Motion: Durations ── */
+    --ix-duration-micro:     100ms;
+    --ix-duration-quick:     200ms;
+    --ix-duration-standard:  300ms;
+    --ix-duration-dramatic:  500ms;
+    --ix-duration-cinematic: 800ms;
+}

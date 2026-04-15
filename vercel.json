@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/dashboard/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/apps/dashboard/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/apps/dashboard/$1"
+    }
+  ],
+  "env": {
+    "JWT_SECRET": "@ion-jwt-secret",
+    "ION_API_KEY": "@ion-api-key"
+  },
+  "functions": {
+    "apps/dashboard/src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

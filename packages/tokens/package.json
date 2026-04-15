@@ -1,0 +1,28 @@
+{
+  "name": "@ionirix/tokens",
+  "version": "1.0.0",
+  "description": "Design tokens for Ionirix Glass UI System",
+  "main": "dist/index.css",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run build:css && npm run build:types",
+    "build:css": "if not exist dist mkdir dist && copy src\\index.css dist\\index.css",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "dev": "npm run build:css -- --watch"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.10",
+    "typescript": "^5.2.2"
+  },
+  "keywords": [
+    "design-tokens",
+    "css",
+    "ionirix",
+    "glass-ui"
+  ],
+  "author": "Ionirix LLC",
+  "license": "UNLICENSED"
+}

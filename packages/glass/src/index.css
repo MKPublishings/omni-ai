@@ -1,0 +1,183 @@
+/* ============================================================
+   IONIRIX GLASS UI SYSTEM — Glass Material Engine
+   Version: 1.0.0
+   Generated: 2026-04-15
+   ============================================================ */
+
+@import '@ionirix/tokens';
+
+/* ── Glass Tier 1: Sovereign Glass ── */
+.ix-glass-sovereign {
+    background: var(--ix-surface-glass);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid var(--ix-border-glass);
+    border-radius: var(--ix-radius-md);
+    box-shadow: var(--ix-shadow-1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: all var(--ix-duration-quick) var(--ix-ease-sovereign);
+}
+.ix-glass-sovereign:hover {
+    background: var(--ix-surface-glass-hover);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: var(--ix-shadow-2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+}
+.ix-glass-sovereign:active {
+    background: var(--ix-surface-glass-active);
+    border-color: var(--ix-border-glass-strong);
+    box-shadow: inset 0 2px 4px rgba(10, 15, 26, 0.3);
+    transform: translateY(0);
+}
+
+/* ── Glass Tier 2: Ambient Glass ── */
+.ix-glass-ambient {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--ix-radius-md);
+    transition: all var(--ix-duration-quick) var(--ix-ease-sovereign);
+}
+
+/* ── Glass Tier 3: Whisper Glass ── */
+.ix-glass-whisper {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(32px) saturate(1.6);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--ix-radius-sm);
+    transition: all var(--ix-duration-quick) var(--ix-ease-sovereign);
+}
+
+/* ── Fallback for No Backdrop-Filter ── */
+@supports not (backdrop-filter: blur(1px)) {
+    .ix-glass-sovereign,
+    .ix-glass-ambient,
+    .ix-glass-whisper {
+        background: var(--ix-surface-elevated);
+        border-color: rgba(255, 255, 255, 0.16);
+    }
+}
+
+/* ── Cross-browser Compatibility ── */
+/* Firefox backdrop-filter fallback */
+@-moz-document url-prefix() {
+    .ix-glass-sovereign,
+    .ix-glass-ambient,
+    .ix-glass-whisper {
+        background: var(--ix-surface-elevated);
+        border-color: rgba(255, 255, 255, 0.16);
+    }
+}
+
+/* Safari-specific optimizations */
+@supports (-webkit-backdrop-filter: blur(1px)) {
+    .ix-glass-sovereign,
+    .ix-glass-ambient,
+    .ix-glass-whisper {
+        -webkit-transform: translateZ(0); /* Force hardware acceleration */
+    }
+}
+
+/* Edge/IE fallbacks */
+@supports not (backdrop-filter: blur(1px)) and (-ms-ime-align: auto) {
+    .ix-glass-sovereign,
+    .ix-glass-ambient,
+    .ix-glass-whisper {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+}
+
+/* ── Glow Modifiers ── */
+.ix-glow-primary { box-shadow: 0 0 40px var(--ix-glow-primary); }
+.ix-glow-cyan    { box-shadow: 0 0 60px var(--ix-glow-cyan); }
+.ix-glow-amber   { box-shadow: 0 0 30px var(--ix-glow-amber); }
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+    .ix-glass-sovereign,
+    .ix-glass-ambient,
+    .ix-glass-whisper {
+        transition-duration: 0.01ms;
+    }
+}
+
+/* ── Ambient Background Animations ── */
+
+/* Glass Shimmer Effect */
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+    50% { opacity: 0.6; }
+    100% { transform: translateX(200%) translateY(200%) rotate(45deg); opacity: 0; }
+}
+
+@keyframes shimmer-delayed {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(-12deg); opacity: 0; }
+    50% { opacity: 0.4; }
+    100% { transform: translateX(200%) translateY(200%) rotate(-12deg); opacity: 0; }
+}
+
+@keyframes shimmer-slow {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(67deg); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateX(200%) translateY(200%) rotate(67deg); opacity: 0; }
+}
+
+.animate-shimmer {
+    animation: shimmer 8s ease-in-out infinite;
+}
+
+.animate-shimmer-delayed {
+    animation: shimmer-delayed 12s ease-in-out infinite;
+    animation-delay: 4s;
+}
+
+.animate-shimmer-slow {
+    animation: shimmer-slow 16s ease-in-out infinite;
+    animation-delay: 8s;
+}
+
+/* Glow Pulse Effect */
+@keyframes glow-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+@keyframes glow-pulse-delayed {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+@keyframes glow-pulse-slow {
+    0%, 100% { opacity: 0.1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.05); }
+}
+
+.animate-glow-pulse {
+    animation: glow-pulse 6s ease-in-out infinite;
+}
+
+.animate-glow-pulse-delayed {
+    animation: glow-pulse-delayed 8s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.animate-glow-pulse-slow {
+    animation: glow-pulse-slow 10s ease-in-out infinite;
+    animation-delay: 5s;
+}
+
+/* Floating Particle Effect */
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
+    25% { transform: translateY(-20px) rotate(90deg); opacity: 0.6; }
+    50% { transform: translateY(-10px) rotate(180deg); opacity: 0.4; }
+    75% { transform: translateY(-30px) rotate(270deg); opacity: 0.8; }
+}
+
+.animate-float {
+    animation: float 12s ease-in-out infinite;
+}

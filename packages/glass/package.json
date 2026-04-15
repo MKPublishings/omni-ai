@@ -1,0 +1,30 @@
+{
+  "name": "@ionirix/glass",
+  "version": "1.0.0",
+  "description": "Glass material system for Ionirix Glass UI",
+  "main": "dist/index.css",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run build:css && npm run build:types",
+    "build:css": "if not exist dist mkdir dist && copy src\\index.css dist\\index.css",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "dev": "npm run build:css -- --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@ionirix/tokens": "file:../tokens"
+  },
+  "keywords": [
+    "glass",
+    "material",
+    "ui",
+    "ionirix"
+  ],
+  "author": "Ionirix LLC",
+  "license": "UNLICENSED"
+}
