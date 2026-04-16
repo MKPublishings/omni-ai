@@ -52,9 +52,9 @@ const MessageBubble = ({ message }: { message: Message }) => {
               <a
                 href={message.image.src}
                 download={message.image.filename || 'ion-image.png'}
-                className="underline underline-offset-4"
+                className="inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white transition hover:bg-quantum-white/8"
               >
-                Download
+                Download image
               </a>
             </div>
           </div>

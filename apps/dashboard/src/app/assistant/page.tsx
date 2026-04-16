@@ -78,7 +78,18 @@ function extractAssistantContent(rawText: string) {
 
 function isImagePrompt(message: string) {
   const normalized = String(message || '').trim().toLowerCase()
-  return /(^|\s)\/image\b|\b(generate|create|make|draw|render|illustrate|design)\b[\s\S]{0,40}\b(image|art|picture|photo|poster|illustration|wallpaper|logo)\b|\bimage of\b|\bpicture of\b/.test(normalized)
+  return /(^|\s)\/image\b|\b(generate|create|make|draw|render|illustrate|design|craft|show)\b(?:\s+me|\s+us)?(?:\s+an?|\s+some)?[\s\S]{0,60}\b(image|art|picture|photo|poster|illustration|wallpaper|logo|portrait|icon|banner|cover)\b|\bimage of\b|\bpicture of\b|\bmake this into an image\b|\bturn this into an image\b|\bcreate art\b|\bgenerate art\b/.test(normalized)
+}
+
+function buildImageSuccessCopy(message: string, filename?: string) {
+  const cleaned = String(message || '').trim()
+  if (cleaned) {
+    return `Your image is ready. ${filename ? `You can preview or download ${filename}.` : 'You can preview or download it below.'}`
+  }
+
+  return filename
+    ? `Your image is ready. You can preview or download ${filename} below.`
+    : 'Your image is ready. You can preview or download it below.'
 }
 
 async function parseAssistantResponse(response: Response) {
@@ -156,7 +167,9 @@ export default function AssistantPage() {
 
       const payload = await parseAssistantResponse(response)
       const content = payload.ok
-        ? payload.content || (payload.imageDataUrl ? 'Image generated.' : 'The reasoning engine completed without a formatted response body.')
+        ? payload.imageDataUrl
+          ? buildImageSuccessCopy(message, payload.imageFilename)
+          : payload.content || 'The reasoning engine completed without a formatted response body.'
         : payload.content || 'The ION runtime rejected the request. Check credentials or deployment health and try again.'
 
       setMessages((current) => [
