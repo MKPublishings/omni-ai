@@ -29,6 +29,7 @@ import { authMiddleware } from './middleware/auth';
 
 interface WorkerEnv {
   DB?: D1Database;
+  ASSETS: Fetcher;
   SESSION: KVNamespace;
   CACHE: KVNamespace;
   CONFIG: KVNamespace;
@@ -37,6 +38,42 @@ interface WorkerEnv {
   TEXT_GENERATION?: any; // Cloudflare Workers AI binding
   ENVIRONMENT?: string;
   VERSION?: string;
+}
+
+function isHtmlNavigationRequest(request: Request, url: URL): boolean {
+  if (!['GET', 'HEAD'].includes(request.method.toUpperCase())) {
+    return false;
+  }
+
+  if (url.pathname.startsWith('/api')) {
+    return false;
+  }
+
+  const accept = request.headers.get('accept') || '';
+  const hasFileExtension = /\.[a-z0-9]+$/i.test(url.pathname);
+  return !hasFileExtension && accept.includes('text/html');
+}
+
+async function serveAssetOrFallback(request: Request, env: WorkerEnv, url: URL): Promise<Response | null> {
+  if (!['GET', 'HEAD'].includes(request.method.toUpperCase())) {
+    return null;
+  }
+
+  if (url.pathname.startsWith('/api')) {
+    return null;
+  }
+
+  const assetResponse = await env.ASSETS.fetch(request);
+  if (assetResponse.status !== 404) {
+    return assetResponse;
+  }
+
+  if (!isHtmlNavigationRequest(request, url)) {
+    return assetResponse;
+  }
+
+  const fallbackUrl = new URL('/index.html', url);
+  return env.ASSETS.fetch(new Request(fallbackUrl.toString(), request));
 }
 
 /**
@@ -64,6 +101,11 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
     // if (url.pathname === '/api/simulation/stream') { ... }
     // if (url.pathname === '/api/system/stream') { ... }
     return new Response('WebSocket upgrade not yet implemented', { status: 501 });
+  }
+
+  const assetResponse = await serveAssetOrFallback(request, env, url);
+  if (assetResponse) {
+    return assetResponse;
   }
 
   // Initialize shared engines (per request)
