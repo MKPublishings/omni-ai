@@ -4806,7 +4806,7 @@ export default {
               ...CORS_HEADERS,
               "Content-Type": "text/event-stream",
             "Connection": "keep-alive",
-            "X-ION-Model-Used": String(result?.modelUsed || runtimeCtx.model || routeSelection.selectedModel),
+            "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
             "X-ION-Route-Reason": routeSelection.reason,
             ...(simulationContext
               ? {

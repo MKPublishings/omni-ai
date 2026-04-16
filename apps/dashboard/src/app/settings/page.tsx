@@ -32,26 +32,26 @@ export default function SettingsPage() {
         <GlassCard className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Account</h2>
           <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Display name</dt>
-              <dd className="font-medium text-quantum-white">{user?.displayName || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{user?.displayName || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Username</dt>
-              <dd className="font-medium text-quantum-white">{user?.username || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{user?.username || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Email</dt>
-              <dd className="font-medium text-quantum-white">{user?.email || 'Loading'}</dd>
+              <dd className="break-all font-medium text-quantum-white sm:text-right">{user?.email || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Role</dt>
-              <dd className="font-medium uppercase tracking-[0.2em] text-quantum-white">{user?.role || 'Loading'}</dd>
+              <dd className="break-words font-medium uppercase tracking-[0.2em] text-quantum-white sm:text-right">{user?.role || 'Loading'}</dd>
             </div>
           </dl>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/profile" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Edit profile</Link>
-            <span className="rounded-full border border-quantum-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-quantum-white/60">
+            <Link href="/profile" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Edit profile</Link>
+            <span className="inline-flex min-h-[2.75rem] items-center rounded-full border border-quantum-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-quantum-white/60">
               {user?.emailVerified ? 'Email verified' : 'Verification pending'}
             </span>
           </div>
@@ -60,21 +60,21 @@ export default function SettingsPage() {
         <GlassCard tier={2} className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Deployment context</h2>
           <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Platform</dt>
-              <dd className="font-medium text-quantum-white">{status?.environment.platform || 'Cloudflare Workers'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.environment.platform || 'Cloudflare Workers'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Region</dt>
-              <dd className="font-medium text-quantum-white">{status?.environment.region || 'Global edge'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.environment.region || 'Global edge'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Runtime</dt>
-              <dd className="font-medium text-quantum-white">{status?.version || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.version || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Status</dt>
-              <dd className="font-medium text-quantum-white">{status?.status || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.status || 'Loading'}</dd>
             </div>
           </dl>
         </GlassCard>

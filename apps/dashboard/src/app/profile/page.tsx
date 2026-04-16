@@ -89,8 +89,8 @@ export default function ProfilePage() {
               <Input value={user?.email || ''} className="h-11 w-full rounded-xl" disabled />
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Button type="submit" disabled={loading || saving}>{saving ? 'Saving...' : 'Save profile'}</Button>
-              <Link href="/settings" className="inline-flex items-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open settings</Link>
+              <Button type="submit" disabled={loading || saving} className="min-h-[2.75rem] flex-1 rounded-full sm:min-h-0 sm:flex-none">{saving ? 'Saving...' : 'Save profile'}</Button>
+              <Link href="/settings" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open settings</Link>
             </div>
           </form>
         </GlassCard>
@@ -102,16 +102,16 @@ export default function ProfilePage() {
               {user?.emailVerified ? 'This account is verified and can access the workspace normally.' : 'This account still needs email verification before it can complete a new sign-in.'}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <span className="rounded-full border border-quantum-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-quantum-white/60">
+              <span className="inline-flex min-h-[2.75rem] items-center rounded-full border border-quantum-white/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-quantum-white/60">
                 {user?.emailVerified ? 'Verified' : 'Pending'}
               </span>
               {!user?.emailVerified && (
-                <Button variant="secondary" onClick={handleResendVerification}>Refresh verification link</Button>
+                <Button variant="secondary" onClick={handleResendVerification} className="min-h-[2.75rem] flex-1 rounded-full sm:min-h-0 sm:flex-none">Refresh verification link</Button>
               )}
             </div>
             {verificationUrl && (
               <div className="mt-4">
-                <Link href={verificationUrl} className="text-sm text-spectral-cyan-300 underline underline-offset-4">Open latest verification link</Link>
+                <Link href={verificationUrl} className="break-all text-sm text-spectral-cyan-300 underline underline-offset-4">Open latest verification link</Link>
               </div>
             )}
           </GlassCard>

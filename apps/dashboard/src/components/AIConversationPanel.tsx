@@ -29,7 +29,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[82%] lg:max-w-xl',
+        'max-w-[92%] break-words rounded-2xl px-4 py-3 sm:max-w-[82%] lg:max-w-xl',
         isUser
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
@@ -93,8 +93,8 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign flex min-h-[560px] flex-col overflow-hidden rounded-[1.5rem] sm:min-h-[640px]',
-          focusMode ? 'fixed inset-2 z-50 sm:inset-4' : 'h-full',
+          'ix-glass-sovereign flex min-h-[32rem] flex-col overflow-hidden rounded-[1.5rem] sm:min-h-[40rem]',
+          focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full',
           className
         )}
         {...props}
@@ -154,14 +154,14 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 rows={2}
-                className="min-h-[52px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-sm leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[52px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[15px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                 disabled={isThinking}
               />
             </div>
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isThinking}
-              className="h-12 rounded-2xl px-5 sm:h-11"
+              className="h-12 w-full rounded-2xl px-5 sm:h-11 sm:w-auto"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

@@ -168,17 +168,17 @@ export default function AssistantPage() {
           <GlassCard className="p-6">
             <h2 className="text-xl font-semibold text-quantum-white">Assistant context</h2>
             <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-              <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+              <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Environment</dt>
-                <dd className="font-medium text-quantum-white">{status?.environment.platform || 'Loading'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.environment.platform || 'Loading'}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+              <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Status</dt>
-                <dd className="font-medium text-quantum-white">{status?.status || 'Loading'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.status || 'Loading'}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Runtime version</dt>
-                <dd className="font-medium text-quantum-white">{status?.version || 'Loading'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.version || 'Loading'}</dd>
               </div>
             </dl>
           </GlassCard>
@@ -191,8 +191,8 @@ export default function AssistantPage() {
               <li>Propose the next implementation priorities for dashboard hardening.</li>
             </ul>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/analytics" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open analytics</Link>
-              <Link href="/profile" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Edit profile</Link>
+              <Link href="/analytics" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open analytics</Link>
+              <Link href="/profile" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Edit profile</Link>
             </div>
           </GlassCard>
         </div>

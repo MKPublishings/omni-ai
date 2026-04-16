@@ -101,7 +101,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/40">
                     {column.header}
                   </p>
-                  <div className="text-sm leading-6 text-quantum-white">
+                  <div className="break-words text-sm leading-6 text-quantum-white">
                     {column.render
                       ? column.render(row[column.key as keyof typeof row], row)
                       : String(row[column.key as keyof typeof row] || '')}

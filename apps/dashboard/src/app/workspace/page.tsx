@@ -108,13 +108,13 @@ export default function WorkspacePage() {
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
         <GlassCard className="p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <h2 className="text-xl font-semibold text-quantum-white">Recent system events</h2>
               <p className="mt-1 text-sm text-quantum-white/64">A live snapshot of the Worker event stream feeding the dashboard.</p>
             </div>
             {status && (
-              <span className="rounded-full border border-quantum-white/12 px-3 py-1 text-xs uppercase tracking-[0.2em] text-quantum-white/64">
+              <span className="inline-flex w-fit rounded-full border border-quantum-white/12 px-3 py-1 text-xs uppercase tracking-[0.2em] text-quantum-white/64">
                 {status.status}
               </span>
             )}
@@ -129,21 +129,21 @@ export default function WorkspacePage() {
           <GlassCard className="p-6">
             <h2 className="text-lg font-semibold text-quantum-white">System envelope</h2>
             <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-              <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+              <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Runtime version</dt>
-                <dd className="font-medium text-quantum-white">{status?.version || 'Loading'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.version || 'Loading'}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+              <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Platform</dt>
-                <dd className="font-medium text-quantum-white">{status?.environment.platform || 'Cloudflare Workers'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.environment.platform || 'Cloudflare Workers'}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+              <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Region</dt>
-                <dd className="font-medium text-quantum-white">{status?.environment.region || 'Global edge'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status?.environment.region || 'Global edge'}</dd>
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <dt>Uptime</dt>
-                <dd className="font-medium text-quantum-white">{status ? formatDuration(status.uptime) : 'Loading'}</dd>
+                <dd className="break-words font-medium text-quantum-white sm:text-right">{status ? formatDuration(status.uptime) : 'Loading'}</dd>
               </div>
             </dl>
           </GlassCard>

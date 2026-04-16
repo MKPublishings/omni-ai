@@ -1,12 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { AmbientBackground } from './AmbientBackground'
 import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
-import { Button } from './Button'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser } from '@/lib/dashboard'
 
@@ -88,6 +86,7 @@ export function DashboardShell({ title, subtitle, children, actions }: Dashboard
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)')
@@ -102,6 +101,22 @@ export function DashboardShell({ title, subtitle, children, actions }: Dashboard
     media.addEventListener('change', syncViewport)
     return () => media.removeEventListener('change', syncViewport)
   }, [])
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem('ion-dashboard-theme')
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme)
+      return
+    }
+
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setTheme(prefersDark ? 'dark' : 'light')
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.dataset.dashboardTheme = theme
+    window.localStorage.setItem('ion-dashboard-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -144,6 +159,10 @@ export function DashboardShell({ title, subtitle, children, actions }: Dashboard
     router.push('/login')
   }
 
+  const handleToggleTheme = () => {
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+  }
+
   const navigationExpanded = isMobileViewport ? mobileNavOpen : !navCollapsed
 
   const handleToggleNavigation = () => {
@@ -172,6 +191,8 @@ export function DashboardShell({ title, subtitle, children, actions }: Dashboard
         <NavigationRail
           collapsed={navCollapsed}
           mobileOpen={isMobileViewport ? mobileNavOpen : true}
+          mobileViewport={isMobileViewport}
+          onRequestClose={() => setMobileNavOpen(false)}
           userName={user?.displayName || 'Loading'}
           userRole={user?.role || 'Member'}
           userInitial={(user?.displayName || user?.username || 'I').charAt(0).toUpperCase()}
@@ -193,42 +214,24 @@ export function DashboardShell({ title, subtitle, children, actions }: Dashboard
             searchValue={searchValue}
             onSearchChange={setSearchValue}
             breadcrumbs={buildBreadcrumbs(pathname)}
+            profileHref="/profile"
+            userInitial={(user?.displayName || user?.username || 'I').charAt(0).toUpperCase()}
+            isDarkMode={theme === 'dark'}
+            onToggleTheme={handleToggleTheme}
+            onToggleNavigation={handleToggleNavigation}
+            navigationExpanded={navigationExpanded}
+            onLogout={handleLogout}
           />
 
           <main className="min-w-0 flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 sm:gap-6">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 text-sm text-quantum-white/64 sm:gap-3">
-                  {user && <span className="hidden max-w-[220px] truncate sm:inline-block">{user.email}</span>}
-                  {actions}
-                  <Link href="/profile" className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-2 text-sm text-quantum-white/72 transition hover:bg-quantum-white/8 hover:text-quantum-white">
-                    Profile
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleToggleNavigation}
-                    aria-label={navigationExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-                    className="h-9 w-9 rounded-full border border-quantum-white/10 p-0"
-                  >
-                    <svg
-                      className={`h-4 w-4 transition-transform duration-standard ${navigationExpanded ? 'rotate-180' : 'rotate-0'}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
-                    Logout
-                  </Button>
-                </div>
+                {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
               </div>
 
               {children}

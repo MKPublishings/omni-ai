@@ -9,11 +9,82 @@
   :root {
     --background: var(--ix-surface-base);
     --foreground: var(--ix-text-primary);
+    --dashboard-topbar-bg: rgba(7, 10, 18, 0.78);
+    --dashboard-topbar-border: rgba(255, 255, 255, 0.08);
+    --dashboard-topbar-fg: rgba(255, 255, 255, 0.94);
+    --dashboard-topbar-muted: rgba(255, 255, 255, 0.58);
+    --dashboard-topbar-icon-bg: rgba(255, 255, 255, 0.04);
+    --dashboard-topbar-icon-border: rgba(255, 255, 255, 0.1);
+    --dashboard-topbar-icon-hover: rgba(255, 255, 255, 0.1);
+    --dashboard-search-bg: rgba(255, 255, 255, 0.06);
+    --dashboard-search-border: rgba(255, 255, 255, 0.1);
+    --dashboard-search-fg: rgba(255, 255, 255, 0.94);
+    --dashboard-search-placeholder: rgba(255, 255, 255, 0.42);
+  }
+
+  html[data-dashboard-theme='light'] {
+    --dashboard-topbar-bg: rgba(245, 248, 252, 0.86);
+    --dashboard-topbar-border: rgba(15, 23, 42, 0.12);
+    --dashboard-topbar-fg: rgba(15, 23, 42, 0.92);
+    --dashboard-topbar-muted: rgba(15, 23, 42, 0.56);
+    --dashboard-topbar-icon-bg: rgba(255, 255, 255, 0.62);
+    --dashboard-topbar-icon-border: rgba(15, 23, 42, 0.1);
+    --dashboard-topbar-icon-hover: rgba(255, 255, 255, 0.9);
+    --dashboard-search-bg: rgba(255, 255, 255, 0.78);
+    --dashboard-search-border: rgba(15, 23, 42, 0.12);
+    --dashboard-search-fg: rgba(15, 23, 42, 0.92);
+    --dashboard-search-placeholder: rgba(15, 23, 42, 0.42);
   }
 
   body {
     color: var(--ix-text-primary);
     background: var(--ix-surface-base);
     font-family: var(--ix-font-body);
+  }
+}
+
+@layer components {
+  .dashboard-topbar {
+    background: var(--dashboard-topbar-bg);
+    border-color: var(--dashboard-topbar-border);
+    color: var(--dashboard-topbar-fg);
+    backdrop-filter: blur(22px);
+  }
+
+  .dashboard-breadcrumb {
+    transition: color 160ms ease;
+  }
+
+  .dashboard-breadcrumb-active {
+    color: var(--dashboard-topbar-fg);
+  }
+
+  .dashboard-breadcrumb-muted {
+    color: var(--dashboard-topbar-muted);
+  }
+
+  .dashboard-icon-button,
+  .dashboard-profile-button {
+    background: var(--dashboard-topbar-icon-bg);
+    border: 1px solid var(--dashboard-topbar-icon-border);
+    color: var(--dashboard-topbar-fg);
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .dashboard-icon-button:hover,
+  .dashboard-profile-button:hover {
+    background: var(--dashboard-topbar-icon-hover);
+    border-color: var(--dashboard-topbar-border);
+    transform: translateY(-1px);
+  }
+
+  .dashboard-search-input {
+    background: var(--dashboard-search-bg);
+    border-color: var(--dashboard-search-border);
+    color: var(--dashboard-search-fg);
+  }
+
+  .dashboard-search-input::placeholder {
+    color: var(--dashboard-search-placeholder);
   }
 }

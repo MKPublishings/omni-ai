@@ -40,17 +40,17 @@ export default function MemoryPage() {
         <GlassCard className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Identity context</h2>
           <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Display name</dt>
-              <dd className="font-medium text-quantum-white">{user?.displayName || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{user?.displayName || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 border-b border-quantum-white/8 pb-3">
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Username</dt>
-              <dd className="font-medium text-quantum-white">{user?.username || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{user?.username || 'Loading'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Role</dt>
-              <dd className="font-medium text-quantum-white">{user?.role || 'Loading'}</dd>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{user?.role || 'Loading'}</dd>
             </div>
           </dl>
         </GlassCard>
@@ -63,8 +63,8 @@ export default function MemoryPage() {
             <li>This page acts as a readable map of the identity and memory-adjacent state already tracked by the platform.</li>
           </ul>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/profile" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open profile</Link>
-            <Link href="/settings" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open settings</Link>
+            <Link href="/profile" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open profile</Link>
+            <Link href="/settings" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open settings</Link>
           </div>
         </GlassCard>
       </section>

@@ -43,17 +43,17 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign min-h-[152px] min-w-0 p-5 sm:min-h-[168px] sm:p-6',
+          'ix-glass-sovereign min-h-[140px] min-w-0 p-4 sm:min-h-[168px] sm:p-6',
           className
         )}
         {...props}
       >
         <div className="flex h-full flex-col">
-          <div className="text-2xl font-bold leading-tight text-quantum-white sm:text-3xl">
+          <div className="break-words text-xl font-bold leading-tight text-quantum-white sm:text-3xl">
             {value}
           </div>
 
-          <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.22em] text-quantum-white/52 sm:text-xs">
+          <div className="mt-2 text-[11px] font-medium uppercase leading-5 tracking-[0.22em] text-quantum-white/52 sm:text-xs">
             {title}
           </div>
 
