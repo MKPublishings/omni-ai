@@ -1,8 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { clearAuthSession, getApiUrl, getStoredToken, storeAuthSession } from '@/lib/auth'
+import { clearAuthSession, getApiUrl, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -18,6 +19,8 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verificationNotice, setVerificationNotice] = useState('')
+  const [verificationUrl, setVerificationUrl] = useState('')
   const router = useRouter()
 
   // Check if already authenticated
@@ -31,6 +34,7 @@ export default function LoginPage() {
   const handleModeChange = (nextMode: AuthMode) => {
     setMode(nextMode)
     setError('')
+    setVerificationNotice('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,18 +62,44 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        if (data.code === 'EMAIL_VERIFICATION_REQUIRED') {
+          setVerificationNotice(data.error || 'Email verification is required before signing in.')
+          setVerificationUrl(data.verificationUrl || '')
+        }
         throw new Error(data.error || 'Login failed')
       }
 
-      storeAuthSession(data)
+      if (data.verificationRequired) {
+        clearAuthSession()
+        setVerificationNotice('Account created. Verify your email before signing in.')
+        setVerificationUrl(data.verificationUrl || '')
+        setMode('login')
+        return
+      }
 
+      storeAuthSession(data)
       router.push('/workspace')
 
     } catch (err) {
-      clearAuthSession()
+      if (!(err instanceof Error && err.message.includes('verification'))) {
+        clearAuthSession()
+      }
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    setError('')
+    setVerificationNotice('')
+
+    try {
+      const payload = await resendVerification(email)
+      setVerificationNotice(payload.alreadyVerified ? 'This account is already verified. You can sign in now.' : 'A fresh verification link is ready.')
+      setVerificationUrl(payload.verificationUrl || '')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resend verification')
     }
   }
 
@@ -81,7 +111,7 @@ export default function LoginPage() {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-transparent via-ion-blue-500/5 to-transparent -rotate-12 animate-shimmer-delayed" />
       </div>
 
-      <GlassCard tier={1} className="w-full max-w-md p-8">
+      <GlassCard tier={1} className="w-full max-w-lg p-6 sm:p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-spectral-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +143,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {mode === 'signup' && (
             <div>
               <Input
@@ -181,6 +211,22 @@ export default function LoginPage() {
             </div>
           )}
 
+          {verificationNotice && (
+            <div className="space-y-3 rounded-2xl border border-spectral-cyan-500/20 bg-spectral-cyan-500/10 p-4 text-sm text-spectral-cyan-200">
+              <p>{verificationNotice}</p>
+              {verificationUrl && (
+                <Link href={verificationUrl} className="inline-flex rounded-full border border-spectral-cyan-400/30 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-400/10">
+                  Open verification link
+                </Link>
+              )}
+              {mode === 'login' && email && (
+                <button type="button" onClick={handleResendVerification} className="block text-left text-sm text-spectral-cyan-100 underline underline-offset-4">
+                  Resend verification link
+                </button>
+              )}
+            </div>
+          )}
+
           <Button
             type="submit"
             className="w-full"
@@ -202,7 +248,7 @@ export default function LoginPage() {
             Email sign-up is enabled. Usernames can sign in too. Passwords require at least 8 characters with a letter and a number.
           </p>
           <p className="mt-3 text-sm text-quantum-white/56">
-            <a href="/" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Return to the public site</a>
+            <Link href="/" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Return to the public site</Link>
           </p>
         </div>
       </GlassCard>

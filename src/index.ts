@@ -4198,7 +4198,7 @@ export default {
           latestUserText,
           mode: normalizedMode
         });
-        const routeSelection = chooseModelForTask("ION", latestUserText, normalizedMode);
+        const routeSelection = chooseModelForTask("auto", latestUserText, normalizedMode);
 
         const promptSystemMessages: IONMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;
@@ -4456,7 +4456,7 @@ export default {
 
         const runtimeCtx = {
           ...requestCtx,
-          model: routeSelection.selectedModel,
+          model: env.MODEL_ION || routeSelection.selectedModel,
           sessionId,
           messages: enrichedMessages,
           maxOutputTokens: outputTokenLimit,
@@ -4588,7 +4588,7 @@ export default {
                   "Content-Type": "text/event-stream",
                   "Cache-Control": "no-cache",
                   "Connection": "keep-alive",
-                  "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                  "X-ION-Model-Used": String(result.modelUsed || runtimeCtx.model || routeSelection.selectedModel),
                   "X-ION-Route-Reason": routeSelection.reason,
                   "X-ION-Orchestrator-Route": orchestratorDecision.route,
                   "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
@@ -4723,7 +4723,7 @@ export default {
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+                "X-ION-Model-Used": String(result.modelUsed || runtimeCtx.model || routeSelection.selectedModel),
                 "X-ION-Route-Reason": routeSelection.reason,
                 "X-ION-Orchestrator-Route": orchestratorDecision.route,
                 "X-ION-Orchestrator-Reason": orchestratorDecision.reason,
@@ -4806,7 +4806,7 @@ export default {
               ...CORS_HEADERS,
               "Content-Type": "text/event-stream",
             "Connection": "keep-alive",
-            "X-ION-Model-Used": String(runtimeCtx.model || routeSelection.selectedModel),
+            "X-ION-Model-Used": String(result?.modelUsed || runtimeCtx.model || routeSelection.selectedModel),
             "X-ION-Route-Reason": routeSelection.reason,
             ...(simulationContext
               ? {

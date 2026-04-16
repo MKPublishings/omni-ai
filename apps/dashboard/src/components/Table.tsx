@@ -1,6 +1,5 @@
 import { forwardRef, HTMLAttributes, ReactNode, useState } from 'react'
 import { clsx } from 'clsx'
-import { Button } from './Button'
 
 interface Column<T> {
   key: keyof T | string
@@ -94,7 +93,26 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
 
     return (
       <div className="ix-glass-sovereign rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-quantum-white/6 md:hidden">
+          {data.map((row, index) => (
+            <div key={index} className="space-y-3 p-4">
+              {columns.map((column) => (
+                <div key={String(column.key)} className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/40">
+                    {column.header}
+                  </p>
+                  <div className="text-sm leading-6 text-quantum-white">
+                    {column.render
+                      ? column.render(row[column.key as keyof typeof row], row)
+                      : String(row[column.key as keyof typeof row] || '')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table
             ref={ref}
             className={clsx('w-full', className)}

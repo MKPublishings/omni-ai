@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
@@ -10,10 +11,15 @@ import { DashboardSystemStatus, fetchDashboardUser, fetchSystemStatus } from '@/
 export default function MemoryPage() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<DashboardSystemStatus | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchDashboardUser().then((payload) => setUser(payload.user)).catch(() => undefined)
-    fetchSystemStatus().then(setStatus).catch(() => undefined)
+    Promise.all([fetchDashboardUser(), fetchSystemStatus()])
+      .then(([userPayload, nextStatus]) => {
+        setUser(userPayload.user)
+        setStatus(nextStatus)
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load memory page'))
   }, [])
 
   return (
@@ -21,6 +27,8 @@ export default function MemoryPage() {
       title="Memory"
       subtitle="Identity scope, session density, and the storage-oriented surfaces that support the broader ION operating environment."
     >
+      {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Auth Users" value={status?.counts.authUsers ?? '...'} trend={{ direction: 'up', value: 'Identity records' }} />
         <StatCard title="Sessions" value={status?.counts.sessions ?? '...'} trend={{ direction: 'neutral', value: 'Active memory contexts' }} />
@@ -54,6 +62,10 @@ export default function MemoryPage() {
             <li>The public site stays static, while authenticated pages pull live state from the Worker runtime after login.</li>
             <li>This page acts as a readable map of the identity and memory-adjacent state already tracked by the platform.</li>
           </ul>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/profile" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open profile</Link>
+            <Link href="/settings" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open settings</Link>
+          </div>
         </GlassCard>
       </section>
     </DashboardShell>

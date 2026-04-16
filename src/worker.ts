@@ -182,6 +182,9 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('POST', '/api/auth/signup', async (r: Request) => authWorker.signup(r));
   router.add('POST', '/api/auth/login', async (r: Request) => authWorker.login(r));
   router.add('GET', '/api/auth/me', async (r: Request) => authWorker.me(r));
+  router.add('POST', '/api/auth/verify-email', async (r: Request) => authWorker.verifyEmail(r));
+  router.add('POST', '/api/auth/resend-verification', async (r: Request) => authWorker.resendVerification(r));
+  router.add('PUT', '/api/auth/profile', async (r: Request) => authWorker.updateProfile(r));
   router.add('POST', '/api/auth/logout', async (r: Request) => authWorker.logout(r));
 
   // ========== MEMORY API ROUTES ==========

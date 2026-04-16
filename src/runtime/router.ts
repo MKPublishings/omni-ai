@@ -35,7 +35,8 @@ function defaultModel(env: RouterEnv): string {
 }
 
 export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): RuntimeRouteDecision {
-  const requested = normalizeText(input.requestedModel).toLowerCase();
+  const requested = normalizeText(input.requestedModel);
+  const requestedNormalized = requested.toLowerCase();
   const mode = normalizeText(input.mode).toLowerCase();
   const text = normalizeText(input.latestUserText).toLowerCase();
   const baseModel = defaultModel(env);
@@ -45,9 +46,9 @@ export function resolveRuntimeRoute(input: RuntimeRouterInput, env: RouterEnv): 
   const hasMultiverseIntent = /\b(multiverse|observable universe|cosmic web|large[ -]?scale structure|supercluster|galaxy cluster|comoving|redshift|lcdm|cosmology)\b/.test(text);
 
   let capability: RuntimeCapability = "chat";
-  let selectedModel = requested && requested !== "ION" ? requested : baseModel;
+  let selectedModel = requested && requestedNormalized !== "ion" && requestedNormalized !== "auto" ? requested : baseModel;
   let fallbackModel = baseModel;
-  let reason = requested && requested !== "ION" ? "explicit-model-request" : "default-primary-model";
+  let reason = requested && requestedNormalized !== "ion" && requestedNormalized !== "auto" ? "explicit-model-request" : "default-primary-model";
   const constraints = ["single-authoritative-runtime", "ts-first-control-loop"];
 
   if (

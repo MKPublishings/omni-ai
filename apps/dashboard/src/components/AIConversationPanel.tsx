@@ -29,13 +29,13 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'max-w-xs lg:max-w-md px-4 py-3 rounded-lg',
+        'max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[82%] lg:max-w-xl',
         isUser
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
       )}>
-        <p className="text-sm leading-relaxed">{message.content}</p>
-        <span className="text-xs opacity-60 mt-2 block">
+        <p className="text-sm leading-7 sm:text-[0.95rem]">{message.content}</p>
+        <span className="mt-2 block text-xs opacity-60">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -93,22 +93,21 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign flex flex-col',
-          focusMode ? 'fixed inset-4 z-50' : 'h-full',
+          'ix-glass-sovereign flex min-h-[560px] flex-col overflow-hidden rounded-[1.5rem] sm:min-h-[640px]',
+          focusMode ? 'fixed inset-2 z-50 sm:inset-4' : 'h-full',
           className
         )}
         {...props}
       >
-        {/* Header */}
-        <div className="p-4 border-b border-quantum-white/8 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-between border-b border-quantum-white/8 p-4 sm:p-5">
+          <div className="flex min-w-0 items-center space-x-3">
             <div className="w-8 h-8 bg-spectral-cyan-500 rounded-full flex items-center justify-center">
               <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-quantum-white">ION AI</h3>
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-quantum-white sm:text-lg">ION AI</h3>
               <p className="text-xs text-quantum-white/64">Cognitive Operating System</p>
             </div>
           </div>
@@ -132,8 +131,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           )}
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5">
           {isLoading && messages.length === 0 ? (
             <ConversationSkeleton />
           ) : (
@@ -147,23 +145,23 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="p-4 border-t border-quantum-white/8">
-          <div className="flex space-x-3">
+        <div className="border-t border-quantum-white/8 p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <Input
+              <textarea
                 placeholder="Ask ION AI anything..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="rounded-full"
+                onKeyDown={handleKeyPress}
+                rows={2}
+                className="min-h-[52px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-sm leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isThinking}
               />
             </div>
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isThinking}
-              className="rounded-full px-4"
+              className="h-12 rounded-2xl px-5 sm:h-11"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

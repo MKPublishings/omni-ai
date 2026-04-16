@@ -11,6 +11,7 @@ export default function ToolsPage() {
   const [tools, setTools] = useState<DashboardToolMetadata[]>([])
   const [status, setStatus] = useState<DashboardSystemStatus | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -20,6 +21,11 @@ export default function ToolsPage() {
         if (!cancelled) {
           setTools(toolList)
           setStatus(nextStatus)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load tools')
         }
       })
       .finally(() => {
@@ -46,6 +52,8 @@ export default function ToolsPage() {
       title="Tools registry"
       subtitle="Browse the registered operational tools exposed by the Worker runtime and watch execution capacity alongside overall system counts."
     >
+      {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Registered Tools" value={loading ? '...' : tools.length} trend={{ direction: 'up', value: 'Registry surface' }} />
         <StatCard title="Described Tools" value={loading ? '...' : describedTools} trend={{ direction: 'neutral', value: 'Documented metadata' }} />

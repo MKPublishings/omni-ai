@@ -10,6 +10,7 @@ import { DashboardSimulationRun, fetchSimulationHistory } from '@/lib/dashboard'
 export default function SimulationsPage() {
   const [runs, setRuns] = useState<DashboardSimulationRun[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -17,6 +18,11 @@ export default function SimulationsPage() {
       .then((payload) => {
         if (!cancelled) {
           setRuns(payload)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load simulations')
         }
       })
       .finally(() => {
@@ -50,6 +56,8 @@ export default function SimulationsPage() {
       title="Simulations"
       subtitle="Review run history, current execution posture, and the scenario archive attached to your authenticated session."
     >
+      {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Total Runs" value={loading ? '...' : runs.length} trend={{ direction: 'up', value: 'Historical archive' }} />
         <StatCard title="Completed" value={loading ? '...' : completedRuns} trend={{ direction: 'up', value: 'Resolved trajectories' }} />

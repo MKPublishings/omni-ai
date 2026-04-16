@@ -10,6 +10,7 @@ import { DashboardSystemEvent, fetchSystemEvents, summarizeEventPayload } from '
 export default function EventsPage() {
   const [events, setEvents] = useState<DashboardSystemEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -17,6 +18,11 @@ export default function EventsPage() {
       .then((rows) => {
         if (!cancelled) {
           setEvents(rows)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load events')
         }
       })
       .finally(() => {
@@ -45,6 +51,8 @@ export default function EventsPage() {
       title="Events"
       subtitle="Detailed event-stream history for the current authenticated session, with a wider operational window than the overview page."
     >
+      {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Events Loaded" value={loading ? '...' : events.length} trend={{ direction: 'up', value: 'Expanded window' }} />
         <StatCard title="Event Types" value={loading ? '...' : eventTypes} trend={{ direction: 'neutral', value: 'Unique categories' }} />

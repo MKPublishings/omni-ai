@@ -62,6 +62,13 @@ export function storeAuthSession(payload: AuthResponse): void {
   window.localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
 }
 
+export function storeUserProfile(user: AuthUser): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
 export function clearAuthSession(): void {
   if (typeof window === 'undefined') {
     return;
@@ -77,4 +84,59 @@ export async function authorizedFetch(input: RequestInfo | URL, init?: RequestIn
     headers.set('Authorization', `Bearer ${token}`);
   }
   return fetch(input, { ...init, headers });
+}
+
+export async function updateProfile(input: { displayName: string; username: string }): Promise<AuthUser> {
+  const response = await authorizedFetch(getApiUrl('/api/auth/profile'), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || 'Profile update failed');
+  }
+
+  if (payload.user) {
+    storeUserProfile(payload.user as AuthUser);
+  }
+
+  return payload.user as AuthUser;
+}
+
+export async function verifyEmailToken(token: string): Promise<{ ok: boolean; user?: AuthUser }> {
+  const response = await fetch(getApiUrl('/api/auth/verify-email'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || 'Email verification failed');
+  }
+
+  return payload as { ok: boolean; user?: AuthUser };
+}
+
+export async function resendVerification(identifier: string): Promise<{ verificationUrl?: string | null; alreadyVerified?: boolean }> {
+  const response = await fetch(getApiUrl('/api/auth/resend-verification'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ identifier }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || 'Could not resend verification');
+  }
+
+  return payload as { verificationUrl?: string | null; alreadyVerified?: boolean };
 }

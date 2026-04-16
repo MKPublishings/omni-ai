@@ -43,28 +43,25 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign p-6 min-w-40',
+          'ix-glass-sovereign min-h-[152px] min-w-0 p-5 sm:min-h-[168px] sm:p-6',
           className
         )}
         {...props}
       >
-        <div className="flex flex-col">
-          {/* Value */}
-          <div className="text-3xl font-bold text-quantum-white mb-1">
+        <div className="flex h-full flex-col">
+          <div className="text-2xl font-bold leading-tight text-quantum-white sm:text-3xl">
             {value}
           </div>
 
-          {/* Title */}
-          <div className="text-sm font-medium text-quantum-white/64 uppercase tracking-wider mb-3">
+          <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.22em] text-quantum-white/52 sm:text-xs">
             {title}
           </div>
 
-          {/* Trend */}
           {trend && (
-            <div className="flex items-center justify-end">
+            <div className="mt-auto flex items-center justify-end pt-4">
               <TrendIcon direction={trend.direction} />
               <span className={clsx(
-                "text-xs font-medium ml-1",
+                "ml-1 text-xs font-medium",
                 trend.direction === 'up' && "text-green-400",
                 trend.direction === 'down' && "text-amber-signal-500",
                 trend.direction === 'neutral' && "text-quantum-white/40"

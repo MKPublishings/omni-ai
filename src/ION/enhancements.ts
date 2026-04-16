@@ -367,9 +367,9 @@ export function chooseModelForTask(requestedModel: string, latestUserText: strin
   const taskType = inferTaskType(latestUserText, mode);
   const normalizedMode = normalizeText(mode).toLowerCase();
 
-  if (normalized !== "auto" && normalized === "ION") {
+  if (normalized !== "auto" && normalized !== "ion") {
     return {
-      selectedModel: "ION",
+      selectedModel: normalizeText(requestedModel),
       taskType,
       reason: "manual-model-selection"
     };

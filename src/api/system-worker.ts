@@ -22,6 +22,11 @@ export class SystemWorker {
     this.env = env;
   }
 
+  private async getSystemEventColumns(): Promise<Set<string>> {
+    const result = await this.db.prepare("PRAGMA table_info(system_events)").all<any>();
+    return new Set((result.results || []).map((row: any) => String(row.name)));
+  }
+
   /**
    * GET /api/system/health — quick health check
    */
@@ -93,11 +98,11 @@ export class SystemWorker {
             toolExecutions,
             simulationRuns,
             publicRoutes: 5,
-            workspaceRoutes: 8,
+            workspaceRoutes: 9,
           },
           routes: {
             public: ['/', '/platform', '/capabilities', '/architecture', '/roadmap'],
-            workspace: ['/workspace', '/assistant', '/analytics', '/events', '/simulations', '/tools', '/memory', '/settings'],
+            workspace: ['/workspace', '/assistant', '/analytics', '/events', '/simulations', '/tools', '/memory', '/profile', '/settings'],
           },
         },
         {
@@ -300,12 +305,28 @@ export class SystemWorker {
       const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '50')));
       const eventType = url.searchParams.get('type'); // optional filter
 
-      let query = 'SELECT * FROM system_events WHERE session_id = ?';
-      const bindings: any[] = [sessionId];
+      const columns = await this.getSystemEventColumns();
+      const hasSessionId = columns.has('session_id');
+      const typeColumn = columns.has('event_type') ? 'event_type' : 'type';
+      const payloadColumn = columns.has('data_json') ? 'data_json' : columns.has('metadata') ? 'metadata' : null;
+      const messageColumn = columns.has('message');
+
+      let query = 'SELECT * FROM system_events';
+      const bindings: any[] = [];
+      const whereClauses: string[] = [];
+
+      if (hasSessionId) {
+        whereClauses.push('session_id = ?');
+        bindings.push(sessionId);
+      }
 
       if (eventType) {
-        query += ' AND event_type = ?';
+        whereClauses.push(`${typeColumn} = ?`);
         bindings.push(eventType);
+      }
+
+      if (whereClauses.length > 0) {
+        query += ` WHERE ${whereClauses.join(' AND ')}`;
       }
 
       query += ' ORDER BY created_at DESC LIMIT ?';
@@ -313,12 +334,26 @@ export class SystemWorker {
 
       const result = await this.db.prepare(query).bind(...bindings).all<any>();
 
-      // Parse JSON fields
       const events = (result.results || []).map((row: any) => ({
         id: row.id,
-        type: row.event_type,
+        type: row[typeColumn] || 'event',
         source: row.source,
-        data: row.data_json ? JSON.parse(row.data_json) : null,
+        data: (() => {
+          let parsed: Record<string, unknown> | null = null;
+          if (payloadColumn && row[payloadColumn]) {
+            try {
+              parsed = JSON.parse(String(row[payloadColumn]));
+            } catch {
+              parsed = { detail: String(row[payloadColumn]) };
+            }
+          }
+
+          if (messageColumn && row.message) {
+            return { message: String(row.message), ...(parsed || {}) };
+          }
+
+          return parsed;
+        })(),
         createdAt: row.created_at,
       }));
 

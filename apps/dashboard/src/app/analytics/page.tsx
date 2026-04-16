@@ -11,16 +11,22 @@ export default function AnalyticsPage() {
   const [status, setStatus] = useState<DashboardSystemStatus | null>(null)
   const [events, setEvents] = useState<DashboardSystemEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
 
     const load = async () => {
       try {
+        setError('')
         const [nextStatus, nextEvents] = await Promise.all([fetchSystemStatus(), fetchSystemEvents(20)])
         if (!cancelled) {
           setStatus(nextStatus)
           setEvents(nextEvents)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load analytics')
         }
       } finally {
         if (!cancelled) {
@@ -53,6 +59,8 @@ export default function AnalyticsPage() {
       title="Analytics"
       subtitle="Operational telemetry, event density, and deployment-side signals for the live ION environment."
     >
+      {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Environment" value={status?.environment.platform || 'Loading'} trend={{ direction: 'neutral', value: status?.environment.region || 'Region pending' }} />
         <StatCard title="Health" value={status?.status || 'Loading'} trend={{ direction: 'up', value: 'Worker responding' }} />

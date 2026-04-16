@@ -1,12 +1,17 @@
 import {
+  AuthConflictError,
+  consumeEmailVerificationToken,
+  createEmailVerification,
   createSession,
   createUser,
   findUserByEmail,
   findUserByIdentifier,
+  findUserById,
   getSessionByToken,
   pruneExpiredSessions,
   revokeSessionByToken,
   touchSession,
+  updateUserProfile,
   validateEmail,
   validatePassword,
   validateUsername,
@@ -44,6 +49,11 @@ function getRequestBody(value: unknown): Record<string, unknown> | null {
 
 export class AuthWorker {
   constructor(private db?: D1Database) {}
+
+  private buildVerificationUrl(request: Request, token: string): string {
+    const url = new URL(request.url);
+    return `${url.origin}/verify-email?token=${encodeURIComponent(token)}`;
+  }
 
   private ensureDb(): Response | null {
     if (this.db) {
@@ -92,12 +102,12 @@ export class AuthWorker {
     }
 
     const user = await createUser(this.db!, { email, password, displayName, username });
-    const { token, session } = await createSession(this.db!, user.id, request);
+    const verification = await createEmailVerification(this.db!, user);
 
     return json({
-      token,
-      sessionId: session.id,
-      expiresAt: session.expires_at,
+      verificationRequired: true,
+      verificationUrl: this.buildVerificationUrl(request, verification.token),
+      verificationDelivery: 'manual-link',
       user,
     }, 201);
   }
@@ -124,6 +134,24 @@ export class AuthWorker {
     const passwordMatches = await verifyPassword(password, userRecord.password_hash);
     if (!passwordMatches) {
       return json({ error: 'Invalid username/email or password.' }, 401);
+    }
+
+    if (userRecord.email_verified !== 1) {
+      const user = await findUserById(this.db!, userRecord.id);
+      const verification = user ? await createEmailVerification(this.db!, {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        displayName: user.display_name,
+        role: user.role,
+        emailVerified: false,
+      }) : null;
+
+      return json({
+        error: 'Email verification is required before signing in.',
+        code: 'EMAIL_VERIFICATION_REQUIRED',
+        verificationUrl: verification ? this.buildVerificationUrl(request, verification.token) : null,
+      }, 403);
     }
 
     await pruneExpiredSessions(this.db!);
@@ -176,5 +204,100 @@ export class AuthWorker {
     }
 
     return json({ ok: true });
+  }
+
+  async verifyEmail(request: Request): Promise<Response> {
+    const dbError = this.ensureDb();
+    if (dbError) {
+      return dbError;
+    }
+
+    const url = new URL(request.url);
+    const body = getRequestBody(await request.json().catch(() => null));
+    const token = String(body?.token || url.searchParams.get('token') || '').trim();
+
+    if (!token) {
+      return json({ error: 'Verification token is required.' }, 400);
+    }
+
+    const user = await consumeEmailVerificationToken(this.db!, token);
+    if (!user) {
+      return json({ error: 'Verification token is invalid or expired.' }, 400);
+    }
+
+    return json({ ok: true, user, verified: true });
+  }
+
+  async resendVerification(request: Request): Promise<Response> {
+    const dbError = this.ensureDb();
+    if (dbError) {
+      return dbError;
+    }
+
+    const body = getRequestBody(await request.json().catch(() => null));
+    const identifier = String(body?.identifier || body?.email || '').trim();
+
+    if (!identifier) {
+      return json({ error: 'Email or username is required.' }, 400);
+    }
+
+    const userRecord = await findUserByIdentifier(this.db!, identifier);
+    if (!userRecord) {
+      return json({ error: 'No account was found for that identifier.' }, 404);
+    }
+
+    if (userRecord.email_verified === 1) {
+      return json({ ok: true, alreadyVerified: true });
+    }
+
+    const verification = await createEmailVerification(this.db!, {
+      id: userRecord.id,
+      username: userRecord.username,
+      email: userRecord.email,
+      displayName: userRecord.display_name,
+      role: userRecord.role,
+      emailVerified: false,
+    });
+
+    return json({
+      ok: true,
+      verificationRequired: true,
+      verificationUrl: this.buildVerificationUrl(request, verification.token),
+      verificationDelivery: 'manual-link',
+    });
+  }
+
+  async updateProfile(request: Request): Promise<Response> {
+    const dbError = this.ensureDb();
+    if (dbError) {
+      return dbError;
+    }
+
+    const token = getBearerToken(request);
+    if (!token) {
+      return json({ error: 'No auth token provided.' }, 401);
+    }
+
+    const auth = await getSessionByToken(this.db!, token);
+    if (!auth) {
+      return json({ error: 'Invalid or expired session.' }, 401);
+    }
+
+    const body = getRequestBody(await request.json().catch(() => null));
+
+    try {
+      const user = await updateUserProfile(this.db!, auth.user.id, {
+        displayName: body?.displayName ? String(body.displayName) : undefined,
+        username: body?.username ? String(body.username) : undefined,
+      });
+
+      return json({ user });
+    } catch (error) {
+      if (error instanceof AuthConflictError) {
+        return json({ error: error.message, code: error.code }, 409);
+      }
+
+      return json({ error: error instanceof Error ? error.message : 'Profile update failed.' }, 400);
+    }
   }
 }
