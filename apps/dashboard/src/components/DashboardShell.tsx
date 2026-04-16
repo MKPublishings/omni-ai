@@ -229,7 +229,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
               <div className={hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between'}>
                 <div className="min-w-0">
                   <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p>
+                  {subtitle ? <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
                 </div>
 
                 {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}

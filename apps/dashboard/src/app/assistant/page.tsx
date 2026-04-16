@@ -142,18 +142,18 @@ export default function AssistantPage() {
   return (
     <DashboardShell
       title="Assistant"
-      subtitle="A direct interface into ION reasoning, with deployment health and operator prompts visible alongside the conversation."
+      subtitle=""
       hidePageIntroOnMobile
     >
       <section>
-        <div className="min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[560px]">
+        <div className="min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]">
           <AIConversationPanel
             messages={messages}
             onSendMessage={handleSendMessage}
             isThinking={isThinking}
             focusMode={focusMode}
             onToggleFocus={() => setFocusMode((value) => !value)}
-            className="h-full min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[560px]"
+            className="h-full min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]"
           />
         </div>
       </section>
