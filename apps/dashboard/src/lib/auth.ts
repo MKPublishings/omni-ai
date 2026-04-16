@@ -17,6 +17,17 @@ export interface AuthResponse {
 const TOKEN_KEY = 'ion_token';
 const USER_KEY = 'ion_user';
 
+export function getApiUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const configuredBase = process.env.NEXT_PUBLIC_ION_API_URL?.trim();
+
+  if (!configuredBase) {
+    return normalizedPath;
+  }
+
+  return `${configuredBase.replace(/\/+$/, '')}${normalizedPath}`;
+}
+
 function safeJsonParse<T>(value: string | null): T | null {
   if (!value) {
     return null;

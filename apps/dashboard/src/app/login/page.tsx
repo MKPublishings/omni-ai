@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { clearAuthSession, getStoredToken, storeAuthSession } from '@/lib/auth'
+import { clearAuthSession, getApiUrl, getStoredToken, storeAuthSession } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -43,7 +43,7 @@ export default function LoginPage() {
         throw new Error('Passwords do not match')
       }
 
-      const response = await fetch(mode === 'signup' ? '/api/auth/signup' : '/api/auth/login', {
+      const response = await fetch(getApiUrl(mode === 'signup' ? '/api/auth/signup' : '/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,28 +2,91 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authorizedFetch, clearAuthSession, getStoredToken } from '@/lib/auth'
+import { authorizedFetch, clearAuthSession, getApiUrl, getStoredToken } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
-import { Input } from '@/components/Input'
 import { NavigationRail, NavItem } from '@/components/NavigationRail'
 import { CommandBar } from '@/components/CommandBar'
 import { StatCard } from '@/components/StatCard'
 import { DataPanel } from '@/components/DataPanel'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
-import { Modal } from '@/components/Modal'
-import { Toast } from '@/components/Toast'
 import { AmbientBackground } from '@/components/AmbientBackground'
 import { Table } from '@/components/Table'
 import { StatCardSkeleton, TableSkeleton, ConversationSkeleton } from '@/components/Skeleton'
 
 type ZoneFocus = 'sanctuary' | 'performance' | 'transition' | null
 
+type DashboardStatus = {
+  version: string
+  status: string
+  uptime: number
+  timestamp: string
+  counts: {
+    authUsers: number
+    sessions: number
+    toolExecutions: number
+    simulationRuns: number
+  }
+  environment: {
+    region: string
+    platform: string
+  }
+}
+
+type ActivityRow = {
+  id: string
+  type: string
+  source: string
+  summary: string
+  createdAt: string
+}
+
+function formatDuration(totalSeconds: number): string {
+  if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
+    return 'just started'
+  }
+
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+
+  if (days > 0) {
+    return `${days}d ${hours}h`
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  if (minutes > 0) {
+    return `${minutes}m`
+  }
+
+  return `${Math.max(1, Math.floor(totalSeconds))}s`
+}
+
+function summarizeEventPayload(data: unknown): string {
+  if (!data || typeof data !== 'object') {
+    return 'Event recorded'
+  }
+
+  const payload = data as Record<string, unknown>
+  const summaryFields = ['message', 'summary', 'status', 'detail', 'mode', 'taskType']
+
+  for (const field of summaryFields) {
+    const value = payload[field]
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
+  }
+
+  return Object.entries(payload)
+    .slice(0, 2)
+    .map(([key, value]) => `${key}: ${String(value)}`)
+    .join(' | ') || 'Event recorded'
+}
+
 export default function Home() {
   const [navCollapsed, setNavCollapsed] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [showToast, setShowToast] = useState(false)
   const [zoneFocus, setZoneFocus] = useState<ZoneFocus>(null)
   const [aiMessages, setAiMessages] = useState<Array<{
     id: string
@@ -41,13 +104,12 @@ export default function Home() {
   const [isThinking, setIsThinking] = useState(false)
   const [panelSplit, setPanelSplit] = useState(65) // Percentage for left panel width
   const [isDragging, setIsDragging] = useState(false)
-  const [stats, setStats] = useState({
-    activeUsers: 12847,
-    systemLoad: 68,
-    aiQueries: 3429
-  })
+  const [systemStatus, setSystemStatus] = useState<DashboardStatus | null>(null)
+  const [activityRows, setActivityRows] = useState<ActivityRow[]>([])
   const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true)
   const [isLoadingConversation, setIsLoadingConversation] = useState(false)
+  const [statusError, setStatusError] = useState('')
   const [user, setUser] = useState<any>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
@@ -63,7 +125,7 @@ export default function Home() {
       }
 
       try {
-        const response = await authorizedFetch('/api/auth/me')
+        const response = await authorizedFetch(getApiUrl('/api/auth/me'))
 
         if (response.ok) {
           const data = await response.json()
@@ -86,7 +148,7 @@ export default function Home() {
   // Logout handler
   const handleLogout = async () => {
     try {
-      await authorizedFetch('/api/auth/logout', { method: 'POST' })
+      await authorizedFetch(getApiUrl('/api/auth/logout'), { method: 'POST' })
     } catch (error) {
       console.error('Logout failed:', error)
     }
@@ -115,30 +177,59 @@ export default function Home() {
     setIsDragging(false)
   }
 
-  // Real-time stats updates
   useEffect(() => {
-    const fetchStats = async () => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    const fetchDashboardData = async () => {
+      setIsLoadingStats(true)
+      setIsLoadingActivity(true)
+      setStatusError('')
+
       try {
-        const response = await fetch('/api/stats')
-        if (response.ok) {
-          const newStats = await response.json()
-          setStats(newStats)
-          setIsLoadingStats(false)
+        const [statusResponse, eventsResponse] = await Promise.all([
+          authorizedFetch(getApiUrl('/api/system/status')),
+          authorizedFetch(getApiUrl('/api/system/events?limit=8')),
+        ])
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to load system status')
+        }
+
+        const statusPayload = await statusResponse.json()
+        setSystemStatus(statusPayload)
+
+        if (eventsResponse.ok) {
+          const eventsPayload = await eventsResponse.json()
+          const rows = Array.isArray(eventsPayload.events)
+            ? eventsPayload.events.map((event: any) => ({
+                id: String(event.id),
+                type: String(event.type || 'event'),
+                source: String(event.source || 'system'),
+                summary: summarizeEventPayload(event.data),
+                createdAt: String(event.createdAt || ''),
+              }))
+            : []
+          setActivityRows(rows)
+        } else {
+          setActivityRows([])
         }
       } catch (error) {
-        console.error('Failed to fetch stats:', error)
+        console.error('Failed to fetch dashboard data:', error)
+        setSystemStatus(null)
+        setActivityRows([])
+        setStatusError(error instanceof Error ? error.message : 'Unable to load dashboard data')
+      } finally {
         setIsLoadingStats(false)
+        setIsLoadingActivity(false)
       }
     }
 
-    // Initial fetch
-    fetchStats()
-
-    // Update every 30 seconds
-    const interval = setInterval(fetchStats, 30000)
-
+    fetchDashboardData()
+    const interval = setInterval(fetchDashboardData, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [isAuthenticated])
 
   // Zone focus handlers
   const handleZoneFocus = (zone: ZoneFocus) => {
@@ -175,7 +266,7 @@ export default function Home() {
       const token = getStoredToken()
 
       // Call real ION AI API
-      const response = await fetch(process.env.NEXT_PUBLIC_ION_API_URL || 'https://ion-ai.ion-ai.workers.dev/', {
+      const response = await fetch(getApiUrl('/'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -220,31 +311,16 @@ export default function Home() {
     }
   }
 
-  const sampleTableData = [
-    { id: 1, name: 'Project Alpha', status: 'Active', progress: 85, team: 'Engineering' },
-    { id: 2, name: 'Project Beta', status: 'Planning', progress: 20, team: 'Design' },
-    { id: 3, name: 'Project Gamma', status: 'Complete', progress: 100, team: 'Marketing' },
-  ]
-
   const tableColumns = [
-    { key: 'name', header: 'Project Name', sortable: true },
-    { key: 'status', header: 'Status', sortable: true },
+    { key: 'type', header: 'Event Type', sortable: true },
+    { key: 'source', header: 'Source', sortable: true },
+    { key: 'summary', header: 'Summary' },
     {
-      key: 'progress',
-      header: 'Progress',
-      render: (value: number) => (
-        <div className="flex items-center space-x-2">
-          <div className="w-16 h-2 bg-quantum-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-spectral-cyan-500 transition-all duration-300"
-              style={{ width: `${value}%` }}
-            />
-          </div>
-          <span className="text-xs text-quantum-white/64">{value}%</span>
-        </div>
-      )
+      key: 'createdAt',
+      header: 'Recorded',
+      render: (value: string) => new Date(value).toLocaleString(),
+      sortable: true,
     },
-    { key: 'team', header: 'Team', sortable: true },
   ]
 
   return (
@@ -324,7 +400,7 @@ export default function Home() {
               <div>
                 <h1 className="text-3xl font-bold text-quantum-white">ION Dashboard</h1>
                 <p className="text-quantum-white/64 mt-1">
-                  {user ? `Welcome back, ${user.name}. Here's your system overview.` : 'Loading...'}
+                  {user ? `Welcome back, ${user.displayName}. Here's your live system overview.` : 'Loading...'}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
@@ -336,10 +412,17 @@ export default function Home() {
                     </Button>
                   </div>
                 )}
-                <Button onClick={() => setShowModal(true)}>Open Modal</Button>
-                <Button variant="secondary" onClick={() => setShowToast(true)}>Show Toast</Button>
+                <Button variant="secondary" onClick={() => window.location.reload()}>
+                  Refresh
+                </Button>
               </div>
             </div>
+
+            {statusError && (
+              <GlassCard tier={2} className="p-4 border border-amber-signal-500/30">
+                <p className="text-sm text-amber-signal-500">{statusError}</p>
+              </GlassCard>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -352,20 +435,20 @@ export default function Home() {
               ) : (
                 <>
                   <StatCard
-                    title="Active Users"
-                    value={stats.activeUsers.toLocaleString()}
-                    trend={{ direction: 'up', value: '+12.5%' }}
+                    title="Registered Users"
+                    value={systemStatus?.counts.authUsers?.toLocaleString() || '0'}
+                    trend={{ direction: 'neutral', value: 'D1 live' }}
                     sparkline
                   />
                   <StatCard
-                    title="System Load"
-                    value={`${stats.systemLoad}%`}
-                    trend={{ direction: stats.systemLoad > 80 ? 'down' : 'neutral', value: '+2.1%' }}
+                    title="Tool Executions"
+                    value={systemStatus?.counts.toolExecutions?.toLocaleString() || '0'}
+                    trend={{ direction: 'neutral', value: 'Observed' }}
                   />
                   <StatCard
-                    title="AI Queries"
-                    value={stats.aiQueries.toLocaleString()}
-                    trend={{ direction: 'up', value: '+8.3%' }}
+                    title="Simulation Runs"
+                    value={systemStatus?.counts.simulationRuns?.toLocaleString() || '0'}
+                    trend={{ direction: 'neutral', value: `Uptime ${formatDuration(systemStatus?.uptime || 0)}` }}
                     sparkline
                   />
                 </>
@@ -385,19 +468,18 @@ export default function Home() {
               >
                 <DataPanel
                   title="Recent Activity"
-                  subtitle="System events and user interactions"
+                  subtitle="Live events recorded in the Worker backend"
                   action={
-                    <Button variant="ghost" size="sm">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Export
+                    <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+                      Reload
                     </Button>
                   }
                 >
                   <Table
-                    data={sampleTableData}
+                    data={activityRows}
                     columns={tableColumns}
+                    loading={isLoadingActivity}
+                    emptyMessage="No live activity yet"
                   />
                 </DataPanel>
               </div>
@@ -424,72 +506,59 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Component Showcase */}
+            {/* Live Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GlassCard tier={1} className="p-6">
-                <h3 className="text-xl font-semibold text-quantum-white mb-4">Button Variants</h3>
-                <div className="space-y-3">
-                  <div className="flex space-x-3">
-                    <Button>Primary</Button>
-                    <Button variant="secondary">Secondary</Button>
-                    <Button variant="ghost">Ghost</Button>
+                <h3 className="text-xl font-semibold text-quantum-white mb-4">Access Profile</h3>
+                <div className="space-y-3 text-sm text-quantum-white/72">
+                  <div className="flex items-center justify-between">
+                    <span>Username</span>
+                    <span className="text-quantum-white">{user?.username || 'Unavailable'}</span>
                   </div>
-                  <div className="flex space-x-3">
-                    <Button size="sm">Small</Button>
-                    <Button size="md">Medium</Button>
-                    <Button size="lg">Large</Button>
+                  <div className="flex items-center justify-between">
+                    <span>Role</span>
+                    <span className="text-quantum-white">{user?.role || 'Unavailable'}</span>
                   </div>
-                  <Button glow>Primary with Glow</Button>
+                  <div className="flex items-center justify-between">
+                    <span>Email</span>
+                    <span className="text-quantum-white">{user?.email || 'Unavailable'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Verification</span>
+                    <span className="text-quantum-white">{user?.emailVerified ? 'Verified' : 'Pending'}</span>
+                  </div>
                 </div>
               </GlassCard>
 
               <GlassCard tier={2} className="p-6">
-                <h3 className="text-xl font-semibold text-quantum-white mb-4">Form Elements</h3>
-                <div className="space-y-4">
-                  <Input placeholder="Enter your name..." />
-                  <Input placeholder="Email address" type="email" />
-                  <Input placeholder="Error state" error />
+                <h3 className="text-xl font-semibold text-quantum-white mb-4">Platform State</h3>
+                <div className="space-y-3 text-sm text-quantum-white/72">
+                  <div className="flex items-center justify-between">
+                    <span>Status</span>
+                    <span className="text-quantum-white">{systemStatus?.status || 'Unavailable'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Version</span>
+                    <span className="text-quantum-white">{systemStatus?.version || 'Unknown'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Platform</span>
+                    <span className="text-quantum-white">{systemStatus?.environment.platform || 'Unknown'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Region</span>
+                    <span className="text-quantum-white">{systemStatus?.environment.region || 'unknown'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Updated</span>
+                    <span className="text-quantum-white">{systemStatus ? new Date(systemStatus.timestamp).toLocaleString() : 'Unavailable'}</span>
+                  </div>
                 </div>
               </GlassCard>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="ION Glass UI System"
-        size="lg"
-      >
-        <div className="space-y-4">
-          <p className="text-quantum-white/80">
-            This is the Ionirix Glass UI System demonstration. The modal showcases the Sovereign Glass material
-            with proper backdrop blur and layering.
-          </p>
-          <div className="flex justify-end space-x-3">
-            <Button variant="ghost" onClick={() => setShowModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setShowModal(false)}>
-              Confirm
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Toast */}
-      {showToast && (
-        <div className="fixed top-4 right-4 z-50">
-          <Toast
-            type="success"
-            title="Success!"
-            message="Glass UI components are working perfectly."
-            onClose={() => setShowToast(false)}
-          />
-        </div>
-      )}
     </div>
   )
 }

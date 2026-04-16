@@ -82,6 +82,12 @@ export class SystemWorker {
 
       const sessionCount = sessionsResult?.count || 0;
 
+      const authUsersResult = await this.db
+        .prepare('SELECT COUNT(*) as count FROM auth_users')
+        .first<any>();
+
+      const authUserCount = authUsersResult?.count || 0;
+
       // Count tool executions
       const toolsResult = await this.db
         .prepare('SELECT COUNT(*) as count FROM tool_executions')
@@ -111,6 +117,7 @@ export class SystemWorker {
         uptime,
         timestamp: new Date().toISOString(),
         counts: {
+          authUsers: authUserCount,
           sessions: sessionCount,
           toolExecutions: toolExecutionCount,
           simulationRuns: simulationCount,
