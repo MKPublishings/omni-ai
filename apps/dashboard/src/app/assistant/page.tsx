@@ -10,6 +10,11 @@ type ConversationMessage = {
   type: 'user' | 'ai'
   content: string
   timestamp: Date
+  image?: {
+    src: string
+    filename?: string
+    model?: string
+  }
 }
 
 const starterMessages: ConversationMessage[] = [
@@ -23,6 +28,9 @@ const starterMessages: ConversationMessage[] = [
 
 function extractAssistantContent(rawText: string) {
   const chunks: string[] = []
+  let imageDataUrl = ''
+  let imageFilename = ''
+  let imageModel = ''
 
   for (const line of rawText.split(/\r?\n/)) {
     const trimmed = line.trim()
@@ -40,17 +48,37 @@ function extractAssistantContent(rawText: string) {
         content?: string
         response?: string
         error?: string
+        imageDataUrl?: string
+        image?: {
+          filename?: string
+          model?: string
+        }
       }
       const value = parsed.content || parsed.response || parsed.error
       if (value) {
         chunks.push(value)
+      }
+      if (!imageDataUrl && parsed.imageDataUrl) {
+        imageDataUrl = parsed.imageDataUrl
+        imageFilename = parsed.image?.filename || ''
+        imageModel = parsed.image?.model || ''
       }
     } catch {
       chunks.push(payload)
     }
   }
 
-  return chunks.join('').trim()
+  return {
+    content: chunks.join('').trim(),
+    imageDataUrl,
+    imageFilename,
+    imageModel,
+  }
+}
+
+function isImagePrompt(message: string) {
+  const normalized = String(message || '').trim().toLowerCase()
+  return /(^|\s)\/image\b|\b(generate|create|make|draw|render|illustrate|design)\b[\s\S]{0,40}\b(image|art|picture|photo|poster|illustration|wallpaper|logo)\b|\bimage of\b|\bpicture of\b/.test(normalized)
 }
 
 async function parseAssistantResponse(response: Response) {
@@ -58,11 +86,14 @@ async function parseAssistantResponse(response: Response) {
 
   if (contentType.includes('text/event-stream')) {
     const rawText = await response.text()
-    const content = extractAssistantContent(rawText)
+    const payload = extractAssistantContent(rawText)
 
     return {
       ok: response.ok,
-      content,
+      content: payload.content,
+      imageDataUrl: payload.imageDataUrl,
+      imageFilename: payload.imageFilename,
+      imageModel: payload.imageModel,
     }
   }
 
@@ -70,8 +101,11 @@ async function parseAssistantResponse(response: Response) {
   return {
     ok: response.ok,
     content: response.ok
-      ? payload.response || ''
+      ? payload.response || payload.content || ''
       : payload.error || '',
+    imageDataUrl: payload.imageDataUrl || '',
+    imageFilename: payload.image?.filename || payload.filename || '',
+    imageModel: payload.image?.model || payload.metadata?.model || '',
   }
 }
 
@@ -92,27 +126,37 @@ export default function AssistantPage() {
     setIsThinking(true)
 
     try {
-      const response = await fetch(getApiUrl('/api/ION?fast=true'), {
+      const token = getStoredToken()
+      const imageRequest = isImagePrompt(message)
+      const response = await fetch(getApiUrl(imageRequest ? '/api/image' : '/api/ION?fast=true'), {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${getStoredToken()}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          mode: 'analysis',
-          fastMode: true,
-          messages: [
-            {
-              role: 'user',
-              content: `${message}\n\nContext: ION AI assistant dashboard page. Respond as an operator-facing assistant.`,
-            },
-          ],
-        }),
+        body: JSON.stringify(
+          imageRequest
+            ? {
+                prompt: message.replace(/^\s*\/image\s*/i, '').trim() || message,
+                mode: 'simple',
+                quality: 'ultra',
+              }
+            : {
+                mode: 'auto',
+                fastMode: true,
+                messages: [
+                  {
+                    role: 'user',
+                    content: `${message}\n\nContext: ION AI assistant dashboard page. Respond as an operator-facing assistant. If the user asks for an image, generate it instead of only describing it.`,
+                  },
+                ],
+              }
+        ),
       })
 
       const payload = await parseAssistantResponse(response)
       const content = payload.ok
-        ? payload.content || 'The reasoning engine completed without a formatted response body.'
+        ? payload.content || (payload.imageDataUrl ? 'Image generated.' : 'The reasoning engine completed without a formatted response body.')
         : payload.content || 'The ION runtime rejected the request. Check credentials or deployment health and try again.'
 
       setMessages((current) => [
@@ -122,6 +166,13 @@ export default function AssistantPage() {
           type: 'ai',
           content,
           timestamp: new Date(),
+          image: payload.imageDataUrl
+            ? {
+                src: payload.imageDataUrl,
+                filename: payload.imageFilename,
+                model: payload.imageModel,
+              }
+            : undefined,
         },
       ])
     } catch {

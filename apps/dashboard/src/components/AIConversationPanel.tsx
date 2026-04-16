@@ -1,6 +1,5 @@
 import { forwardRef, HTMLAttributes, useState, useRef, useEffect } from 'react'
 import { clsx } from 'clsx'
-import { Input } from './Input'
 import { Button } from './Button'
 import { ConversationSkeleton } from './Skeleton'
 
@@ -9,6 +8,11 @@ interface Message {
   type: 'user' | 'ai'
   content: string
   timestamp: Date
+  image?: {
+    src: string
+    filename?: string
+    model?: string
+  }
 }
 
 interface AIConversationPanelProps extends HTMLAttributes<HTMLDivElement> {
@@ -34,7 +38,27 @@ const MessageBubble = ({ message }: { message: Message }) => {
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
       )}>
-        <p className="text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p>
+        {message.content ? <p className="text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p> : null}
+        {message.image ? (
+          <div className={clsx(message.content ? 'mt-3' : '')}>
+            <img
+              src={message.image.src}
+              alt={message.image.filename || 'Generated image'}
+              className="max-h-[28rem] w-full rounded-2xl border border-quantum-white/10 object-cover"
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs opacity-70">
+              {message.image.filename ? <span>{message.image.filename}</span> : null}
+              {message.image.model ? <span>{message.image.model}</span> : null}
+              <a
+                href={message.image.src}
+                download={message.image.filename || 'ion-image.png'}
+                className="underline underline-offset-4"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        ) : null}
         <span className="mt-2 block text-xs opacity-60">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
