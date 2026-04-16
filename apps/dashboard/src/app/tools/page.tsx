@@ -5,7 +5,7 @@ import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
 import { StatCard } from '@/components/StatCard'
 import { Table } from '@/components/Table'
-import { DashboardSystemStatus, DashboardToolMetadata, fetchSystemStatus, fetchTools } from '@/lib/dashboard'
+import { DashboardSystemStatus, DashboardToolMetadata, fetchSystemStatus, fetchTools, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 export default function ToolsPage() {
   const [tools, setTools] = useState<DashboardToolMetadata[]>([])
@@ -16,26 +16,33 @@ export default function ToolsPage() {
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([fetchTools(), fetchSystemStatus()])
-      .then(([toolList, nextStatus]) => {
+    const load = async () => {
+      try {
+        setError('')
+        const [toolList, nextStatus] = await Promise.all([fetchTools(), fetchSystemStatus()])
         if (!cancelled) {
           setTools(toolList)
           setStatus(nextStatus)
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Unable to load tools')
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setLoading(false)
         }
-      })
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
 
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 

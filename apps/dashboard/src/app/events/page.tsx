@@ -5,7 +5,7 @@ import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
 import { StatCard } from '@/components/StatCard'
 import { Table } from '@/components/Table'
-import { DashboardSystemEvent, fetchSystemEvents, summarizeEventPayload } from '@/lib/dashboard'
+import { DashboardSystemEvent, fetchSystemEvents, LIVE_REFRESH_INTERVAL_MS, summarizeEventPayload } from '@/lib/dashboard'
 
 export default function EventsPage() {
   const [events, setEvents] = useState<DashboardSystemEvent[]>([])
@@ -14,25 +14,33 @@ export default function EventsPage() {
 
   useEffect(() => {
     let cancelled = false
-    fetchSystemEvents(40)
-      .then((rows) => {
+
+    const load = async () => {
+      try {
+        setError('')
+        const rows = await fetchSystemEvents(40)
         if (!cancelled) {
           setEvents(rows)
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Unable to load events')
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setLoading(false)
         }
-      })
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
 
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 

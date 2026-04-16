@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { GlassCard } from '@/components/GlassCard'
 import { PublicSiteShell } from '@/components/PublicSiteShell'
 import { PublicStatusPanel } from '@/components/PublicStatusPanel'
-import { DashboardHealthStatus, fetchPublicHealth } from '@/lib/dashboard'
+import { DashboardHealthStatus, fetchPublicHealth, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 const roadmapItems = [
   {
@@ -30,7 +30,28 @@ export default function RoadmapPage() {
   const [health, setHealth] = useState<DashboardHealthStatus | null>(null)
 
   useEffect(() => {
-    fetchPublicHealth().then(setHealth).catch(() => undefined)
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const nextHealth = await fetchPublicHealth()
+        if (!cancelled) {
+          setHealth(nextHealth)
+        }
+      } catch {
+        return undefined
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
   }, [])
 
   return (

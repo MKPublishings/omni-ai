@@ -1,5 +1,7 @@
 import { AuthUser, authorizedFetch, getApiUrl } from './auth'
 
+export const LIVE_REFRESH_INTERVAL_MS = 15000
+
 export interface DashboardHealthStatus {
   status: string
   timestamp: string
@@ -129,7 +131,12 @@ export function summarizeEventPayload(data: unknown): string {
 }
 
 async function fetchAuthorizedJson<T>(path: string): Promise<T> {
-  const response = await authorizedFetch(getApiUrl(path))
+  const response = await authorizedFetch(getLiveApiUrl(path), {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  })
 
   if (!response.ok) {
     throw new Error(`Request failed for ${path}: ${response.status}`)
@@ -176,13 +183,24 @@ export async function fetchTools(): Promise<DashboardToolMetadata[]> {
 }
 
 export async function fetchPublicHealth(): Promise<DashboardHealthStatus> {
-  const response = await fetch(getApiUrl('/api/system/health'))
+  const response = await fetch(getLiveApiUrl('/api/system/health'), {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  })
 
   if (!response.ok) {
     throw new Error(`Request failed for /api/system/health: ${response.status}`)
   }
 
   return response.json() as Promise<DashboardHealthStatus>
+}
+
+function getLiveApiUrl(path: string): string {
+  const apiUrl = getApiUrl(path)
+  const separator = apiUrl.includes('?') ? '&' : '?'
+  return `${apiUrl}${separator}_=${Date.now()}`
 }
 
 export function fetchChatSettings(): Promise<{ preferences: DashboardChatPreferences }> {

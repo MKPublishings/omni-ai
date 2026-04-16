@@ -11,6 +11,7 @@ import {
   fetchSystemEvents,
   fetchSystemStatus,
   formatDuration,
+  LIVE_REFRESH_INTERVAL_MS,
   summarizeEventPayload,
 } from '@/lib/dashboard'
 
@@ -48,8 +49,8 @@ export default function WorkspacePage() {
       }
     }
 
-    load()
-    const interval = window.setInterval(load, 30000)
+    void load()
+    const interval = window.setInterval(load, LIVE_REFRESH_INTERVAL_MS)
     return () => {
       cancelled = true
       window.clearInterval(interval)

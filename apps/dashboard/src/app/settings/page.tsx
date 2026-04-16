@@ -14,6 +14,7 @@ import {
   fetchChatSettings,
   fetchDashboardUser,
   fetchSystemStatus,
+  LIVE_REFRESH_INTERVAL_MS,
   updateChatSettings,
 } from '@/lib/dashboard'
 import { AuthUser } from '@/lib/auth'
@@ -29,6 +30,7 @@ export default function SettingsPage() {
   const [isClearingHistory, setIsClearingHistory] = useState(false)
 
   const loadSettings = () => {
+    setError('')
     Promise.all([fetchDashboardUser(), fetchSystemStatus(), fetchChatSettings(), fetchChatHistory(200)])
       .then(([userPayload, nextStatus, chatSettingsPayload, chatHistoryPayload]) => {
         setUser(userPayload.user)
@@ -41,6 +43,11 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSettings()
+    const interval = window.setInterval(loadSettings, LIVE_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(interval)
+    }
   }, [])
 
   const handleToggle = async (key: 'persistHistory' | 'contextCarryover') => {

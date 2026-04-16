@@ -5,7 +5,7 @@ import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
 import { StatCard } from '@/components/StatCard'
 import { Table } from '@/components/Table'
-import { DashboardSimulationRun, fetchSimulationHistory } from '@/lib/dashboard'
+import { DashboardSimulationRun, fetchSimulationHistory, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 export default function SimulationsPage() {
   const [runs, setRuns] = useState<DashboardSimulationRun[]>([])
@@ -14,25 +14,33 @@ export default function SimulationsPage() {
 
   useEffect(() => {
     let cancelled = false
-    fetchSimulationHistory(16)
-      .then((payload) => {
+
+    const load = async () => {
+      try {
+        setError('')
+        const payload = await fetchSimulationHistory(16)
         if (!cancelled) {
           setRuns(payload)
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Unable to load simulations')
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setLoading(false)
         }
-      })
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
 
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 

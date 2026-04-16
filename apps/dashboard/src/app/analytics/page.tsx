@@ -5,7 +5,7 @@ import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
 import { StatCard } from '@/components/StatCard'
 import { Table } from '@/components/Table'
-import { DashboardSystemEvent, DashboardSystemStatus, fetchSystemEvents, fetchSystemStatus } from '@/lib/dashboard'
+import { DashboardSystemEvent, DashboardSystemStatus, fetchSystemEvents, fetchSystemStatus, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 export default function AnalyticsPage() {
   const [status, setStatus] = useState<DashboardSystemStatus | null>(null)
@@ -35,9 +35,14 @@ export default function AnalyticsPage() {
       }
     }
 
-    load()
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
+
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 

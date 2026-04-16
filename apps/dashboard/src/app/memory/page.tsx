@@ -6,7 +6,7 @@ import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
 import { StatCard } from '@/components/StatCard'
 import { AuthUser } from '@/lib/auth'
-import { DashboardSystemStatus, fetchDashboardUser, fetchSystemStatus } from '@/lib/dashboard'
+import { DashboardSystemStatus, fetchDashboardUser, fetchSystemStatus, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 export default function MemoryPage() {
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -14,12 +14,32 @@ export default function MemoryPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([fetchDashboardUser(), fetchSystemStatus()])
-      .then(([userPayload, nextStatus]) => {
-        setUser(userPayload.user)
-        setStatus(nextStatus)
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load memory page'))
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        setError('')
+        const [userPayload, nextStatus] = await Promise.all([fetchDashboardUser(), fetchSystemStatus()])
+        if (!cancelled) {
+          setUser(userPayload.user)
+          setStatus(nextStatus)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unable to load memory page')
+        }
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(() => {
+      void load()
+    }, LIVE_REFRESH_INTERVAL_MS)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
   }, [])
 
   return (

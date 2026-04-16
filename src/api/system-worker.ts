@@ -9,6 +9,12 @@
 import type { RouteParams } from '../router';
 import { EventBus } from '../engines/event-bus';
 
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
+
 export class SystemWorker {
   private db: D1Database;
   private kv?: KVNamespace;
@@ -107,6 +113,7 @@ export class SystemWorker {
         },
         {
           status: httpStatus,
+          headers: NO_STORE_HEADERS,
         }
       );
     } catch (err: unknown) {
@@ -175,6 +182,8 @@ export class SystemWorker {
           region: this.env.REGION || 'unknown',
           platform: 'cloudflare-workers',
         },
+      }, {
+        headers: NO_STORE_HEADERS,
       });
     } catch (err: unknown) {
       console.error('[SystemWorker.getStatus]', err);
