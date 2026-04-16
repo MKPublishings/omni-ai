@@ -1,6 +1,6 @@
 import { AuthUser, authorizedFetch, getApiUrl } from './auth'
 
-export const LIVE_REFRESH_INTERVAL_MS = 15000
+export const LIVE_REFRESH_INTERVAL_MS = 120000
 
 export interface DashboardHealthStatus {
   status: string
