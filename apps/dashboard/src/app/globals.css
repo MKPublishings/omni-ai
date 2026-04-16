@@ -20,6 +20,15 @@
     --dashboard-search-border: rgba(255, 255, 255, 0.1);
     --dashboard-search-fg: rgba(255, 255, 255, 0.94);
     --dashboard-search-placeholder: rgba(255, 255, 255, 0.42);
+    --ambient-gradient-1: rgba(12, 28, 62, 0.96);
+    --ambient-gradient-2: rgba(8, 52, 92, 0.7);
+    --ambient-gradient-3: rgba(22, 102, 110, 0.38);
+    --ambient-gradient-4: rgba(150, 104, 36, 0.16);
+    --ambient-orb-cyan: rgba(73, 224, 255, 0.2);
+    --ambient-orb-blue: rgba(59, 130, 246, 0.18);
+    --ambient-orb-amber: rgba(245, 158, 11, 0.12);
+    --ambient-sheen: rgba(255, 255, 255, 0.05);
+    --ambient-particle: rgba(255, 255, 255, 0.24);
   }
 
   html[data-dashboard-theme='light'] {
@@ -34,6 +43,15 @@
     --dashboard-search-border: rgba(15, 23, 42, 0.12);
     --dashboard-search-fg: rgba(15, 23, 42, 0.92);
     --dashboard-search-placeholder: rgba(15, 23, 42, 0.42);
+    --ambient-gradient-1: rgba(244, 248, 252, 0.98);
+    --ambient-gradient-2: rgba(189, 225, 244, 0.78);
+    --ambient-gradient-3: rgba(155, 223, 223, 0.44);
+    --ambient-gradient-4: rgba(255, 214, 153, 0.26);
+    --ambient-orb-cyan: rgba(56, 189, 248, 0.18);
+    --ambient-orb-blue: rgba(59, 130, 246, 0.14);
+    --ambient-orb-amber: rgba(251, 191, 36, 0.14);
+    --ambient-sheen: rgba(255, 255, 255, 0.28);
+    --ambient-particle: rgba(15, 23, 42, 0.18);
   }
 
   body {
@@ -44,6 +62,65 @@
 }
 
 @layer components {
+  .ambient-gradient-field {
+    background-image:
+      radial-gradient(circle at 18% 22%, var(--ambient-gradient-3) 0%, transparent 34%),
+      radial-gradient(circle at 82% 18%, var(--ambient-gradient-2) 0%, transparent 36%),
+      radial-gradient(circle at 50% 78%, var(--ambient-gradient-4) 0%, transparent 30%),
+      linear-gradient(135deg, var(--ambient-gradient-1) 0%, var(--ambient-gradient-2) 38%, var(--ambient-gradient-3) 68%, var(--ambient-gradient-1) 100%);
+    background-size: 140% 140%, 150% 150%, 130% 130%, 160% 160%;
+    background-position: 0% 0%, 100% 10%, 50% 100%, 0% 50%;
+    filter: saturate(1.06);
+    animation: ambient-gradient-shift 24s ease-in-out infinite alternate;
+  }
+
+  .ambient-gradient-mesh {
+    background-image:
+      radial-gradient(circle at 22% 30%, color-mix(in srgb, var(--ambient-gradient-3) 44%, transparent) 0%, transparent 28%),
+      radial-gradient(circle at 74% 26%, color-mix(in srgb, var(--ambient-gradient-2) 38%, transparent) 0%, transparent 30%),
+      radial-gradient(circle at 60% 74%, color-mix(in srgb, var(--ambient-gradient-4) 50%, transparent) 0%, transparent 26%);
+    mix-blend-mode: screen;
+    animation: ambient-mesh-drift 18s ease-in-out infinite alternate;
+  }
+
+  .ambient-orb {
+    will-change: transform, opacity;
+    animation: ambient-orb-drift 20s ease-in-out infinite;
+  }
+
+  .ambient-orb-cyan {
+    background: radial-gradient(circle, var(--ambient-orb-cyan) 0%, transparent 68%);
+  }
+
+  .ambient-orb-blue {
+    background: radial-gradient(circle, var(--ambient-orb-blue) 0%, transparent 70%);
+    animation-delay: -7s;
+    animation-duration: 23s;
+  }
+
+  .ambient-orb-amber {
+    background: radial-gradient(circle, var(--ambient-orb-amber) 0%, transparent 72%);
+    animation-delay: -11s;
+    animation-duration: 26s;
+  }
+
+  .ambient-sheen {
+    background: radial-gradient(circle at 50% 50%, var(--ambient-sheen) 0%, transparent 62%);
+    filter: blur(22px);
+    animation: ambient-sheen-drift 16s ease-in-out infinite;
+  }
+
+  .ambient-sheen-delayed {
+    animation-delay: -8s;
+    animation-duration: 20s;
+  }
+
+  .ambient-particle {
+    background: var(--ambient-particle);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--ambient-particle) 60%, transparent);
+    animation: ambient-particle-float 16s ease-in-out infinite;
+  }
+
   .dashboard-topbar {
     background: var(--dashboard-topbar-bg);
     border-color: var(--dashboard-topbar-border);
@@ -86,5 +163,71 @@
 
   .dashboard-search-input::placeholder {
     color: var(--dashboard-search-placeholder);
+  }
+}
+
+@keyframes ambient-gradient-shift {
+  0% {
+    background-position: 0% 0%, 100% 10%, 50% 100%, 0% 50%;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    background-position: 18% 22%, 86% 0%, 42% 86%, 100% 50%;
+  }
+  100% {
+    background-position: 12% 100%, 74% 14%, 60% 10%, 100% 40%;
+    transform: scale(1.08) rotate(-2deg);
+  }
+}
+
+@keyframes ambient-mesh-drift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(1.5%, 1%, 0) scale(1.05);
+    opacity: 0.95;
+  }
+}
+
+@keyframes ambient-orb-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-3%, 4%, 0) scale(0.96);
+    opacity: 0.68;
+  }
+}
+
+@keyframes ambient-sheen-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.28;
+  }
+  100% {
+    transform: translate3d(2%, -4%, 0) scale(1.12);
+    opacity: 0.48;
+  }
+}
+
+@keyframes ambient-particle-float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.9);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate3d(0.6rem, -1rem, 0) scale(1.15);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(-0.4rem, 0.8rem, 0) scale(0.95);
+    opacity: 0.18;
   }
 }

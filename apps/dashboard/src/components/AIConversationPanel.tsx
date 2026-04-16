@@ -29,12 +29,12 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'max-w-[92%] break-words rounded-2xl px-4 py-3 sm:max-w-[82%] lg:max-w-xl',
+        'max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
         isUser
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
       )}>
-        <p className="text-sm leading-7 sm:text-[0.95rem]">{message.content}</p>
+        <p className="text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p>
         <span className="mt-2 block text-xs opacity-60">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
@@ -93,22 +93,22 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign flex min-h-[32rem] flex-col overflow-hidden rounded-[1.5rem] sm:min-h-[40rem]',
+          'ix-glass-sovereign flex min-h-[30rem] flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
           focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full',
           className
         )}
         {...props}
       >
-        <div className="flex items-center justify-between border-b border-quantum-white/8 p-4 sm:p-5">
+        <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
           <div className="flex min-w-0 items-center space-x-3">
-            <div className="w-8 h-8 bg-spectral-cyan-500 rounded-full flex items-center justify-center">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
               <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-quantum-white sm:text-lg">ION AI</h3>
-              <p className="text-xs text-quantum-white/64">Cognitive Operating System</p>
+              <h3 className="text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
+              <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
             </div>
           </div>
           {onToggleFocus && (
@@ -116,7 +116,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
               variant="ghost"
               size="sm"
               onClick={onToggleFocus}
-              className="text-quantum-white/64 hover:text-quantum-white"
+              className="h-9 w-9 rounded-full p-0 text-quantum-white/64 hover:text-quantum-white sm:h-8 sm:w-auto sm:rounded-md sm:p-0"
             >
               {focusMode ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5">
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
           {isLoading && messages.length === 0 ? (
             <ConversationSkeleton />
           ) : (
@@ -145,7 +145,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="border-t border-quantum-white/8 p-3 sm:p-4">
+        <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <textarea
@@ -154,14 +154,14 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 rows={2}
-                className="min-h-[52px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[15px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-3.5 py-2.5 text-sm leading-5 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isThinking}
               />
             </div>
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isThinking}
-              className="h-12 w-full rounded-2xl px-5 sm:h-11 sm:w-auto"
+              className="h-11 w-full rounded-2xl px-5 sm:h-11 sm:w-auto"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

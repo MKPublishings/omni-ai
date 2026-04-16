@@ -152,19 +152,36 @@ export default function AssistantPage() {
       title="Assistant"
       subtitle="A direct interface into ION reasoning, with deployment health and operator prompts visible alongside the conversation."
     >
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <div className="min-h-[560px] sm:min-h-[680px]">
+      <section className="space-y-4 md:space-y-6 xl:grid xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] xl:gap-6 xl:space-y-0">
+        <GlassCard className="p-4 md:hidden">
+          <div className="grid gap-3 grid-cols-1 xs:grid-cols-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] px-3 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-quantum-white/48">Environment</p>
+              <p className="mt-2 text-sm font-medium text-quantum-white">{status?.environment.platform || 'Loading'}</p>
+            </div>
+            <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] px-3 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-quantum-white/48">Status</p>
+              <p className="mt-2 text-sm font-medium text-quantum-white">{status?.status || 'Loading'}</p>
+            </div>
+            <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] px-3 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-quantum-white/48">Runtime</p>
+              <p className="mt-2 truncate text-sm font-medium text-quantum-white">{status?.version || 'Loading'}</p>
+            </div>
+          </div>
+        </GlassCard>
+
+        <div className="min-h-[calc(100svh-18rem)] sm:min-h-[680px] xl:min-h-[560px]">
           <AIConversationPanel
             messages={messages}
             onSendMessage={handleSendMessage}
             isThinking={isThinking}
             focusMode={focusMode}
             onToggleFocus={() => setFocusMode((value) => !value)}
-            className="h-full min-h-[560px] sm:min-h-[680px]"
+            className="h-full min-h-[calc(100svh-18rem)] sm:min-h-[680px] xl:min-h-[560px]"
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-1">
+        <div className="hidden gap-6 md:grid md:grid-cols-2 xl:grid-cols-1">
           <GlassCard className="p-6">
             <h2 className="text-xl font-semibold text-quantum-white">Assistant context</h2>
             <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
@@ -196,6 +213,31 @@ export default function AssistantPage() {
             </div>
           </GlassCard>
         </div>
+
+        <details className="group md:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] px-4 py-3 text-sm font-medium text-quantum-white/78 transition hover:bg-quantum-white/[0.05]">
+            Assistant details
+            <svg className="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </summary>
+
+          <div className="mt-3 grid gap-4">
+            <GlassCard className="p-4">
+              <h2 className="text-base font-semibold text-quantum-white">Prompt starters</h2>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-quantum-white/72">
+                <li>Summarize the current Worker architecture and identify weak spots.</li>
+                <li>Explain the latest system events in plain language for an operator.</li>
+                <li>Propose the next implementation priorities for dashboard hardening.</li>
+              </ul>
+            </GlassCard>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/analytics" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Open analytics</Link>
+              <Link href="/profile" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Edit profile</Link>
+            </div>
+          </div>
+        </details>
       </section>
     </DashboardShell>
   )
