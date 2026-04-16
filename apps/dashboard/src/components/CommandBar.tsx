@@ -91,7 +91,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               placeholder="Search across Ionirix..."
               value={searchValue}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="dashboard-search-input h-11 w-full rounded-2xl border pl-10 pr-4 text-sm transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500"
+              className="dashboard-search-input h-11 w-full rounded-2xl border px-12 text-center text-sm transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500"
             />
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <svg className="h-4 w-4 text-[color:var(--dashboard-topbar-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
