@@ -154,7 +154,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 rows={2}
-                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-3.5 py-2.5 text-sm leading-5 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-sm leading-5 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isThinking}
               />
             </div>
