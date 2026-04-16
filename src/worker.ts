@@ -30,14 +30,15 @@ import { authMiddleware } from './middleware/auth';
 interface WorkerEnv {
   DB?: D1Database;
   ASSETS: Fetcher;
-  SESSION: KVNamespace;
-  CACHE: KVNamespace;
-  CONFIG: KVNamespace;
-  MIND: KVNamespace;
-  MEMORY: KVNamespace;
+  SESSION?: KVNamespace;
+  CACHE?: KVNamespace;
+  CONFIG?: KVNamespace;
+  MIND?: KVNamespace;
+  MEMORY?: KVNamespace;
   TEXT_GENERATION?: any; // Cloudflare Workers AI binding
   ENVIRONMENT?: string;
   VERSION?: string;
+  ION_ENV?: string;
 }
 
 function isHtmlNavigationRequest(request: Request, url: URL): boolean {
@@ -63,13 +64,33 @@ async function serveAssetOrFallback(request: Request, env: WorkerEnv, url: URL):
     return null;
   }
 
-  const assetResponse = await env.ASSETS.fetch(request);
-  if (assetResponse.status !== 404) {
-    return assetResponse;
+  const candidatePaths = new Set<string>();
+  const hasFileExtension = /\.[a-z0-9]+$/i.test(url.pathname);
+
+  if (!hasFileExtension) {
+    if (url.pathname === '/' || url.pathname === '') {
+      candidatePaths.add('/index.html');
+      candidatePaths.add('/');
+    } else {
+      const normalizedPath = url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname;
+      candidatePaths.add(`${normalizedPath}.html`);
+      candidatePaths.add(`${normalizedPath}/index.html`);
+      candidatePaths.add(url.pathname);
+    }
+  } else {
+    candidatePaths.add(url.pathname);
+  }
+
+  for (const candidatePath of candidatePaths) {
+    const candidateUrl = new URL(candidatePath, url);
+    const assetResponse = await env.ASSETS.fetch(new Request(candidateUrl.toString(), request));
+    if (assetResponse.status !== 404) {
+      return assetResponse;
+    }
   }
 
   if (!isHtmlNavigationRequest(request, url)) {
-    return assetResponse;
+    return new Response('Not Found', { status: 404 });
   }
 
   const fallbackUrl = new URL('/index.html', url);
@@ -121,7 +142,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   // Initialize workers (with corrected constructors)
   const memoryWorker = new MemoryWorker(db, eventBus);
   const toolsWorker = new ToolsWorker(db, toolRegistry, eventBus);
-  const specsWorker = new SpecsWorker(db, env.CACHE);
+  const specsWorker = new SpecsWorker(db, env.CACHE as KVNamespace);
   const simulationWorker = new SimulationWorker(db, eventBus);
   const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
   const authWorker = new AuthWorker(env.DB);

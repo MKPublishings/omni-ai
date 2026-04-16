@@ -3,6 +3,9 @@ import { clsx } from 'clsx'
 
 interface NavigationRailProps extends HTMLAttributes<HTMLDivElement> {
   collapsed?: boolean
+  userName?: string
+  userRole?: string
+  userInitial?: string
 }
 
 interface NavItemProps extends HTMLAttributes<HTMLButtonElement> {
@@ -18,7 +21,7 @@ const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
       <button
         ref={ref}
         className={clsx(
-          'flex items-center w-full px-3 py-2 rounded-md text-left transition-all duration-quick ease-sovereign',
+          'relative flex items-center w-full px-3 py-2 rounded-md text-left transition-all duration-quick ease-sovereign',
           'hover:bg-quantum-white/10 focus:outline-none focus:ring-2 focus:ring-ion-blue-500',
           active && 'bg-ion-blue-500 text-quantum-white',
           !active && 'text-quantum-white/64 hover:text-quantum-white',
@@ -46,7 +49,7 @@ const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
 NavItem.displayName = 'NavItem'
 
 export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
-  ({ collapsed = false, className, children, ...props }, ref) => {
+  ({ collapsed = false, userName = 'Ionirix User', userRole = 'Operator', userInitial = 'I', className, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -79,12 +82,12 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
         <div className="p-4 border-t border-quantum-white/8">
           <div className="flex items-center">
             <div className="flex-shrink-0 w-8 h-8 bg-spectral-cyan-500 rounded-full flex items-center justify-center">
-              <span className="text-pine-black-900 font-medium text-sm">M</span>
+              <span className="text-pine-black-900 font-medium text-sm">{userInitial}</span>
             </div>
             {!collapsed && (
               <div className="ml-3">
-                <p className="text-quantum-white text-sm font-medium">Mirnes</p>
-                <p className="text-quantum-white/64 text-xs">Founder</p>
+                <p className="text-quantum-white text-sm font-medium truncate">{userName}</p>
+                <p className="text-quantum-white/64 text-xs truncate">{userRole}</p>
               </div>
             )}
           </div>

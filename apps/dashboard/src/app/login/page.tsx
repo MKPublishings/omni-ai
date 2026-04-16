@@ -24,7 +24,7 @@ export default function LoginPage() {
   useEffect(() => {
     const token = getStoredToken()
     if (token) {
-      router.push('/')
+      router.push('/workspace')
     }
   }, [router])
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
       storeAuthSession(data)
 
-      router.push('/')
+      router.push('/workspace')
 
     } catch (err) {
       clearAuthSession()
@@ -200,6 +200,9 @@ export default function LoginPage() {
         <div className="mt-8 text-center">
           <p className="text-quantum-white/40 text-sm">
             Email sign-up is enabled. Usernames can sign in too. Passwords require at least 8 characters with a letter and a number.
+          </p>
+          <p className="mt-3 text-sm text-quantum-white/56">
+            <a href="/" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Return to the public site</a>
           </p>
         </div>
       </GlassCard>

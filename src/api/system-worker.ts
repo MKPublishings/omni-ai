@@ -11,11 +11,11 @@ import { EventBus } from '../engines/event-bus';
 
 export class SystemWorker {
   private db: D1Database;
-  private kv: KVNamespace;
+  private kv?: KVNamespace;
   private eventBus: EventBus;
   private env: any;
 
-  constructor(db: D1Database, kv: KVNamespace, eventBus: EventBus, env: any) {
+  constructor(db: D1Database, kv: KVNamespace | undefined, eventBus: EventBus, env: any) {
     this.db = db;
     this.kv = kv;
     this.eventBus = eventBus;
@@ -27,9 +27,9 @@ export class SystemWorker {
    */
   async getHealth(request: Request, env: any, ctx: ExecutionContext, params: RouteParams): Promise<Response> {
     try {
-      // Quick test: D1 connectivity
       let dbOk = false;
-      let kvOk = false;
+      let kvState: 'ok' | 'error' | 'not-configured' = 'not-configured';
+      let assetsState: 'ok' | 'error' | 'not-configured' = 'not-configured';
 
       try {
         await this.db.prepare('SELECT 1').first();
@@ -38,14 +38,40 @@ export class SystemWorker {
         console.error('[SystemWorker] D1 health check failed:', err);
       }
 
-      try {
-        await this.kv.get('health:ping');
-        kvOk = true;
-      } catch (err) {
-        console.error('[SystemWorker] KV health check failed:', err);
+      if (this.kv && typeof this.kv.get === 'function') {
+        try {
+          await this.kv.get('health:ping');
+          kvState = 'ok';
+        } catch (err) {
+          kvState = 'error';
+          console.error('[SystemWorker] KV health check failed:', err);
+        }
       }
 
-      const status = dbOk && kvOk ? 'ok' : 'degraded';
+      if (this.env?.ASSETS && typeof this.env.ASSETS.fetch === 'function') {
+        assetsState = 'ok';
+      }
+
+      const countQuery = async (sql: string): Promise<number> => {
+        try {
+          const result = await this.db.prepare(sql).first<any>();
+          return Number(result?.count || 0);
+        } catch {
+          return 0;
+        }
+      };
+
+      const [authUsers, toolExecutions, simulationRuns] = dbOk
+        ? await Promise.all([
+            countQuery('SELECT COUNT(*) as count FROM auth_users'),
+            countQuery('SELECT COUNT(*) as count FROM tool_executions'),
+            countQuery('SELECT COUNT(*) as count FROM simulation_runs'),
+          ])
+        : [0, 0, 0];
+
+      const hasDependencyError = kvState === 'error';
+      const status = !dbOk ? 'error' : hasDependencyError ? 'degraded' : 'ok';
+      const httpStatus = status === 'error' ? 503 : 200;
 
       return Response.json(
         {
@@ -53,11 +79,29 @@ export class SystemWorker {
           timestamp: new Date().toISOString(),
           checks: {
             d1: dbOk ? 'ok' : 'error',
-            kv: kvOk ? 'ok' : 'error',
+            kv: kvState,
+            assets: assetsState,
+          },
+          deployment: {
+            environment: this.env?.ION_ENV || this.env?.ENVIRONMENT || 'production',
+            platform: 'cloudflare-workers',
+            region: this.env?.REGION || 'global-edge',
+            version: this.env?.VERSION || '2.0.0',
+          },
+          summary: {
+            authUsers,
+            toolExecutions,
+            simulationRuns,
+            publicRoutes: 5,
+            workspaceRoutes: 8,
+          },
+          routes: {
+            public: ['/', '/platform', '/capabilities', '/architecture', '/roadmap'],
+            workspace: ['/workspace', '/assistant', '/analytics', '/events', '/simulations', '/tools', '/memory', '/settings'],
           },
         },
         {
-          status: status === 'ok' ? 200 : 503,
+          status: httpStatus,
         }
       );
     } catch (err: unknown) {
@@ -166,6 +210,36 @@ export class SystemWorker {
       const sessionId = (request as any).authContext?.sessionId;
       if (!sessionId) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      if (!this.kv || typeof this.kv.get !== 'function') {
+        return Response.json({
+          window: 'unavailable',
+          timestamp: new Date().toISOString(),
+          requests: {
+            total: 0,
+            successful: 0,
+            errors: 0,
+            rateLimit: 0,
+            avgResponseMs: 0,
+          },
+          tools: {
+            executionCount: 0,
+            avgDurationMs: 0,
+            successRate: 1,
+          },
+          memory: {
+            entriesCreated: 0,
+            entriesDeleted: 0,
+            avgSizeBytes: 0,
+          },
+          simulation: {
+            runCount: 0,
+            stepsExecuted: 0,
+            avgStepMs: 0,
+          },
+          availability: 'kv-not-configured',
+        });
       }
 
       const url = new URL(request.url);
