@@ -56,49 +56,57 @@ const DEFAULT_CHAT_PREFERENCES: ChatPreferences = {
   updatedAt: new Date(0).toISOString()
 };
 
-async function getTableColumns(db: D1Database, tableName: string): Promise<Set<string>> {
-  const result = await db.prepare(`PRAGMA table_info(${tableName})`).all<{ name: string }>();
-  const rows = Array.isArray(result.results) ? result.results : [];
-  return new Set(rows.map((row) => String(row.name || "")).filter(Boolean));
-}
-
 export async function ensureIONMemorySchema(env: D1Env): Promise<void> {
   if (!env.ION_DB) return;
 
-  await env.ION_DB.exec(`
-    CREATE TABLE IF NOT EXISTS ION_long_term_memory (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id TEXT NOT NULL,
-      user_id TEXT NOT NULL DEFAULT '',
-      mode TEXT NOT NULL,
-      user_text TEXT NOT NULL,
-      assistant_text TEXT NOT NULL,
-      emotional_tone TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-    );
+  await env.ION_DB.prepare(
+    `
+      CREATE TABLE IF NOT EXISTS ION_long_term_memory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        user_id TEXT NOT NULL DEFAULT '',
+        mode TEXT NOT NULL,
+        user_text TEXT NOT NULL,
+        assistant_text TEXT NOT NULL,
+        emotional_tone TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      )
+    `
+  ).run();
 
-    CREATE INDEX IF NOT EXISTS idx_ION_ltm_session_created
-      ON ION_long_term_memory(session_id, created_at DESC);
+  await env.ION_DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_ION_ltm_session_created ON ION_long_term_memory(session_id, created_at DESC)`
+  ).run();
 
-    CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created
-      ON ION_long_term_memory(user_id, created_at DESC);
+  await env.ION_DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created ON ION_long_term_memory(user_id, created_at DESC)`
+  ).run();
 
-    CREATE INDEX IF NOT EXISTS idx_ION_ltm_created
-      ON ION_long_term_memory(created_at DESC);
+  await env.ION_DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_ION_ltm_created ON ION_long_term_memory(created_at DESC)`
+  ).run();
 
-    CREATE TABLE IF NOT EXISTS ION_chat_preferences (
-      user_id TEXT PRIMARY KEY,
-      persist_history INTEGER NOT NULL DEFAULT 1,
-      context_carryover INTEGER NOT NULL DEFAULT 1,
-      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-    );
-  `);
+  await env.ION_DB.prepare(
+    `
+      CREATE TABLE IF NOT EXISTS ION_chat_preferences (
+        user_id TEXT PRIMARY KEY,
+        persist_history INTEGER NOT NULL DEFAULT 1,
+        context_carryover INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      )
+    `
+  ).run();
 
-  const columns = await getTableColumns(env.ION_DB, 'ION_long_term_memory');
-  if (!columns.has('user_id')) {
-    await env.ION_DB.exec(`ALTER TABLE ION_long_term_memory ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`);
-    await env.ION_DB.exec(`CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created ON ION_long_term_memory(user_id, created_at DESC)`);
+  try {
+    await env.ION_DB.prepare(`ALTER TABLE ION_long_term_memory ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`).run();
+  } catch (error) {
+    const message = String((error as Error)?.message || error || '');
+    if (!/duplicate column name|already exists/i.test(message)) {
+      throw error;
+    }
   }
+
+  await env.ION_DB.prepare(`CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created ON ION_long_term_memory(user_id, created_at DESC)`).run();
 }
 
 export async function saveMemoryTurn(env: D1Env, turn: MemoryTurnRecord): Promise<void> {

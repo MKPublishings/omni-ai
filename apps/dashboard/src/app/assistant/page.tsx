@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
-import { getApiUrl, getStoredToken } from '@/lib/auth'
+import { getApiUrl, getStoredToken, getStoredUser } from '@/lib/auth'
 import { fetchChatHistory } from '@/lib/dashboard'
 
 type ConversationMessage = {
@@ -27,6 +27,8 @@ const starterMessages: ConversationMessage[] = [
   },
 ]
 
+const CHAT_CACHE_PREFIX = 'ion_assistant_messages:'
+
 function buildStarterMessages(): ConversationMessage[] {
   return [
     {
@@ -36,6 +38,66 @@ function buildStarterMessages(): ConversationMessage[] {
       timestamp: new Date(),
     },
   ]
+}
+
+function getChatCacheKey() {
+  const user = getStoredUser()
+  return `${CHAT_CACHE_PREFIX}${user?.id || 'anonymous'}`
+}
+
+function readCachedMessages(): ConversationMessage[] {
+  if (typeof window === 'undefined') {
+    return buildStarterMessages()
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getChatCacheKey())
+    if (!raw) {
+      return buildStarterMessages()
+    }
+
+    const parsed = JSON.parse(raw) as Array<{
+      id: string
+      type: 'user' | 'ai'
+      content: string
+      timestamp: string
+      image?: {
+        src: string
+        filename?: string
+        model?: string
+      }
+    }>
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return buildStarterMessages()
+    }
+
+    return parsed.map((entry) => ({
+      id: entry.id,
+      type: entry.type,
+      content: entry.content,
+      timestamp: new Date(entry.timestamp || Date.now()),
+      image: entry.image,
+    }))
+  } catch {
+    return buildStarterMessages()
+  }
+}
+
+function writeCachedMessages(messages: ConversationMessage[]) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const serializable = messages.map((message) => ({
+      ...message,
+      timestamp: message.timestamp.toISOString(),
+    }))
+    window.localStorage.setItem(getChatCacheKey(), JSON.stringify(serializable))
+  } catch {
+    return
+  }
 }
 
 function mapStoredTurnsToMessages(turns: Array<{
@@ -177,19 +239,27 @@ async function parseAssistantResponse(response: Response) {
 }
 
 export default function AssistantPage() {
-  const [messages, setMessages] = useState<ConversationMessage[]>(starterMessages)
+  const [messages, setMessages] = useState<ConversationMessage[]>(() => readCachedMessages())
   const [isThinking, setIsThinking] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [focusMode, setFocusMode] = useState(false)
 
   useEffect(() => {
+    writeCachedMessages(messages)
+  }, [messages])
+
+  useEffect(() => {
     let cancelled = false
 
     async function loadHistory() {
+      const cachedMessages = readCachedMessages()
+      if (!cancelled) {
+        setMessages(cachedMessages)
+      }
+
       const token = getStoredToken()
       if (!token) {
         if (!cancelled) {
-          setMessages(buildStarterMessages())
           setIsLoadingHistory(false)
         }
         return
@@ -198,12 +268,12 @@ export default function AssistantPage() {
       try {
         const payload = await fetchChatHistory(120)
         if (!cancelled) {
-          setMessages(mapStoredTurnsToMessages(payload.turns || []))
+          if (Array.isArray(payload.turns) && payload.turns.length > 0) {
+            setMessages(mapStoredTurnsToMessages(payload.turns))
+          }
         }
       } catch {
-        if (!cancelled) {
-          setMessages(buildStarterMessages())
-        }
+        return
       } finally {
         if (!cancelled) {
           setIsLoadingHistory(false)

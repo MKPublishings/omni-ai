@@ -29,6 +29,7 @@ import { authMiddleware } from './middleware/auth';
 
 interface WorkerEnv {
   DB?: D1Database;
+  ION_DB?: D1Database;
   ASSETS: Fetcher;
   SESSION?: KVNamespace;
   CACHE?: KVNamespace;
@@ -183,6 +184,10 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // Helper to compose middleware
   const compose = (handler: any) => withRateLimit(withMetrics(withAuth(handler)));
+  const ionWorkerEnv = {
+    ...env,
+    ION_DB: env.ION_DB || env.DB,
+  };
 
   // ========== AUTH API ROUTES ==========
   router.add('POST', '/api/auth/signup', async (r: Request) => authWorker.signup(r));
@@ -237,36 +242,36 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // ========== LEGACY ION CHAT ROUTE (compatibility)
   router.add('POST', '/api/ION', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('ALL', '/api/ION', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('GET', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('DELETE', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('ALL', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('GET', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('PUT', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('ALL', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
 
   // ========== LEGACY ION IMAGE ROUTE (compatibility)
   router.add('POST', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
   router.add('ALL', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {
-    return IONWorker.fetch(req, e as any, c as any);
+    return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
 
   // Dispatch request through router
