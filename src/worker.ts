@@ -39,6 +39,12 @@ interface WorkerEnv {
   ENVIRONMENT?: string;
   VERSION?: string;
   ION_ENV?: string;
+  APP_BASE_URL?: string;
+  EMAIL_TRANSPORT?: string;
+  EMAIL_FROM?: string;
+  EMAIL_REPLY_TO?: string;
+  MAILCHANNELS_API_URL?: string;
+  RESEND_API_KEY?: string;
 }
 
 function isHtmlNavigationRequest(request: Request, url: URL): boolean {
@@ -145,7 +151,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const specsWorker = new SpecsWorker(db, env.CACHE as KVNamespace);
   const simulationWorker = new SimulationWorker(db, eventBus);
   const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
-  const authWorker = new AuthWorker(env.DB);
+  const authWorker = new AuthWorker(env.DB, env);
 
   // Middleware functions
   const withAuth = (handler: any) =>

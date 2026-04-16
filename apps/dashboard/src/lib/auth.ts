@@ -124,7 +124,7 @@ export async function verifyEmailToken(token: string): Promise<{ ok: boolean; us
   return payload as { ok: boolean; user?: AuthUser };
 }
 
-export async function resendVerification(identifier: string): Promise<{ verificationUrl?: string | null; alreadyVerified?: boolean }> {
+export async function resendVerification(identifier: string): Promise<{ verificationUrl?: string | null; alreadyVerified?: boolean; verificationDelivery?: string; verificationEmailSent?: boolean; verificationEmailError?: string }> {
   const response = await fetch(getApiUrl('/api/auth/resend-verification'), {
     method: 'POST',
     headers: {
@@ -138,5 +138,5 @@ export async function resendVerification(identifier: string): Promise<{ verifica
     throw new Error(payload.error || 'Could not resend verification');
   }
 
-  return payload as { verificationUrl?: string | null; alreadyVerified?: boolean };
+  return payload as { verificationUrl?: string | null; alreadyVerified?: boolean; verificationDelivery?: string; verificationEmailSent?: boolean; verificationEmailError?: string };
 }

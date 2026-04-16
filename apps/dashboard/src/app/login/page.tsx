@@ -63,7 +63,11 @@ export default function LoginPage() {
 
       if (!response.ok) {
         if (data.code === 'EMAIL_VERIFICATION_REQUIRED') {
-          setVerificationNotice(data.error || 'Email verification is required before signing in.')
+          setVerificationNotice(
+            data.verificationEmailSent
+              ? 'Email verification is required before signing in. Check your inbox for the latest verification email.'
+              : data.error || 'Email verification is required before signing in.'
+          )
           setVerificationUrl(data.verificationUrl || '')
         }
         throw new Error(data.error || 'Login failed')
@@ -71,7 +75,11 @@ export default function LoginPage() {
 
       if (data.verificationRequired) {
         clearAuthSession()
-        setVerificationNotice('Account created. Verify your email before signing in.')
+        setVerificationNotice(
+          data.verificationEmailSent
+            ? 'Account created. A verification email has been sent to your inbox.'
+            : 'Account created. Verify your email before signing in.'
+        )
         setVerificationUrl(data.verificationUrl || '')
         setMode('login')
         return
@@ -96,7 +104,13 @@ export default function LoginPage() {
 
     try {
       const payload = await resendVerification(email)
-      setVerificationNotice(payload.alreadyVerified ? 'This account is already verified. You can sign in now.' : 'A fresh verification link is ready.')
+      setVerificationNotice(
+        payload.alreadyVerified
+          ? 'This account is already verified. You can sign in now.'
+          : payload.verificationEmailSent
+            ? 'A fresh verification email has been sent.'
+            : 'A fresh verification link is ready.'
+      )
       setVerificationUrl(payload.verificationUrl || '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not resend verification')
@@ -221,7 +235,7 @@ export default function LoginPage() {
               )}
               {mode === 'login' && email && (
                 <button type="button" onClick={handleResendVerification} className="block text-left text-sm text-spectral-cyan-100 underline underline-offset-4">
-                  Resend verification link
+                  Resend verification email
                 </button>
               )}
             </div>

@@ -17,6 +17,16 @@ import {
   validateUsername,
   verifyPassword,
 } from '../auth/credentials';
+import { sendVerificationEmail, type VerificationDelivery } from '../services/email';
+
+type AuthWorkerEnv = {
+  APP_BASE_URL?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_TRANSPORT?: string;
+  EMAIL_FROM?: string;
+  EMAIL_REPLY_TO?: string;
+  MAILCHANNELS_API_URL?: string;
+};
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -48,11 +58,30 @@ function getRequestBody(value: unknown): Record<string, unknown> | null {
 }
 
 export class AuthWorker {
-  constructor(private db?: D1Database) {}
+  constructor(private db?: D1Database, private env?: AuthWorkerEnv) {}
 
   private buildVerificationUrl(request: Request, token: string): string {
-    const url = new URL(request.url);
-    return `${url.origin}/verify-email?token=${encodeURIComponent(token)}`;
+    const origin = String(this.env?.APP_BASE_URL || '').trim() || new URL(request.url).origin;
+    return `${origin.replace(/\/+$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
+  }
+
+  private async issueVerification(request: Request, user: { id: string; username: string; email: string; displayName: string; role: string; emailVerified: boolean; }) {
+    const verification = await createEmailVerification(this.db!, user);
+    const verificationUrl = this.buildVerificationUrl(request, verification.token);
+    const mailResult = await sendVerificationEmail(this.env || {}, {
+      to: user.email,
+      displayName: user.displayName,
+      verificationUrl,
+    });
+
+    return {
+      verification,
+      verificationUrl,
+      verificationDelivery: mailResult.delivery as VerificationDelivery,
+      verificationProvider: mailResult.provider,
+      verificationEmailSent: mailResult.delivered,
+      verificationEmailError: mailResult.error,
+    };
   }
 
   private ensureDb(): Response | null {
@@ -102,12 +131,15 @@ export class AuthWorker {
     }
 
     const user = await createUser(this.db!, { email, password, displayName, username });
-    const verification = await createEmailVerification(this.db!, user);
+    const delivery = await this.issueVerification(request, user);
 
     return json({
       verificationRequired: true,
-      verificationUrl: this.buildVerificationUrl(request, verification.token),
-      verificationDelivery: 'manual-link',
+      verificationUrl: delivery.verificationEmailSent ? null : delivery.verificationUrl,
+      verificationDelivery: delivery.verificationDelivery,
+      verificationProvider: delivery.verificationProvider,
+      verificationEmailSent: delivery.verificationEmailSent,
+      verificationEmailError: delivery.verificationEmailError,
       user,
     }, 201);
   }
@@ -138,7 +170,7 @@ export class AuthWorker {
 
     if (userRecord.email_verified !== 1) {
       const user = await findUserById(this.db!, userRecord.id);
-      const verification = user ? await createEmailVerification(this.db!, {
+      const verification = user ? await this.issueVerification(request, {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -150,7 +182,11 @@ export class AuthWorker {
       return json({
         error: 'Email verification is required before signing in.',
         code: 'EMAIL_VERIFICATION_REQUIRED',
-        verificationUrl: verification ? this.buildVerificationUrl(request, verification.token) : null,
+        verificationUrl: verification && !verification.verificationEmailSent ? verification.verificationUrl : null,
+        verificationDelivery: verification?.verificationDelivery || 'manual-link',
+        verificationProvider: verification?.verificationProvider || 'manual-link',
+        verificationEmailSent: verification?.verificationEmailSent || false,
+        verificationEmailError: verification?.verificationEmailError,
       }, 403);
     }
 
@@ -250,7 +286,7 @@ export class AuthWorker {
       return json({ ok: true, alreadyVerified: true });
     }
 
-    const verification = await createEmailVerification(this.db!, {
+    const verification = await this.issueVerification(request, {
       id: userRecord.id,
       username: userRecord.username,
       email: userRecord.email,
@@ -262,8 +298,11 @@ export class AuthWorker {
     return json({
       ok: true,
       verificationRequired: true,
-      verificationUrl: this.buildVerificationUrl(request, verification.token),
-      verificationDelivery: 'manual-link',
+      verificationUrl: verification.verificationEmailSent ? null : verification.verificationUrl,
+      verificationDelivery: verification.verificationDelivery,
+      verificationProvider: verification.verificationProvider,
+      verificationEmailSent: verification.verificationEmailSent,
+      verificationEmailError: verification.verificationEmailError,
     });
   }
 

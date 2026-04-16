@@ -9,6 +9,11 @@ binding = "AI"
 
 [vars]
 ION_ENV = "production"
+APP_BASE_URL = "https://ion-ai.omni-ai.workers.dev"
+EMAIL_TRANSPORT = "mailchannels"
+EMAIL_FROM = "noreply@ionirix.com"
+EMAIL_REPLY_TO = "mirnes@ionirix.com"
+MAILCHANNELS_API_URL = "https://api.mailchannels.net/tx/v1/send"
 
 # Optional ION model alias.
 # MODEL_ION = "@cf/meta/llama-3.1-8b-instruct"
@@ -24,6 +29,7 @@ ION_ENV = "production"
 # ION_MIN_OUTPUT_TOKENS = "512"
 # ION_MAX_OUTPUT_TOKENS = "8192"
 # ION_ENV = "development" # set to "production" to disable debug response headers
+# Configure RESEND_API_KEY as a Wrangler secret if using Resend for outbound email.
 
 # KV namespaces for phase 2-3 systems (commented out - create in Cloudflare dashboard first)
 # [[kv_namespaces]]

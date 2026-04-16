@@ -58,7 +58,13 @@ export default function ProfilePage() {
     try {
       const payload = await resendVerification(user.email)
       setVerificationUrl(payload.verificationUrl || '')
-      setSuccess(payload.alreadyVerified ? 'Email is already verified.' : 'Verification link refreshed.')
+      setSuccess(
+        payload.alreadyVerified
+          ? 'Email is already verified.'
+          : payload.verificationEmailSent
+            ? 'Verification email sent.'
+            : 'Verification link refreshed.'
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not resend verification')
     }
@@ -106,7 +112,7 @@ export default function ProfilePage() {
                 {user?.emailVerified ? 'Verified' : 'Pending'}
               </span>
               {!user?.emailVerified && (
-                <Button variant="secondary" onClick={handleResendVerification} className="min-h-[2.75rem] flex-1 rounded-full sm:min-h-0 sm:flex-none">Refresh verification link</Button>
+                <Button variant="secondary" onClick={handleResendVerification} className="min-h-[2.75rem] flex-1 rounded-full sm:min-h-0 sm:flex-none">Send verification email</Button>
               )}
             </div>
             {verificationUrl && (
