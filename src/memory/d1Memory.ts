@@ -6,6 +6,7 @@ type D1Env = {
 
 export interface MemoryTurnRecord {
   sessionId: string;
+  userId?: string;
   mode: string;
   userText: string;
   assistantText: string;
@@ -20,6 +21,23 @@ export interface MemoryArcEntry {
   createdAt: string;
 }
 
+export interface ChatHistoryEntry {
+  id: number;
+  sessionId: string;
+  userId: string;
+  mode: string;
+  userText: string;
+  assistantText: string;
+  emotionalTone: string;
+  createdAt: string;
+}
+
+export interface ChatPreferences {
+  persistHistory: boolean;
+  contextCarryover: boolean;
+  updatedAt: string;
+}
+
 export interface LongTermMemoryStats {
   totalRows: number;
   rowsLast24h: number;
@@ -32,6 +50,18 @@ function normalizeText(value: unknown, fallback = ""): string {
   return text || fallback;
 }
 
+const DEFAULT_CHAT_PREFERENCES: ChatPreferences = {
+  persistHistory: true,
+  contextCarryover: true,
+  updatedAt: new Date(0).toISOString()
+};
+
+async function getTableColumns(db: D1Database, tableName: string): Promise<Set<string>> {
+  const result = await db.prepare(`PRAGMA table_info(${tableName})`).all<{ name: string }>();
+  const rows = Array.isArray(result.results) ? result.results : [];
+  return new Set(rows.map((row) => String(row.name || "")).filter(Boolean));
+}
+
 export async function ensureIONMemorySchema(env: D1Env): Promise<void> {
   if (!env.ION_DB) return;
 
@@ -39,6 +69,7 @@ export async function ensureIONMemorySchema(env: D1Env): Promise<void> {
     CREATE TABLE IF NOT EXISTS ION_long_term_memory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       session_id TEXT NOT NULL,
+      user_id TEXT NOT NULL DEFAULT '',
       mode TEXT NOT NULL,
       user_text TEXT NOT NULL,
       assistant_text TEXT NOT NULL,
@@ -49,15 +80,32 @@ export async function ensureIONMemorySchema(env: D1Env): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_ION_ltm_session_created
       ON ION_long_term_memory(session_id, created_at DESC);
 
+    CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created
+      ON ION_long_term_memory(user_id, created_at DESC);
+
     CREATE INDEX IF NOT EXISTS idx_ION_ltm_created
       ON ION_long_term_memory(created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS ION_chat_preferences (
+      user_id TEXT PRIMARY KEY,
+      persist_history INTEGER NOT NULL DEFAULT 1,
+      context_carryover INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+    );
   `);
+
+  const columns = await getTableColumns(env.ION_DB, 'ION_long_term_memory');
+  if (!columns.has('user_id')) {
+    await env.ION_DB.exec(`ALTER TABLE ION_long_term_memory ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`);
+    await env.ION_DB.exec(`CREATE INDEX IF NOT EXISTS idx_ION_ltm_user_created ON ION_long_term_memory(user_id, created_at DESC)`);
+  }
 }
 
 export async function saveMemoryTurn(env: D1Env, turn: MemoryTurnRecord): Promise<void> {
   if (!env.ION_DB) return;
 
   const sessionId = normalizeText(turn.sessionId, "anon").slice(0, 120);
+  const userId = normalizeText(turn.userId).slice(0, 120);
   const mode = normalizeText(turn.mode, "auto").slice(0, 64);
   const userText = normalizeText(turn.userText).slice(0, 4000);
   const assistantText = normalizeText(turn.assistantText).slice(0, 8000);
@@ -67,11 +115,11 @@ export async function saveMemoryTurn(env: D1Env, turn: MemoryTurnRecord): Promis
   await env.ION_DB.prepare(
     `
       INSERT INTO ION_long_term_memory (
-        session_id, mode, user_text, assistant_text, emotional_tone
-      ) VALUES (?1, ?2, ?3, ?4, ?5)
+        session_id, user_id, mode, user_text, assistant_text, emotional_tone
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
     `
   )
-    .bind(sessionId, mode, userText, assistantText, emotionalTone)
+    .bind(sessionId, userId, mode, userText, assistantText, emotionalTone)
     .run();
 }
 
@@ -95,6 +143,139 @@ export async function getRecentMemoryArc(env: D1Env, sessionId: string, limit = 
 
   const rows = Array.isArray(result.results) ? result.results : [];
   return rows.reverse();
+}
+
+export async function getRecentMemoryArcForUser(env: D1Env, userId: string, limit = 4): Promise<MemoryArcEntry[]> {
+  if (!env.ION_DB) return [];
+
+  const normalizedUserId = normalizeText(userId).slice(0, 120);
+  if (!normalizedUserId) return [];
+
+  const safeLimit = Math.max(1, Math.min(12, Math.floor(limit)));
+  const result = await env.ION_DB.prepare(
+    `
+      SELECT mode, user_text AS userText, assistant_text AS assistantText, emotional_tone AS emotionalTone, created_at AS createdAt
+      FROM ION_long_term_memory
+      WHERE user_id = ?1
+      ORDER BY created_at DESC
+      LIMIT ?2
+    `
+  )
+    .bind(normalizedUserId, safeLimit)
+    .all<MemoryArcEntry>();
+
+  const rows = Array.isArray(result.results) ? result.results : [];
+  return rows.reverse();
+}
+
+export async function getChatHistoryForUser(env: D1Env, userId: string, limit = 120): Promise<ChatHistoryEntry[]> {
+  if (!env.ION_DB) return [];
+
+  const normalizedUserId = normalizeText(userId).slice(0, 120);
+  if (!normalizedUserId) return [];
+
+  const safeLimit = Math.max(1, Math.min(500, Math.floor(limit)));
+  const result = await env.ION_DB.prepare(
+    `
+      SELECT
+        id,
+        session_id AS sessionId,
+        user_id AS userId,
+        mode,
+        user_text AS userText,
+        assistant_text AS assistantText,
+        emotional_tone AS emotionalTone,
+        created_at AS createdAt
+      FROM ION_long_term_memory
+      WHERE user_id = ?1
+      ORDER BY created_at DESC
+      LIMIT ?2
+    `
+  )
+    .bind(normalizedUserId, safeLimit)
+    .all<ChatHistoryEntry>();
+
+  const rows = Array.isArray(result.results) ? result.results : [];
+  return rows.reverse();
+}
+
+export async function clearChatHistoryForUser(env: D1Env, userId: string): Promise<number> {
+  if (!env.ION_DB) return 0;
+
+  const normalizedUserId = normalizeText(userId).slice(0, 120);
+  if (!normalizedUserId) return 0;
+
+  const result = await env.ION_DB.prepare(
+    `DELETE FROM ION_long_term_memory WHERE user_id = ?1`
+  )
+    .bind(normalizedUserId)
+    .run();
+
+  return Number((result as any)?.meta?.changes || 0);
+}
+
+export async function getChatPreferences(env: D1Env, userId: string): Promise<ChatPreferences> {
+  if (!env.ION_DB) return { ...DEFAULT_CHAT_PREFERENCES };
+
+  const normalizedUserId = normalizeText(userId).slice(0, 120);
+  if (!normalizedUserId) return { ...DEFAULT_CHAT_PREFERENCES };
+
+  const result = await env.ION_DB.prepare(
+    `
+      SELECT
+        persist_history AS persistHistory,
+        context_carryover AS contextCarryover,
+        updated_at AS updatedAt
+      FROM ION_chat_preferences
+      WHERE user_id = ?1
+      LIMIT 1
+    `
+  )
+    .bind(normalizedUserId)
+    .first<{ persistHistory: number; contextCarryover: number; updatedAt: string }>();
+
+  if (!result) {
+    return { ...DEFAULT_CHAT_PREFERENCES };
+  }
+
+  return {
+    persistHistory: Number(result.persistHistory) !== 0,
+    contextCarryover: Number(result.contextCarryover) !== 0,
+    updatedAt: normalizeText(result.updatedAt, DEFAULT_CHAT_PREFERENCES.updatedAt)
+  };
+}
+
+export async function updateChatPreferences(
+  env: D1Env,
+  userId: string,
+  input: Partial<Pick<ChatPreferences, 'persistHistory' | 'contextCarryover'>>
+): Promise<ChatPreferences> {
+  if (!env.ION_DB) return { ...DEFAULT_CHAT_PREFERENCES };
+
+  const normalizedUserId = normalizeText(userId).slice(0, 120);
+  if (!normalizedUserId) return { ...DEFAULT_CHAT_PREFERENCES };
+
+  const current = await getChatPreferences(env, normalizedUserId);
+  const next: ChatPreferences = {
+    persistHistory: typeof input.persistHistory === 'boolean' ? input.persistHistory : current.persistHistory,
+    contextCarryover: typeof input.contextCarryover === 'boolean' ? input.contextCarryover : current.contextCarryover,
+    updatedAt: new Date().toISOString()
+  };
+
+  await env.ION_DB.prepare(
+    `
+      INSERT INTO ION_chat_preferences (user_id, persist_history, context_carryover, updated_at)
+      VALUES (?1, ?2, ?3, ?4)
+      ON CONFLICT(user_id) DO UPDATE SET
+        persist_history = excluded.persist_history,
+        context_carryover = excluded.context_carryover,
+        updated_at = excluded.updated_at
+    `
+  )
+    .bind(normalizedUserId, next.persistHistory ? 1 : 0, next.contextCarryover ? 1 : 0, next.updatedAt)
+    .run();
+
+  return next;
 }
 
 export async function pruneMemoryOlderThanDays(env: D1Env, retentionDays: number): Promise<number> {

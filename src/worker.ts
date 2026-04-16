@@ -242,6 +242,24 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('ALL', '/api/ION', async (req: Request, e: any, c: ExecutionContext) => {
     return IONWorker.fetch(req, e as any, c as any);
   });
+  router.add('GET', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('DELETE', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('ALL', '/api/chat/history', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('GET', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('PUT', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
+  router.add('ALL', '/api/chat/settings', async (req: Request, e: any, c: ExecutionContext) => {
+    return IONWorker.fetch(req, e as any, c as any);
+  });
 
   // ========== LEGACY ION IMAGE ROUTE (compatibility)
   router.add('POST', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {

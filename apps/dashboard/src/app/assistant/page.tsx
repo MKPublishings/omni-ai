@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
 import { getApiUrl, getStoredToken } from '@/lib/auth'
+import { fetchChatHistory } from '@/lib/dashboard'
 
 type ConversationMessage = {
   id: string
@@ -21,10 +22,65 @@ const starterMessages: ConversationMessage[] = [
   {
     id: 'welcome',
     type: 'ai',
-    content: 'ION AI is online. Ask for architecture checks, system reasoning, or operator guidance.',
+    content: 'ION AI online. Standing by for an input.',
     timestamp: new Date(),
   },
 ]
+
+function buildStarterMessages(): ConversationMessage[] {
+  return [
+    {
+      id: 'welcome',
+      type: 'ai',
+      content: 'ION AI online. Standing by for an input.',
+      timestamp: new Date(),
+    },
+  ]
+}
+
+function mapStoredTurnsToMessages(turns: Array<{
+  id: number
+  userText: string
+  assistantText: string
+  createdAt: string
+}>): ConversationMessage[] {
+  const messages = turns.flatMap((turn) => {
+    const timestamp = new Date(turn.createdAt || Date.now())
+    return [
+      {
+        id: `history-user-${turn.id}`,
+        type: 'user' as const,
+        content: turn.userText,
+        timestamp,
+      },
+      {
+        id: `history-ai-${turn.id}`,
+        type: 'ai' as const,
+        content: turn.assistantText,
+        timestamp,
+      },
+    ]
+  })
+
+  return messages.length > 0 ? messages : buildStarterMessages()
+}
+
+function buildChatMessages(messages: ConversationMessage[], latestMessage: string) {
+  const history = [...messages, {
+    id: `pending-${Date.now()}`,
+    type: 'user' as const,
+    content: latestMessage,
+    timestamp: new Date(),
+  }]
+
+  return history
+    .filter((entry) => entry.id !== 'welcome')
+    .slice(-14)
+    .map((entry) => ({
+      role: entry.type === 'user' ? 'user' : 'assistant',
+      content: entry.content,
+    }))
+}
 
 function extractAssistantContent(rawText: string) {
   const chunks: string[] = []
@@ -123,7 +179,44 @@ async function parseAssistantResponse(response: Response) {
 export default function AssistantPage() {
   const [messages, setMessages] = useState<ConversationMessage[]>(starterMessages)
   const [isThinking, setIsThinking] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [focusMode, setFocusMode] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadHistory() {
+      const token = getStoredToken()
+      if (!token) {
+        if (!cancelled) {
+          setMessages(buildStarterMessages())
+          setIsLoadingHistory(false)
+        }
+        return
+      }
+
+      try {
+        const payload = await fetchChatHistory(120)
+        if (!cancelled) {
+          setMessages(mapStoredTurnsToMessages(payload.turns || []))
+        }
+      } catch {
+        if (!cancelled) {
+          setMessages(buildStarterMessages())
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingHistory(false)
+        }
+      }
+    }
+
+    void loadHistory()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleSendMessage = async (message: string) => {
     const userMessage: ConversationMessage = {
@@ -142,7 +235,7 @@ export default function AssistantPage() {
       const response = await fetch(getApiUrl(imageRequest ? '/api/image' : '/api/ION?fast=true'), {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(
@@ -155,12 +248,7 @@ export default function AssistantPage() {
             : {
                 mode: 'auto',
                 fastMode: true,
-                messages: [
-                  {
-                    role: 'user',
-                    content: `${message}\n\nContext: ION AI assistant dashboard page. Respond as an operator-facing assistant. If the user asks for an image, generate it instead of only describing it.`,
-                  },
-                ],
+                messages: buildChatMessages(messages, `${message}\n\nContext: ION AI assistant dashboard page. Respond as an operator-facing assistant. If the user asks for an image, generate it instead of only describing it.`),
               }
         ),
       })
@@ -215,6 +303,7 @@ export default function AssistantPage() {
             messages={messages}
             onSendMessage={handleSendMessage}
             isThinking={isThinking}
+            isLoading={isLoadingHistory}
             focusMode={focusMode}
             onToggleFocus={() => setFocusMode((value) => !value)}
             className="h-full min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]"

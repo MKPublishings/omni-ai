@@ -68,6 +68,23 @@ export interface DashboardSimulationRun {
   current_step?: number
 }
 
+export interface DashboardChatPreferences {
+  persistHistory: boolean
+  contextCarryover: boolean
+  updatedAt: string
+}
+
+export interface DashboardChatHistoryTurn {
+  id: number
+  sessionId: string
+  userId: string
+  mode: string
+  userText: string
+  assistantText: string
+  emotionalTone: string
+  createdAt: string
+}
+
 export function formatDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return 'just started'
@@ -121,6 +138,20 @@ async function fetchAuthorizedJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
+async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Promise<T> {
+  const response = await authorizedFetch(getApiUrl(path), init)
+  const payload = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const errorMessage = typeof (payload as { error?: unknown }).error === 'string'
+      ? String((payload as { error: string }).error)
+      : `Request failed for ${path}: ${response.status}`
+    throw new Error(errorMessage)
+  }
+
+  return payload as T
+}
+
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
   return fetchAuthorizedJson('/api/auth/me')
 }
@@ -152,4 +183,28 @@ export async function fetchPublicHealth(): Promise<DashboardHealthStatus> {
   }
 
   return response.json() as Promise<DashboardHealthStatus>
+}
+
+export function fetchChatSettings(): Promise<{ preferences: DashboardChatPreferences }> {
+  return fetchAuthorizedJson('/api/chat/settings')
+}
+
+export function updateChatSettings(input: Partial<Pick<DashboardChatPreferences, 'persistHistory' | 'contextCarryover'>>): Promise<{ preferences: DashboardChatPreferences }> {
+  return fetchAuthorizedMutation('/api/chat/settings', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+}
+
+export function fetchChatHistory(limit = 120): Promise<{ turns: DashboardChatHistoryTurn[]; preferences: DashboardChatPreferences }> {
+  return fetchAuthorizedJson(`/api/chat/history?limit=${limit}`)
+}
+
+export function clearChatHistory(): Promise<{ ok: boolean; deletedCount: number }> {
+  return fetchAuthorizedMutation('/api/chat/history', {
+    method: 'DELETE',
+  })
 }

@@ -23,7 +23,16 @@ import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference
 import { Laws, type LawDomain } from "./ION/laws/lawRegistry";
 import { warmupConnections, getConnectionStats } from "./llm/cloudflareOptimizations";
 import { advanceSimulationState, exportSimulationState } from "./ION/simulation/engine";
-import { ensureIONMemorySchema, getRecentMemoryArc, saveMemoryTurn } from "./memory/d1Memory";
+import {
+  clearChatHistoryForUser,
+  ensureIONMemorySchema,
+  getChatHistoryForUser,
+  getChatPreferences,
+  getRecentMemoryArc,
+  getRecentMemoryArcForUser,
+  saveMemoryTurn,
+  updateChatPreferences
+} from "./memory/d1Memory";
 import { formatWorkingMemoryPrompt, loadWorkingMemory, updateWorkingMemoryFromTurn } from "./memory/workingMemory";
 import { runSelfMaintenance } from "./maintenance/selfMaintenance";
 import { getMaintenanceStatus } from "./maintenance/status";
@@ -32,6 +41,8 @@ import { runVisualReasoning } from "./ION/multimodal/visualReasoner";
 import { buildPersonaPrompt, resolvePersonaProfile } from "./ION/behavior/personaEngine";
 import { buildEmotionalResonancePrompt, getEmotionalResonance, persistEmotionalResonance } from "./ION/behavior/emotionalResonance";
 import { applyAdaptiveBehavior, buildAdaptiveBehaviorPrompt } from "./ION/behavior/adaptiveBehavior";
+import { canonicalizeIONMode, normalizeConversationHints, resolveEffectiveIONMode } from "./ION/modeRouting";
+import { getSessionByToken, touchSession } from "./auth/credentials";
 import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
@@ -791,123 +802,11 @@ async function buildMultiverseSimulationContext(messages: IONMessage[]): Promise
   }
 }
 
-function canonicalizeIONMode(value: string): string {
-  const normalized = sanitizePromptText(String(value || "")).trim().toLowerCase();
-
-  if (normalized === "default") return "auto";
-  if (normalized === "sim") return "simulation";
-  if (normalized === "galaxy" || normalized === "cosmic-mode") return "cosmic";
-  if (normalized === "universe" || normalized === "multiverse-mode") return "multiverse";
-
-  return normalized || "auto";
-}
-
-function extractExplicitSimulationMode(value: string): "simulation" | "cosmic" | "multiverse" | null {
-  const normalized = canonicalizeIONMode(value);
-  if (normalized === "simulation" || normalized === "cosmic" || normalized === "multiverse") {
-    return normalized;
-  }
-
-  return null;
-}
-
-function inferSimulationModeFromPrompt(text: string): "simulation" | "cosmic" | "multiverse" | null {
-  const normalized = sanitizePromptText(String(text || "")).trim().toLowerCase();
-  if (!normalized) return null;
-
-  const hasSimulationIntent =
-    /^\/simulation\b/.test(normalized) ||
-    /\b(simulate|simulation mode|scenario|stress[ -]?test|forecast|project forward|play out|run through|step through|model(?: this| the| a)?|counterfactual|what if)\b/.test(normalized);
-  const hasCosmicScope =
-    /\b(cosmic|galactic|galaxy|milky way|stellar|star system|orbit(?:al)?|nebula|astrophysical|n-?body)\b/.test(normalized);
-  const hasMultiverseScope =
-    /\b(multiverse|observable universe|cosmic web|large[ -]?scale structure|supercluster|galaxy cluster|comoving|redshift|lcdm|cosmology)\b/.test(normalized);
-
-  if (hasMultiverseScope && (hasSimulationIntent || /\b(query|map|render|explore)\b/.test(normalized))) {
-    return "multiverse";
-  }
-
-  if (hasCosmicScope && (hasSimulationIntent || /\b(diagnostics?|evolve|orbit|trajectory|mode)\b/.test(normalized))) {
-    return "cosmic";
-  }
-
-  if (hasSimulationIntent) {
-    return "simulation";
-  }
-
-  return null;
-}
-
-function resolveEffectiveIONMode(input: {
-  requestedMode: string;
-  latestUserText: string;
-  conversationHints: ReturnType<typeof normalizeConversationHints>;
-}): string {
-  const requestedMode = canonicalizeIONMode(input.requestedMode);
-  if (requestedMode !== "auto") {
-    return requestedMode;
-  }
-
-  const explicitHintMode =
-    extractExplicitSimulationMode(input.conversationHints.inferredMode) ||
-    extractExplicitSimulationMode(input.conversationHints.requestedOutput);
-
-  if (explicitHintMode) {
-    return explicitHintMode;
-  }
-
-  const inferredMode = inferSimulationModeFromPrompt(
-    [
-      input.latestUserText,
-      input.conversationHints.latestUserIntent,
-      ...input.conversationHints.recentUserFocus
-    ]
-      .filter(Boolean)
-      .join("\n")
-  );
-
-  return inferredMode || requestedMode;
-}
-
 function summarizeConversationSnippet(value: string, maxLen = 200): string {
   const compact = sanitizePromptText(String(value || "")).trim();
   if (!compact) return "";
   if (compact.length <= maxLen) return compact;
   return `${compact.slice(0, Math.max(0, maxLen - 3))}...`;
-}
-
-function normalizeConversationHints(raw: IONRequestBody["conversationHints"]): {
-  inferredMode: string;
-  latestUserIntent: string;
-  recentUserFocus: string[];
-  recentAssistantCommitments: string[];
-  requestedOutput: string;
-} {
-  const inferredMode = sanitizePromptText(String(raw?.inferredMode || "")).trim().toLowerCase();
-  const latestUserIntent = summarizeConversationSnippet(String(raw?.latestUserIntent || ""), 220);
-  const requestedOutput = summarizeConversationSnippet(String(raw?.requestedOutput || "general"), 48).toLowerCase();
-
-  const recentUserFocus = Array.isArray(raw?.recentUserFocus)
-    ? raw.recentUserFocus
-        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
-        .filter(Boolean)
-        .slice(0, 4)
-    : [];
-
-  const recentAssistantCommitments = Array.isArray(raw?.recentAssistantCommitments)
-    ? raw.recentAssistantCommitments
-        .map((item) => summarizeConversationSnippet(String(item || ""), 180))
-        .filter(Boolean)
-        .slice(0, 3)
-    : [];
-
-  return {
-    inferredMode,
-    latestUserIntent,
-    recentUserFocus,
-    recentAssistantCommitments,
-    requestedOutput: requestedOutput || "general"
-  };
 }
 
 function buildConversationDigest(messages: IONMessage[], limit = 6): string {
@@ -1747,6 +1646,36 @@ function resolveSessionId(request: Request): string {
   const querySession = String(url.searchParams.get("sid") || "").trim();
   const raw = headerSession || querySession || "anon";
   return raw.replace(/[^a-zA-Z0-9:_-]/g, "").slice(0, 120) || "anon";
+}
+
+function getBearerToken(request: Request): string {
+  const authHeader = String(request.headers.get("Authorization") || request.headers.get("authorization") || "").trim();
+  if (authHeader.startsWith("Bearer ")) {
+    return authHeader.slice(7).trim();
+  }
+
+  const cookieHeader = String(request.headers.get("Cookie") || request.headers.get("cookie") || "");
+  const cookieMatch = cookieHeader.match(/(?:^|;\s*)ion_token=([^;]+)/);
+  return cookieMatch ? decodeURIComponent(cookieMatch[1]) : "";
+}
+
+async function resolveAuthenticatedChatContext(request: Request, env: Env): Promise<{ sessionId: string; userId: string } | null> {
+  if (!env.ION_DB) return null;
+
+  const token = getBearerToken(request);
+  if (!token) return null;
+
+  try {
+    const auth = await getSessionByToken(env.ION_DB, token);
+    if (!auth) return null;
+    await touchSession(env.ION_DB, auth.session.id);
+    return {
+      sessionId: auth.session.id,
+      userId: auth.user.id
+    };
+  } catch {
+    return null;
+  }
 }
 
 function isAdminAuthorized(request: Request, env: Env): boolean {
@@ -2655,7 +2584,7 @@ async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; 
 function makeImageFilename(styleId: string): string {
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const safeStyle = String(styleId || "image").replace(/[^a-zA-Z0-9_-]/g, "_");
-  return `slizzai_${safeStyle}_${ts}.png`;
+  return `ionirix_${safeStyle}_${ts}.png`;
 }
 
 async function generateIONImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<IONImageGenerationResult> {
@@ -2841,6 +2770,8 @@ export default {
       const url = new URL(request.url);
       const isApiRoute =
         url.pathname === "/api/ION" ||
+        url.pathname === "/api/chat/history" ||
+        url.pathname === "/api/chat/settings" ||
         url.pathname === "/api/image" ||
         url.pathname === "/api/provider/status" ||
         url.pathname === "/api/ping" ||
@@ -4100,10 +4031,114 @@ export default {
         }
       }
 
+      if (url.pathname === "/api/chat/history" && request.method === "GET") {
+        await ensureIONMemorySchema(env);
+        const authChatContext = await resolveAuthenticatedChatContext(request, env);
+        if (!authChatContext?.userId) {
+          return new Response(JSON.stringify({ error: "Authentication required." }), {
+            status: 401,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const preferences = await getChatPreferences(env, authChatContext.userId);
+        const turns = preferences.persistHistory
+          ? await getChatHistoryForUser(env, authChatContext.userId, clamp(Number(url.searchParams.get("limit") || 120), 1, 500))
+          : [];
+
+        return new Response(JSON.stringify({ ok: true, turns, preferences }), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/chat/history" && request.method === "DELETE") {
+        await ensureIONMemorySchema(env);
+        const authChatContext = await resolveAuthenticatedChatContext(request, env);
+        if (!authChatContext?.userId) {
+          return new Response(JSON.stringify({ error: "Authentication required." }), {
+            status: 401,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const deletedCount = await clearChatHistoryForUser(env, authChatContext.userId);
+        return new Response(JSON.stringify({ ok: true, deletedCount }), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/chat/settings" && request.method === "GET") {
+        await ensureIONMemorySchema(env);
+        const authChatContext = await resolveAuthenticatedChatContext(request, env);
+        if (!authChatContext?.userId) {
+          return new Response(JSON.stringify({ error: "Authentication required." }), {
+            status: 401,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const preferences = await getChatPreferences(env, authChatContext.userId);
+        return new Response(JSON.stringify({ ok: true, preferences }), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
+      if (url.pathname === "/api/chat/settings" && request.method === "PUT") {
+        await ensureIONMemorySchema(env);
+        const authChatContext = await resolveAuthenticatedChatContext(request, env);
+        if (!authChatContext?.userId) {
+          return new Response(JSON.stringify({ error: "Authentication required." }), {
+            status: 401,
+            headers: {
+              ...CORS_HEADERS,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        const body = (await request.json().catch(() => ({}))) as {
+          persistHistory?: boolean;
+          contextCarryover?: boolean;
+        };
+        const preferences = await updateChatPreferences(env, authChatContext.userId, {
+          persistHistory: typeof body.persistHistory === "boolean" ? body.persistHistory : undefined,
+          contextCarryover: typeof body.contextCarryover === "boolean" ? body.contextCarryover : undefined
+        });
+
+        return new Response(JSON.stringify({ ok: true, preferences }), {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
       if (url.pathname === "/api/ION" && request.method === "POST") {
         const requestStartedAt = Date.now();
         await ensureIONMemorySchema(env);
         const body = (await request.json()) as IONRequestBody;
+        const authChatContext = await resolveAuthenticatedChatContext(request, env);
+        const sessionId = authChatContext?.sessionId || resolveSessionId(request);
+        const userId = authChatContext?.userId || "";
+        const chatPreferences = userId ? await getChatPreferences(env, userId) : null;
         const safetyProfile = normalizeSafetyProfile(body?.safetyProfile);
         const legalDecision = evaluateLegalAttestation(safetyProfile, request);
         if (legalDecision.blocked) {
@@ -4128,17 +4163,18 @@ export default {
         }
 
         const requestedMode = canonicalizeIONMode(String(body.mode || "auto"));
-        const sessionId = resolveSessionId(request);
         const sanitizedMessages = (body.messages || []).map((m) => ({
           role: (m?.role || "user") as IONRole,
           content: IONSafety.sanitizeInput(m?.content || "")
         }));
         const latestUserText = getLatestUserText(sanitizedMessages);
+        const workingMemory = await loadWorkingMemory(env, sessionId);
         const conversationHints = normalizeConversationHints(body?.conversationHints);
         const normalizedMode = resolveEffectiveIONMode({
           requestedMode,
           latestUserText,
-          conversationHints
+          conversationHints,
+          lastMode: workingMemory.lastMode
         });
         const requestCtx = {
           mode: normalizedMode,
@@ -4158,7 +4194,6 @@ export default {
           ? await buildMultiverseSimulationContext(requestCtx.messages)
           : null;
         const simulationContext = engineSimulationContext || cosmicSimulationContext || multiverseSimulationContext;
-        const workingMemory = await loadWorkingMemory(env, sessionId);
         const requestCountryCode = getRequestCountryCode(request);
         const fastChatEnabled =
           isEnabledFlag(env.ION_FAST_CHAT) ||
@@ -4279,7 +4314,7 @@ export default {
           )
         );
 
-        const shouldLoadMemoryArc = !isStatefulSimulationMode && !fastChatEnabled;
+        const shouldLoadMemoryArc = !isStatefulSimulationMode && !fastChatEnabled && chatPreferences?.contextCarryover !== false;
         const shouldLoadInternetLearning = !fastChatEnabled;
         const shouldLoadWeather = !fastChatEnabled && shouldUseWeatherContext(latestUserText);
         const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
@@ -4288,7 +4323,9 @@ export default {
         const shouldLoadInternetSearch = !fastChatEnabled && shouldUseInternetSearch(latestUserText, normalizedMode);
 
         const memoryArcPromise = shouldLoadMemoryArc
-          ? getRecentMemoryArc(env, sessionId, 3)
+          ? userId
+            ? getRecentMemoryArcForUser(env, userId, 6)
+            : getRecentMemoryArc(env, sessionId, 3)
           : Promise.resolve([]);
         const internetLearningPromise = shouldLoadInternetLearning
           ? getInternetLearningContext(env, normalizedMode, latestUserText, 4)
@@ -4506,7 +4543,7 @@ export default {
             };
 
             result = {
-              response: `Image generated via multi-modal orchestration. File: ${generated.filename}. Model: ${generated.model}.`
+              response: `Your image is ready. Preview or download ${generated.filename}.`
             };
           } else {
             result = await IONBrainLoop(env, runtimeCtx);
@@ -4536,13 +4573,18 @@ export default {
                           assistantText: fullText,
                           emotionalTone: emotionalResonance.IONTone
                         }),
-                        saveMemoryTurn(env, {
-                          sessionId,
-                          mode: normalizedMode,
-                          userText: latestUserTurn,
-                          assistantText: fullText,
-                          emotionalTone: emotionalResonance.IONTone
-                        })
+                        ...(chatPreferences?.persistHistory === false
+                          ? []
+                          : [
+                              saveMemoryTurn(env, {
+                                sessionId,
+                                userId,
+                                mode: normalizedMode,
+                                userText: latestUserTurn,
+                                assistantText: fullText,
+                                emotionalTone: emotionalResonance.IONTone
+                              })
+                            ])
                       ]).catch((memoryErr) => {
                         logger.log("memory_persist_deferred_failed", {
                           message: String((memoryErr as Error)?.message || memoryErr || "unknown error")
@@ -4669,13 +4711,18 @@ export default {
                     assistantText: finalResponse,
                     emotionalTone: emotionalResonance.IONTone
                   }),
-                  saveMemoryTurn(env, {
-                    sessionId,
-                    mode: normalizedMode,
-                    userText: latestUserTurn,
-                    assistantText: finalResponse,
-                    emotionalTone: emotionalResonance.IONTone
-                  })
+                  ...(chatPreferences?.persistHistory === false
+                    ? []
+                    : [
+                        saveMemoryTurn(env, {
+                          sessionId,
+                          userId,
+                          mode: normalizedMode,
+                          userText: latestUserTurn,
+                          assistantText: finalResponse,
+                          emotionalTone: emotionalResonance.IONTone
+                        })
+                      ])
                 ]).catch((memoryErr) => {
                   logger.log("memory_persist_deferred_failed", {
                     message: String((memoryErr as Error)?.message || memoryErr || "unknown error")

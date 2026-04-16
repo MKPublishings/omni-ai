@@ -1,25 +1,4 @@
-type ModeInfo = {
-  id: string;
-  label: string;
-  summary: string;
-  aliases: string[];
-};
-
-const MODE_INFOS: ModeInfo[] = [
-  { id: "auto", label: "Auto", summary: "Automatically routes by task and confidence.", aliases: ["default"] },
-  { id: "architect", label: "Architect", summary: "Structured design and systems planning.", aliases: ["design"] },
-  { id: "analyst", label: "Analyst", summary: "Comparative analysis and trade-off evaluation.", aliases: ["analysis"] },
-  { id: "visual", label: "Visual", summary: "Image prompt and visual reasoning support.", aliases: ["render"] },
-  { id: "lore", label: "Lore", summary: "Narrative continuity and world-building context.", aliases: ["story"] },
-  { id: "reasoning", label: "Reasoning", summary: "Step-wise logic and explanation-focused outputs.", aliases: ["logic"] },
-  { id: "coding", label: "Coding", summary: "Implementation, refactor, and debugging assistance.", aliases: ["dev", "programming"] },
-  { id: "knowledge", label: "Knowledge", summary: "Reference-driven responses from indexed sources.", aliases: ["retrieval"] },
-  { id: "system-knowledge", label: "System Knowledge", summary: "Internal module/protocol-aware responses.", aliases: ["system knowledge"] },
-  { id: "anatomy", label: "Anatomy", summary: "Human anatomy and subsystem integration from ION internals.", aliases: ["human", "bio"] },
-  { id: "simulation", label: "Simulation", summary: "Stateful simulation and controlled scenario exploration.", aliases: ["sim"] },
-  { id: "cosmic", label: "Cosmic", summary: "Milky Way-scale deterministic galactic simulation and diagnostics.", aliases: ["galaxy", "cosmic-mode"] },
-  { id: "multiverse", label: "Multiverse", summary: "Observable-universe-scale deterministic hierarchical simulation and querying.", aliases: ["multiverse-mode", "universe"] }
-];
+import { ION_MODE_INFOS, canonicalizeIONMode } from "../ION/modeRouting";
 
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
@@ -29,16 +8,16 @@ function json(payload: unknown, status = 200): Response {
 }
 
 export async function listModes() {
-  return json(MODE_INFOS.map((mode) => mode.label));
+  return json(ION_MODE_INFOS.map((mode) => mode.label));
 }
 
 export async function listModeDetails() {
-  return json({ ok: true, count: MODE_INFOS.length, modes: MODE_INFOS });
+  return json({ ok: true, count: ION_MODE_INFOS.length, modes: ION_MODE_INFOS });
 }
 
 export async function getModeDetails(modeId: string) {
-  const value = String(modeId || "").trim().toLowerCase();
-  const mode = MODE_INFOS.find((entry) => entry.id === value || entry.aliases.includes(value));
+  const value = canonicalizeIONMode(String(modeId || ""));
+  const mode = ION_MODE_INFOS.find((entry) => entry.id === value || entry.aliases.includes(value));
   if (!mode) {
     return json({ ok: false, error: `Unknown mode '${value}'` }, 404);
   }
