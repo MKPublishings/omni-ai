@@ -33,12 +33,12 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
+        'chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
         isUser
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
       )}>
-        {message.content ? <p className="text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p> : null}
+        {message.content ? <p className="chat-selectable text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p> : null}
         {message.image ? (
           <div className={clsx(message.content ? 'mt-3' : '')}>
             <img
@@ -59,7 +59,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
             </div>
           </div>
         ) : null}
-        <span className="mt-2 block text-xs opacity-60">
+        <span className="mt-2 block select-none text-xs opacity-60">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -202,7 +202,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 onFocus={handleInputFocus}
                 rows={2}
                 enterKeyHint="done"
-                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
+                className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
                 disabled={isThinking}
               />
             </div>

@@ -164,6 +164,12 @@
   .dashboard-search-input::placeholder {
     color: var(--dashboard-search-placeholder);
   }
+
+  .chat-selectable {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
+  }
 }
 
 @keyframes ambient-gradient-shift {
