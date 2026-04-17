@@ -89,7 +89,9 @@ const ThinkingIndicator = () => {
 export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPanelProps>(
   ({ messages = [], onSendMessage, isThinking, isLoading, focusMode, onToggleFocus, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
+    const [isInputFocused, setIsInputFocused] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -104,6 +106,10 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         onSendMessage(inputValue.trim())
         setInputValue('')
       }
+    }
+
+    const dismissKeyboard = () => {
+      textareaRef.current?.blur()
     }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -170,14 +176,35 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         </div>
 
         <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
+          <div className="mb-2 flex justify-end sm:hidden">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={dismissKeyboard}
+              className={clsx(
+                'h-9 rounded-full px-3 text-xs uppercase tracking-[0.18em] text-quantum-white/72 transition',
+                isInputFocused ? 'opacity-100' : 'pointer-events-none opacity-0'
+              )}
+            >
+              <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Done
+            </Button>
+          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <textarea
+                ref={textareaRef}
                 placeholder="Ask ION AI anything..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 rows={2}
+                enterKeyHint="done"
                 className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-sm leading-5 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isThinking}
               />
