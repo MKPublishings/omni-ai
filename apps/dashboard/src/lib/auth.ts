@@ -11,11 +11,34 @@ export interface AuthResponse {
   token: string;
   sessionId: string;
   expiresAt: string;
+  accessTier?: string;
   user: AuthUser;
 }
 
 const TOKEN_KEY = 'ion_token';
 const USER_KEY = 'ion_user';
+
+function buildAuthCookie(token: string, expiresAt?: string): string {
+  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
+  const expires = expiresAt ? `; Expires=${new Date(expiresAt).toUTCString()}` : '';
+  return `${TOKEN_KEY}=${encodeURIComponent(token)}; Path=/; SameSite=Lax${expires}${secure}`;
+}
+
+function writeAuthCookie(token: string, expiresAt?: string): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.cookie = buildAuthCookie(token, expiresAt);
+}
+
+function clearAuthCookie(): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.cookie = `${TOKEN_KEY}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+}
 
 export function getApiUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -60,6 +83,7 @@ export function storeAuthSession(payload: AuthResponse): void {
   }
   window.localStorage.setItem(TOKEN_KEY, payload.token);
   window.localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+  writeAuthCookie(payload.token, payload.expiresAt);
 }
 
 export function storeUserProfile(user: AuthUser): void {
@@ -75,6 +99,7 @@ export function clearAuthSession(): void {
   }
   window.localStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(USER_KEY);
+  clearAuthCookie();
 }
 
 export async function authorizedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -83,7 +108,7 @@ export async function authorizedFetch(input: RequestInfo | URL, init?: RequestIn
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  return fetch(input, { ...init, headers });
+  return fetch(input, { ...init, headers, credentials: init?.credentials || 'include' });
 }
 
 export async function updateProfile(input: { displayName: string; username: string }): Promise<AuthUser> {

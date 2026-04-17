@@ -188,6 +188,7 @@ export class PremiumWorker {
     const interval = normalizeBillingInterval(body?.interval);
     const userEmail = String((request as any).authContext?.email || '').trim() || null;
     const priceId = resolveStripePriceId(planTier, interval, this.env);
+    const requestedPriceId = normalizeQuery(body?.priceId);
 
     if (!String(this.env.STRIPE_SECRET_KEY || '').trim()) {
       return json({ error: 'Stripe secret key is not configured.' }, 503);
@@ -195,6 +196,10 @@ export class PremiumWorker {
 
     if (!priceId) {
       return json({ error: `Stripe price id is not configured for ${planTier}/${interval}.` }, 503);
+    }
+
+    if (requestedPriceId && requestedPriceId !== priceId) {
+      return json({ error: `Selected price id does not match configured billing plan for ${planTier}/${interval}.` }, 400);
     }
 
     try {
@@ -306,6 +311,12 @@ export class PremiumWorker {
         premiumYearly: Boolean(this.env.STRIPE_PREMIUM_YEARLY_PRICE_ID),
         enterpriseMonthly: Boolean(this.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID),
         enterpriseYearly: Boolean(this.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID),
+      },
+      priceIds: {
+        premiumMonthly: String(this.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID || '').trim() || null,
+        premiumYearly: String(this.env.STRIPE_PREMIUM_YEARLY_PRICE_ID || '').trim() || null,
+        enterpriseMonthly: String(this.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || '').trim() || null,
+        enterpriseYearly: String(this.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || '').trim() || null,
       },
     });
   }

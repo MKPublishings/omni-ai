@@ -18,6 +18,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 100%;
 }
 
 .ion-billing-plan::before {
@@ -49,6 +50,20 @@
   padding: 0.55rem 0.9rem;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.ion-billing-plan-chip {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 0.55rem 0.85rem;
+  text-transform: uppercase;
 }
 
 .ion-billing-feature-dot {
@@ -137,6 +152,49 @@
   border: 2px solid rgba(255, 255, 255, 0.16);
   border-top-color: rgba(73, 224, 255, 0.94);
   animation: ion-billing-spin 1s linear infinite;
+}
+
+.ion-billing-modal-shell {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.ion-billing-modal-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.75rem;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 1.25rem;
+}
+
+.ion-billing-modal-panel-strong {
+  background:
+    radial-gradient(circle at top right, rgba(73, 224, 255, 0.1), transparent 32%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.ion-billing-price-id {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.ion-billing-comparison {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(73, 224, 255, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.08), transparent 34%);
+}
+
+@media (max-width: 768px) {
+  .ion-billing-highlight,
+  .ion-billing-plan-chip {
+    white-space: normal;
+  }
+
+  .ion-billing-modal-panel {
+    padding: 1rem;
+  }
 }
 
 @keyframes ion-billing-spin {

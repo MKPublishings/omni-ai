@@ -32,8 +32,8 @@ export async function authMiddleware(
     const authDb = env.ION_DB || env.DB;
 
     // Get session ID from Authorization header or cookie
-    const authHeader = request.headers.get('Authorization');
-    const cookieHeader = request.headers.get('Cookie');
+    const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+    const cookieHeader = request.headers.get('Cookie') || request.headers.get('cookie');
 
     let sessionId: string | null = null;
 
@@ -42,11 +42,16 @@ export async function authMiddleware(
       sessionId = authHeader.substring(7);
     }
 
-    // Try cookie: session=...
+    // Try cookie: ion_token=... or legacy session=...
     if (!sessionId && cookieHeader) {
-      const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+      const ionTokenMatch = cookieHeader.match(/(?:^|;\s*)ion_token=([^;]+)/);
+      if (ionTokenMatch) {
+        sessionId = decodeURIComponent(ionTokenMatch[1]);
+      }
+
+      const sessionMatch = !sessionId ? cookieHeader.match(/(?:^|;\s*)session=([^;]+)/) : null;
       if (sessionMatch) {
-        sessionId = sessionMatch[1];
+        sessionId = decodeURIComponent(sessionMatch[1]);
       }
     }
 

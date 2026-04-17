@@ -32,6 +32,11 @@ const navigationItems: NavigationEntry[] = [
     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.5 0-4.5 1.567-4.5 3.5S9.5 15 12 15s4.5 1.567 4.5 3.5S14.5 22 12 22m0-14V2m0 20v-2" /></svg>,
   },
   {
+    href: '/billing/manage',
+    label: 'Billing',
+    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" /></svg>,
+  },
+  {
     href: '/workspace',
     label: 'Overview',
     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" /></svg>,
@@ -85,6 +90,18 @@ function buildBreadcrumbs(pathname: string): string[] {
 
   const segments = pathname.split('/').filter(Boolean)
   return ['Dashboard', ...segments.map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))]
+}
+
+function isNavigationItemActive(pathname: string, href: string): boolean {
+  if (pathname === href) {
+    return true
+  }
+
+  if (href === '/workspace') {
+    return pathname === '/workspace'
+  }
+
+  return pathname.startsWith(`${href}/`)
 }
 
 export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false }: DashboardShellProps) {
@@ -218,7 +235,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
               key={item.href}
               icon={item.icon}
               label={item.label}
-              active={pathname === item.href}
+              active={isNavigationItemActive(pathname, item.href)}
               collapsed={navCollapsed}
               onClick={() => router.push(item.href)}
             />

@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { clearAuthSession, getApiUrl, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
@@ -10,7 +10,7 @@ import { Input } from '@/components/Input'
 
 type AuthMode = 'login' | 'signup'
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
@@ -22,14 +22,16 @@ export default function LoginPage() {
   const [verificationNotice, setVerificationNotice] = useState('')
   const [verificationUrl, setVerificationUrl] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextPath = searchParams.get('next') || '/workspace'
 
   // Check if already authenticated
   useEffect(() => {
     const token = getStoredToken()
     if (token) {
-      router.push('/workspace')
+      router.push(nextPath)
     }
-  }, [router])
+  }, [nextPath, router])
 
   const handleModeChange = (nextMode: AuthMode) => {
     setMode(nextMode)
@@ -86,7 +88,7 @@ export default function LoginPage() {
       }
 
       storeAuthSession(data)
-      router.push('/workspace')
+  router.push(nextPath)
 
     } catch (err) {
       if (!(err instanceof Error && err.message.includes('verification'))) {
@@ -267,5 +269,13 @@ export default function LoginPage() {
         </div>
       </GlassCard>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-pine-black-900 p-4 text-sm text-quantum-white/68">Loading sign-in...</div>}>
+      <LoginPageContent />
+    </Suspense>
   )
 }

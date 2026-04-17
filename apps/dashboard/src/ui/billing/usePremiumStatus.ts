@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { authorizedFetch, getApiUrl, getStoredToken } from '@/lib/auth'
+import { authorizedFetch, getApiUrl } from '@/lib/auth'
 
 export type BillingInterval = 'month' | 'year'
 
@@ -17,9 +17,21 @@ export interface BillingSubscriptionRecord {
   id?: string
   plan_tier?: string
   status?: string
+  provider_subscription_id?: string
+  current_period_start?: string
   current_period_end?: string
+  created_at?: string
   updated_at?: string
   metadata_json?: string
+}
+
+export interface BillingCustomerRecord {
+  id?: string
+  provider?: string
+  provider_customer_id?: string
+  email?: string
+  status?: string
+  updated_at?: string
 }
 
 interface PriceConfiguration {
@@ -29,6 +41,13 @@ interface PriceConfiguration {
   enterpriseYearly: boolean
 }
 
+export interface BillingPriceIds {
+  premiumMonthly: string | null
+  premiumYearly: string | null
+  enterpriseMonthly: string | null
+  enterpriseYearly: string | null
+}
+
 interface EntitlementsResponse {
   accessTier?: string
   activeEntitlement?: PremiumEntitlementRecord | null
@@ -36,9 +55,11 @@ interface EntitlementsResponse {
 }
 
 interface BillingStatusResponse {
+  customer?: BillingCustomerRecord | null
   subscriptions?: BillingSubscriptionRecord[]
   providerConfigured?: boolean
   priceConfiguration?: Partial<PriceConfiguration>
+  priceIds?: Partial<BillingPriceIds>
 }
 
 export interface PremiumStatusSnapshot {
@@ -51,8 +72,10 @@ export interface PremiumStatusState extends PremiumStatusSnapshot {
   loading: boolean
   signedIn: boolean
   subscriptions: BillingSubscriptionRecord[]
+  customer: BillingCustomerRecord | null
   providerConfigured: boolean
   priceConfiguration: PriceConfiguration
+  priceIds: BillingPriceIds
   error: string
   lastCheckedAt: string | null
 }
@@ -66,6 +89,13 @@ const DEFAULT_PRICE_CONFIGURATION: PriceConfiguration = {
   premiumYearly: false,
   enterpriseMonthly: false,
   enterpriseYearly: false,
+}
+
+const DEFAULT_PRICE_IDS: BillingPriceIds = {
+  premiumMonthly: null,
+  premiumYearly: null,
+  enterpriseMonthly: null,
+  enterpriseYearly: null,
 }
 
 function hasActiveEntitlement(entitlement: PremiumEntitlementRecord | null | undefined): boolean {
@@ -104,8 +134,10 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
     loading: true,
     signedIn: false,
     subscriptions: [],
+    customer: null,
     providerConfigured: false,
     priceConfiguration: DEFAULT_PRICE_CONFIGURATION,
+    priceIds: DEFAULT_PRICE_IDS,
     error: '',
     lastCheckedAt: null,
   })
@@ -115,26 +147,6 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
     const pollMs = options.pollMs ?? 60000
 
     const load = async () => {
-      const token = getStoredToken()
-
-      if (!token) {
-        if (!cancelled) {
-          setState({
-            accessTier: 'free',
-            isPremium: false,
-            activeEntitlement: null,
-            loading: false,
-            signedIn: false,
-            subscriptions: [],
-            providerConfigured: false,
-            priceConfiguration: DEFAULT_PRICE_CONFIGURATION,
-            error: '',
-            lastCheckedAt: null,
-          })
-        }
-        return
-      }
-
       if (!cancelled) {
         setState((current) => ({ ...current, loading: true, error: '' }))
       }
@@ -156,7 +168,23 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
         ])
 
         if (entitlementsResponse.status === 401 || billingResponse.status === 401) {
-          throw new Error('Authentication required to resolve premium status.')
+          if (!cancelled) {
+            setState({
+              accessTier: 'free',
+              isPremium: false,
+              activeEntitlement: null,
+              loading: false,
+              signedIn: false,
+              subscriptions: [],
+              customer: null,
+              providerConfigured: false,
+              priceConfiguration: DEFAULT_PRICE_CONFIGURATION,
+              priceIds: DEFAULT_PRICE_IDS,
+              error: '',
+              lastCheckedAt: new Date().toISOString(),
+            })
+          }
+          return
         }
 
         const entitlementsPayload = await entitlementsResponse.json().catch(() => ({})) as EntitlementsResponse
@@ -181,10 +209,15 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
             loading: false,
             signedIn: true,
             subscriptions: Array.isArray(billingPayload.subscriptions) ? billingPayload.subscriptions : [],
+            customer: billingPayload.customer || null,
             providerConfigured: Boolean(billingPayload.providerConfigured),
             priceConfiguration: {
               ...DEFAULT_PRICE_CONFIGURATION,
               ...(billingPayload.priceConfiguration || {}),
+            },
+            priceIds: {
+              ...DEFAULT_PRICE_IDS,
+              ...(billingPayload.priceIds || {}),
             },
             error: '',
             lastCheckedAt: new Date().toISOString(),
@@ -195,7 +228,7 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
           setState((current) => ({
             ...current,
             loading: false,
-            signedIn: true,
+            signedIn: current.signedIn,
             error: error instanceof Error ? error.message : 'Unable to resolve premium status.',
             lastCheckedAt: new Date().toISOString(),
           }))

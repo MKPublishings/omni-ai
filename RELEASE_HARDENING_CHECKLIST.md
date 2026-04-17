@@ -13,10 +13,10 @@
 - `STRIPE_SECRET_KEY=<stripe secret key>`
 - `STRIPE_WEBHOOK_SECRET=<stripe webhook signing secret>`
 - `STRIPE_PUBLISHABLE_KEY=<stripe publishable key>`
-- `STRIPE_PREMIUM_MONTHLY_PRICE_ID=<stripe price id>`
-- `STRIPE_PREMIUM_YEARLY_PRICE_ID=<stripe price id>`
-- `STRIPE_ENTERPRISE_MONTHLY_PRICE_ID=<stripe price id>`
-- `STRIPE_ENTERPRISE_YEARLY_PRICE_ID=<stripe price id>`
+- `STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_1TN0JIBJEKcExtO66AR2kxnp`
+- `STRIPE_PREMIUM_YEARLY_PRICE_ID=price_1TN0OwBJEKcExtO6XWK1617l`
+- `STRIPE_ENTERPRISE_MONTHLY_PRICE_ID=price_1TN0SrBJEKcExtO6DpypdWEA`
+- `STRIPE_ENTERPRISE_YEARLY_PRICE_ID=price_1TN0W9BJEKcExtO6hpAoVcmV`
 - `STRIPE_CHECKOUT_SUCCESS_URL=/billing/success`
 - `STRIPE_CHECKOUT_CANCEL_URL=/billing/cancel`
 - If MP4 encoding is desired in server runtime:

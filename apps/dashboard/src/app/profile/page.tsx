@@ -97,6 +97,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Button type="submit" disabled={loading || saving} className="min-h-[2.75rem] flex-1 rounded-full sm:min-h-0 sm:flex-none">{saving ? 'Saving...' : 'Save profile'}</Button>
               <Link href="/settings" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open settings</Link>
+              <Link href="/billing/manage" className="inline-flex min-h-[2.75rem] flex-1 items-center justify-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8 sm:min-h-0 sm:flex-none">Open billing</Link>
             </div>
           </form>
         </GlassCard>

@@ -20,10 +20,10 @@ STRIPE_WEBHOOK_SECRET="whsec_replace_me"
 # Publishable key returned to the client for checkout bootstrapping.
 STRIPE_PUBLISHABLE_KEY="pk_test_replace_me"
 # Price IDs for premium and enterprise subscriptions.
-STRIPE_PREMIUM_MONTHLY_PRICE_ID="price_premium_monthly_replace_me"
-STRIPE_PREMIUM_YEARLY_PRICE_ID="price_premium_yearly_replace_me"
-STRIPE_ENTERPRISE_MONTHLY_PRICE_ID="price_enterprise_monthly_replace_me"
-STRIPE_ENTERPRISE_YEARLY_PRICE_ID="price_enterprise_yearly_replace_me"
+STRIPE_PREMIUM_MONTHLY_PRICE_ID="price_1TN0JIBJEKcExtO66AR2kxnp"
+STRIPE_PREMIUM_YEARLY_PRICE_ID="price_1TN0OwBJEKcExtO6XWK1617l"
+STRIPE_ENTERPRISE_MONTHLY_PRICE_ID="price_1TN0SrBJEKcExtO6DpypdWEA"
+STRIPE_ENTERPRISE_YEARLY_PRICE_ID="price_1TN0W9BJEKcExtO6hpAoVcmV"
 # Billing return paths can be relative to APP_BASE_URL.
 STRIPE_CHECKOUT_SUCCESS_URL="/billing/success"
 STRIPE_CHECKOUT_CANCEL_URL="/billing/cancel"
