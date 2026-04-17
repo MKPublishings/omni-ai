@@ -89,7 +89,6 @@ const ThinkingIndicator = () => {
 export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPanelProps>(
   ({ messages = [], onSendMessage, isThinking, isLoading, focusMode, onToggleFocus, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
-    const [isInputFocused, setIsInputFocused] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -115,8 +114,24 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
     const handleKeyPress = (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
+
+        if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
+          dismissKeyboard()
+          return
+        }
+
         handleSend()
       }
+    }
+
+    const handleInputFocus = () => {
+      if (typeof window === 'undefined' || !window.matchMedia('(pointer: coarse)').matches) {
+        return
+      }
+
+      window.setTimeout(() => {
+        textareaRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }, 250)
     }
 
     return (
@@ -176,23 +191,6 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         </div>
 
         <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
-          <div className="mb-2 flex justify-end sm:hidden">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={dismissKeyboard}
-              className={clsx(
-                'h-9 rounded-full px-3 text-xs uppercase tracking-[0.18em] text-quantum-white/72 transition',
-                isInputFocused ? 'opacity-100' : 'pointer-events-none opacity-0'
-              )}
-            >
-              <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Done
-            </Button>
-          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
               <textarea
@@ -201,11 +199,10 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
+                onFocus={handleInputFocus}
                 rows={2}
                 enterKeyHint="done"
-                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-sm leading-5 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
                 disabled={isThinking}
               />
             </div>
