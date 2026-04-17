@@ -102,7 +102,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       scrollToBottom()
     }, [messages, isThinking])
 
-    useImperativeHandle(ref, () => panelRef.current, [])
+    useImperativeHandle(ref, () => panelRef.current!, [])
 
     useEffect(() => {
       if (typeof document === 'undefined') {
