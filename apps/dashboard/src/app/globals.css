@@ -176,6 +176,10 @@
     z-index: 0;
   }
 
+  .chat-messages-scroll.chat-selection-active {
+    overflow: hidden;
+  }
+
   @media (pointer: coarse) {
     .chat-copy-surface,
     .chat-copy-surface:hover,
@@ -185,6 +189,11 @@
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       transition-property: background-color, border-color, color, box-shadow !important;
+    }
+
+    .chat-messages-scroll.chat-selection-active {
+      touch-action: none;
+      overscroll-behavior: contain;
     }
   }
 }

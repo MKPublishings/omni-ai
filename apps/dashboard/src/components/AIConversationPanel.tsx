@@ -90,6 +90,8 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
   ({ messages = [], onSendMessage, isThinking, isLoading, focusMode, onToggleFocus, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const messagesContainerRef = useRef<HTMLDivElement>(null)
+    const panelRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const scrollToBottom = () => {
@@ -99,6 +101,42 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
     useEffect(() => {
       scrollToBottom()
     }, [messages, isThinking])
+
+    useEffect(() => {
+      if (typeof document === 'undefined') {
+        return
+      }
+
+      const updateSelectionState = () => {
+        const selection = window.getSelection()
+        const panel = panelRef.current
+        const scroller = messagesContainerRef.current
+        if (!panel || !scroller) {
+          return
+        }
+
+        const anchorNode = selection?.anchorNode
+        const focusNode = selection?.focusNode
+        const hasSelectedText = Boolean(selection && !selection.isCollapsed && selection.toString().trim())
+        const isInsidePanel = Boolean(
+          hasSelectedText &&
+          anchorNode &&
+          focusNode &&
+          panel.contains(anchorNode) &&
+          panel.contains(focusNode)
+        )
+
+        scroller.classList.toggle('chat-selection-active', isInsidePanel)
+      }
+
+      document.addEventListener('selectionchange', updateSelectionState)
+      document.addEventListener('touchend', updateSelectionState, { passive: true })
+
+      return () => {
+        document.removeEventListener('selectionchange', updateSelectionState)
+        document.removeEventListener('touchend', updateSelectionState)
+      }
+    }, [])
 
     const handleSend = () => {
       if (inputValue.trim() && onSendMessage) {
@@ -136,7 +174,14 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
 
     return (
       <div
-        ref={ref}
+        ref={(node) => {
+          panelRef.current = node
+          if (typeof ref === 'function') {
+            ref(node)
+          } else if (ref) {
+            ref.current = node
+          }
+        }}
         className={clsx(
           'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
           focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
@@ -176,7 +221,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
+        <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
           {isLoading && messages.length === 0 ? (
             <ConversationSkeleton />
           ) : (
