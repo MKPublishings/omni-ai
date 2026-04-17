@@ -176,7 +176,6 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
 
     return (
       <div
-                className="inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white"
         className={clsx(
           'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
           focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
