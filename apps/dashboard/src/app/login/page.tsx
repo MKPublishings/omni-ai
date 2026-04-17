@@ -10,6 +10,25 @@ import { Input } from '@/components/Input'
 
 type AuthMode = 'login' | 'signup'
 
+function buildVerificationDeliveryNotice(input: {
+  sent?: boolean
+  error?: string
+  fallbackLink?: boolean
+  successMessage: string
+  fallbackMessage: string
+}) {
+  if (input.sent) {
+    return input.successMessage
+  }
+
+  const detail = String(input.error || '').trim()
+  if (detail) {
+    return `Verification email delivery failed: ${detail}${input.fallbackLink ? ' Use the verification link below while mail delivery is being fixed.' : ''}`
+  }
+
+  return input.fallbackMessage
+}
+
 function LoginPageContent() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [displayName, setDisplayName] = useState('')
@@ -66,9 +85,13 @@ function LoginPageContent() {
       if (!response.ok) {
         if (data.code === 'EMAIL_VERIFICATION_REQUIRED') {
           setVerificationNotice(
-            data.verificationEmailSent
-              ? 'Email verification is required before signing in. Check your inbox for the latest verification email.'
-              : data.error || 'Email verification is required before signing in.'
+            buildVerificationDeliveryNotice({
+              sent: Boolean(data.verificationEmailSent),
+              error: typeof data.verificationEmailError === 'string' ? data.verificationEmailError : data.error,
+              fallbackLink: Boolean(data.verificationUrl),
+              successMessage: 'Email verification is required before signing in. Check your inbox for the latest verification email.',
+              fallbackMessage: 'Email verification is required before signing in. Email delivery failed, so use the verification link below.',
+            })
           )
           setVerificationUrl(data.verificationUrl || '')
         }
@@ -78,9 +101,13 @@ function LoginPageContent() {
       if (data.verificationRequired) {
         clearAuthSession()
         setVerificationNotice(
-          data.verificationEmailSent
-            ? 'Account created. A verification email has been sent to your inbox.'
-            : 'Account created. Verify your email before signing in.'
+          buildVerificationDeliveryNotice({
+            sent: Boolean(data.verificationEmailSent),
+            error: typeof data.verificationEmailError === 'string' ? data.verificationEmailError : '',
+            fallbackLink: Boolean(data.verificationUrl),
+            successMessage: 'Account created. A verification email has been sent to your inbox.',
+            fallbackMessage: 'Account created, but verification email delivery failed. Use the verification link below before signing in.',
+          })
         )
         setVerificationUrl(data.verificationUrl || '')
         setMode('login')
@@ -109,9 +136,13 @@ function LoginPageContent() {
       setVerificationNotice(
         payload.alreadyVerified
           ? 'This account is already verified. You can sign in now.'
-          : payload.verificationEmailSent
-            ? 'A fresh verification email has been sent.'
-            : 'A fresh verification link is ready.'
+          : buildVerificationDeliveryNotice({
+              sent: Boolean(payload.verificationEmailSent),
+              error: payload.verificationEmailError,
+              fallbackLink: Boolean(payload.verificationUrl),
+              successMessage: 'A fresh verification email has been sent.',
+              fallbackMessage: 'Verification email delivery failed. Use the fresh verification link below.',
+            })
       )
       setVerificationUrl(payload.verificationUrl || '')
     } catch (err) {
@@ -232,7 +263,7 @@ function LoginPageContent() {
               <p>{verificationNotice}</p>
               {verificationUrl && (
                 <Link href={verificationUrl} className="inline-flex rounded-full border border-spectral-cyan-400/30 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-400/10">
-                  Open verification link
+                  Open verification link directly
                 </Link>
               )}
               {mode === 'login' && email && (

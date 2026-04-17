@@ -75,7 +75,7 @@ export default function VerifyEmailPage() {
           ? 'This account is already verified. You can sign in now.'
           : payload.verificationEmailSent
             ? 'A fresh verification email has been sent.'
-            : 'A fresh verification link is ready on the login screen.'
+            : `Verification email delivery failed${payload.verificationEmailError ? `: ${payload.verificationEmailError}` : '.'}${payload.verificationUrl ? ' Use the direct verification link exposed elsewhere in the app if it is shown.' : ''}`
       )
     } catch (err) {
       setResendError(err instanceof Error ? err.message : 'Could not resend verification email.')

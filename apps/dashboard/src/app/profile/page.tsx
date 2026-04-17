@@ -9,6 +9,25 @@ import { Input } from '@/components/Input'
 import { AuthUser, resendVerification, updateProfile } from '@/lib/auth'
 import { fetchDashboardUser } from '@/lib/dashboard'
 
+function buildVerificationDeliveryNotice(input: {
+  sent?: boolean
+  error?: string
+  fallbackLink?: boolean
+}) {
+  if (input.sent) {
+    return 'Verification email sent.'
+  }
+
+  const detail = String(input.error || '').trim()
+  if (detail) {
+    return `Verification email delivery failed: ${detail}${input.fallbackLink ? ' Use the link below while the mail transport is being fixed.' : ''}`
+  }
+
+  return input.fallbackLink
+    ? 'Verification email delivery failed. Use the link below while the mail transport is being fixed.'
+    : 'Verification email delivery failed.'
+}
+
 export default function ProfilePage() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [displayName, setDisplayName] = useState('')
@@ -61,9 +80,11 @@ export default function ProfilePage() {
       setSuccess(
         payload.alreadyVerified
           ? 'Email is already verified.'
-          : payload.verificationEmailSent
-            ? 'Verification email sent.'
-            : 'Verification link refreshed.'
+          : buildVerificationDeliveryNotice({
+              sent: Boolean(payload.verificationEmailSent),
+              error: payload.verificationEmailError,
+              fallbackLink: Boolean(payload.verificationUrl),
+            })
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not resend verification')
@@ -118,7 +139,7 @@ export default function ProfilePage() {
             </div>
             {verificationUrl && (
               <div className="mt-4">
-                <Link href={verificationUrl} className="break-all text-sm text-spectral-cyan-300 underline underline-offset-4">Open latest verification link</Link>
+                <Link href={verificationUrl} className="break-all text-sm text-spectral-cyan-300 underline underline-offset-4">Open latest verification link directly</Link>
               </div>
             )}
           </GlassCard>

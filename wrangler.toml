@@ -10,10 +10,15 @@ binding = "AI"
 [vars]
 ION_ENV = "production"
 APP_BASE_URL = "https://ion-ai.omni-ai.workers.dev"
-EMAIL_TRANSPORT = "mailchannels"
+EMAIL_TRANSPORT = "resend"
 EMAIL_FROM = "noreply@ionirix.com"
 EMAIL_REPLY_TO = "mirnes@ionirix.com"
 MAILCHANNELS_API_URL = "https://api.mailchannels.net/tx/v1/send"
+# Public outbound email plan:
+# - configure RESEND_API_KEY as a Wrangler secret
+# - verify the sending domain ionirix.com inside Resend
+# - publish SPF/DKIM/DMARC records for ionirix.com from the Resend dashboard
+# - keep MAILCHANNELS_API_URL only as a legacy fallback path if EMAIL_TRANSPORT is changed back to mailchannels
 # Configure the following as Wrangler secrets or vars for Stripe billing:
 # STRIPE_SECRET_KEY
 # STRIPE_WEBHOOK_SECRET
@@ -39,7 +44,7 @@ STRIPE_CHECKOUT_CANCEL_URL = "/billing/cancel"
 # ION_MIN_OUTPUT_TOKENS = "512"
 # ION_MAX_OUTPUT_TOKENS = "8192"
 # ION_ENV = "development" # set to "production" to disable debug response headers
-# Configure RESEND_API_KEY as a Wrangler secret if using Resend for outbound email.
+# Configure RESEND_API_KEY as a Wrangler secret for outbound verification email.
 
 # KV namespaces for phase 2-3 systems (commented out - create in Cloudflare dashboard first)
 # [[kv_namespaces]]

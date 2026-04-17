@@ -192,13 +192,23 @@ async function sendViaMailchannels(env: VerificationMailEnv, input: Verification
 
 export async function sendVerificationEmail(env: VerificationMailEnv, input: VerificationEmailInput): Promise<VerificationEmailResult> {
   const transport = String(env.EMAIL_TRANSPORT || '').trim().toLowerCase();
+  const hasResendApiKey = Boolean(String(env.RESEND_API_KEY || '').trim());
+  const hasEmailFrom = Boolean(String(env.EMAIL_FROM || '').trim());
 
   try {
-    if (String(env.RESEND_API_KEY || '').trim()) {
+    if (transport === 'resend') {
       return await sendViaResend(env, input);
     }
 
-    if (transport === 'mailchannels' || (transport === '' && String(env.EMAIL_FROM || '').trim())) {
+    if (transport === 'mailchannels') {
+      return await sendViaMailchannels(env, input);
+    }
+
+    if (hasResendApiKey) {
+      return await sendViaResend(env, input);
+    }
+
+    if (transport === '' && hasEmailFrom) {
       return await sendViaMailchannels(env, input);
     }
   } catch (error) {
