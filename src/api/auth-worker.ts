@@ -8,6 +8,7 @@ import {
   findUserByIdentifier,
   findUserById,
   getSessionByToken,
+  getEffectiveAccessTier,
   pruneExpiredSessions,
   revokeSessionByToken,
   touchSession,
@@ -192,11 +193,13 @@ export class AuthWorker {
 
     await pruneExpiredSessions(this.db!);
     const { token, session } = await createSession(this.db!, userRecord.id, request);
+    const accessTier = await getEffectiveAccessTier(this.db!, userRecord.id, userRecord.role);
 
     return json({
       token,
       sessionId: session.id,
       expiresAt: session.expires_at,
+      accessTier,
       user: {
         id: userRecord.id,
         username: userRecord.username,
@@ -225,7 +228,12 @@ export class AuthWorker {
     }
 
     await touchSession(this.db!, auth.session.id);
-    return json({ user: auth.user, sessionId: auth.session.id, expiresAt: auth.session.expires_at });
+    return json({
+      user: auth.user,
+      sessionId: auth.session.id,
+      expiresAt: auth.session.expires_at,
+      accessTier: auth.accessTier,
+    });
   }
 
   async logout(request: Request): Promise<Response> {

@@ -40,6 +40,21 @@ export interface AuthEmailVerificationRecord {
   consumed_at: string | null;
 }
 
+export type AccessTier = 'free' | 'premium' | 'enterprise';
+
+export interface AuthUserEntitlementRecord {
+  id: string;
+  user_id: string;
+  tier: AccessTier;
+  status: string;
+  source: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  metadata_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuthenticatedUser {
   id: string;
   username: string;
@@ -52,6 +67,17 @@ export interface AuthenticatedUser {
 export interface AuthSessionResult {
   session: AuthSessionRecord;
   user: AuthenticatedUser;
+  accessTier: AccessTier;
+}
+
+function normalizeAccessTier(value: string): AccessTier {
+  if (value === 'enterprise') {
+    return 'enterprise';
+  }
+  if (value === 'premium') {
+    return 'premium';
+  }
+  return 'free';
 }
 
 export class AuthConflictError extends Error {
@@ -539,7 +565,114 @@ export async function getSessionByToken(db: D1Database, token: string): Promise<
     last_login_at: result.user_last_login_at ? String(result.user_last_login_at) : null,
   });
 
-  return { session, user };
+  const accessTier = await getEffectiveAccessTier(db, user.id, user.role);
+
+  return { session, user, accessTier };
+}
+
+export async function getActiveUserEntitlement(db: D1Database, userId: string): Promise<AuthUserEntitlementRecord | null> {
+  const now = new Date().toISOString();
+  const result = await db
+    .prepare(
+      `SELECT *
+      FROM auth_user_entitlements
+      WHERE user_id = ?
+        AND status = 'active'
+        AND (starts_at IS NULL OR starts_at <= ?)
+        AND (ends_at IS NULL OR ends_at > ?)
+      ORDER BY CASE tier
+        WHEN 'enterprise' THEN 3
+        WHEN 'premium' THEN 2
+        ELSE 1
+      END DESC,
+      updated_at DESC
+      LIMIT 1`
+    )
+    .bind(userId, now, now)
+    .first<AuthUserEntitlementRecord>();
+
+  return result ?? null;
+}
+
+export async function listUserEntitlements(db: D1Database, userId: string): Promise<AuthUserEntitlementRecord[]> {
+  const result = await db
+    .prepare(`SELECT * FROM auth_user_entitlements WHERE user_id = ? ORDER BY updated_at DESC`)
+    .bind(userId)
+    .all<AuthUserEntitlementRecord>();
+
+  return (result.results || []) as AuthUserEntitlementRecord[];
+}
+
+export async function upsertUserEntitlement(
+  db: D1Database,
+  input: {
+    userId: string;
+    tier: AccessTier;
+    status?: string;
+    source?: string;
+    startsAt?: string | null;
+    endsAt?: string | null;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<AuthUserEntitlementRecord> {
+  const now = new Date().toISOString();
+  const existing = await db
+    .prepare(`SELECT id FROM auth_user_entitlements WHERE user_id = ? AND tier = ? LIMIT 1`)
+    .bind(input.userId, normalizeAccessTier(input.tier))
+    .first<{ id: string }>();
+
+  const id = existing?.id || crypto.randomUUID();
+  await db
+    .prepare(`INSERT INTO auth_user_entitlements (id, user_id, tier, status, source, starts_at, ends_at, metadata_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        status = excluded.status,
+        source = excluded.source,
+        starts_at = excluded.starts_at,
+        ends_at = excluded.ends_at,
+        metadata_json = excluded.metadata_json,
+        updated_at = excluded.updated_at`)
+    .bind(
+      id,
+      input.userId,
+      normalizeAccessTier(input.tier),
+      String(input.status || 'active').trim() || 'active',
+      String(input.source || 'manual').trim() || 'manual',
+      input.startsAt || null,
+      input.endsAt || null,
+      input.metadata ? JSON.stringify(input.metadata) : null,
+      now,
+      now,
+    )
+    .run();
+
+  const entitlement = await db
+    .prepare(`SELECT * FROM auth_user_entitlements WHERE id = ? LIMIT 1`)
+    .bind(id)
+    .first<AuthUserEntitlementRecord>();
+
+  if (!entitlement) {
+    throw new Error('Failed to persist entitlement.');
+  }
+
+  return entitlement;
+}
+
+export async function getEffectiveAccessTier(
+  db: D1Database,
+  userId: string,
+  role?: string | null
+): Promise<AccessTier> {
+  if (String(role || '').trim().toLowerCase() === 'admin') {
+    return 'enterprise';
+  }
+
+  const entitlement = await getActiveUserEntitlement(db, userId);
+  if (!entitlement) {
+    return 'free';
+  }
+
+  return normalizeAccessTier(entitlement.tier);
 }
 
 export async function touchSession(db: D1Database, sessionId: string): Promise<void> {

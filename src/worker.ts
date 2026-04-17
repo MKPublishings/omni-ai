@@ -22,10 +22,12 @@ import { SpecsWorker } from './api/specs-worker';
 import { SimulationWorker } from './api/simulation-worker';
 import { SystemWorker } from './api/system-worker';
 import { AuthWorker } from './api/auth-worker';
+import { PremiumWorker } from './api/premium-worker';
 import IONWorker from './index.ts';
 
 // Middleware
 import { authMiddleware } from './middleware/auth';
+import { applyIonGateway, serializeGatewayContext } from './gateway/ionGateway';
 
 interface WorkerEnv {
   DB?: D1Database;
@@ -46,6 +48,15 @@ interface WorkerEnv {
   EMAIL_REPLY_TO?: string;
   MAILCHANNELS_API_URL?: string;
   RESEND_API_KEY?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PUBLISHABLE_KEY?: string;
+  STRIPE_PREMIUM_MONTHLY_PRICE_ID?: string;
+  STRIPE_PREMIUM_YEARLY_PRICE_ID?: string;
+  STRIPE_ENTERPRISE_MONTHLY_PRICE_ID?: string;
+  STRIPE_ENTERPRISE_YEARLY_PRICE_ID?: string;
+  STRIPE_CHECKOUT_SUCCESS_URL?: string;
+  STRIPE_CHECKOUT_CANCEL_URL?: string;
 }
 
 function isHtmlNavigationRequest(request: Request, url: URL): boolean {
@@ -153,15 +164,26 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const simulationWorker = new SimulationWorker(db, eventBus);
   const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
   const authWorker = new AuthWorker(env.DB, env);
+  const premiumWorker = new PremiumWorker(db, eventBus, toolRegistry, env);
 
   // Middleware functions
   const withAuth = (handler: any) =>
     async (request: Request, env: any, ctx: ExecutionContext, params: any) => {
-      const authResult = await authMiddleware(request, env);
-      if (!authResult.valid) {
-        return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      let authError = 'Unauthorized';
+
+      if (!(request as any).authContext) {
+        const authResult = await authMiddleware(request, env);
+        if (!authResult.valid) {
+          return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+        }
+        authError = authResult.error || authError;
+        (request as any).authContext = authResult.context;
       }
-      (request as any).authContext = authResult.context;
+
+      if (!(request as any).authContext?.userId) {
+        return new Response(JSON.stringify({ error: authError }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
+
       return handler(request, env, ctx, params);
     };
 
@@ -197,6 +219,57 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('POST', '/api/auth/resend-verification', async (r: Request) => authWorker.resendVerification(r));
   router.add('PUT', '/api/auth/profile', async (r: Request) => authWorker.updateProfile(r));
   router.add('POST', '/api/auth/logout', async (r: Request) => authWorker.logout(r));
+
+  router.add('GET', '/api/account/entitlements/me', compose((r: Request) => premiumWorker.getMyEntitlements(r)));
+
+  router.add('GET', '/api/billing/subscription', compose((r: Request) => premiumWorker.getBillingStatus(r)));
+  router.add('POST', '/api/billing/checkout', compose((r: Request) => premiumWorker.createCheckout(r)));
+  router.add('POST', '/api/billing/webhooks/stripe', async (r: Request) => premiumWorker.handleStripeWebhook(r));
+
+  router.add('GET', '/api/gateway/status', async (r: Request) => {
+    return new Response(JSON.stringify({
+      ok: true,
+      gateway: serializeGatewayContext((r as any).ionGatewayContext),
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  router.add('GET', '/api/premium/status', async (r: Request) => {
+    return new Response(JSON.stringify({
+      ok: true,
+      gateway: serializeGatewayContext((r as any).ionGatewayContext),
+      phase: 'phase-1-ion-gateway',
+      rollout: 'premium-ready',
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  router.add('GET', '/api/enterprise/status', async (r: Request) => {
+    return new Response(JSON.stringify({
+      ok: true,
+      gateway: serializeGatewayContext((r as any).ionGatewayContext),
+      phase: 'phase-1-ion-gateway',
+      rollout: 'enterprise-scaffold',
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+  router.add('GET', '/api/enterprise/entitlements', (r: Request) => premiumWorker.listEntitlements(r));
+  router.add('POST', '/api/enterprise/entitlements', (r: Request) => premiumWorker.upsertEntitlementRoute(r));
+
+  router.add('POST', '/api/premium/retrieval/query', (r: Request) => premiumWorker.retrievalQuery(r));
+  router.add('POST', '/api/premium/retrieval/recover', (r: Request) => premiumWorker.retrievalRecovery(r));
+  router.add('GET', '/api/premium/connectivity/status', (r: Request) => premiumWorker.connectivityStatus(r));
+  router.add('POST', '/api/premium/connectivity/probe', (r: Request) => premiumWorker.connectivityProbe(r));
+  router.add('POST', '/api/premium/sovereignty/assess', (r: Request) => premiumWorker.sovereigntyAssessment(r));
+  router.add('POST', '/api/premium/search/super', (r: Request) => premiumWorker.superSearch(r));
+  router.add('POST', '/api/premium/sweep/targeted', (r: Request) => premiumWorker.targetedSweep(r));
+  router.add('GET', '/api/premium/sweep/:id', (r: Request, e: any, c: any, p: any) => premiumWorker.getSweep(r, e, c, p));
 
   // ========== MEMORY API ROUTES ==========
   router.add('GET', '/api/memory', compose((r: any, e: any, c: any, p: any) => memoryWorker.list(r, e, c, p)));
@@ -275,7 +348,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   });
 
   // Dispatch request through router
-  return router.handle(request, env, ctx);
+  return applyIonGateway(request, ionWorkerEnv as any, (gatewayRequest) => router.handle(gatewayRequest, env, ctx));
 }
 
 /**

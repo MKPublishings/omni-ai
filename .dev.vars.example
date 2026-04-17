@@ -12,6 +12,22 @@ ION_MEDIA_API_TIMEOUT_MS="45000"
 # Optional admin protection for maintenance endpoints.
 ION_ADMIN_KEY="replace-with-strong-secret"
 
+# ===== Stripe billing =====
+# Secret key from the Stripe dashboard.
+STRIPE_SECRET_KEY="sk_test_replace_me"
+# Webhook signing secret for /api/billing/webhooks/stripe.
+STRIPE_WEBHOOK_SECRET="whsec_replace_me"
+# Publishable key returned to the client for checkout bootstrapping.
+STRIPE_PUBLISHABLE_KEY="pk_test_replace_me"
+# Price IDs for premium and enterprise subscriptions.
+STRIPE_PREMIUM_MONTHLY_PRICE_ID="price_premium_monthly_replace_me"
+STRIPE_PREMIUM_YEARLY_PRICE_ID="price_premium_yearly_replace_me"
+STRIPE_ENTERPRISE_MONTHLY_PRICE_ID="price_enterprise_monthly_replace_me"
+STRIPE_ENTERPRISE_YEARLY_PRICE_ID="price_enterprise_yearly_replace_me"
+# Billing return paths can be relative to APP_BASE_URL.
+STRIPE_CHECKOUT_SUCCESS_URL="/billing/success"
+STRIPE_CHECKOUT_CANCEL_URL="/billing/cancel"
+
 # Optional model aliases.
 MODEL_ION="@cf/meta/llama-3.1-8b-instruct"
 

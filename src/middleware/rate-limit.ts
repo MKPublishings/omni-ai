@@ -30,6 +30,17 @@ const DEFAULT_LIMITS: RateLimitConfig[] = [
   { path: '/api/system/status', maxRequests: 30, windowSeconds: 60 },
   // Image API
   { path: '/api/image', maxRequests: 10, windowSeconds: 60 },
+  // Premium retrieval/search
+  { path: '/api/premium/retrieval/query', maxRequests: 30, windowSeconds: 60 },
+  { path: '/api/premium/retrieval/recover', maxRequests: 18, windowSeconds: 60 },
+  { path: '/api/premium/search/super', maxRequests: 24, windowSeconds: 60 },
+  { path: '/api/premium/sweep/targeted', maxRequests: 12, windowSeconds: 60 },
+  { path: '/api/premium/connectivity/probe', maxRequests: 20, windowSeconds: 60 },
+  { path: '/api/premium/sovereignty/assess', maxRequests: 18, windowSeconds: 60 },
+  // Billing hooks
+  { path: '/api/billing/checkout', maxRequests: 6, windowSeconds: 60 },
+  { path: '/api/billing/subscription', maxRequests: 20, windowSeconds: 60 },
+  { path: '/api/billing/webhooks/stripe', maxRequests: 60, windowSeconds: 60 },
 ];
 
 export class RateLimiter {

@@ -1,58 +1,48 @@
 /**
  * @script migrate-d1
- * 
- * Run all database migrations in order.
+ *
+ * Apply D1 migrations through Wrangler.
  * Usage: npm run db:migrate
+ * Usage: npm run db:migrate:remote
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+import { spawn } from 'node:child_process';
 
-interface MigrationEnv {
-  DB: D1Database;
+const DATABASE_NAME = 'ionirix';
+
+function runWranglerMigration(mode: '--local' | '--remote'): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const command = `npx wrangler d1 migrations apply ${DATABASE_NAME} ${mode}`;
+    const child = spawn(command, [], {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+      shell: true,
+    });
+
+    child.on('error', reject);
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      reject(new Error(`Wrangler D1 migrations exited with code ${code ?? 'unknown'}.`));
+    });
+  });
 }
 
-const MIGRATIONS_DIR = path.join(process.cwd(), 'migrations');
-
-/**
- * Load migration files in order
- */
-async function getMigrations(): Promise<Array<{ name: string; sql: string }>> {
-  const files = await fs.readdir(MIGRATIONS_DIR);
-  const migrations = files
-    .filter((f) => f.endsWith('.sql'))
-    .sort()
-    .map((f) => f.replace('.sql', ''));
-
-  const migrationList = [];
-  for (const name of migrations) {
-    const sql = await fs.readFile(path.join(MIGRATIONS_DIR, `${name}.sql`), 'utf-8');
-    migrationList.push({ name, sql });
-  }
-
-  return migrationList;
+export async function runMigrations(mode: '--local' | '--remote' = '--local'): Promise<void> {
+  console.log(`[Migrate] Applying D1 migrations to ${mode === '--remote' ? 'remote' : 'local'} database...`);
+  await runWranglerMigration(mode);
+  console.log('[Migrate] ✅ Migration apply complete');
 }
 
-/**
- * Run migrations
- */
-export async function runMigrations(env: MigrationEnv): Promise<void> {
-  console.log('[Migrate] Starting D1 migrations...');
-
-  const migrations = await getMigrations();
-
-  for (const { name, sql } of migrations) {
-    try {
-      console.log(`[Migrate] Running ${name}...`);
-      await env.DB.prepare(sql).run();
-      console.log(`[Migrate] ✅ ${name}`);
-    } catch (err: unknown) {
-      console.error(`[Migrate] ❌ ${name}:`, err);
-      throw err;
-    }
-  }
-
-  console.log('[Migrate] ✅ All migrations complete');
+if (String(process.argv[1] || '').includes('migrate-d1')) {
+  const mode = process.argv.includes('--remote') ? '--remote' : '--local';
+  runMigrations(mode).catch((error) => {
+    console.error('[Migrate] ❌', error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
 }
 
 export default runMigrations;

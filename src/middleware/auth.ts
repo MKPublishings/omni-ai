@@ -7,7 +7,7 @@
  * Attaches sessionId and mode to the request object.
  */
 
-import { getSessionByToken, touchSession } from '../auth/credentials';
+import { getSessionByToken, touchSession, type AccessTier } from '../auth/credentials';
 
 export interface AuthContext {
   sessionId: string;
@@ -15,6 +15,7 @@ export interface AuthContext {
   isAdmin?: boolean;
   userId?: string;
   email?: string;
+  accessTier?: AccessTier;
 }
 
 declare global {
@@ -28,6 +29,8 @@ export async function authMiddleware(
   env: any
 ): Promise<{ valid: boolean; context?: AuthContext; error?: string }> {
   try {
+    const authDb = env.ION_DB || env.DB;
+
     // Get session ID from Authorization header or cookie
     const authHeader = request.headers.get('Authorization');
     const cookieHeader = request.headers.get('Cookie');
@@ -47,8 +50,8 @@ export async function authMiddleware(
       }
     }
 
-    if (sessionId && env.DB) {
-      const auth = await getSessionByToken(env.DB as D1Database, sessionId);
+    if (sessionId && authDb) {
+      const auth = await getSessionByToken(authDb as D1Database, sessionId);
       if (!auth) {
         return {
           valid: false,
@@ -56,7 +59,7 @@ export async function authMiddleware(
         };
       }
 
-      await touchSession(env.DB as D1Database, auth.session.id);
+      await touchSession(authDb as D1Database, auth.session.id);
 
       return {
         valid: true,
@@ -66,6 +69,7 @@ export async function authMiddleware(
           isAdmin: auth.user.role === 'admin',
           userId: auth.user.id,
           email: auth.user.email,
+          accessTier: auth.accessTier,
         },
       };
     }
@@ -90,7 +94,7 @@ export async function authMiddleware(
 
     return {
       valid: true,
-      context: { sessionId, mode, isAdmin },
+      context: { sessionId, mode, isAdmin, accessTier: 'free' },
     };
   } catch (error: unknown) {
     return {
