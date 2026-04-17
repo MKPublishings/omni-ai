@@ -209,3 +209,181 @@ test("worker /api/ION delivers native stream chunks progressively", async () => 
   const chunkText = new TextDecoder().decode((result as any).value || new Uint8Array());
   assert.match(chunkText, /data:\s*\{"content":"hello"/);
 });
+
+test("worker /api/ION keeps live internet retrieval enabled for freshness-sensitive fast queries", async () => {
+  const originalFetch = globalThis.fetch;
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard")) {
+      return new Response(
+        JSON.stringify({
+          events: [
+            {
+              date: "2026-04-17T19:00Z",
+              links: [{ href: "https://www.espn.com/nba/game/_/gameId/401000001" }],
+              competitions: [
+                {
+                  date: "2026-04-17T19:00Z",
+                  status: { type: { description: "Scheduled" } },
+                  competitors: [
+                    { homeAway: "away", team: { displayName: "Milwaukee Bucks" } },
+                    { homeAway: "home", team: { displayName: "Boston Celtics" } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const env = {
+      AI: {
+        run: async (_model: string, _input: unknown) => ({ response: "Grounded live response." })
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      ASSETS: {
+        fetch: async () => new Response("not-found", { status: 404 })
+      },
+      MODEL_ION: "primary-model"
+    } as any;
+
+    const request = new Request("https://example.test/api/ION?fast=true", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ION-session-id": "worker-live-grounding"
+      },
+      body: JSON.stringify({
+        mode: "auto",
+        fastMode: true,
+        messages: [
+          {
+            role: "user",
+            content: "What NBA games are on today?"
+          }
+        ]
+      })
+    });
+
+    const response = await worker.fetch(request, env, createExecutionContext() as any);
+    const sseText = await response.text();
+    const firstEvent = extractFirstSseEvent(sseText);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("X-ION-Fast-Chat"), "true");
+    assert.equal(response.headers.get("X-ION-Internet-Count"), "1");
+    assert.equal(firstEvent.content, "Grounded live response.");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("worker /api/ION keeps general internet retrieval enabled for lookup-style fast queries", async () => {
+  const originalFetch = globalThis.fetch;
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("html.duckduckgo.com/html/?q=")) {
+      return new Response(
+        `
+          <html>
+            <body>
+              <div class="result">
+                <a class="result__a" href="https://www.microsoft.com/en-us/about/leadership/satya-nadella">Satya Nadella - Microsoft CEO</a>
+                <div class="result__snippet">Satya Nadella is Chairman and Chief Executive Officer of Microsoft.</div>
+              </div>
+            </body>
+          </html>
+        `,
+        {
+          status: 200,
+          headers: { "Content-Type": "text/html; charset=utf-8" }
+        }
+      );
+    }
+
+    if (url.includes("api.duckduckgo.com")) {
+      return new Response(JSON.stringify({ RelatedTopics: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (url.includes("en.wikipedia.org/w/api.php")) {
+      return new Response(JSON.stringify(["", [], [], []]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (url === "https://www.microsoft.com/en-us/about/leadership/satya-nadella") {
+      return new Response(
+        '<html><head><title>Satya Nadella, Chairman and CEO, Microsoft</title></head><body><main>Satya Nadella is Chairman and Chief Executive Officer of Microsoft.</main></body></html>',
+        {
+          status: 200,
+          headers: { "Content-Type": "text/html; charset=utf-8" }
+        }
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const env = {
+      AI: {
+        run: async (_model: string, _input: unknown) => ({ response: "Grounded general web response." })
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      ASSETS: {
+        fetch: async () => new Response("not-found", { status: 404 })
+      },
+      MODEL_ION: "primary-model"
+    } as any;
+
+    const request = new Request("https://example.test/api/ION?fast=true", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ION-session-id": "worker-general-grounding"
+      },
+      body: JSON.stringify({
+        mode: "auto",
+        fastMode: true,
+        messages: [
+          {
+            role: "user",
+            content: "Who is the CEO of Microsoft?"
+          }
+        ]
+      })
+    });
+
+    const response = await worker.fetch(request, env, createExecutionContext() as any);
+    const sseText = await response.text();
+    const firstEvent = extractFirstSseEvent(sseText);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("X-ION-Fast-Chat"), "true");
+    assert.equal(response.headers.get("X-ION-Internet-Count"), "1");
+    assert.equal(firstEvent.content, "Grounded general web response.");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

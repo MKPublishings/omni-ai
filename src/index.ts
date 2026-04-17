@@ -217,7 +217,7 @@ type InternetSearchHit = {
   title: string;
   snippet: string;
   url: string;
-  source: "duckduckgo" | "wikipedia";
+  source: "duckduckgo" | "wikipedia" | "espn";
 };
 
 type InternetWeatherResult = {
@@ -242,7 +242,7 @@ type InternetLearningFact = {
   title: string;
   snippet: string;
   url: string;
-  source: "duckduckgo" | "wikipedia";
+  source: "duckduckgo" | "wikipedia" | "espn";
 };
 
 type InternetLearningEntry = {
@@ -905,6 +905,29 @@ function buildFlexibleResponsePrompt(input: {
   ].join("\n");
 }
 
+function buildSourceDisciplinePrompt(input: {
+  freshnessSensitive: boolean;
+  internetSearchRequested: boolean;
+  internetHitCount: number;
+  weatherLoaded: boolean;
+}): string {
+  return [
+    "Source Discipline Layer is active.",
+    input.freshnessSensitive
+      ? "This request is freshness-sensitive. Treat it as a live-data question."
+      : "Use external context only when it is relevant and available.",
+    input.internetSearchRequested
+      ? "This request depends on external lookup. Prefer retrieved web evidence over model memory."
+      : "External lookup is optional for this request.",
+    `Internet hits loaded: ${input.internetHitCount}.`,
+    `Weather context loaded: ${input.weatherLoaded}.`,
+    "If external facts are present, answer from that retrieved context and keep claims aligned with those sources.",
+    "If external lookup was needed but the retrieved evidence is missing or too thin, say that you could not verify the answer instead of guessing.",
+    "For freshness-sensitive questions, be explicit that the answer depends on current source data.",
+    "Never invent schedules, scores, prices, releases, headlines, or other time-sensitive facts."
+  ].join("\n");
+}
+
 function parseDepartment(value: unknown): Department | null {
   const text = sanitizePromptText(String(value || "")).trim();
   if (text === "Research" || text === "Ops" || text === "Finance" || text === "Creative" || text === "Infra") {
@@ -1137,6 +1160,101 @@ function buildInternetQueries(mode: string, userText: string): string[] {
   return [...new Set([primary, fallback].filter(Boolean))];
 }
 
+function isFreshnessSensitiveQuery(userText: string): boolean {
+  const value = sanitizePromptText(String(userText || "")).trim().toLowerCase();
+  if (!value) return false;
+
+  return /\b(today|tonight|tomorrow|current|currently|latest|live|now|right now|recent|recently|this week|this weekend|schedule|schedules|games|game|match|matches|playing|score|scores|standings|odds|price|prices|stock|weather|forecast|traffic|news|breaking|release date|availability)\b/i.test(value);
+}
+
+function isGeneralInternetLookupQuery(userText: string): boolean {
+  const value = sanitizePromptText(String(userText || "")).trim();
+  if (!value) return false;
+
+  const factualPattern = /\b(who is|who are|what is|what are|when is|when did|where is|where are|which is|which are|how many|how much|find|search|lookup|look up|show me|list|official site|official website|homepage|documentation|docs|guide|reference|compare|vs\.?|benchmark|release|update|price|population|capital|schedule|games|game|news)\b/i;
+  const questionPattern = /\?$/;
+  const internalPattern = /\b(ion|ion ai|ionirix|repo|repository|workspace|dashboard|project|codebase|code|file|component|route|worker|build)\b/i;
+
+  return factualPattern.test(value) || (questionPattern.test(value) && !internalPattern.test(value));
+}
+
+function isNBAScheduleQuery(userText: string): boolean {
+  const value = sanitizePromptText(String(userText || "")).trim().toLowerCase();
+  if (!value) return false;
+
+  return /\b(nba|basketball)\b/i.test(value) && /\b(game|games|schedule|matchup|matchups|playing|today|tonight|on today)\b/i.test(value);
+}
+
+function formatDateForScoreboard(timeZone: string): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+
+  return formatter.format(new Date()).replace(/-/g, "");
+}
+
+async function searchNBASchedule(userText: string): Promise<InternetSearchHit[]> {
+  if (!isNBAScheduleQuery(userText)) {
+    return [];
+  }
+
+  const scoreboardDate = formatDateForScoreboard("America/New_York");
+  const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${scoreboardDate}`;
+  const response = await fetch(apiUrl, {
+    method: "GET",
+    headers: {
+      "User-Agent": "IONAi/1.0 (+live-sports-retrieval)"
+    }
+  });
+  if (!response.ok) return [];
+
+  const payload = (await response.json()) as any;
+  const events = Array.isArray(payload?.events) ? payload.events : [];
+  const dateLabel = `${scoreboardDate.slice(0, 4)}-${scoreboardDate.slice(4, 6)}-${scoreboardDate.slice(6, 8)}`;
+  const scoreboardUrl = `https://www.espn.com/nba/scoreboard/_/date/${scoreboardDate}`;
+
+  if (!events.length) {
+    return [
+      {
+        title: `NBA schedule for ${dateLabel}`,
+        snippet: `ESPN scoreboard reports no NBA games scheduled for ${dateLabel}.`,
+        url: scoreboardUrl,
+        source: "espn"
+      }
+    ];
+  }
+
+  return events.slice(0, 10).map((event: any) => {
+    const competition = Array.isArray(event?.competitions) ? event.competitions[0] : null;
+    const competitors = Array.isArray(competition?.competitors) ? competition.competitors : [];
+    const away = competitors.find((team: any) => team?.homeAway === "away");
+    const home = competitors.find((team: any) => team?.homeAway === "home");
+    const awayName = sanitizePromptText(String(away?.team?.displayName || away?.team?.shortDisplayName || "Away Team")).trim();
+    const homeName = sanitizePromptText(String(home?.team?.displayName || home?.team?.shortDisplayName || "Home Team")).trim();
+    const status = sanitizePromptText(String(competition?.status?.type?.description || event?.status?.type?.description || "Scheduled")).trim();
+    const broadcast = Array.isArray(competition?.broadcasts)
+      ? competition.broadcasts.map((item: any) => sanitizePromptText(String(item?.names?.[0] || "")).trim()).filter(Boolean).join(", ")
+      : "";
+    const startTime = sanitizePromptText(String(competition?.date || event?.date || "")).trim();
+    const url = sanitizePromptText(String(event?.links?.[0]?.href || competition?.links?.[0]?.href || scoreboardUrl)).trim();
+
+    return {
+      title: `${awayName} at ${homeName}`,
+      snippet: [
+        `NBA scoreboard for ${dateLabel}.`,
+        `Status: ${status}.`,
+        startTime ? `Start: ${startTime}.` : "",
+        broadcast ? `Broadcast: ${broadcast}.` : ""
+      ].filter(Boolean).join(" "),
+      url,
+      source: "espn" as const
+    };
+  });
+}
+
 function flattenDuckDuckGoTopics(items: any[], collector: InternetSearchHit[]): void {
   for (const item of items || []) {
     if (item?.Topics && Array.isArray(item.Topics)) {
@@ -1155,6 +1273,97 @@ function flattenDuckDuckGoTopics(items: any[], collector: InternetSearchHit[]): 
       source: "duckduckgo"
     });
   }
+}
+
+function decodeHtmlEntities(value: string): string {
+  return String(value || "")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#x2F;/gi, "/")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#x3D;/gi, "=")
+    .replace(/&#(\d+);/g, (_match, code) => {
+      const value = Number(code);
+      return Number.isFinite(value) ? String.fromCharCode(value) : "";
+    });
+}
+
+function normalizeDuckDuckGoResultUrl(rawUrl: string): string {
+  const value = decodeHtmlEntities(String(rawUrl || "")).trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value, "https://duckduckgo.com");
+    const redirect = parsed.searchParams.get("uddg");
+    if (redirect) {
+      return decodeURIComponent(redirect);
+    }
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+}
+
+async function searchDuckDuckGoWeb(query: string, limit = 5): Promise<InternetSearchHit[]> {
+  const target = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  const response = await fetch(target, {
+    method: "GET",
+    headers: {
+      "User-Agent": "IONAi/1.0 (+web-search)",
+      "Accept-Language": "en-US,en;q=0.9"
+    }
+  });
+  if (!response.ok) return [];
+
+  const html = await response.text();
+  const hits: InternetSearchHit[] = [];
+  const anchorPattern = /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let match = anchorPattern.exec(html);
+
+  while (match && hits.length < Math.max(1, limit)) {
+    const [fullMatch, href, rawTitle] = match;
+    const startIndex = match.index ?? 0;
+    const localWindow = html.slice(startIndex, startIndex + Math.max(fullMatch.length + 1200, 1600));
+    const snippetMatch = localWindow.match(/<(?:a|div)[^>]*class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/(?:a|div)>/i);
+    const title = sanitizePromptText(stripHtmlToText(decodeHtmlEntities(rawTitle || ""))).trim();
+    const snippet = sanitizePromptText(stripHtmlToText(decodeHtmlEntities(snippetMatch?.[1] || ""))).trim();
+    const url = sanitizePromptText(normalizeDuckDuckGoResultUrl(href || "")).trim();
+
+    if (title && url) {
+      hits.push({
+        title: title.slice(0, 160),
+        snippet: snippet.slice(0, 400),
+        url,
+        source: "duckduckgo"
+      });
+    }
+
+    match = anchorPattern.exec(html);
+  }
+
+  return hits;
+}
+
+async function enrichInternetHits(hits: InternetSearchHit[], maxInspections = 3): Promise<InternetSearchHit[]> {
+  const inspections = await Promise.all(
+    hits.slice(0, Math.max(0, maxInspections)).map((hit) => withTimeout(inspectWebsite(hit.url), 1200, null))
+  );
+
+  return hits.map((hit, index) => {
+    const inspection = index < inspections.length ? inspections[index] : null;
+    if (!inspection) return hit;
+
+    return {
+      ...hit,
+      title: sanitizePromptText(String(inspection.title || hit.title)).slice(0, 160) || hit.title,
+      snippet: sanitizePromptText(String(inspection.contentPreview || inspection.excerpt || hit.snippet)).slice(0, 400) || hit.snippet,
+      url: inspection.url || hit.url
+    };
+  });
 }
 
 async function searchDuckDuckGo(query: string, limit = 4): Promise<InternetSearchHit[]> {
@@ -1227,6 +1436,14 @@ function dedupeInternetHits(hits: InternetSearchHit[], limit: number): InternetS
 async function performModeAwareInternetSearch(mode: string, userText: string): Promise<{ profile: InternetSearchProfile; hits: InternetSearchHit[] }> {
   const key = normalizeInternetMode(mode);
   const profile = INTERNET_MODE_PROFILES[key];
+  const sportsHits = await searchNBASchedule(userText);
+  if (sportsHits.length) {
+    return {
+      profile,
+      hits: dedupeInternetHits(sportsHits, Math.max(profile.limit, sportsHits.length))
+    };
+  }
+
   const queries = buildInternetQueries(key, userText);
   if (!queries.length) {
     return { profile, hits: [] };
@@ -1234,23 +1451,29 @@ async function performModeAwareInternetSearch(mode: string, userText: string): P
 
   const collected: InternetSearchHit[] = [];
   for (const query of queries.slice(0, 2)) {
-    const [ddg, wiki] = await Promise.all([
+    const [ddgWeb, ddg, wiki] = await Promise.all([
+      searchDuckDuckGoWeb(query, profile.limit + 1),
       searchDuckDuckGo(query, profile.limit),
       searchWikipedia(query, profile.limit)
     ]);
-    collected.push(...ddg, ...wiki);
+    collected.push(...ddgWeb, ...ddg, ...wiki);
     if (collected.length >= profile.limit * 2) break;
   }
 
+  const deduped = dedupeInternetHits(collected, Math.max(profile.limit + 2, 6));
+  const enriched = await enrichInternetHits(deduped, Math.min(3, deduped.length));
+
   return {
     profile,
-    hits: dedupeInternetHits(collected, profile.limit)
+    hits: dedupeInternetHits(enriched, profile.limit)
   };
 }
 
 function shouldUseInternetSearch(userText: string, mode: string): boolean {
   const value = String(userText || "").trim();
   if (!value) return false;
+  if (isNBAScheduleQuery(value)) return true;
+  if (isGeneralInternetLookupQuery(value)) return true;
   const normalized = normalizeInternetMode(mode);
   if (normalized === "simulation" || normalized === "cosmic" || normalized === "multiverse") return false;
   const intentPattern = /\b(latest|current|today|news|recent|what is|how to|documentation|docs|guide|compare|vs\.?|benchmark|release|update)\b/i;
@@ -1589,7 +1812,12 @@ async function loadInternetLearningStore(env: Env): Promise<InternetLearningStor
                 title: sanitizePromptText(String(fact?.title || "")).slice(0, 180),
                 snippet: sanitizePromptText(String(fact?.snippet || "")).slice(0, 420),
                 url: sanitizePromptText(String(fact?.url || "")).slice(0, 360),
-                source: fact?.source === "wikipedia" ? "wikipedia" : "duckduckgo"
+                source:
+                  fact?.source === "wikipedia"
+                    ? "wikipedia"
+                    : fact?.source === "espn"
+                      ? "espn"
+                      : "duckduckgo"
               })).filter((fact) => Boolean(fact.title && fact.url))
             : []
         }))
@@ -4236,6 +4464,7 @@ export default {
           : null;
         const simulationContext = engineSimulationContext || cosmicSimulationContext || multiverseSimulationContext;
         const requestCountryCode = getRequestCountryCode(request);
+        const freshnessSensitiveQuery = isFreshnessSensitiveQuery(latestUserText);
         const fastChatEnabled =
           isEnabledFlag(env.ION_FAST_CHAT) ||
           body?.fastMode === true ||
@@ -4366,13 +4595,14 @@ export default {
           )
         );
 
+        const allowInternetLookupInFastMode = shouldUseInternetSearch(latestUserText, normalizedMode);
         const shouldLoadMemoryArc = !isStatefulSimulationMode && !fastChatEnabled && chatPreferences?.contextCarryover !== false;
-        const shouldLoadInternetLearning = !fastChatEnabled;
-        const shouldLoadWeather = !fastChatEnabled && shouldUseWeatherContext(latestUserText);
+        const shouldLoadInternetLearning = !fastChatEnabled && !freshnessSensitiveQuery;
+        const shouldLoadWeather = (allowInternetLookupInFastMode || !fastChatEnabled) && shouldUseWeatherContext(latestUserText);
         const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
         const shouldUseKnowledge = !fastChatEnabled && shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
         const shouldLoadSystemModules = !fastChatEnabled && shouldUseSystemKnowledge(normalizedMode, latestUserText);
-        const shouldLoadInternetSearch = !fastChatEnabled && shouldUseInternetSearch(latestUserText, normalizedMode);
+        const shouldLoadInternetSearch = (allowInternetLookupInFastMode || !fastChatEnabled) && shouldUseInternetSearch(latestUserText, normalizedMode);
 
         const memoryArcPromise = shouldLoadMemoryArc
           ? userId
@@ -4523,6 +4753,18 @@ export default {
           }
           }
         }
+
+        promptSystemMessages.push(
+          makeContextSystemMessage(
+            "Source Discipline",
+            buildSourceDisciplinePrompt({
+              freshnessSensitive: freshnessSensitiveQuery,
+              internetSearchRequested: shouldLoadInternetSearch,
+              internetHitCount,
+              weatherLoaded: shouldLoadWeather
+            })
+          )
+        );
 
         const enrichedMessages: IONMessage[] = [...promptSystemMessages, ...requestCtx.messages];
 

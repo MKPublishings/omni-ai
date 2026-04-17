@@ -158,6 +158,19 @@ function inferRequestedOutput(message: string) {
   return 'adaptive'
 }
 
+function requiresInternetGrounding(message: string) {
+  const normalized = String(message || '').trim().toLowerCase()
+  if (!normalized) {
+    return false
+  }
+
+  const livePattern = /\b(today|tonight|tomorrow|current|currently|latest|live|now|right now|recent|news|schedule|games|game|score|scores|standings|odds|price|prices|stock|weather|forecast|traffic|release|released|availability)\b/
+  const factualPattern = /\b(who is|who are|what is|what are|when is|when did|where is|where are|which is|which are|how many|how much|find|search|lookup|look up|show me|list|official site|official website|homepage|documentation|docs|guide|reference|compare|vs\.?|benchmark|update)\b/
+  const internalPattern = /\b(ion|repo|repository|workspace|dashboard|project|codebase|code|file|component|route|worker|build)\b/
+
+  return livePattern.test(normalized) || factualPattern.test(normalized) || (normalized.endsWith('?') && !internalPattern.test(normalized))
+}
+
 function extractAssistantContent(rawText: string) {
   const chunks: string[] = []
   let imageDataUrl = ''
@@ -464,7 +477,9 @@ export default function AssistantPage() {
     try {
       const token = getStoredToken()
       const imageRequest = isImagePrompt(message)
-      const response = await fetch(getApiUrl(imageRequest ? '/api/image' : '/api/ION?fast=true'), {
+      const groundedInternetQuery = !imageRequest && requiresInternetGrounding(message)
+      const ionPath = groundedInternetQuery ? '/api/ION' : '/api/ION?fast=true'
+      const response = await fetch(getApiUrl(imageRequest ? '/api/image' : ionPath), {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -479,7 +494,7 @@ export default function AssistantPage() {
               }
             : {
                 mode: 'auto',
-                fastMode: true,
+                fastMode: !groundedInternetQuery,
                 conversationHints: {
                   requestedOutput: inferRequestedOutput(message),
                 },
