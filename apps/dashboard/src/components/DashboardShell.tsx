@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { clsx } from 'clsx'
 import { AmbientBackground } from './AmbientBackground'
 import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
