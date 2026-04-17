@@ -38,7 +38,8 @@ function parseMessageSegments(content: string): MessageSegment[] {
   const fencePattern = /```([\w.+-]*)\n([\s\S]*?)```/g
   let lastIndex = 0
 
-  for (const match of source.matchAll(fencePattern)) {
+  let match = fencePattern.exec(source)
+  while (match) {
     const index = match.index ?? 0
     const [fullMatch, language, code] = match
     const preceding = source.slice(lastIndex, index)
@@ -52,6 +53,7 @@ function parseMessageSegments(content: string): MessageSegment[] {
       language: String(language || 'text').trim() || 'text',
     })
     lastIndex = index + fullMatch.length
+    match = fencePattern.exec(source)
   }
 
   const trailing = source.slice(lastIndex)
