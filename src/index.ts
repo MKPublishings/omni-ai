@@ -850,10 +850,11 @@ function buildReasoningPlannerPrompt(input: {
 
   return [
     "Reasoning plan before answering:",
-    "1) Identify the exact task and required output format.",
+    "1) Identify the exact task and any explicit output-format request.",
     "2) Prefer user-provided context, memory, and retrieved evidence over assumptions.",
     "3) Keep response mode-consistent and avoid drift into unrelated domains.",
-    "4) Before finalizing, run a short self-check for contradictions and missing constraints.",
+    "4) If no format is specified, choose the structure that best serves the task instead of forcing a default template.",
+    "5) Before finalizing, run a short self-check for contradictions and missing constraints.",
     "",
     `Mode context: ${mode}`,
     latestUserText ? `Latest user text: ${latestUserText}` : "",
@@ -862,6 +863,46 @@ function buildReasoningPlannerPrompt(input: {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function inferFlexibleResponseShape(latestUserText: string, requestedOutput: string): string {
+  const explicit = sanitizePromptText(String(requestedOutput || "")).trim().toLowerCase();
+  if (explicit && explicit !== "general") {
+    return explicit;
+  }
+
+  const text = sanitizePromptText(String(latestUserText || "")).trim().toLowerCase();
+  if (!text) return "adaptive";
+
+  if (/\b(json|yaml|xml|csv)\b/.test(text)) return "structured data";
+  if (/\b(code|script|snippet|function|component|tsx|typescript|javascript|python|sql|regex|bash|powershell|shell)\b/.test(text)) return "code block";
+  if (/\b(table|matrix|columns|tabular|spreadsheet)\b/.test(text)) return "table";
+  if (/\b(bullet|bullets|list|checklist|steps|outline)\b/.test(text)) return "bullet list";
+  if (/\b(quote|quotes|excerpt|excerpts|citation|citations)\b/.test(text)) return "quoted excerpt";
+  if (/\b(annotation|annotate|annotations|commentary|commented)\b/.test(text)) return "annotated notes";
+  if (/\b(graph|chart|plot|timeline|diagram|ascii|text graph|text chart|text visual|box drawing)\b/.test(text)) return "text visual";
+  if (/\b(compare|comparison|pros and cons|trade-?off|versus|vs\.?|options)\b/.test(text)) return "comparison layout";
+  return "adaptive";
+}
+
+function buildFlexibleResponsePrompt(input: {
+  latestUserText: string;
+  requestedOutput: string;
+  route: string;
+  mode: string;
+}): string {
+  const preferredShape = inferFlexibleResponseShape(input.latestUserText, input.requestedOutput);
+
+  return [
+    "Response Flexibility Layer is active.",
+    `Mode context: ${sanitizePromptText(String(input.mode || "auto")) || "auto"}`,
+    `Preferred response shape: ${preferredShape}`,
+    `Active route: ${sanitizePromptText(String(input.route || "chat")) || "chat"}`,
+    "Match the user's requested format exactly when they specify one.",
+    "If the user does not specify a format, choose the most useful shape for the task.",
+    "Valid response shapes include plain text, paragraphs, bullet lists, numbered steps, excerpts, annotations, quotes, compact data layouts, symbols, fenced code blocks, copyable scripts, tables, and text-based visuals such as ASCII charts or diagrams.",
+    "Do not force every answer into the same style, and do not add image-description boilerplate unless the user explicitly asks for an image analysis or caption."
+  ].join("\n");
 }
 
 function parseDepartment(value: unknown): Department | null {
@@ -4310,6 +4351,17 @@ export default {
               latestUserText,
               conversationDigest,
               conversationHints
+            })
+          )
+        );
+        promptSystemMessages.push(
+          makeContextSystemMessage(
+            "Response Flexibility",
+            buildFlexibleResponsePrompt({
+              latestUserText,
+              requestedOutput: conversationHints.requestedOutput,
+              route: orchestratorDecision.route,
+              mode: normalizedMode
             })
           )
         );

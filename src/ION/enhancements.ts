@@ -215,7 +215,7 @@ export function buildModeTemplate(options: PromptTemplateOptions): string {
       "Auto Mode is active.",
       "Infer intent from the latest user request and adapt response style accordingly.",
       "Prioritize clarity, correctness, and practical next steps.",
-      "When intent is mixed, produce a balanced output that remains concise and structured."
+      "When the user does not specify a format, choose the response shape that best fits the task instead of forcing one house style."
     ].join("\n");
   }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
-import { getApiUrl, getStoredToken, getStoredUser } from '@/lib/auth'
+import { getApiUrl, getStoredToken } from '@/lib/auth'
 import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
 
@@ -142,6 +142,22 @@ function buildChatMessages(messages: ConversationMessage[], latestMessage: strin
     }))
 }
 
+function inferRequestedOutput(message: string) {
+  const normalized = String(message || '').trim().toLowerCase()
+  if (!normalized) {
+    return 'adaptive'
+  }
+
+  if (/\b(json|yaml|xml|csv)\b/.test(normalized)) return 'structured data'
+  if (/\b(code|script|snippet|function|component|tsx|typescript|javascript|python|sql|regex|bash|powershell|shell)\b/.test(normalized)) return 'code block'
+  if (/\b(table|matrix|tabular|columns)\b/.test(normalized)) return 'table'
+  if (/\b(bullet|bullets|list|checklist|steps|outline)\b/.test(normalized)) return 'bullet list'
+  if (/\b(annotation|annotate|annotations)\b/.test(normalized)) return 'annotated notes'
+  if (/\b(quote|quotes|excerpt|excerpts)\b/.test(normalized)) return 'quoted excerpt'
+  if (/\b(graph|chart|diagram|ascii|text visual|text graph|text chart)\b/.test(normalized)) return 'text visual'
+  return 'adaptive'
+}
+
 function extractAssistantContent(rawText: string) {
   const chunks: string[] = []
   let imageDataUrl = ''
@@ -198,14 +214,113 @@ function isImagePrompt(message: string) {
 }
 
 function buildImageSuccessCopy(message: string, filename?: string) {
-  const cleaned = String(message || '').trim()
-  if (cleaned) {
-    return `Your image is ready. ${filename ? `You can preview or download ${filename}.` : 'You can preview or download it below.'}`
+  void message
+  void filename
+  return ''
+}
+
+type AssistantPayload = {
+  ok: boolean
+  content: string
+  imageDataUrl: string
+  imageFilename: string
+  imageModel: string
+}
+
+type StreamingPayload = {
+  content?: string
+  response?: string
+  error?: string
+  imageDataUrl?: string
+  image?: {
+    filename?: string
+    model?: string
+  }
+}
+
+function accumulateStreamingPayload(current: AssistantPayload, parsed: StreamingPayload): AssistantPayload {
+  const value = parsed.content || parsed.response || parsed.error || ''
+
+  return {
+    ok: current.ok,
+    content: `${current.content}${value}`,
+    imageDataUrl: current.imageDataUrl || parsed.imageDataUrl || '',
+    imageFilename: current.imageFilename || parsed.image?.filename || '',
+    imageModel: current.imageModel || parsed.image?.model || '',
+  }
+}
+
+function createEmptyAssistantPayload(ok: boolean): AssistantPayload {
+  return {
+    ok,
+    content: '',
+    imageDataUrl: '',
+    imageFilename: '',
+    imageModel: '',
+  }
+}
+
+async function streamAssistantResponse(
+  response: Response,
+  onProgress: (payload: AssistantPayload) => void,
+): Promise<AssistantPayload> {
+  const stream = response.body
+  if (!stream) {
+    return createEmptyAssistantPayload(response.ok)
   }
 
-  return filename
-    ? `Your image is ready. You can preview or download ${filename} below.`
-    : 'Your image is ready. You can preview or download it below.'
+  const reader = stream.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let payload = createEmptyAssistantPayload(response.ok)
+
+  const applyEventData = (rawEvent: string) => {
+    const eventData = rawEvent
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).trim())
+      .join('')
+
+    if (!eventData || eventData === '[DONE]') {
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(eventData) as StreamingPayload
+      payload = accumulateStreamingPayload(payload, parsed)
+    } catch {
+      payload = {
+        ...payload,
+        content: `${payload.content}${eventData}`,
+      }
+    }
+
+    onProgress(payload)
+  }
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) {
+      break
+    }
+
+    buffer += decoder.decode(value, { stream: true })
+
+    const events = buffer.split(/\r?\n\r?\n/)
+    buffer = events.pop() || ''
+
+    for (const event of events) {
+      applyEventData(event)
+    }
+  }
+
+  buffer += decoder.decode()
+  if (buffer.trim()) {
+    applyEventData(buffer)
+  }
+
+  return payload
 }
 
 async function parseAssistantResponse(response: Response) {
@@ -241,6 +356,33 @@ export default function AssistantPage() {
   const [isThinking, setIsThinking] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [focusMode, setFocusMode] = useState(false)
+
+  const upsertAssistantMessage = (id: string, patch: Partial<ConversationMessage>) => {
+    setMessages((current) => {
+      const exists = current.some((message) => message.id === id)
+      if (!exists) {
+        return [
+          ...current,
+          {
+            id,
+            type: 'ai',
+            content: '',
+            timestamp: new Date(),
+            ...patch,
+          },
+        ]
+      }
+
+      return current.map((message) =>
+        message.id === id
+          ? {
+              ...message,
+              ...patch,
+            }
+          : message,
+      )
+    })
+  }
 
   useEffect(() => {
     writeCachedMessages(messages)
@@ -307,12 +449,14 @@ export default function AssistantPage() {
   }, [])
 
   const handleSendMessage = async (message: string) => {
+    const now = Date.now()
     const userMessage: ConversationMessage = {
-      id: `${Date.now()}`,
+      id: `${now}`,
       type: 'user',
       content: message,
       timestamp: new Date(),
     }
+    const assistantMessageId = `${now}-reply`
 
     setMessages((current) => [...current, userMessage])
     setIsThinking(true)
@@ -336,10 +480,62 @@ export default function AssistantPage() {
             : {
                 mode: 'auto',
                 fastMode: true,
-                messages: buildChatMessages(messages, `${message}\n\nContext: ION AI assistant dashboard page. Respond as an operator-facing assistant. If the user asks for an image, generate it instead of only describing it.`),
+                conversationHints: {
+                  requestedOutput: inferRequestedOutput(message),
+                },
+                messages: buildChatMessages(messages, message),
               }
         ),
       })
+
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('text/event-stream')) {
+        upsertAssistantMessage(assistantMessageId, {
+          content: '',
+          timestamp: new Date(),
+        })
+        setIsThinking(false)
+
+        const streamed = await streamAssistantResponse(response, (streamPayload) => {
+          const nextContent = streamPayload.ok
+            ? streamPayload.imageDataUrl
+              ? buildImageSuccessCopy(message, streamPayload.imageFilename)
+              : streamPayload.content
+            : streamPayload.content || 'The ION runtime rejected the request. Check credentials or deployment health and try again.'
+
+          upsertAssistantMessage(assistantMessageId, {
+            content: nextContent,
+            timestamp: new Date(),
+            image: streamPayload.imageDataUrl
+              ? {
+                  src: streamPayload.imageDataUrl,
+                  filename: streamPayload.imageFilename,
+                  model: streamPayload.imageModel,
+                }
+              : undefined,
+          })
+        })
+
+        const finalContent = streamed.ok
+          ? streamed.imageDataUrl
+            ? buildImageSuccessCopy(message, streamed.imageFilename)
+            : streamed.content || 'The reasoning engine completed without a formatted response body.'
+          : streamed.content || 'The ION runtime rejected the request. Check credentials or deployment health and try again.'
+
+        upsertAssistantMessage(assistantMessageId, {
+          content: finalContent,
+          timestamp: new Date(),
+          image: streamed.imageDataUrl
+            ? {
+                src: streamed.imageDataUrl,
+                filename: streamed.imageFilename,
+                model: streamed.imageModel,
+              }
+            : undefined,
+        })
+
+        return
+      }
 
       const payload = await parseAssistantResponse(response)
       const content = payload.ok
@@ -351,7 +547,7 @@ export default function AssistantPage() {
       setMessages((current) => [
         ...current,
         {
-          id: `${Date.now()}-reply`,
+          id: assistantMessageId,
           type: 'ai',
           content,
           timestamp: new Date(),

@@ -24,8 +24,88 @@ interface AIConversationPanelProps extends HTMLAttributes<HTMLDivElement> {
   onToggleFocus?: () => void
 }
 
+type MessageSegment =
+  | { type: 'text'; content: string }
+  | { type: 'code'; content: string; language: string }
+
+function parseMessageSegments(content: string): MessageSegment[] {
+  const source = String(content || '').replace(/\r\n/g, '\n')
+  if (!source.trim()) {
+    return []
+  }
+
+  const segments: MessageSegment[] = []
+  const fencePattern = /```([\w.+-]*)\n([\s\S]*?)```/g
+  let lastIndex = 0
+
+  for (const match of source.matchAll(fencePattern)) {
+    const index = match.index ?? 0
+    const [fullMatch, language, code] = match
+    const preceding = source.slice(lastIndex, index)
+    if (preceding.trim()) {
+      segments.push({ type: 'text', content: preceding.trim() })
+    }
+
+    segments.push({
+      type: 'code',
+      content: String(code || '').replace(/\n$/, ''),
+      language: String(language || 'text').trim() || 'text',
+    })
+    lastIndex = index + fullMatch.length
+  }
+
+  const trailing = source.slice(lastIndex)
+  if (trailing.trim()) {
+    segments.push({ type: 'text', content: trailing.trim() })
+  }
+
+  return segments.length > 0 ? segments : [{ type: 'text', content: source.trim() }]
+}
+
+function looksPreformattedText(content: string) {
+  const value = String(content || '')
+  const lines = value.split('\n').filter((line) => line.trim().length > 0)
+  if (lines.length < 2) {
+    return false
+  }
+
+  return /(^|\n)\s{2,}\S|[┌┐└┘│─├┤┬┴┼█▁▂▃▄▅▆▇]/.test(value) || lines.filter((line) => /\|/.test(line)).length >= 2
+}
+
+function renderMessageText(content: string) {
+  const segments = parseMessageSegments(content)
+
+  return segments.map((segment, index) => {
+    if (segment.type === 'code') {
+      return (
+        <div key={`code-${index}`} className="overflow-hidden rounded-2xl border border-quantum-white/12 bg-pine-black-900/70">
+          <div className="border-b border-quantum-white/8 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-quantum-white/48">
+            {segment.language}
+          </div>
+          <pre className="chat-selectable overflow-x-auto px-3 py-3 text-[12px] leading-6 text-spectral-cyan-300 sm:px-4 sm:text-[13px]"><code>{segment.content}</code></pre>
+        </div>
+      )
+    }
+
+    if (looksPreformattedText(segment.content)) {
+      return (
+        <pre key={`text-${index}`} className="chat-selectable overflow-x-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-quantum-white sm:text-[13px]">
+          {segment.content}
+        </pre>
+      )
+    }
+
+    return (
+      <div key={`text-${index}`} className="chat-selectable whitespace-pre-wrap break-words text-sm leading-6 text-quantum-white sm:text-[0.95rem] sm:leading-7">
+        {segment.content}
+      </div>
+    )
+  })
+}
+
 const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.type === 'user'
+  const renderedSegments = message.content ? renderMessageText(message.content) : []
 
   return (
     <div className={clsx(
@@ -38,7 +118,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'
       )}>
-        {message.content ? <p className="chat-selectable text-sm leading-6 sm:text-[0.95rem] sm:leading-7">{message.content}</p> : null}
+        {renderedSegments.length > 0 ? <div className="space-y-3">{renderedSegments}</div> : null}
         {message.image ? (
           <div className={clsx(message.content ? 'mt-3' : '')}>
             <img
