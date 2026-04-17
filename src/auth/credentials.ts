@@ -4,7 +4,7 @@ const MAX_SUPPORTED_PASSWORD_ITERATIONS = 100000;
 const PASSWORD_KEY_LENGTH = 32;
 const SESSION_TOKEN_BYTES = 32;
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
-const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24;
+const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 30;
 
 export interface AuthUserRecord {
   id: string;
@@ -38,6 +38,13 @@ export interface AuthEmailVerificationRecord {
   expires_at: string;
   created_at: string;
   consumed_at: string | null;
+}
+
+export type EmailVerificationConsumeStatus = 'verified' | 'not_found' | 'used' | 'expired';
+
+export interface EmailVerificationConsumeResult {
+  status: EmailVerificationConsumeStatus;
+  user?: AuthenticatedUser;
 }
 
 export type AccessTier = 'free' | 'premium' | 'enterprise';
@@ -398,7 +405,7 @@ export async function createEmailVerification(
 export async function consumeEmailVerificationToken(
   db: D1Database,
   token: string
-): Promise<AuthenticatedUser | null> {
+): Promise<EmailVerificationConsumeResult> {
   const tokenHash = await hashSessionToken(token);
   const result = await db
     .prepare(
@@ -428,16 +435,16 @@ export async function consumeEmailVerificationToken(
     .first<Record<string, unknown>>();
 
   if (!result) {
-    return null;
+    return { status: 'not_found' };
   }
 
   if (result.verification_consumed_at) {
-    return null;
+    return { status: 'used' };
   }
 
   const expiresAt = new Date(String(result.verification_expires_at));
   if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
-    return null;
+    return { status: 'expired' };
   }
 
   const now = new Date().toISOString();
@@ -446,7 +453,9 @@ export async function consumeEmailVerificationToken(
     db.prepare('UPDATE auth_users SET email_verified = 1, updated_at = ? WHERE id = ?').bind(now, String(result.user_id)),
   ]);
 
-  return mapUser({
+  return {
+    status: 'verified',
+    user: mapUser({
     id: String(result.user_id),
     username: String(result.user_username),
     email: String(result.user_email),
@@ -457,7 +466,8 @@ export async function consumeEmailVerificationToken(
     created_at: String(result.user_created_at),
     updated_at: now,
     last_login_at: result.user_last_login_at ? String(result.user_last_login_at) : null,
-  });
+    }),
+  };
 }
 
 export async function updateUserProfile(

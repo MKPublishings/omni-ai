@@ -31,30 +31,40 @@ function escapeHtml(value: string): string {
 }
 
 function buildVerificationEmailContent(input: VerificationEmailInput): { subject: string; text: string; html: string } {
-  const safeName = escapeHtml(input.displayName || 'there');
+  const greetingName = String(input.displayName || '').trim() || 'there';
+  const safeName = escapeHtml(greetingName);
   const safeUrl = escapeHtml(input.verificationUrl);
-  const subject = 'Verify your Ionirix email';
+  const subject = 'Verify your Ionirix account';
   const text = [
-    `Hello ${input.displayName || 'there'},`,
+    `Hi ${greetingName},`,
     '',
-    'Verify your email to finish activating your Ionirix account.',
+    'Welcome to Ionirix — your access point to sovereign, high-integrity AI systems.',
+    '',
+    'To activate your account, please verify your email address by using the secure link below:',
     '',
     input.verificationUrl,
     '',
-    'This link expires in 24 hours.',
+    'If you did not create an Ionirix account, you can safely ignore this message.',
+    '',
+    'Ionirix LLC',
+    'Sovereign AI Infrastructure',
   ].join('\n');
   const html = `
-    <div style="background:#071018;padding:32px 20px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e7edf7;">
-      <div style="max-width:560px;margin:0 auto;background:linear-gradient(180deg,rgba(16,25,43,0.96),rgba(10,16,28,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,0.35);">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:#34d6ff;color:#071018;font-weight:700;font-size:14px;letter-spacing:0.08em;">IX</div>
-        <p style="margin:18px 0 0;color:rgba(231,237,247,0.62);font-size:12px;letter-spacing:0.24em;text-transform:uppercase;">Ionirix</p>
-        <h1 style="margin:10px 0 0;font-size:28px;line-height:1.2;color:#f7fbff;">Verify your email</h1>
-        <p style="margin:18px 0 0;font-size:15px;line-height:1.7;color:rgba(231,237,247,0.78);">Hello ${safeName}, activate your Ionirix account by verifying your email address.</p>
+    <div style="background:#061018;padding:32px 18px;font-family:'Segoe UI',Arial,sans-serif;color:#e8eef7;">
+      <div style="max-width:560px;margin:0 auto;border-radius:28px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#0d1726 0%,#09111c 100%);padding:36px 32px;box-shadow:0 32px 90px rgba(0,0,0,0.4);">
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:16px;background:#6be5ff;color:#061018;font-size:13px;font-weight:700;letter-spacing:0.14em;">IX</div>
+        <p style="margin:18px 0 0;font-size:11px;line-height:1.4;letter-spacing:0.28em;text-transform:uppercase;color:rgba(232,238,247,0.52);">Ionirix</p>
+        <h1 style="margin:10px 0 0;font-size:30px;line-height:1.15;color:#f7fbff;">Verify your account</h1>
+        <p style="margin:22px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">Hi ${safeName},</p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">Welcome to Ionirix — your access point to sovereign, high-integrity AI systems.</p>
+        <p style="margin:12px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">To activate your account, please verify your email address by using the secure link below.</p>
         <div style="margin-top:28px;">
-          <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#2d8cff;color:#ffffff;text-decoration:none;font-weight:600;">Verify email</a>
+          <a href="${safeUrl}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#0f8cff;color:#ffffff;text-decoration:none;font-weight:600;letter-spacing:0.01em;">Verify your Ionirix account</a>
         </div>
-        <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:rgba(231,237,247,0.58);">This link expires in 24 hours. If the button does not open, copy and paste this URL into your browser:</p>
+        <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:rgba(232,238,247,0.54);">If the button does not open, copy and paste this URL into your browser:</p>
         <p style="margin:12px 0 0;word-break:break-all;font-size:12px;line-height:1.7;color:#7be5ff;">${safeUrl}</p>
+        <p style="margin:22px 0 0;font-size:13px;line-height:1.75;color:rgba(232,238,247,0.56);">If you did not create an Ionirix account, you can safely ignore this message.</p>
+        <p style="margin:26px 0 0;font-size:13px;line-height:1.7;color:rgba(232,238,247,0.66);">Ionirix LLC<br/>Sovereign AI Infrastructure</p>
       </div>
     </div>
   `;

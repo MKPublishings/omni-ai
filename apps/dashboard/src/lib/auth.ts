@@ -15,6 +15,14 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface VerifyEmailResponse {
+  ok: boolean;
+  user?: AuthUser;
+  verified?: boolean;
+  code?: string;
+  error?: string;
+}
+
 const TOKEN_KEY = 'ion_token';
 const USER_KEY = 'ion_user';
 
@@ -132,7 +140,7 @@ export async function updateProfile(input: { displayName: string; username: stri
   return payload.user as AuthUser;
 }
 
-export async function verifyEmailToken(token: string): Promise<{ ok: boolean; user?: AuthUser }> {
+export async function verifyEmailToken(token: string): Promise<VerifyEmailResponse> {
   const response = await fetch(getApiUrl('/api/auth/verify-email'), {
     method: 'POST',
     headers: {
@@ -142,11 +150,10 @@ export async function verifyEmailToken(token: string): Promise<{ ok: boolean; us
   });
 
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error || 'Email verification failed');
-  }
-
-  return payload as { ok: boolean; user?: AuthUser };
+  return {
+    ok: response.ok,
+    ...(payload as Record<string, unknown>),
+  } as VerifyEmailResponse;
 }
 
 export async function resendVerification(identifier: string): Promise<{ verificationUrl?: string | null; alreadyVerified?: boolean; verificationDelivery?: string; verificationEmailSent?: boolean; verificationEmailError?: string }> {

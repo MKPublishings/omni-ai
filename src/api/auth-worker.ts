@@ -261,15 +261,23 @@ export class AuthWorker {
     const token = String(body?.token || url.searchParams.get('token') || '').trim();
 
     if (!token) {
-      return json({ error: 'Verification token is required.' }, 400);
+      return json({ error: 'Verification token is required.', code: 'EMAIL_VERIFICATION_MISSING_TOKEN' }, 400);
     }
 
-    const user = await consumeEmailVerificationToken(this.db!, token);
-    if (!user) {
-      return json({ error: 'Verification token is invalid or expired.' }, 400);
+    const result = await consumeEmailVerificationToken(this.db!, token);
+    if (result.status === 'expired') {
+      return json({ error: 'This verification link has expired. Request a fresh verification email to continue.', code: 'EMAIL_VERIFICATION_EXPIRED' }, 410);
     }
 
-    return json({ ok: true, user, verified: true });
+    if (result.status === 'used') {
+      return json({ error: 'This verification link has already been used. Sign in to continue.', code: 'EMAIL_VERIFICATION_USED' }, 409);
+    }
+
+    if (result.status === 'not_found' || !result.user) {
+      return json({ error: 'This verification link is invalid.', code: 'EMAIL_VERIFICATION_INVALID' }, 400);
+    }
+
+    return json({ ok: true, user: result.user, verified: true, code: 'EMAIL_VERIFICATION_VERIFIED' });
   }
 
   async resendVerification(request: Request): Promise<Response> {
