@@ -1,4 +1,4 @@
-import { forwardRef, HTMLAttributes, useState, useRef, useEffect } from 'react'
+import { forwardRef, HTMLAttributes, useState, useRef, useEffect, useImperativeHandle } from 'react'
 import { clsx } from 'clsx'
 import { Button } from './Button'
 import { ConversationSkeleton } from './Skeleton'
@@ -102,6 +102,8 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       scrollToBottom()
     }, [messages, isThinking])
 
+    useImperativeHandle(ref, () => panelRef.current, [])
+
     useEffect(() => {
       if (typeof document === 'undefined') {
         return
@@ -174,14 +176,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
 
     return (
       <div
-        ref={(node) => {
-          panelRef.current = node
-          if (typeof ref === 'function') {
-            ref(node)
-          } else if (ref) {
-            ref.current = node
-          }
-        }}
+        ref={panelRef}
         className={clsx(
           'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
           focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
