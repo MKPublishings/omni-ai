@@ -25,6 +25,8 @@ export interface VerificationEmailResult {
   error?: string;
 }
 
+const DEFAULT_FROM_NAME = 'Ionirix';
+
 function summarizeProviderPayload(value: string, maxLength = 320): string {
   const normalized = String(value || '').replace(/\s+/g, ' ').trim();
   if (!normalized) {
@@ -45,41 +47,54 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function formatMailbox(address: string, displayName = DEFAULT_FROM_NAME): string {
+  const trimmedAddress = String(address || '').trim();
+  const trimmedName = String(displayName || '').trim();
+  if (!trimmedAddress) {
+    return '';
+  }
+
+  if (!trimmedName) {
+    return trimmedAddress;
+  }
+
+  return `${trimmedName} <${trimmedAddress}>`;
+}
+
 function buildVerificationEmailContent(input: VerificationEmailInput): { subject: string; text: string; html: string } {
   const greetingName = String(input.displayName || '').trim() || 'there';
   const safeName = escapeHtml(greetingName);
   const safeUrl = escapeHtml(input.verificationUrl);
-  const subject = 'Verify your Ionirix account';
+  const subject = 'Verify your email address for Ionirix';
   const text = [
     `Hi ${greetingName},`,
     '',
-    'Welcome to Ionirix — your access point to sovereign, high-integrity AI systems.',
+    'Use the link below to verify your email address and finish creating your Ionirix account.',
     '',
-    'To activate your account, please verify your email address by using the secure link below:',
+    'Verification link:',
     '',
     input.verificationUrl,
     '',
-    'If you did not create an Ionirix account, you can safely ignore this message.',
+    'This email was sent because someone used this address to sign up for Ionirix.',
+    'If that was not you, you can ignore this email.',
     '',
-    'Ionirix LLC',
-    'Sovereign AI Infrastructure',
+    'Ionirix',
+    'Reply to this email if you need help.',
   ].join('\n');
   const html = `
-    <div style="background:#061018;padding:32px 18px;font-family:'Segoe UI',Arial,sans-serif;color:#e8eef7;">
-      <div style="max-width:560px;margin:0 auto;border-radius:28px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#0d1726 0%,#09111c 100%);padding:36px 32px;box-shadow:0 32px 90px rgba(0,0,0,0.4);">
-        <div style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:16px;background:#6be5ff;color:#061018;font-size:13px;font-weight:700;letter-spacing:0.14em;">IX</div>
-        <p style="margin:18px 0 0;font-size:11px;line-height:1.4;letter-spacing:0.28em;text-transform:uppercase;color:rgba(232,238,247,0.52);">Ionirix</p>
-        <h1 style="margin:10px 0 0;font-size:30px;line-height:1.15;color:#f7fbff;">Verify your account</h1>
-        <p style="margin:22px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">Hi ${safeName},</p>
-        <p style="margin:12px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">Welcome to Ionirix — your access point to sovereign, high-integrity AI systems.</p>
-        <p style="margin:12px 0 0;font-size:15px;line-height:1.75;color:rgba(232,238,247,0.78);">To activate your account, please verify your email address by using the secure link below.</p>
-        <div style="margin-top:28px;">
-          <a href="${safeUrl}" style="display:inline-block;padding:14px 24px;border-radius:999px;background:#0f8cff;color:#ffffff;text-decoration:none;font-weight:600;letter-spacing:0.01em;">Verify your Ionirix account</a>
+    <div style="background:#f5f7fb;padding:24px 12px;font-family:Arial,sans-serif;color:#142033;">
+      <div style="max-width:560px;margin:0 auto;border:1px solid #d8e0eb;border-radius:12px;background:#ffffff;padding:32px 28px;">
+        <p style="margin:0 0 20px;font-size:12px;line-height:1.4;letter-spacing:0.16em;text-transform:uppercase;color:#5f6f86;">Ionirix</p>
+        <h1 style="margin:0 0 18px;font-size:24px;line-height:1.25;color:#142033;">Verify your email address</h1>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#243247;">Hi ${safeName},</p>
+        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#243247;">Use the button below to verify your email address and finish creating your Ionirix account.</p>
+        <div style="margin:24px 0;">
+          <a href="${safeUrl}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#0f62fe;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">Verify email address</a>
         </div>
-        <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:rgba(232,238,247,0.54);">If the button does not open, copy and paste this URL into your browser:</p>
-        <p style="margin:12px 0 0;word-break:break-all;font-size:12px;line-height:1.7;color:#7be5ff;">${safeUrl}</p>
-        <p style="margin:22px 0 0;font-size:13px;line-height:1.75;color:rgba(232,238,247,0.56);">If you did not create an Ionirix account, you can safely ignore this message.</p>
-        <p style="margin:26px 0 0;font-size:13px;line-height:1.7;color:rgba(232,238,247,0.66);">Ionirix LLC<br/>Sovereign AI Infrastructure</p>
+        <p style="margin:0 0 10px;font-size:13px;line-height:1.7;color:#4e5d72;">If the button does not open, copy and paste this link into your browser:</p>
+        <p style="margin:0 0 18px;word-break:break-all;font-size:12px;line-height:1.7;color:#0f62fe;">${safeUrl}</p>
+        <p style="margin:0 0 10px;font-size:13px;line-height:1.7;color:#4e5d72;">This email was sent because someone used this address to sign up for Ionirix.</p>
+        <p style="margin:0;font-size:13px;line-height:1.7;color:#4e5d72;">If that was not you, you can ignore this email or reply to let us know.</p>
       </div>
     </div>
   `;
@@ -102,6 +117,7 @@ async function sendViaResend(env: VerificationMailEnv, input: VerificationEmailI
   }
 
   const content = buildVerificationEmailContent(input);
+  const fromMailbox = formatMailbox(from);
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -109,12 +125,16 @@ async function sendViaResend(env: VerificationMailEnv, input: VerificationEmailI
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from,
+      from: fromMailbox,
       to: [input.to],
       reply_to: env.EMAIL_REPLY_TO ? [env.EMAIL_REPLY_TO] : undefined,
       subject: content.subject,
       html: content.html,
       text: content.text,
+      headers: {
+        'Auto-Submitted': 'auto-generated',
+        'X-Auto-Response-Suppress': 'All',
+      },
     }),
   });
 
@@ -162,7 +182,7 @@ async function sendViaMailchannels(env: VerificationMailEnv, input: Verification
           to: [{ email: input.to, name: input.displayName || undefined }],
         },
       ],
-      from: { email: from },
+      from: { email: from, name: DEFAULT_FROM_NAME },
       reply_to: env.EMAIL_REPLY_TO ? { email: env.EMAIL_REPLY_TO } : undefined,
       subject: content.subject,
       content: [
