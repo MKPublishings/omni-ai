@@ -217,7 +217,7 @@ type InternetSearchHit = {
   title: string;
   snippet: string;
   url: string;
-  source: "duckduckgo" | "wikipedia" | "espn";
+  source: "duckduckgo" | "wikipedia" | "espn" | "yahoo-finance";
 };
 
 type InternetWeatherResult = {
@@ -229,6 +229,12 @@ type InternetWeatherResult = {
   weatherCode: number;
   observationTime: string;
   timezone: string;
+  dailySummary?: {
+    date: string;
+    temperatureMaxC: number;
+    temperatureMinC: number;
+    precipitationProbabilityMax?: number | null;
+  } | null;
 };
 
 type InternetInspectResult = {
@@ -242,7 +248,13 @@ type InternetLearningFact = {
   title: string;
   snippet: string;
   url: string;
-  source: "duckduckgo" | "wikipedia" | "espn";
+  source: "duckduckgo" | "wikipedia" | "espn" | "yahoo-finance";
+};
+
+type ChatSourceReference = {
+  title: string;
+  url: string;
+  source: string;
 };
 
 type InternetLearningEntry = {
@@ -266,6 +278,53 @@ type InternetSearchProfile = {
   querySuffix: string;
   limit: number;
 };
+
+function dedupeChatSources(sources: ChatSourceReference[], limit = 4): ChatSourceReference[] {
+  const out: ChatSourceReference[] = [];
+  const seen = new Set<string>();
+
+  for (const source of sources) {
+    const title = sanitizePromptText(String(source?.title || "")).trim();
+    const url = sanitizePromptText(String(source?.url || "")).trim();
+    const label = sanitizePromptText(String(source?.source || "source")).trim().toLowerCase() || "source";
+    if (!title || !url) continue;
+
+    const key = `${title.toLowerCase()}|${url.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push({ title, url, source: label });
+    if (out.length >= Math.max(1, limit)) break;
+  }
+
+  return out;
+}
+
+function buildInternetSourceReferences(hits: InternetSearchHit[], limit = 4): ChatSourceReference[] {
+  return dedupeChatSources(
+    hits.map((hit) => ({
+      title: sanitizePromptText(String(hit.title || "")).trim(),
+      url: sanitizePromptText(String(hit.url || "")).trim(),
+      source: sanitizePromptText(String(hit.source || "source")).trim().toLowerCase()
+    })),
+    limit
+  );
+}
+
+function buildWeatherSourceReference(weather: InternetWeatherResult | null): ChatSourceReference[] {
+  if (!weather) return [];
+
+  const title = weather.location
+    ? `Open-Meteo weather for ${weather.location}`
+    : "Open-Meteo weather";
+  const url = `https://open-meteo.com/en/docs`;
+
+  return [{
+    title,
+    url,
+    source: "open-meteo"
+  }];
+}
 
 type ImageModelConfig = {
   model: string;
@@ -1185,6 +1244,13 @@ function isNBAScheduleQuery(userText: string): boolean {
   return /\b(nba|basketball)\b/i.test(value) && /\b(game|games|schedule|matchup|matchups|playing|today|tonight|on today)\b/i.test(value);
 }
 
+function isStockMarketQuery(userText: string): boolean {
+  const value = sanitizePromptText(String(userText || "")).trim().toLowerCase();
+  if (!value) return false;
+
+  return /\b(stock market|market today|markets today|dow|s&p|s and p|nasdaq|index|indexes|indices|futures|stocks today|equities)\b/i.test(value);
+}
+
 function formatDateForScoreboard(timeZone: string): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -1253,6 +1319,70 @@ async function searchNBASchedule(userText: string): Promise<InternetSearchHit[]>
       source: "espn" as const
     };
   });
+}
+
+function formatMarketTimestamp(unixSeconds: number | null | undefined): string {
+  if (!Number.isFinite(unixSeconds || NaN)) {
+    return "";
+  }
+
+  try {
+    return new Date(Number(unixSeconds) * 1000).toISOString();
+  } catch {
+    return "";
+  }
+}
+
+async function searchStockMarket(userText: string): Promise<InternetSearchHit[]> {
+  if (!isStockMarketQuery(userText)) {
+    return [];
+  }
+
+  const symbols = ["^GSPC", "^DJI", "^IXIC"];
+  const quoteUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(","))}`;
+  const response = await fetch(quoteUrl, {
+    method: "GET",
+    headers: {
+      "User-Agent": "IONAi/1.0 (+market-retrieval)",
+      "Accept": "application/json"
+    }
+  });
+  if (!response.ok) return [];
+
+  const payload = (await response.json()) as any;
+  const results = Array.isArray(payload?.quoteResponse?.result) ? payload.quoteResponse.result : [];
+  if (!results.length) return [];
+
+  return results
+    .map((entry: any) => {
+      const symbol = sanitizePromptText(String(entry?.symbol || "")).trim();
+      const title = sanitizePromptText(String(entry?.shortName || entry?.longName || symbol)).trim();
+      const marketState = sanitizePromptText(String(entry?.marketState || "")).trim();
+      const price = Number(entry?.regularMarketPrice);
+      const change = Number(entry?.regularMarketChange);
+      const changePercent = Number(entry?.regularMarketChangePercent);
+      const currency = sanitizePromptText(String(entry?.currency || "USD")).trim();
+      const quoteTime = formatMarketTimestamp(Number(entry?.regularMarketTime));
+      const exchange = sanitizePromptText(String(entry?.fullExchangeName || entry?.exchange || "")).trim();
+
+      if (!title || !Number.isFinite(price)) return null;
+
+      return {
+        title,
+        snippet: [
+          symbol ? `Symbol: ${symbol}.` : "",
+          `Price: ${price.toFixed(2)} ${currency}.`,
+          Number.isFinite(change) ? `Change: ${change >= 0 ? "+" : ""}${change.toFixed(2)}.` : "",
+          Number.isFinite(changePercent) ? `Change %: ${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%.` : "",
+          marketState ? `Market state: ${marketState}.` : "",
+          exchange ? `Exchange: ${exchange}.` : "",
+          quoteTime ? `Quote time: ${quoteTime}.` : ""
+        ].filter(Boolean).join(" "),
+        url: `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`,
+        source: "yahoo-finance" as const
+      };
+    })
+    .filter((entry: InternetSearchHit | null): entry is InternetSearchHit => Boolean(entry));
 }
 
 function flattenDuckDuckGoTopics(items: any[], collector: InternetSearchHit[]): void {
@@ -1441,6 +1571,14 @@ async function performModeAwareInternetSearch(mode: string, userText: string): P
     return {
       profile,
       hits: dedupeInternetHits(sportsHits, Math.max(profile.limit, sportsHits.length))
+    };
+  }
+
+  const marketHits = await searchStockMarket(userText);
+  if (marketHits.length) {
+    return {
+      profile,
+      hits: dedupeInternetHits(marketHits, Math.max(profile.limit, marketHits.length))
     };
   }
 
@@ -1669,10 +1807,33 @@ function buildSimulationClientPayload(
 }
 
 function inferWeatherLocation(userText: string, request: Request): string {
-  const value = String(userText || "").trim();
-  const match = value.match(/\b(?:in|for|at)\s+([a-zA-Z][a-zA-Z\s\-]{1,64})\??$/i);
-  if (match && match[1]) {
-    return sanitizePromptText(match[1]);
+  const value = sanitizePromptText(String(userText || "")).trim();
+  const explicitLocationMatches = Array.from(value.matchAll(/\b(?:in|for|at)\s+([a-zA-Z][a-zA-Z\s\-'.]{1,40}(?:,\s*[A-Za-z]{2,})?)/gi));
+  const explicitLocation = explicitLocationMatches.length ? explicitLocationMatches[explicitLocationMatches.length - 1] : null;
+  if (explicitLocation && explicitLocation[1]) {
+    const cleaned = explicitLocation[1]
+      .replace(/^(?:in|for|at)\s+/i, "")
+      .replace(/\b(today|tonight|tomorrow|now|right now|currently|current|weather|forecast)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\s+,/g, ",")
+      .trim()
+      .replace(/[?.!,;:]+$/g, "");
+    if (cleaned) {
+      return sanitizePromptText(cleaned);
+    }
+  }
+
+  const trailingLocation = value.match(/\b([A-Za-z][A-Za-z\s\-'.]{1,40}(?:,\s*[A-Za-z]{2,})?)\s*\??$/);
+  if (trailingLocation && trailingLocation[1] && shouldUseWeatherContext(value)) {
+    const cleaned = trailingLocation[1]
+      .replace(/\b(weather|forecast|today|tonight|tomorrow|current|currently|now|right now)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\s+,/g, ",")
+      .trim()
+      .replace(/[?.!,;:]+$/g, "");
+    if (cleaned && /[a-z]/i.test(cleaned)) {
+      return sanitizePromptText(cleaned);
+    }
   }
 
   const cf = (request as any)?.cf || {};
@@ -1702,13 +1863,24 @@ async function fetchWeatherForLocation(location: string): Promise<InternetWeathe
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
 
   const locationLabel = [first.name, first.admin1, first.country].filter(Boolean).join(", ");
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=1`;
   const weatherResponse = await fetch(weatherUrl, { method: "GET" });
   if (!weatherResponse.ok) return null;
 
   const weatherData = (await weatherResponse.json()) as any;
   const current = weatherData?.current_weather;
   if (!current) return null;
+  const daily = weatherData?.daily;
+  const dailySummary = Array.isArray(daily?.time) && daily.time.length > 0
+    ? {
+        date: sanitizePromptText(String(daily.time[0] || "")),
+        temperatureMaxC: Number(daily.temperature_2m_max?.[0]),
+        temperatureMinC: Number(daily.temperature_2m_min?.[0]),
+        precipitationProbabilityMax: daily.precipitation_probability_max?.[0] == null
+          ? null
+          : Number(daily.precipitation_probability_max?.[0])
+      }
+    : null;
 
   return {
     location: sanitizePromptText(String(locationLabel || location)),
@@ -1718,7 +1890,8 @@ async function fetchWeatherForLocation(location: string): Promise<InternetWeathe
     windSpeedKmh: Number(current.windspeed),
     weatherCode: Number(current.weathercode),
     observationTime: sanitizePromptText(String(current.time || "")),
-    timezone: sanitizePromptText(String(weatherData?.timezone || ""))
+    timezone: sanitizePromptText(String(weatherData?.timezone || "")),
+    dailySummary
   };
 }
 
@@ -1817,6 +1990,8 @@ async function loadInternetLearningStore(env: Env): Promise<InternetLearningStor
                     ? "wikipedia"
                     : fact?.source === "espn"
                       ? "espn"
+                      : fact?.source === "yahoo-finance"
+                        ? "yahoo-finance"
                       : "duckduckgo"
               })).filter((fact) => Boolean(fact.title && fact.url))
             : []
@@ -4508,6 +4683,7 @@ export default {
         const promptSystemMessages: IONMessage[] = [];
         let internetProfileUsed: InternetSearchProfile | null = null;
         let internetHitCount = 0;
+        let responseSources: ChatSourceReference[] = [];
         const savedMemory = isStatefulSimulationMode ? {} : await getPreferences(env);
         const personaProfile = await personaProfilePromise;
         const emotionalResonance = await emotionalResonancePromise;
@@ -4598,7 +4774,7 @@ export default {
         const allowInternetLookupInFastMode = shouldUseInternetSearch(latestUserText, normalizedMode);
         const shouldLoadMemoryArc = !isStatefulSimulationMode && !fastChatEnabled && chatPreferences?.contextCarryover !== false;
         const shouldLoadInternetLearning = !fastChatEnabled && !freshnessSensitiveQuery;
-        const shouldLoadWeather = (allowInternetLookupInFastMode || !fastChatEnabled) && shouldUseWeatherContext(latestUserText);
+        const shouldLoadWeather = shouldUseWeatherContext(latestUserText);
         const weatherLocation = shouldLoadWeather ? inferWeatherLocation(latestUserText, request) : "";
         const shouldUseKnowledge = !fastChatEnabled && shouldUseKnowledgeRetrieval(latestUserText, normalizedMode);
         const shouldLoadSystemModules = !fastChatEnabled && shouldUseSystemKnowledge(normalizedMode, latestUserText);
@@ -4674,6 +4850,10 @@ export default {
         if (shouldLoadWeather) {
           const weather = await withTimeout(weatherPromise, 800, null);
           if (weather) {
+            responseSources = dedupeChatSources([
+              ...responseSources,
+              ...buildWeatherSourceReference(weather)
+            ]);
             promptSystemMessages.push(
               makeContextSystemMessage(
                 "Live Weather",
@@ -4684,8 +4864,18 @@ export default {
                   `Weather code: ${weather.weatherCode}`,
                   `Observation time: ${weather.observationTime}`,
                   `Timezone: ${weather.timezone}`,
+                  weather.dailySummary?.date ? `Forecast date: ${weather.dailySummary.date}` : "",
+                  Number.isFinite(weather.dailySummary?.temperatureMaxC)
+                    ? `Today's high (C): ${Number(weather.dailySummary?.temperatureMaxC).toFixed(1)}`
+                    : "",
+                  Number.isFinite(weather.dailySummary?.temperatureMinC)
+                    ? `Today's low (C): ${Number(weather.dailySummary?.temperatureMinC).toFixed(1)}`
+                    : "",
+                  Number.isFinite(weather.dailySummary?.precipitationProbabilityMax)
+                    ? `Precipitation probability max (%): ${Number(weather.dailySummary?.precipitationProbabilityMax).toFixed(0)}`
+                    : "",
                   "Use this weather context for current-condition questions and be explicit that it is a point-in-time snapshot."
-                ].join("\n")
+                ].filter(Boolean).join("\n")
               )
             );
           }
@@ -4733,6 +4923,10 @@ export default {
           internetProfileUsed = internet.profile;
           internetHitCount = internet.hits.length;
           if (internet.hits.length) {
+            responseSources = dedupeChatSources([
+              ...responseSources,
+              ...buildInternetSourceReferences(internet.hits)
+            ]);
             const internetContext = internet.hits
               .map((hit, index) => {
                 return `(${index + 1}) [${hit.source}] ${hit.title}\n${hit.snippet}\nURL: ${hit.url}`;
@@ -4798,6 +4992,9 @@ export default {
         try {
           let multimodalPayload: Record<string, unknown> | null = null;
           let result: any;
+          const groundingClientPayload = responseSources.length
+            ? { sources: responseSources }
+            : null;
 
           if (orchestratorDecision.route === "tool" && orchestratorDecision.toolDirective) {
             const toolResult = await executeTool(
@@ -4854,7 +5051,10 @@ export default {
                 providerStream: nativeProviderStream,
                 route: orchestratorDecision.route,
                 multimodalPayload,
-                initialPayload: simulationClientPayload,
+                initialPayload: {
+                  ...(simulationClientPayload || {}),
+                  ...(groundingClientPayload || {})
+                },
                 onComplete: (fullText) => {
                   if (!isStatefulSimulationMode && latestUserTurn && fullText) {
                     ctx.waitUntil(
@@ -4976,7 +5176,7 @@ export default {
                 if (responseChunks.length > 0) {
                   controller.enqueue(
                     encoder.encode(
-                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload, ...simulationClientPayload })}\n\n`
+                      `data: ${JSON.stringify({ content: responseChunks[0], route: orchestratorDecision.route, ...multimodalPayload, ...simulationClientPayload, ...groundingClientPayload })}\n\n`
                     )
                   );
                   for (let index = 1; index < responseChunks.length; index += 1) {

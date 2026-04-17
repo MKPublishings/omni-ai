@@ -8,6 +8,11 @@ interface Message {
   type: 'user' | 'ai'
   content: string
   timestamp: Date
+  sources?: Array<{
+    title: string
+    url: string
+    source: string
+  }>
   image?: {
     src: string
     filename?: string
@@ -108,6 +113,7 @@ function renderMessageText(content: string) {
 const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.type === 'user'
   const renderedSegments = message.content ? renderMessageText(message.content) : []
+  const sources = Array.isArray(message.sources) ? message.sources : []
 
   return (
     <div className={clsx(
@@ -138,6 +144,28 @@ const MessageBubble = ({ message }: { message: Message }) => {
               >
                 Download image
               </a>
+            </div>
+          </div>
+        ) : null}
+        {!isUser && sources.length > 0 ? (
+          <div className={clsx(message.content || message.image ? 'mt-3' : '')}>
+            <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-quantum-white/48">
+              Sources
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {sources.map((source) => (
+                <a
+                  key={`${source.url}-${source.title}`}
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-quantum-white/12 bg-quantum-white/5 px-3 py-1.5 text-xs text-quantum-white/84 transition hover:bg-quantum-white/10"
+                  title={source.title}
+                >
+                  <span className="shrink-0 uppercase tracking-[0.16em] text-quantum-white/48">{source.source}</span>
+                  <span className="truncate">{source.title}</span>
+                </a>
+              ))}
             </div>
           </div>
         ) : null}

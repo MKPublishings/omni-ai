@@ -12,6 +12,11 @@ type ConversationMessage = {
   type: 'user' | 'ai'
   content: string
   timestamp: Date
+  sources?: Array<{
+    title: string
+    url: string
+    source: string
+  }>
   image?: {
     src: string
     filename?: string
@@ -59,6 +64,11 @@ function readCachedMessages(): ConversationMessage[] {
       type: 'user' | 'ai'
       content: string
       timestamp: string
+      sources?: Array<{
+        title: string
+        url: string
+        source: string
+      }>
       image?: {
         src: string
         filename?: string
@@ -75,6 +85,7 @@ function readCachedMessages(): ConversationMessage[] {
       type: entry.type,
       content: entry.content,
       timestamp: new Date(entry.timestamp || Date.now()),
+      sources: Array.isArray(entry.sources) ? entry.sources : undefined,
       image: entry.image,
     }))
   } catch {
@@ -176,6 +187,7 @@ function extractAssistantContent(rawText: string) {
   let imageDataUrl = ''
   let imageFilename = ''
   let imageModel = ''
+  let sources: AssistantPayload['sources'] = []
 
   for (const line of rawText.split(/\r?\n/)) {
     const trimmed = line.trim()
@@ -198,10 +210,18 @@ function extractAssistantContent(rawText: string) {
           filename?: string
           model?: string
         }
+        sources?: Array<{
+          title?: string
+          url?: string
+          source?: string
+        }>
       }
       const value = parsed.content || parsed.response || parsed.error
       if (value) {
         chunks.push(value)
+      }
+      if (!sources.length) {
+        sources = normalizeSources(parsed.sources)
       }
       if (!imageDataUrl && parsed.imageDataUrl) {
         imageDataUrl = parsed.imageDataUrl
@@ -218,6 +238,7 @@ function extractAssistantContent(rawText: string) {
     imageDataUrl,
     imageFilename,
     imageModel,
+    sources,
   }
 }
 
@@ -238,17 +259,43 @@ type AssistantPayload = {
   imageDataUrl: string
   imageFilename: string
   imageModel: string
+  sources: Array<{
+    title: string
+    url: string
+    source: string
+  }>
 }
 
 type StreamingPayload = {
   content?: string
   response?: string
   error?: string
+  sources?: Array<{
+    title?: string
+    url?: string
+    source?: string
+  }>
   imageDataUrl?: string
   image?: {
     filename?: string
     model?: string
   }
+}
+
+function normalizeSources(
+  sources: StreamingPayload['sources'] | AssistantPayload['sources'] | undefined,
+): AssistantPayload['sources'] {
+  if (!Array.isArray(sources)) {
+    return []
+  }
+
+  return sources
+    .map((source) => ({
+      title: String(source?.title || '').trim(),
+      url: String(source?.url || '').trim(),
+      source: String(source?.source || '').trim(),
+    }))
+    .filter((source) => source.title && source.url)
 }
 
 function accumulateStreamingPayload(current: AssistantPayload, parsed: StreamingPayload): AssistantPayload {
@@ -260,6 +307,7 @@ function accumulateStreamingPayload(current: AssistantPayload, parsed: Streaming
     imageDataUrl: current.imageDataUrl || parsed.imageDataUrl || '',
     imageFilename: current.imageFilename || parsed.image?.filename || '',
     imageModel: current.imageModel || parsed.image?.model || '',
+    sources: current.sources.length > 0 ? current.sources : normalizeSources(parsed.sources),
   }
 }
 
@@ -270,6 +318,7 @@ function createEmptyAssistantPayload(ok: boolean): AssistantPayload {
     imageDataUrl: '',
     imageFilename: '',
     imageModel: '',
+    sources: [],
   }
 }
 
@@ -349,6 +398,7 @@ async function parseAssistantResponse(response: Response) {
       imageDataUrl: payload.imageDataUrl,
       imageFilename: payload.imageFilename,
       imageModel: payload.imageModel,
+      sources: payload.sources,
     }
   }
 
@@ -361,6 +411,7 @@ async function parseAssistantResponse(response: Response) {
     imageDataUrl: payload.imageDataUrl || '',
     imageFilename: payload.image?.filename || payload.filename || '',
     imageModel: payload.image?.model || payload.metadata?.model || '',
+    sources: normalizeSources(payload.sources),
   }
 }
 
@@ -521,6 +572,7 @@ export default function AssistantPage() {
           upsertAssistantMessage(assistantMessageId, {
             content: nextContent,
             timestamp: new Date(),
+            sources: streamPayload.sources,
             image: streamPayload.imageDataUrl
               ? {
                   src: streamPayload.imageDataUrl,
@@ -540,6 +592,7 @@ export default function AssistantPage() {
         upsertAssistantMessage(assistantMessageId, {
           content: finalContent,
           timestamp: new Date(),
+          sources: streamed.sources,
           image: streamed.imageDataUrl
             ? {
                 src: streamed.imageDataUrl,
@@ -566,6 +619,7 @@ export default function AssistantPage() {
           type: 'ai',
           content,
           timestamp: new Date(),
+          sources: payload.sources,
           image: payload.imageDataUrl
             ? {
                 src: payload.imageDataUrl,

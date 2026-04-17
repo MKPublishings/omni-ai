@@ -216,7 +216,13 @@ test("worker /api/ION keeps live internet retrieval enabled for freshness-sensit
   const mind = new MemoryNamespace();
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.toString()
+        : input instanceof Request
+          ? input.url
+          : String(input);
     if (url.includes("site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard")) {
       return new Response(
         JSON.stringify({
@@ -297,7 +303,13 @@ test("worker /api/ION keeps general internet retrieval enabled for lookup-style 
   const mind = new MemoryNamespace();
 
   globalThis.fetch = (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.toString()
+        : input instanceof Request
+          ? input.url
+          : String(input);
     if (url.includes("html.duckduckgo.com/html/?q=")) {
       return new Response(
         `
@@ -383,6 +395,229 @@ test("worker /api/ION keeps general internet retrieval enabled for lookup-style 
     assert.equal(response.headers.get("X-ION-Fast-Chat"), "true");
     assert.equal(response.headers.get("X-ION-Internet-Count"), "1");
     assert.equal(firstEvent.content, "Grounded general web response.");
+    assert.equal(Array.isArray(firstEvent.sources), true);
+    assert.equal((firstEvent.sources as Array<unknown>).length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("worker /api/ION resolves weather for city-state prompts", async () => {
+  const originalFetch = globalThis.fetch;
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.startsWith("https://geocoding-api.open-meteo.com/v1/search?")) {
+      return new Response(
+        JSON.stringify({
+          results: [
+            {
+              name: "Utica",
+              admin1: "New York",
+              country: "United States",
+              latitude: 43.1009,
+              longitude: -75.2327
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    if (url.startsWith("https://api.open-meteo.com/v1/forecast?")) {
+      return new Response(
+        JSON.stringify({
+          timezone: "America/New_York",
+          current_weather: {
+            temperature: 9.5,
+            windspeed: 11.2,
+            weathercode: 3,
+            time: "2026-04-17T14:00"
+          },
+          daily: {
+            time: ["2026-04-17"],
+            temperature_2m_max: [14.1],
+            temperature_2m_min: [4.2],
+            precipitation_probability_max: [25]
+          }
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    if (url.includes("html.duckduckgo.com/html/?q=")) {
+      return new Response("<html><body></body></html>", {
+        status: 200,
+        headers: { "Content-Type": "text/html; charset=utf-8" }
+      });
+    }
+
+    if (url.includes("api.duckduckgo.com") || url.includes("en.wikipedia.org/w/api.php")) {
+      return new Response(JSON.stringify(url.includes("api.duckduckgo.com") ? { RelatedTopics: [] } : ["", [], [], []]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const env = {
+      AI: {
+        run: async (_model: string, _input: unknown) => ({ response: "Grounded weather response." })
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      ASSETS: {
+        fetch: async () => new Response("not-found", { status: 404 })
+      },
+      MODEL_ION: "primary-model"
+    } as any;
+
+    const request = new Request("https://example.test/api/ION?fast=true", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ION-session-id": "worker-weather-grounding"
+      },
+      body: JSON.stringify({
+        mode: "auto",
+        fastMode: true,
+        messages: [
+          {
+            role: "user",
+            content: "What's the weather for today in Utica, NY?"
+          }
+        ]
+      })
+    });
+
+    const response = await worker.fetch(request, env, createExecutionContext() as any);
+    const sseText = await response.text();
+    const firstEvent = extractFirstSseEvent(sseText);
+
+    assert.equal(response.status, 200);
+    assert.equal(firstEvent.content, "Grounded weather response.");
+    assert.equal(Array.isArray(firstEvent.sources), true);
+    assert.equal((firstEvent.sources as Array<unknown>).length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("worker /api/ION uses direct market data for stock market prompts", async () => {
+  const originalFetch = globalThis.fetch;
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.startsWith("https://query1.finance.yahoo.com/v7/finance/quote?symbols=")) {
+      return new Response(
+        JSON.stringify({
+          quoteResponse: {
+            result: [
+              {
+                symbol: "^GSPC",
+                shortName: "S&P 500",
+                regularMarketPrice: 5234.56,
+                regularMarketChange: 48.22,
+                regularMarketChangePercent: 0.93,
+                marketState: "REGULAR",
+                regularMarketTime: 1776441000,
+                currency: "USD",
+                fullExchangeName: "SNP"
+              },
+              {
+                symbol: "^DJI",
+                shortName: "Dow Jones Industrial Average",
+                regularMarketPrice: 38765.43,
+                regularMarketChange: 205.11,
+                regularMarketChangePercent: 0.53,
+                marketState: "REGULAR",
+                regularMarketTime: 1776441000,
+                currency: "USD",
+                fullExchangeName: "DJI"
+              },
+              {
+                symbol: "^IXIC",
+                shortName: "NASDAQ Composite",
+                regularMarketPrice: 16432.1,
+                regularMarketChange: 121.33,
+                regularMarketChangePercent: 0.74,
+                marketState: "REGULAR",
+                regularMarketTime: 1776441000,
+                currency: "USD",
+                fullExchangeName: "NASDAQ"
+              }
+            ]
+          }
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    throw new Error(`unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const env = {
+      AI: {
+        run: async (_model: string, input: unknown) => {
+          const serialized = JSON.stringify(input);
+          assert.match(serialized, /S&P 500/);
+          assert.match(serialized, /NASDAQ Composite/);
+          assert.match(serialized, /Market state: REGULAR/);
+          return { response: "Grounded market response." };
+        }
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      ASSETS: {
+        fetch: async () => new Response("not-found", { status: 404 })
+      },
+      MODEL_ION: "primary-model"
+    } as any;
+
+    const request = new Request("https://example.test/api/ION?fast=true", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ION-session-id": "worker-market-grounding"
+      },
+      body: JSON.stringify({
+        mode: "auto",
+        fastMode: true,
+        messages: [
+          {
+            role: "user",
+            content: "What does the stock market look like today?"
+          }
+        ]
+      })
+    });
+
+    const response = await worker.fetch(request, env, createExecutionContext() as any);
+    const sseText = await response.text();
+    const firstEvent = extractFirstSseEvent(sseText);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("X-ION-Internet-Count"), "3");
+    assert.equal(firstEvent.content, "Grounded market response.");
+    assert.equal(Array.isArray(firstEvent.sources), true);
+    assert.equal((firstEvent.sources as Array<unknown>).length, 3);
   } finally {
     globalThis.fetch = originalFetch;
   }
