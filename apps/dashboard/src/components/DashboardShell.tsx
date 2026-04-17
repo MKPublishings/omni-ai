@@ -17,6 +17,7 @@ interface DashboardShellProps {
   children: ReactNode
   actions?: ReactNode
   hidePageIntroOnMobile?: boolean
+  fullBleedOnMobile?: boolean
 }
 
 interface NavigationEntry {
@@ -104,7 +105,7 @@ function isNavigationItemActive(pathname: string, href: string): boolean {
   return pathname.startsWith(`${href}/`)
 }
 
-export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false }: DashboardShellProps) {
+export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false, fullBleedOnMobile = false }: DashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const premium = usePremiumStatus()
@@ -257,8 +258,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             statusSlot={commandStatus}
           />
 
-          <main className="min-w-0 flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 sm:gap-6">
+          <main className={clsx('min-w-0 flex-1 overflow-auto py-4 sm:py-5 md:px-6 lg:px-8', fullBleedOnMobile ? 'px-0 md:px-6 lg:px-8' : 'px-3 sm:px-4')}>
+            <div className={clsx('mx-auto flex w-full flex-col gap-5 sm:gap-6', fullBleedOnMobile ? 'max-w-7xl px-0 md:px-0' : 'max-w-7xl')}>
               <div className={hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between'}>
                 <div className="min-w-0">
                   <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1>

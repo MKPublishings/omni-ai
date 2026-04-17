@@ -7,10 +7,11 @@ interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   onClose: () => void
   title?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
+  contentClassName?: string
 }
 
 export const Modal = forwardRef<HTMLDivElement, ModalProps>(
-  ({ isOpen, onClose, title, size = 'md', className, children, ...props }, ref) => {
+  ({ isOpen, onClose, title, size = 'md', className, contentClassName, children, ...props }, ref) => {
     useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -39,7 +40,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
     }
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:items-center sm:p-4">
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-pine-black-900/72 backdrop-blur-sm"
@@ -50,7 +51,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         <div
           ref={ref}
           className={clsx(
-            'relative ix-glass-sovereign w-full rounded-lg shadow-4',
+            'relative max-h-[calc(100svh-1rem)] w-full overflow-hidden rounded-[1.25rem] shadow-4 sm:max-h-[calc(100svh-2rem)] sm:rounded-[1.5rem]',
+            'ix-glass-sovereign',
             sizeClasses[size],
             className
           )}
@@ -58,15 +60,15 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between p-6 border-b border-quantum-white/8">
-              <h2 className="text-xl font-semibold text-quantum-white">
+            <div className="flex items-center justify-between gap-3 border-b border-quantum-white/8 px-4 py-4 sm:px-6 sm:py-5">
+              <h2 className="min-w-0 text-lg font-semibold text-quantum-white sm:text-xl">
                 {title}
               </h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="text-quantum-white/64 hover:text-quantum-white"
+                className="h-10 w-10 shrink-0 rounded-full p-0 text-quantum-white/64 hover:text-quantum-white"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -76,7 +78,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           )}
 
           {/* Content */}
-          <div className="p-6">
+          <div className={clsx('max-h-[calc(100svh-5.5rem)] overflow-y-auto px-4 py-4 sm:max-h-[calc(100svh-8rem)] sm:px-6 sm:py-6', contentClassName)}>
             {children}
           </div>
         </div>

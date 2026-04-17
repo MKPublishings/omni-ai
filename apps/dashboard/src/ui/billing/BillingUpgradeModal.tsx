@@ -28,7 +28,7 @@ export function BillingUpgradeModal({ isOpen, onClose, plan, premium }: BillingU
   const activeLabel = premium.accessTier === 'enterprise' ? 'Enterprise active' : 'Premium active'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Confirm checkout" size="lg" className="ion-billing-modal-shell">
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirm checkout" size="lg" className="ion-billing-modal-shell" contentClassName="ion-billing-modal-content">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <div className="ion-billing-modal-panel">
           <p className="ion-billing-kicker">Selected plan</p>
@@ -39,7 +39,7 @@ export function BillingUpgradeModal({ isOpen, onClose, plan, premium }: BillingU
           </p>
           <p className="mt-4 text-sm leading-7 text-quantum-white/72">{plan.description}</p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 sm:gap-3">
             <span className="ion-billing-highlight">{plan.callout}</span>
             <span className="ion-billing-plan-chip">{plan.tier}</span>
             <span className="ion-billing-plan-chip">{plan.billing === 'year' ? 'Recurring yearly' : 'Recurring monthly'}</span>
@@ -94,7 +94,7 @@ export function BillingUpgradeModal({ isOpen, onClose, plan, premium }: BillingU
             {plan.featureList.map((feature) => (
               <li key={feature} className="flex items-start gap-3">
                 <span className={`ion-billing-feature-dot ion-billing-feature-dot-${plan.accent}`} aria-hidden="true" />
-                <span>{feature}</span>
+                <span className="min-w-0 break-words">{feature}</span>
               </li>
             ))}
           </ul>

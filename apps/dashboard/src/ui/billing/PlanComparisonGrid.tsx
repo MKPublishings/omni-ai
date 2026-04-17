@@ -12,21 +12,23 @@ export function PlanComparisonGrid() {
         <p className="max-w-xl text-sm leading-7 text-quantum-white/68">Both tiers use the same live Worker checkout route and the same entitlement verification path after Stripe redirects back.</p>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-quantum-white/10 bg-pine-black-900/28">
-        <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(120px,0.95fr)_minmax(120px,0.95fr)] border-b border-quantum-white/8 bg-quantum-white/4 px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-quantum-white/62 md:px-6">
+      <div className="mt-6 overflow-x-auto rounded-[1.75rem] border border-quantum-white/10 bg-pine-black-900/28">
+        <div className="min-w-[34rem]">
+          <div className="grid grid-cols-[minmax(140px,1.1fr)_minmax(120px,0.95fr)_minmax(120px,0.95fr)] border-b border-quantum-white/8 bg-quantum-white/4 px-4 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-quantum-white/62 md:px-6">
           <span>Capability</span>
           <span>Premium</span>
           <span>Enterprise</span>
-        </div>
+          </div>
 
-        <div className="divide-y divide-quantum-white/8">
-          {PLAN_COMPARISON_ROWS.map((row) => (
-            <div key={row.feature} className="grid grid-cols-[minmax(140px,1.1fr)_minmax(120px,0.95fr)_minmax(120px,0.95fr)] gap-4 px-4 py-4 text-sm leading-7 text-quantum-white/72 md:px-6">
-              <span className="font-medium text-quantum-white">{row.feature}</span>
-              <span>{row.premium}</span>
-              <span>{row.enterprise}</span>
-            </div>
-          ))}
+          <div className="divide-y divide-quantum-white/8">
+            {PLAN_COMPARISON_ROWS.map((row) => (
+              <div key={row.feature} className="grid grid-cols-[minmax(140px,1.1fr)_minmax(120px,0.95fr)_minmax(120px,0.95fr)] gap-4 px-4 py-4 text-sm leading-7 text-quantum-white/72 md:px-6">
+                <span className="font-medium text-quantum-white">{row.feature}</span>
+                <span>{row.premium}</span>
+                <span>{row.enterprise}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </GlassCard>

@@ -159,11 +159,16 @@
   overflow: hidden;
 }
 
+.ion-billing-modal-content {
+  overscroll-behavior: contain;
+}
+
 .ion-billing-modal-panel {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1.75rem;
   background: rgba(255, 255, 255, 0.035);
   padding: 1.25rem;
+  min-width: 0;
 }
 
 .ion-billing-modal-panel-strong {
@@ -192,8 +197,22 @@
     white-space: normal;
   }
 
+  .ion-billing-modal-shell {
+    border-radius: 1.25rem;
+  }
+
   .ion-billing-modal-panel {
     padding: 1rem;
+    border-radius: 1.25rem;
+  }
+
+  .ion-billing-price-id {
+    letter-spacing: 0.04em;
+    word-break: break-word;
+  }
+
+  .ion-billing-stat-card {
+    min-height: 0;
   }
 }
 

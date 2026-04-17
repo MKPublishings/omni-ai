@@ -366,9 +366,10 @@ export default function AssistantPage() {
       title="Assistant"
       subtitle=""
       hidePageIntroOnMobile
+      fullBleedOnMobile
     >
-      <section>
-        <div className="min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]">
+      <section className="w-full md:px-0">
+        <div className="min-h-[calc(100svh-8.5rem)] w-full sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]">
           <AIConversationPanel
             messages={messages}
             onSendMessage={handleSendMessage}
@@ -376,7 +377,7 @@ export default function AssistantPage() {
             isLoading={isLoadingHistory}
             focusMode={focusMode}
             onToggleFocus={() => setFocusMode((value) => !value)}
-            className="h-full min-h-[calc(100svh-10.5rem)] sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]"
+            className="h-full min-h-[calc(100svh-8.5rem)] w-full rounded-none border-x-0 sm:min-h-[680px] sm:rounded-[1.5rem] sm:border-x xl:min-h-[calc(100svh-12rem)]"
           />
         </div>
       </section>

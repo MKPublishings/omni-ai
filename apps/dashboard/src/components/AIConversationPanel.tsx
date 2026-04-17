@@ -117,8 +117,8 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         ref={ref}
         className={clsx(
-          'ix-glass-sovereign flex min-h-[30rem] flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
-          focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full',
+          'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
+          focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
           className
         )}
         {...props}
