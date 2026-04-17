@@ -33,7 +33,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
+        'chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
         isUser
           ? 'bg-ion-blue-600 text-quantum-white'
           : 'ix-glass-sovereign text-quantum-white'

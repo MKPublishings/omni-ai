@@ -170,6 +170,23 @@
     -webkit-user-select: text;
     -webkit-touch-callout: default;
   }
+
+  .chat-copy-surface {
+    position: relative;
+    z-index: 0;
+  }
+
+  @media (pointer: coarse) {
+    .chat-copy-surface,
+    .chat-copy-surface:hover,
+    .chat-copy-surface:active {
+      transform: none !important;
+      -webkit-transform: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transition-property: background-color, border-color, color, box-shadow !important;
+    }
+  }
 }
 
 @keyframes ambient-gradient-shift {
