@@ -33,6 +33,58 @@ type MessageSegment =
   | { type: 'text'; content: string }
   | { type: 'code'; content: string; language: string }
 
+function getSourceLabel(source: string) {
+  const normalized = String(source || '').trim().toLowerCase()
+
+  if (normalized === 'open-meteo') return 'weather'
+  if (normalized === 'yahoo-finance') return 'market'
+  if (normalized === 'espn') return 'sports'
+  if (normalized === 'wikipedia') return 'reference'
+  if (normalized === 'duckduckgo') return 'web'
+  return normalized || 'source'
+}
+
+function getSourceFavicon(url: string) {
+  const value = String(url || '').trim()
+  if (!value) {
+    return ''
+  }
+
+  try {
+    const parsed = new URL(value)
+    return `${parsed.origin}/favicon.ico`
+  } catch {
+    return ''
+  }
+}
+
+function SourceChip({ source }: { source: NonNullable<Message['sources']>[number] }) {
+  const [showFavicon, setShowFavicon] = useState(Boolean(getSourceFavicon(source.url)))
+  const faviconUrl = getSourceFavicon(source.url)
+  const sourceLabel = getSourceLabel(source.source)
+
+  return (
+    <a
+      href={source.url}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex max-w-full items-center gap-2 rounded-full border border-quantum-white/12 bg-quantum-white/5 px-3 py-1.5 text-xs text-quantum-white/84 transition hover:bg-quantum-white/10"
+      title={source.title}
+    >
+      {showFavicon && faviconUrl ? (
+        <img
+          src={faviconUrl}
+          alt=""
+          className="h-3.5 w-3.5 rounded-sm object-contain"
+          onError={() => setShowFavicon(false)}
+        />
+      ) : null}
+      <span className="shrink-0 uppercase tracking-[0.16em] text-quantum-white/48">{sourceLabel}</span>
+      <span className="truncate">{source.title}</span>
+    </a>
+  )
+}
+
 function parseMessageSegments(content: string): MessageSegment[] {
   const source = String(content || '').replace(/\r\n/g, '\n')
   if (!source.trim()) {
@@ -154,17 +206,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
             </div>
             <div className="flex flex-wrap gap-2">
               {sources.map((source) => (
-                <a
-                  key={`${source.url}-${source.title}`}
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-quantum-white/12 bg-quantum-white/5 px-3 py-1.5 text-xs text-quantum-white/84 transition hover:bg-quantum-white/10"
-                  title={source.title}
-                >
-                  <span className="shrink-0 uppercase tracking-[0.16em] text-quantum-white/48">{source.source}</span>
-                  <span className="truncate">{source.title}</span>
-                </a>
+                <SourceChip key={`${source.url}-${source.title}`} source={source} />
               ))}
             </div>
           </div>
