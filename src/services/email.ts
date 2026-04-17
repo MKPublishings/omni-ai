@@ -18,7 +18,22 @@ export interface VerificationEmailResult {
   delivered: boolean;
   delivery: VerificationDelivery;
   provider: 'resend' | 'mailchannels' | 'manual-link';
+  attemptedProvider?: 'resend' | 'mailchannels';
+  failureStage?: 'config' | 'provider-response' | 'transport-selection' | 'exception';
+  statusCode?: number;
+  responseSnippet?: string;
   error?: string;
+}
+
+function summarizeProviderPayload(value: string, maxLength = 320): string {
+  const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, Math.max(0, maxLength - 1))}...`
+    : normalized;
 }
 
 function escapeHtml(value: string): string {
@@ -76,7 +91,14 @@ async function sendViaResend(env: VerificationMailEnv, input: VerificationEmailI
   const from = String(env.EMAIL_FROM || '').trim();
   const apiKey = String(env.RESEND_API_KEY || '').trim();
   if (!from || !apiKey) {
-    return { delivered: false, delivery: 'manual-link', provider: 'manual-link', error: 'Resend configuration is incomplete.' };
+    return {
+      delivered: false,
+      delivery: 'manual-link',
+      provider: 'manual-link',
+      attemptedProvider: 'resend',
+      failureStage: 'config',
+      error: 'Resend configuration is incomplete.',
+    };
   }
 
   const content = buildVerificationEmailContent(input);
@@ -98,16 +120,33 @@ async function sendViaResend(env: VerificationMailEnv, input: VerificationEmailI
 
   if (!response.ok) {
     const payload = await response.text().catch(() => 'Unknown Resend error');
-    return { delivered: false, delivery: 'manual-link', provider: 'manual-link', error: payload };
+    const responseSnippet = summarizeProviderPayload(payload);
+    return {
+      delivered: false,
+      delivery: 'manual-link',
+      provider: 'manual-link',
+      attemptedProvider: 'resend',
+      failureStage: 'provider-response',
+      statusCode: response.status,
+      responseSnippet,
+      error: responseSnippet || `Resend responded with status ${response.status}.`,
+    };
   }
 
-  return { delivered: true, delivery: 'email', provider: 'resend' };
+  return { delivered: true, delivery: 'email', provider: 'resend', attemptedProvider: 'resend', statusCode: response.status };
 }
 
 async function sendViaMailchannels(env: VerificationMailEnv, input: VerificationEmailInput): Promise<VerificationEmailResult> {
   const from = String(env.EMAIL_FROM || '').trim();
   if (!from) {
-    return { delivered: false, delivery: 'manual-link', provider: 'manual-link', error: 'MailChannels configuration is incomplete.' };
+    return {
+      delivered: false,
+      delivery: 'manual-link',
+      provider: 'manual-link',
+      attemptedProvider: 'mailchannels',
+      failureStage: 'config',
+      error: 'MailChannels configuration is incomplete.',
+    };
   }
 
   const content = buildVerificationEmailContent(input);
@@ -135,10 +174,20 @@ async function sendViaMailchannels(env: VerificationMailEnv, input: Verification
 
   if (!response.ok) {
     const payload = await response.text().catch(() => 'Unknown MailChannels error');
-    return { delivered: false, delivery: 'manual-link', provider: 'manual-link', error: payload };
+    const responseSnippet = summarizeProviderPayload(payload);
+    return {
+      delivered: false,
+      delivery: 'manual-link',
+      provider: 'manual-link',
+      attemptedProvider: 'mailchannels',
+      failureStage: 'provider-response',
+      statusCode: response.status,
+      responseSnippet,
+      error: responseSnippet || `MailChannels responded with status ${response.status}.`,
+    };
   }
 
-  return { delivered: true, delivery: 'email', provider: 'mailchannels' };
+  return { delivered: true, delivery: 'email', provider: 'mailchannels', attemptedProvider: 'mailchannels', statusCode: response.status };
 }
 
 export async function sendVerificationEmail(env: VerificationMailEnv, input: VerificationEmailInput): Promise<VerificationEmailResult> {
@@ -157,9 +206,16 @@ export async function sendVerificationEmail(env: VerificationMailEnv, input: Ver
       delivered: false,
       delivery: 'manual-link',
       provider: 'manual-link',
+      failureStage: 'exception',
       error: error instanceof Error ? error.message : 'Verification email failed.',
     };
   }
 
-  return { delivered: false, delivery: 'manual-link', provider: 'manual-link' };
+  return {
+    delivered: false,
+    delivery: 'manual-link',
+    provider: 'manual-link',
+    failureStage: 'transport-selection',
+    error: 'No verification email transport is configured.',
+  };
 }

@@ -20,6 +20,8 @@ import {
 } from '../auth/credentials';
 import { sendVerificationEmail, type VerificationDelivery } from '../services/email';
 
+type AuthVerificationContext = 'signup' | 'login' | 'resend';
+
 type AuthWorkerEnv = {
   APP_BASE_URL?: string;
   RESEND_API_KEY?: string;
@@ -58,6 +60,71 @@ function getRequestBody(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
 }
 
+function getAuthRequestId(request: Request): string {
+  const cfRay = request.headers.get('cf-ray') || request.headers.get('CF-Ray');
+  if (cfRay) {
+    return cfRay;
+  }
+
+  return crypto.randomUUID();
+}
+
+function maskEmail(value: string): string {
+  const normalized = String(value || '').trim().toLowerCase();
+  const atIndex = normalized.indexOf('@');
+  if (atIndex <= 0) {
+    return normalized ? `${normalized.slice(0, 2)}***` : 'unknown';
+  }
+
+  const local = normalized.slice(0, atIndex);
+  const domain = normalized.slice(atIndex + 1);
+  const maskedLocal = local.length <= 2
+    ? `${local.charAt(0) || '*'}***`
+    : `${local.slice(0, 2)}***`;
+
+  return `${maskedLocal}@${domain}`;
+}
+
+function maskIdentifier(value: string): string {
+  const normalized = String(value || '').trim();
+  if (!normalized) {
+    return 'unknown';
+  }
+  if (normalized.includes('@')) {
+    return maskEmail(normalized);
+  }
+
+  return normalized.length <= 3
+    ? `${normalized.charAt(0)}***`
+    : `${normalized.slice(0, 3)}***`;
+}
+
+function sanitizeErrorMessage(value: unknown, maxLength = 320): string {
+  const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, Math.max(0, maxLength - 1))}...`
+    : normalized;
+}
+
+function logAuthDelivery(event: string, data: Record<string, unknown>, level: 'log' | 'error' = 'log') {
+  const payload = {
+    event,
+    data,
+    timestamp: Date.now(),
+  };
+
+  if (level === 'error') {
+    console.error('[ION AUTH]', JSON.stringify(payload));
+    return;
+  }
+
+  console.log('[ION AUTH]', JSON.stringify(payload));
+}
+
 export class AuthWorker {
   constructor(private db?: D1Database, private env?: AuthWorkerEnv) {}
 
@@ -66,14 +133,46 @@ export class AuthWorker {
     return `${origin.replace(/\/+$/, '')}/verify-email?token=${encodeURIComponent(token)}`;
   }
 
-  private async issueVerification(request: Request, user: { id: string; username: string; email: string; displayName: string; role: string; emailVerified: boolean; }) {
+  private async issueVerification(
+    request: Request,
+    user: { id: string; username: string; email: string; displayName: string; role: string; emailVerified: boolean; },
+    context: AuthVerificationContext,
+    requestId: string,
+  ) {
     const verification = await createEmailVerification(this.db!, user);
     const verificationUrl = this.buildVerificationUrl(request, verification.token);
+    logAuthDelivery('verification_token_issued', {
+      requestId,
+      context,
+      userId: user.id,
+      email: maskEmail(user.email),
+      expiresAt: verification.record.expires_at,
+      appBaseUrl: String(this.env?.APP_BASE_URL || '').trim() || new URL(request.url).origin,
+    });
+
     const mailResult = await sendVerificationEmail(this.env || {}, {
       to: user.email,
       displayName: user.displayName,
       verificationUrl,
     });
+
+    logAuthDelivery(mailResult.delivered ? 'verification_email_delivered' : 'verification_email_failed', {
+      requestId,
+      context,
+      userId: user.id,
+      email: maskEmail(user.email),
+      delivery: mailResult.delivery,
+      provider: mailResult.provider,
+      attemptedProvider: mailResult.attemptedProvider || null,
+      failureStage: mailResult.failureStage || null,
+      statusCode: mailResult.statusCode || null,
+      responseSnippet: sanitizeErrorMessage(mailResult.responseSnippet || ''),
+      error: sanitizeErrorMessage(mailResult.error || ''),
+      transportConfigured: String(this.env?.EMAIL_TRANSPORT || '').trim().toLowerCase() || '(auto)',
+      hasResendApiKey: Boolean(String(this.env?.RESEND_API_KEY || '').trim()),
+      hasEmailFrom: Boolean(String(this.env?.EMAIL_FROM || '').trim()),
+      mailchannelsApiUrl: String(this.env?.MAILCHANNELS_API_URL || '').trim() || 'https://api.mailchannels.net/tx/v1/send',
+    }, mailResult.delivered ? 'log' : 'error');
 
     return {
       verification,
@@ -105,6 +204,8 @@ export class AuthWorker {
       return dbError;
     }
 
+    const requestId = getAuthRequestId(request);
+
     const body = getRequestBody(await request.json().catch(() => null));
     const email = String(body?.email || '').trim();
     const password = String(body?.password || '');
@@ -128,11 +229,22 @@ export class AuthWorker {
 
     const existingUser = await findUserByEmail(this.db!, email);
     if (existingUser) {
+      logAuthDelivery('signup_duplicate_email', {
+        requestId,
+        email: maskEmail(email),
+      });
       return json({ error: 'An account with that email already exists.' }, 409);
     }
 
     const user = await createUser(this.db!, { email, password, displayName, username });
-    const delivery = await this.issueVerification(request, user);
+    logAuthDelivery('signup_user_created', {
+      requestId,
+      userId: user.id,
+      email: maskEmail(user.email),
+      username: user.username,
+    });
+
+    const delivery = await this.issueVerification(request, user, 'signup', requestId);
 
     return json({
       verificationRequired: true,
@@ -150,6 +262,8 @@ export class AuthWorker {
     if (dbError) {
       return dbError;
     }
+
+    const requestId = getAuthRequestId(request);
 
     const body = getRequestBody(await request.json().catch(() => null));
     const identifier = String(body?.identifier || body?.email || body?.username || '').trim();
@@ -171,6 +285,13 @@ export class AuthWorker {
 
     if (userRecord.email_verified !== 1) {
       const user = await findUserById(this.db!, userRecord.id);
+      logAuthDelivery('login_verification_required', {
+        requestId,
+        userId: userRecord.id,
+        identifier: maskIdentifier(identifier),
+        email: maskEmail(userRecord.email),
+      });
+
       const verification = user ? await this.issueVerification(request, {
         id: user.id,
         username: user.username,
@@ -178,7 +299,7 @@ export class AuthWorker {
         displayName: user.display_name,
         role: user.role,
         emailVerified: false,
-      }) : null;
+      }, 'login', requestId) : null;
 
       return json({
         error: 'Email verification is required before signing in.',
@@ -286,6 +407,8 @@ export class AuthWorker {
       return dbError;
     }
 
+    const requestId = getAuthRequestId(request);
+
     const body = getRequestBody(await request.json().catch(() => null));
     const identifier = String(body?.identifier || body?.email || '').trim();
 
@@ -295,12 +418,28 @@ export class AuthWorker {
 
     const userRecord = await findUserByIdentifier(this.db!, identifier);
     if (!userRecord) {
+      logAuthDelivery('resend_verification_user_not_found', {
+        requestId,
+        identifier: maskIdentifier(identifier),
+      });
       return json({ error: 'No account was found for that identifier.' }, 404);
     }
 
     if (userRecord.email_verified === 1) {
+      logAuthDelivery('resend_verification_already_verified', {
+        requestId,
+        userId: userRecord.id,
+        email: maskEmail(userRecord.email),
+      });
       return json({ ok: true, alreadyVerified: true });
     }
+
+    logAuthDelivery('resend_verification_requested', {
+      requestId,
+      userId: userRecord.id,
+      identifier: maskIdentifier(identifier),
+      email: maskEmail(userRecord.email),
+    });
 
     const verification = await this.issueVerification(request, {
       id: userRecord.id,
@@ -309,7 +448,7 @@ export class AuthWorker {
       displayName: userRecord.display_name,
       role: userRecord.role,
       emailVerified: false,
-    });
+    }, 'resend', requestId);
 
     return json({
       ok: true,
