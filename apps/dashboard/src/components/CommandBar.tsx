@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { forwardRef, HTMLAttributes } from 'react'
+import { ReactNode, forwardRef, HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
 
 interface CommandBarProps extends HTMLAttributes<HTMLDivElement> {
@@ -13,6 +13,7 @@ interface CommandBarProps extends HTMLAttributes<HTMLDivElement> {
   onToggleNavigation?: () => void
   navigationExpanded?: boolean
   onLogout?: () => void
+  statusSlot?: ReactNode
 }
 
 export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
@@ -27,6 +28,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
     onToggleNavigation,
     navigationExpanded,
     onLogout,
+    statusSlot,
     className,
     ...props
   }, ref) => {
@@ -122,6 +124,8 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
           </div>
 
           <div className="flex items-center gap-2">
+            {statusSlot ? <div className="hidden xl:flex xl:items-center xl:gap-2">{statusSlot}</div> : null}
+
             <Link
               href="/assistant"
               aria-label="Open assistant"

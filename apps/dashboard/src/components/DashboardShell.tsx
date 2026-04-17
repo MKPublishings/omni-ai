@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { AmbientBackground } from './AmbientBackground'
@@ -7,6 +8,8 @@ import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser } from '@/lib/dashboard'
+import { PremiumBadge } from '@/ui/billing/PremiumBadge'
+import { usePremiumStatus } from '@/ui/billing/usePremiumStatus'
 
 interface DashboardShellProps {
   title: string
@@ -23,6 +26,11 @@ interface NavigationEntry {
 }
 
 const navigationItems: NavigationEntry[] = [
+  {
+    href: '/pricing',
+    label: 'Pricing',
+    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.5 0-4.5 1.567-4.5 3.5S9.5 15 12 15s4.5 1.567 4.5 3.5S14.5 22 12 22m0-14V2m0 20v-2" /></svg>,
+  },
   {
     href: '/workspace',
     label: 'Overview',
@@ -82,6 +90,7 @@ function buildBreadcrumbs(pathname: string): string[] {
 export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false }: DashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const premium = usePremiumStatus()
   const [navCollapsed, setNavCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
@@ -166,6 +175,12 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
 
   const navigationExpanded = isMobileViewport ? mobileNavOpen : !navCollapsed
 
+  const commandStatus = premium.loading
+    ? <span className="hidden rounded-full border border-quantum-white/12 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-quantum-white/52 xl:inline-flex">Checking plan</span>
+    : premium.isPremium
+      ? <PremiumBadge compact label={premium.accessTier === 'enterprise' ? 'Enterprise active' : 'Premium active'} />
+      : <Link href="/pricing" className="hidden rounded-full border border-spectral-cyan-500/22 bg-spectral-cyan-500/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16 xl:inline-flex">Upgrade</Link>
+
   const handleToggleNavigation = () => {
     if (isMobileViewport) {
       setMobileNavOpen((value) => !value)
@@ -222,6 +237,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             onToggleNavigation={handleToggleNavigation}
             navigationExpanded={navigationExpanded}
             onLogout={handleLogout}
+            statusSlot={commandStatus}
           />
 
           <main className="min-w-0 flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">

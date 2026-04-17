@@ -9,6 +9,11 @@ import { DashboardHealthStatus, fetchPublicHealth, LIVE_REFRESH_INTERVAL_MS } fr
 
 const roamCards = [
   {
+    title: 'Pricing',
+    href: '/pricing',
+    description: 'Move directly into the new premium purchase flow and trigger checkout against the live Worker billing routes.',
+  },
+  {
     title: 'Platform',
     href: '/platform',
     description: 'See the Cloudflare deployment shape and a public health snapshot before login.',
@@ -69,6 +74,7 @@ export default function LandingPage() {
       subtitle="Browse the public site, inspect the platform surface, and then step into the authenticated operational workspace when you are ready."
       actions={
         <>
+          <Link href="/pricing" className="rounded-full border border-spectral-cyan-500/18 bg-spectral-cyan-500/10 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/18">View pricing</Link>
           <Link href="/platform" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Explore platform</Link>
           <Link href="/login" className="rounded-full bg-ion-blue-500 px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-ion-blue-600">Sign in</Link>
         </>
