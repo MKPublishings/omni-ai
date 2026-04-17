@@ -151,6 +151,19 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       textareaRef.current?.blur()
     }
 
+    const handleScrollToTop = () => {
+      messagesContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+
+      const pageScroller = panelRef.current?.closest('main')
+      if (pageScroller instanceof HTMLElement) {
+        pageScroller.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+
     const handleKeyPress = (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -245,15 +258,30 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 disabled={isThinking}
               />
             </div>
-            <Button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isThinking}
-              className="h-11 w-full rounded-2xl px-5 sm:h-11 sm:w-auto"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </Button>
+            <div className="flex w-full gap-2 sm:w-auto sm:flex-col">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleScrollToTop}
+                className="h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
+                aria-label="Scroll to top"
+                title="Scroll to top"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isThinking}
+                className="h-11 flex-1 rounded-2xl px-5 sm:w-11 sm:flex-none sm:px-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

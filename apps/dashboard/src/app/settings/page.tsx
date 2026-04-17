@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/Button'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
+import { clearCachedAssistantMessages, getCachedAssistantMessageCount } from '@/lib/assistant-chat'
 import {
   clearChatHistory,
   DashboardChatHistoryTurn,
@@ -28,9 +29,11 @@ export default function SettingsPage() {
   const [actionMessage, setActionMessage] = useState('')
   const [savingKey, setSavingKey] = useState<'persistHistory' | 'contextCarryover' | ''>('')
   const [isClearingHistory, setIsClearingHistory] = useState(false)
+  const [cachedMessageCount, setCachedMessageCount] = useState(0)
 
   const loadSettings = () => {
     setError('')
+    setCachedMessageCount(getCachedAssistantMessageCount())
     Promise.all([fetchDashboardUser(), fetchSystemStatus(), fetchChatSettings(), fetchChatHistory(200)])
       .then(([userPayload, nextStatus, chatSettingsPayload, chatHistoryPayload]) => {
         setUser(userPayload.user)
@@ -76,8 +79,10 @@ export default function SettingsPage() {
 
     try {
       await clearChatHistory()
+      clearCachedAssistantMessages()
       setChatTurns([])
-      setActionMessage('Saved chat history cleared from your account.')
+      setCachedMessageCount(0)
+      setActionMessage('Chat history and local assistant chat cleared.')
     } catch (err) {
       setActionMessage(err instanceof Error ? err.message : 'Could not clear chat history')
     } finally {
@@ -179,7 +184,7 @@ export default function SettingsPage() {
               <p className="mt-2 text-sm leading-6 text-quantum-white/72">Assistant conversations now sync to your account, reload after navigation, and follow you across browsers and mobile sessions.</p>
             </div>
             <span className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-1 text-xs uppercase tracking-[0.22em] text-quantum-white/60">
-              {chatTurns.length} saved turns
+              {chatTurns.length} saved turns · {cachedMessageCount} cached messages
             </span>
           </div>
 
@@ -219,8 +224,8 @@ export default function SettingsPage() {
             <Button variant="secondary" size="sm" onClick={handleExportHistory} disabled={chatTurns.length === 0}>
               Export chat history
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleClearHistory} disabled={isClearingHistory || chatTurns.length === 0}>
-              {isClearingHistory ? 'Clearing history...' : 'Clear saved history'}
+            <Button variant="ghost" size="sm" onClick={handleClearHistory} disabled={isClearingHistory || (chatTurns.length === 0 && cachedMessageCount === 0)}>
+              {isClearingHistory ? 'Clearing chat...' : 'Clear chat and history'}
             </Button>
             <Button variant="ghost" size="sm" onClick={loadSettings}>
               Refresh chat status
@@ -244,6 +249,10 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Stored turns</dt>
               <dd className="break-words font-medium text-quantum-white sm:text-right">{chatTurns.length}</dd>
+            </div>
+            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <dt>Cached local messages</dt>
+              <dd className="break-words font-medium text-quantum-white sm:text-right">{cachedMessageCount}</dd>
             </div>
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Last preference update</dt>

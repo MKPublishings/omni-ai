@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
 import { getApiUrl, getStoredToken, getStoredUser } from '@/lib/auth'
+import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
 
 type ConversationMessage = {
@@ -27,8 +28,6 @@ const starterMessages: ConversationMessage[] = [
   },
 ]
 
-const CHAT_CACHE_PREFIX = 'ion_assistant_messages:'
-
 function buildStarterMessages(): ConversationMessage[] {
   return [
     {
@@ -41,8 +40,7 @@ function buildStarterMessages(): ConversationMessage[] {
 }
 
 function getChatCacheKey() {
-  const user = getStoredUser()
-  return `${CHAT_CACHE_PREFIX}${user?.id || 'anonymous'}`
+  return getAssistantChatCacheKey()
 }
 
 function readCachedMessages(): ConversationMessage[] {
@@ -247,6 +245,26 @@ export default function AssistantPage() {
   useEffect(() => {
     writeCachedMessages(messages)
   }, [messages])
+
+  useEffect(() => {
+    const handleChatCleared = () => {
+      setMessages(buildStarterMessages())
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === getAssistantChatCacheKey() && event.newValue === null) {
+        setMessages(buildStarterMessages())
+      }
+    }
+
+    window.addEventListener(ASSISTANT_CHAT_CLEARED_EVENT, handleChatCleared)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(ASSISTANT_CHAT_CLEARED_EVENT, handleChatCleared)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
