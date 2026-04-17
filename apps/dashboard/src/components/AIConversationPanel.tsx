@@ -70,12 +70,12 @@ const MessageBubble = ({ message }: { message: Message }) => {
 const ThinkingIndicator = () => {
   return (
     <div className="flex justify-start mb-4">
-      <div className="ix-glass-sovereign px-4 py-3 rounded-lg ix-glow-cyan">
+      <div className="ix-glass-sovereign px-4 py-3 rounded-lg">
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-spectral-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-spectral-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-spectral-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+            <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
+            <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
+            <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
           </div>
           <span className="text-spectral-cyan-400 text-sm font-medium uppercase tracking-wider">
             Processing
@@ -95,7 +95,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      messagesEndRef.current?.scrollIntoView()
     }
 
     useEffect(() => {
@@ -170,13 +170,13 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       }
 
       window.setTimeout(() => {
-        textareaRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        textareaRef.current?.scrollIntoView({ block: 'center' })
       }, 250)
     }
 
     return (
       <div
-        ref={panelRef}
+                className="inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white"
         className={clsx(
           'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
           focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
@@ -201,7 +201,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
               variant="ghost"
               size="sm"
               onClick={onToggleFocus}
-              className="h-9 w-9 rounded-full p-0 text-quantum-white/64 hover:text-quantum-white sm:h-8 sm:w-auto sm:rounded-md sm:p-0"
+              className="h-9 w-9 rounded-full p-0 text-quantum-white/64 sm:h-8 sm:w-auto sm:rounded-md sm:p-0"
             >
               {focusMode ? (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +242,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 onFocus={handleInputFocus}
                 rows={2}
                 enterKeyHint="done"
-                className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
+                className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
                 disabled={isThinking}
               />
             </div>

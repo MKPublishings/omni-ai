@@ -171,6 +171,13 @@
     -webkit-touch-callout: default;
   }
 
+  .assistant-static-page,
+  .assistant-static-page * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
   .chat-copy-surface {
     position: relative;
     z-index: 0;
@@ -195,6 +202,15 @@
 
   .chat-messages-scroll.chat-selection-active {
     overflow: hidden;
+  }
+
+  .assistant-static-page .chat-messages-scroll,
+  .assistant-static-page .chat-copy-surface,
+  .assistant-static-page .ix-glass-sovereign,
+  .assistant-static-page .ix-glass-sovereign:hover,
+  .assistant-static-page .ix-glass-sovereign:active {
+    transform: none !important;
+    -webkit-transform: none !important;
   }
 
   @media (pointer: coarse) {

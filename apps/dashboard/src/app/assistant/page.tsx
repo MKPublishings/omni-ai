@@ -368,7 +368,7 @@ export default function AssistantPage() {
       hidePageIntroOnMobile
       fullBleedOnMobile
     >
-      <section className="w-full md:px-0">
+      <section className="assistant-static-page w-full md:px-0">
         <div className="min-h-[calc(100svh-8.5rem)] w-full sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]">
           <AIConversationPanel
             messages={messages}
