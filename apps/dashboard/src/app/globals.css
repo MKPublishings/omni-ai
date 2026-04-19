@@ -137,6 +137,8 @@
 
   .chat-fullscreen-shell:fullscreen {
     box-sizing: border-box;
+    border: 0 !important;
+    outline: none;
     padding: 5vw;
     background:
       radial-gradient(circle at 20% 20%, rgba(22, 102, 110, 0.18) 0%, transparent 30%),

@@ -383,12 +383,12 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         ref={panelRef}
         className={clsx(
-          'chat-fullscreen-shell h-full w-full min-w-0',
+          'chat-fullscreen-shell flex h-full w-full min-w-0 flex-col',
           className
         )}
         {...props}
       >
-        <div className="chat-fullscreen-panel ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]">
+        <div className="chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]">
           <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
