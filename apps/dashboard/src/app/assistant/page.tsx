@@ -645,7 +645,7 @@ export default function AssistantPage() {
 
   return (
     <DashboardShell
-      title="Assistant"
+      title=""
       subtitle=""
       hidePageIntroOnMobile
       fullBleedOnMobile
