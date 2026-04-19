@@ -18,6 +18,7 @@
     --workspace-table-cell-x: 16px;
     --workspace-table-cell-y: 12px;
     --workspace-content-gap: 1.5rem;
+    --workspace-content-inset: 5%;
     --dashboard-topbar-bg: rgba(7, 10, 18, 0.78);
     --dashboard-topbar-border: rgba(255, 255, 255, 0.08);
     --dashboard-topbar-fg: rgba(255, 255, 255, 0.94);
@@ -87,6 +88,7 @@
 
   .workspace-shell-frame {
     gap: var(--workspace-content-gap);
+    padding-inline: var(--workspace-content-inset);
   }
 
   .workspace-page-intro {

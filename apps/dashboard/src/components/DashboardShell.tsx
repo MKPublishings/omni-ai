@@ -260,7 +260,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
           />
 
           <main className="min-w-0 flex-1 overflow-auto py-4 sm:py-5">
-            <div className={clsx('workspace-shell-frame site-content-frame mx-auto flex w-full min-w-0 flex-col gap-5 sm:gap-6', fullBleedOnMobile ? 'px-0 md:px-0' : '')}>
+            <div className="workspace-shell-frame site-content-frame mx-auto flex w-full min-w-0 flex-col gap-5 sm:gap-6">
               <div className={clsx('workspace-page-intro', hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>
                 <div className="workspace-page-intro-copy min-w-0">
                   <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1>
