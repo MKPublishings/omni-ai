@@ -20,6 +20,27 @@ const publicLinks = [
   { href: '/workspace', label: 'Workspace' },
 ]
 
+const legalItems = [
+  { href: '/terms', label: 'Terms of Service' },
+  { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/acceptable-use', label: 'Acceptable Use Policy' },
+  { href: '/security-compliance', label: 'Security & Compliance' },
+  { href: '/data-processing-addendum', label: 'Data Processing Addendum (DPA)' },
+  { href: '/cookie-settings', label: 'Cookie Settings' },
+]
+
+const companyItems = [
+  'Ionirix LLC (New York, USA)',
+  'Registered and operating in accordance with NYS corporate law.',
+  'Trademark and brand assets protected under U.S. and international IP statutes.',
+]
+
+const contactItems = [
+  { label: 'General Inquiries', href: 'mailto:support@ionirix.net', value: 'support@ionirix.net' },
+  { label: 'Security Reports', href: 'mailto:support@ionirix.net', value: 'support@ionirix.net' },
+  { label: 'Legal Notices', href: 'mailto:noreply@ionirix.com', value: 'noreply@ionirix.com' },
+]
+
 export function PublicSiteShell({ title, subtitle, children, actions }: PublicSiteShellProps) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-pine-black-900">
@@ -62,8 +83,51 @@ export function PublicSiteShell({ title, subtitle, children, actions }: PublicSi
           <div className="mt-10 grid gap-6">{children}</div>
         </main>
 
-        <footer className="border-t border-quantum-white/8 py-5 text-sm text-quantum-white/48">
-          Public pages are browseable without authentication. Workspace routes move through the live Worker-backed auth flow.
+        <footer className="border-t border-quantum-white/8 py-8 text-sm text-quantum-white/56">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-quantum-white">© 2026 Ionirix LLC. All rights reserved.</p>
+              <p className="max-w-xl leading-7 text-quantum-white/60">
+                Ionirix is a sovereign intelligence architecture. All systems, interfaces, simulations, models, designs, and platform materials are the exclusive property of Ionirix LLC. Unauthorized reproduction, distribution, modification, or derivative use is strictly prohibited.
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Legal</p>
+              <ul className="mt-4 space-y-2 text-quantum-white/64">
+                {legalItems.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="transition hover:text-quantum-white">
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Company</p>
+              <ul className="mt-4 space-y-2 text-quantum-white/64">
+                {companyItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Contact</p>
+              <ul className="mt-4 space-y-2 text-quantum-white/64">
+                {contactItems.map((item) => (
+                  <li key={item.label}>
+                    <span className="text-quantum-white/50">{item.label}:</span>{' '}
+                    <a href={item.href} className="transition hover:text-quantum-white">
+                      {item.value}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </footer>
       </div>
     </div>
