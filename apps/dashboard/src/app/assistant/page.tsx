@@ -419,7 +419,6 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<ConversationMessage[]>(() => readCachedMessages())
   const [isThinking, setIsThinking] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
-  const [focusMode, setFocusMode] = useState(false)
 
   const upsertAssistantMessage = (id: string, patch: Partial<ConversationMessage>) => {
     setMessages((current) => {
@@ -658,8 +657,6 @@ export default function AssistantPage() {
             onSendMessage={handleSendMessage}
             isThinking={isThinking}
             isLoading={isLoadingHistory}
-            focusMode={focusMode}
-            onToggleFocus={() => setFocusMode((value) => !value)}
             className="h-full min-h-[calc(100svh-8.5rem)] w-full rounded-none border-x-0 sm:min-h-[680px] sm:rounded-[1.5rem] sm:border-x xl:min-h-[calc(100svh-12rem)]"
           />
         </div>

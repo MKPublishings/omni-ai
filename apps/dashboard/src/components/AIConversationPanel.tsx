@@ -25,8 +25,6 @@ interface AIConversationPanelProps extends HTMLAttributes<HTMLDivElement> {
   onSendMessage?: (message: string) => void
   isThinking?: boolean
   isLoading?: boolean
-  focusMode?: boolean
-  onToggleFocus?: () => void
 }
 
 type MessageSegment =
@@ -239,7 +237,7 @@ const ThinkingIndicator = () => {
 }
 
 export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPanelProps>(
-  ({ messages = [], onSendMessage, isThinking, isLoading, focusMode, onToggleFocus, className, ...props }, ref) => {
+  ({ messages = [], onSendMessage, isThinking, isLoading, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const messagesContainerRef = useRef<HTMLDivElement>(null)
@@ -343,7 +341,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       <div
         className={clsx(
           'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
-          focusMode ? 'fixed inset-0 z-50 rounded-none sm:inset-4 sm:rounded-[1.5rem]' : 'h-full w-full',
+          'h-full w-full',
           className
         )}
         {...props}
@@ -360,24 +358,6 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
               <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
             </div>
           </div>
-          {onToggleFocus && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleFocus}
-              className="h-9 w-9 rounded-full p-0 text-quantum-white/64 sm:h-8 sm:w-auto sm:rounded-md sm:p-0"
-            >
-              {focusMode ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              )}
-            </Button>
-          )}
         </div>
 
         <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
