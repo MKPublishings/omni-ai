@@ -48,7 +48,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
     <div className="relative min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 md:px-6 lg:px-8">
+      <div className="site-shell-frame relative z-10 mx-auto flex min-h-screen w-full flex-col py-6">
         <header className="ix-glass-ambient flex flex-col gap-4 rounded-2xl border border-quantum-white/8 px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-spectral-cyan-500 text-sm font-bold text-pine-black-900">

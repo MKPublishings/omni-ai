@@ -19,6 +19,13 @@ export interface BillingPlan {
   featureList: string[]
 }
 
+export interface PlanComparisonRow {
+  feature: string
+  detail: string
+  premium: string
+  enterprise: string
+}
+
 function resolvePublicPriceId(value: string | undefined, fallback: string): string {
   return String(value || '').trim() || fallback
 }
@@ -85,36 +92,72 @@ export const PLANS: Record<BillingPlanKey, BillingPlan> = {
 
 export const PRICING_PLANS = Object.values(PLANS)
 
-export const PLAN_COMPARISON_ROWS = [
+export const PLAN_COMPARISON_ROWS: PlanComparisonRow[] = [
   {
     feature: 'Access tier',
+    detail: 'The entitlement lane your account resolves into after checkout and verification.',
     premium: 'Premium',
     enterprise: 'Enterprise',
   },
   {
     feature: 'Monthly price',
+    detail: 'Recurring monthly billing for operators who want the shortest commitment path.',
     premium: '$9.99',
     enterprise: '$99.99',
   },
   {
     feature: 'Yearly price',
+    detail: 'Recurring annual billing for lower effective cost over sustained use.',
     premium: '$89',
     enterprise: '$999',
   },
   {
     feature: 'Best fit',
-    premium: 'Individual premium usage',
-    enterprise: 'Teams and heavy usage',
+    detail: 'The primary usage profile each plan is designed to support.',
+    premium: 'Individual operators and focused premium use',
+    enterprise: 'Teams, heavier operational demand, and broader adoption',
   },
   {
     feature: 'Billing cadence',
+    detail: 'Available recurring payment options on the live checkout path.',
     premium: 'Monthly or yearly recurring',
     enterprise: 'Monthly or yearly recurring',
   },
   {
+    feature: 'Workspace access level',
+    detail: 'How the plan positions your account inside the entitlement model.',
+    premium: 'Premium workspace entitlement',
+    enterprise: 'Higher-capacity enterprise entitlement',
+  },
+  {
+    feature: 'Operational scope',
+    detail: 'How each tier is framed for ongoing usage intensity.',
+    premium: 'Direct premium lane for sustained individual workflows',
+    enterprise: 'Broader lane for recurring team and advanced operator use',
+  },
+  {
+    feature: 'Commitment profile',
+    detail: 'How the plan is positioned when choosing between flexibility and longer-term lock-in.',
+    premium: 'Monthly for flexibility, yearly for lower recurring cost',
+    enterprise: 'Monthly for evaluation, yearly for persistent team commitment',
+  },
+  {
     feature: 'Checkout path',
-    premium: 'Worker-backed Stripe checkout',
-    enterprise: 'Worker-backed Stripe checkout',
+    detail: 'The mechanism used to launch payment and return state to the app.',
+    premium: 'Worker-backed Stripe checkout with entitlement refresh',
+    enterprise: 'Worker-backed Stripe checkout with entitlement refresh',
+  },
+  {
+    feature: 'Return-state verification',
+    detail: 'How the UI confirms access after Stripe redirects back.',
+    premium: 'Live entitlement checks across pricing, return screens, and workspace header',
+    enterprise: 'Live entitlement checks across pricing, return screens, and workspace header',
+  },
+  {
+    feature: 'Upgrade path',
+    detail: 'How the platform handles movement into a higher tier.',
+    premium: 'Can move into enterprise if operational demand increases',
+    enterprise: 'Top paid lane in the current public pricing model',
   },
 ]
 

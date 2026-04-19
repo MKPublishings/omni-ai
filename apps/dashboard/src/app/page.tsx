@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { GlassCard } from '@/components/GlassCard'
 import { PublicSiteShell } from '@/components/PublicSiteShell'
 
 export default function LandingPage() {
@@ -7,18 +8,19 @@ export default function LandingPage() {
       title="Ionirix — Sovereign Intelligence Architecture"
       subtitle="Public Entry Edition"
       heroMeta={
-        <p className="dateline">April 19, 2026 | Public Entry Desk | New York Edition</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-quantum-white/48">April 19, 2026 | Public Entry Desk | New York Edition</p>
       }
       actions={
         <>
-          <Link href="/platform" className="panel-action panel-action-secondary">Platform</Link>
-          <Link href="/roadmap" className="panel-action panel-action-secondary">Roadmap</Link>
-          <Link href="/login" className="panel-action panel-action-primary">Enter workspace</Link>
+          <Link href="/platform" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Platform</Link>
+          <Link href="/roadmap" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Roadmap</Link>
+          <Link href="/login" className="rounded-full bg-ion-blue-500 px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-ion-blue-600">Enter workspace</Link>
         </>
       }
       footer={
-        <footer className="legal-footer">
-          <section className="legal-panel">
+        <footer className="border-t border-quantum-white/8 py-8 text-sm text-quantum-white/56">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+            <section className="space-y-4">
             <p>© 2026 Ionirix LLC. All rights reserved.</p>
 
             <p>
@@ -26,134 +28,219 @@ export default function LandingPage() {
               models, designs, and platform materials are the exclusive property of Ionirix LLC.
               Unauthorized reproduction, distribution, modification, or derivative use is strictly prohibited.
             </p>
-          </section>
+            </section>
 
-          <section className="legal-panel">
+            <section>
             <p>— Legal —</p>
-            <ul>
-              <li><Link href="/terms">Terms of Service</Link></li>
-              <li><Link href="/privacy">Privacy Policy</Link></li>
-              <li><Link href="/acceptable-use">Acceptable Use Policy</Link></li>
-              <li><Link href="/security-compliance">Security &amp; Compliance</Link></li>
-              <li><Link href="/data-processing-addendum">Data Processing Addendum (DPA)</Link></li>
-              <li><Link href="/cookie-settings">Cookie Settings</Link></li>
+            <ul className="mt-4 space-y-2 text-quantum-white/64">
+              <li><Link href="/terms" className="transition hover:text-quantum-white">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="transition hover:text-quantum-white">Privacy Policy</Link></li>
+              <li><Link href="/acceptable-use" className="transition hover:text-quantum-white">Acceptable Use Policy</Link></li>
+              <li><Link href="/security-compliance" className="transition hover:text-quantum-white">Security &amp; Compliance</Link></li>
+              <li><Link href="/data-processing-addendum" className="transition hover:text-quantum-white">Data Processing Addendum (DPA)</Link></li>
+              <li><Link href="/cookie-settings" className="transition hover:text-quantum-white">Cookie Settings</Link></li>
             </ul>
-          </section>
+            </section>
 
-          <section className="legal-panel">
+            <section>
             <p>— Company —</p>
-            <ul>
+            <ul className="mt-4 space-y-2 text-quantum-white/64">
               <li>Ionirix LLC (New York, USA)</li>
               <li>Registered and operating in accordance with NYS corporate law.</li>
               <li>Trademark and brand assets protected under U.S. and international IP statutes.</li>
             </ul>
-          </section>
+            </section>
 
-          <section className="legal-panel">
+            <section>
             <p>— Contact —</p>
-            <ul>
-              <li>General Inquiries: <a href="mailto:support@ionirix.net">support@ionirix.net</a></li>
-              <li>Security Reports: <a href="mailto:support@ionirix.net">support@ionirix.net</a></li>
-              <li>Legal Notices: <a href="mailto:noreply@ionirix.com">noreply@ionirix.com</a></li>
+            <ul className="mt-4 space-y-2 text-quantum-white/64">
+              <li>General Inquiries: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
+              <li>Security Reports: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
+              <li>Legal Notices: <a href="mailto:noreply@ionirix.com" className="transition hover:text-quantum-white">noreply@ionirix.com</a></li>
             </ul>
-          </section>
+            </section>
+          </div>
         </footer>
       }
     >
-      <section className="panel newspaper-lead hover-panel">
-        <article className="newspaper-article lead-article">
-          <header>
-            <p className="article-category">Lead</p>
-            <h2 className="article-headline">A sovereign architecture enters the public surface with structure instead of noise.</h2>
-            <p className="article-subhead">
-              Ionirix is presented here as infrastructure: a system for reasoning, simulation, memory, and long-horizon creation. The public entry is meant to explain the architecture plainly, then direct the reader into the live operational surface.
-            </p>
-          </header>
-          <p className="article-body">
-            Ionirix is not framed as a generic assistant layer. It is a sovereign intelligence architecture designed to make complex work more legible, more continuous, and more intentional. Its purpose is to preserve clarity under scale, maintain operator agency, and provide a durable environment in which thought can move into execution without losing structure.
-          </p>
-          <p className="article-body">
-            This entry page functions like a front-page edition: an ordered briefing on what the platform is, what has changed, and where it is heading. The newspaper logic is deliberate. Each panel acts as an article, each article holds a distinct layer of the system, and the whole page reads as a public record rather than a promotional surface.
-          </p>
-          <blockquote className="pull-quote">
-            "Ionirix is being built to carry meaning, continuity, and direction through complexity."
-          </blockquote>
-        </article>
-      </section>
-
-      <section className="panel update-panel hover-panel">
-        <article className="newspaper-article update-article">
-          <header>
-            <p className="article-category">Sovereign Update</p>
-            <h2 className="article-headline">The latest work consolidates the system into a more legible operating form.</h2>
-            <p className="article-subhead">
-              The recent build cycle has focused on coherence: one kernel direction, one public story, one cleaner bridge between explanation, identity, billing, and live simulation infrastructure.
-            </p>
-          </header>
-
-          <div className="article-split">
-            <article className="article-column">
-              <p className="article-body">
-                The sovereign update includes the continued formation of a unified kernel, a broad UI overhaul, new public pages, billing integration, email verification, valuation-facing documents, simulation bus work, and the elevation of reasoning archetypes into explicit system structure.
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+        <GlassCard className="p-6" interactive>
+          <article>
+            <header>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Lead Article</p>
+              <h2 className="mt-4 text-3xl font-semibold leading-tight text-quantum-white">A sovereign architecture enters the public surface with structure instead of noise.</h2>
+              <p className="mt-4 text-base leading-7 text-quantum-white/72">
+                Ionirix is presented here as infrastructure: a system for reasoning, simulation, memory, and long-horizon creation. The public entry is meant to explain the architecture plainly, then direct the reader into the live operational surface.
               </p>
-              <p className="article-body">
-                Together these changes move Ionirix away from fragmented surfaces and toward a publication-grade architecture. The public side now explains the platform with greater precision, while the internal side continues to deepen its reasoning, event, and simulation capabilities.
+            </header>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                Ionirix is not framed as a generic assistant layer. It is a sovereign intelligence architecture designed to make complex work more legible, more continuous, and more intentional. Its purpose is to preserve clarity under scale, maintain operator agency, and provide a durable environment in which thought can move into execution without losing structure.
               </p>
-            </article>
+              <p>
+                This page is meant to be read like a public edition. Each section carries a distinct layer of the system, from the underlying architecture to the latest update cycle, from platform intent to the near-term roadmap. The result should feel less like a landing page and more like an editorial surface for a system becoming real.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
 
-            <aside className="article-sidebar">
-              <p className="sidebar-title">Update Summary</p>
-              <ul className="sidebar-list">
-                <li>Unified kernel direction</li>
-                <li>UI overhaul across public and workspace surfaces</li>
-                <li>New public, legal, and pricing pages</li>
-                <li>Billing integration and entitlement flows</li>
-                <li>Email verification pathways</li>
-                <li>Valuation and public record materials</li>
-                <li>Simulation bus continuity</li>
-                <li>Reasoning archetypes as system primitives</li>
-              </ul>
-            </aside>
-          </div>
-        </article>
-      </section>
-
-      <section className="panel about-panel hover-panel">
-        <article className="newspaper-article about-article">
-          <header>
-            <p className="article-category">What Ionirix Is</p>
-            <h2 className="article-headline">A sovereign intelligence architecture, explained plainly.</h2>
-          </header>
-          <p className="article-body">
-            Ionirix is a system for structured reasoning, simulation, memory, and execution. It is designed to help a person or organization think clearly across long arcs of work rather than collapsing everything into isolated exchanges.
-          </p>
-          <p className="article-body">
-            Its sovereign quality comes from internal coherence. The platform is being shaped as an architecture with its own logic, spatial order, and operational identity. That means the public entry, workspace surfaces, billing routes, legal pages, and simulation mechanisms are meant to reinforce one another instead of behaving like disconnected layers.
-          </p>
-          <aside className="article-sidebar">
-            <p className="sidebar-title">Purpose</p>
-            <p className="sidebar-copy">
-              Clarity, agency, and long-horizon creation remain the central aims.
-            </p>
+        <GlassCard className="p-6" interactive>
+          <aside>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Public Entry Note</p>
+            <blockquote className="mt-4 text-2xl font-semibold leading-tight text-quantum-white">
+              &ldquo;Ionirix is being built to carry meaning, continuity, and direction through complexity.&rdquo;
+            </blockquote>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                The public shell now acts as a readable record of the platform instead of a thin outer wrapper. Visitors can understand what Ionirix is, what changed recently, and where the system is heading before crossing into the protected workspace.
+              </p>
+              <p>
+                The same design logic used on the capabilities and roadmap pages now governs the public entry: large glass panels, clear hierarchy, deliberate spacing, and enough density to reward actual reading.
+              </p>
+            </div>
           </aside>
-        </article>
+        </GlassCard>
       </section>
 
-      <section className="panel roadmap-panel hover-panel">
-        <article className="newspaper-article roadmap-article">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+        <GlassCard className="p-6" interactive>
+          <article>
           <header>
-            <p className="article-category">Road Ahead</p>
-            <h2 className="article-headline">The next phase extends deeper into infrastructure and continuity.</h2>
-          </header>
-          <p className="article-body">
-            The coming direction is not cosmetic. It points toward deeper simulation orchestration, stronger public-to-private continuity, more operator-grade telemetry, and broader use of reasoning archetypes as active components inside the product.
-          </p>
-          <p className="article-body">
-            Future work is expected to continue hardening identity, billing, and entitlement flows while expanding the system&apos;s ability to hold state, expose its logic, and support deliberate creation across longer time horizons.
-          </p>
-          <aside className="article-sidebar">
-            <p className="sidebar-title">Highlights</p>
-            <ul className="sidebar-list">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Sovereign Update</p>
+              <h2 className="mt-4 text-2xl font-semibold text-quantum-white">The latest work consolidates the system into a more legible operating form.</h2>
+              <p className="mt-4 text-sm leading-7 text-quantum-white/72">
+                The recent build cycle has focused on coherence: one kernel direction, one public story, and one cleaner bridge between explanation, identity, billing, and live simulation infrastructure.
+              </p>
+            </header>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <article className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-5">
+                <h3 className="text-lg font-semibold text-quantum-white">Structural work</h3>
+                <div className="mt-3 space-y-3 text-sm leading-6 text-quantum-white/72">
+                  <p>
+                    The platform continues to orient around a unified kernel model. Public pages, worker-backed routes, simulations, verification flows, and billing paths now describe the same underlying system rather than adjacent versions of it.
+                  </p>
+                  <p>
+                    That alignment matters because Ionirix is no longer being introduced as an abstract concept. It is being exposed as an operational stack with a readable public record and a protected workspace built around live state, system memory, and reasoning structure.
+                  </p>
+                </div>
+              </article>
+
+              <aside className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-5">
+                <h3 className="text-lg font-semibold text-quantum-white">What&apos;s New</h3>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-quantum-white/72">
+                  <li>Unified kernel direction established across the public surface and workspace model.</li>
+                  <li>UI overhaul completed for the public shell and operational posture.</li>
+                  <li>New public, legal, pricing, architecture, and roadmap pages added.</li>
+                  <li>Billing integration connected to live Worker-backed checkout and entitlement flows.</li>
+                  <li>Email verification introduced for activation and recovery pathways.</li>
+                  <li>Valuation and public record documentation brought into the broader surface.</li>
+                  <li>Simulation bus continuity reinforced across the runtime layer.</li>
+                  <li>Reasoning archetypes elevated into explicit system primitives.</li>
+                </ul>
+              </aside>
+            </div>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <aside>
+            <h3 className="text-lg font-semibold text-quantum-white">Update Context</h3>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                The public side now explains the platform with greater precision, while the internal side continues to deepen its reasoning, event, and simulation capabilities.
+              </p>
+              <p>
+                This is the same logic seen on the roadmap and capabilities pages: each panel is meant to stand as a compact article with enough depth to read on its own, while still contributing to the larger story of the system.
+            </p>
+            </div>
+          </aside>
+        </GlassCard>
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <GlassCard className="p-6" interactive>
+          <article>
+            <header>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">What Ionirix Is</p>
+              <h2 className="mt-4 text-xl font-semibold text-quantum-white">A sovereign intelligence architecture, explained plainly.</h2>
+            </header>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                Ionirix is a system for structured reasoning, simulation, memory, and execution. It is designed to help a person or organization think clearly across long arcs of work rather than collapsing everything into isolated exchanges.
+              </p>
+              <p>
+                Its sovereign quality comes from internal coherence. The public entry, workspace surfaces, billing routes, legal pages, and simulation mechanisms are meant to reinforce one another instead of behaving like disconnected layers.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <article>
+            <header>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Philosophy</p>
+              <h2 className="mt-4 text-xl font-semibold text-quantum-white">Clarity, agency, and long-horizon creation remain the center.</h2>
+            </header>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                The platform exists to make complex creation more legible. It aims to reduce fragmentation between thought, tools, systems, and execution while preserving the operator&apos;s sense of authorship over the process.
+              </p>
+              <p>
+                This is why Ionirix is being built as architecture rather than a thin interface wrapper. The system is meant to hold continuity and direction, not merely produce isolated outputs.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <aside>
+            <h2 className="text-xl font-semibold text-quantum-white">Purpose</h2>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                Ionirix is being shaped to support work that extends beyond a single prompt, a single page, or a single state transition.
+              </p>
+              <p>
+                The system is intended to help people think with continuity, govern outcomes over time, and move from concept to execution without losing the structure of the work itself.
+              </p>
+            </div>
+          </aside>
+        </GlassCard>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+        <GlassCard className="p-6" interactive>
+          <article>
+            <header>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Road Ahead</p>
+              <h2 className="mt-4 text-2xl font-semibold text-quantum-white">The next phase extends deeper into infrastructure and continuity.</h2>
+            </header>
+            <div className="mt-6 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                The coming direction is not cosmetic. It points toward deeper simulation orchestration, stronger public-to-private continuity, more operator-grade telemetry, and broader use of reasoning archetypes as active components inside the product.
+              </p>
+              <p>
+                Future work is expected to continue hardening identity, billing, and entitlement flows while expanding the system&apos;s ability to hold state, expose its logic, and support deliberate creation across longer time horizons.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Operational next</p>
+                <p className="mt-2 text-sm leading-6 text-quantum-white/72">Authoritative world-state expansion, deeper simulation orchestration, stronger system telemetry, and clearer inspection pathways remain near-term priorities.</p>
+              </div>
+              <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-5">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Public next</p>
+                <p className="mt-2 text-sm leading-6 text-quantum-white/72">The public side can continue to grow into richer system documentation, reasoning explainers, valuation records, and clearer access to platform intent without moving the auth boundary.</p>
+              </div>
+            </div>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <aside>
+            <h2 className="text-lg font-semibold text-quantum-white">Highlights</h2>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/72">
               <li>Authoritative world-state expansion</li>
               <li>Deeper simulation orchestration</li>
               <li>Stronger telemetry and inspection surfaces</li>
@@ -161,40 +248,38 @@ export default function LandingPage() {
               <li>Further release and investor documentation</li>
             </ul>
           </aside>
-        </article>
+        </GlassCard>
       </section>
 
-      <section className="panel founders-note hover-panel">
-        <article className="newspaper-article op-ed-article">
-          <header>
-            <p className="article-category">Founder&apos;s Note</p>
-            <h2 className="article-headline">The architecture must keep its center.</h2>
-          </header>
-          <p className="article-body">
-            Ionirix is being built with restraint on purpose. The goal is not velocity without form, but a system that can hold identity, intention, and continuity as it grows. If it succeeds, it will do so by remaining structurally honest at every layer.
-          </p>
-        </article>
-      </section>
-
-      <section className="panel systems-panel hover-panel">
-        <article className="newspaper-article systems-article">
+      <section className="grid gap-6 md:grid-cols-2">
+        <GlassCard className="p-6" interactive>
+          <article>
             <header>
-            <p className="article-category">Systems</p>
-            <h2 className="article-headline">The newspaper surface is rendered through panel logic.</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Founder&apos;s Note</p>
+              <h2 className="mt-4 text-xl font-semibold text-quantum-white">The architecture must keep its center.</h2>
             </header>
-          <p className="article-body">
-            Each section on this page is wrapped as a panel so the editorial form still follows Ionirix spatial logic. The result is a hybrid surface: article rhythm, panel geometry, hover-reactive affordance, and a clear hierarchy from headline to sidebar to note.
-          </p>
-          <p className="article-body">
-            The effect should feel less like a dashboard card grid and more like a deliberate publication rendered through sovereign interface rules.
-          </p>
-          <aside className="article-sidebar">
-            <p className="sidebar-title">Reading order</p>
-            <p className="sidebar-copy">
-              Headline, subhead, body, sidebars, and pull-quotes remain the organizing logic throughout the page.
+            <p className="mt-4 text-sm leading-7 text-quantum-white/72">
+              Ionirix is being built with restraint on purpose. The goal is not velocity without form, but a system that can hold identity, intention, and continuity as it grows. If it succeeds, it will do so by remaining structurally honest at every layer.
             </p>
-          </aside>
-        </article>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <article>
+            <header>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Systems</p>
+              <h2 className="mt-4 text-xl font-semibold text-quantum-white">The public surface now reads more like a record than a wrapper.</h2>
+            </header>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                Each section on this page is wrapped in the same glass-panel logic used elsewhere on the public surface. The goal is a readable set of hovering panels that feel consistent with the capabilities and roadmap pages while still carrying more editorial density.
+              </p>
+              <p>
+                Headline, subhead, body, sidebars, and compact internal panels remain the organizing logic throughout the page, but the visual language now stays inside Ionirix&apos;s established public-page system.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
       </section>
     </PublicSiteShell>
   )

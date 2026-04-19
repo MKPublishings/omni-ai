@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '../ui/billing/billing.css'
+import { ViewportLayoutController } from '@/components/ViewportLayoutController'
 
 export const metadata: Metadata = {
   title: 'Ionirix',
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <ViewportLayoutController />
         {children}
       </body>
     </html>

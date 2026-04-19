@@ -10,27 +10,57 @@ import { DashboardHealthStatus, fetchPublicHealth, LIVE_REFRESH_INTERVAL_MS } fr
 const architectureLayers = [
   {
     title: 'Static public shell',
-    description: 'The public-facing pages export to flat HTML assets so Cloudflare can serve the Sovereign briefing layer without a Node runtime.',
+    description: 'The public-facing pages export to flat HTML assets so Cloudflare can serve the Sovereign briefing layer without a Node runtime. This keeps the public shell fast, cacheable, and resilient while still allowing the site to describe a more complex system behind the scenes.',
   },
   {
     title: 'Worker route layer',
-    description: 'The Worker resolves clean routes to exported HTML assets first, then switches into authenticated APIs and websocket upgrades for operational flows.',
+    description: 'The Worker resolves clean routes to exported HTML assets first, then switches into authenticated APIs and websocket upgrades for operational flows. It acts as the architectural hinge between the browseable surface and the stateful operational environment.',
   },
   {
     title: 'World-state bus',
-    description: 'A Durable Object-backed world-state bus now carries edge-side sovereign coordination and isolates state per authenticated session boundary.',
+    description: 'A Durable Object-backed world-state bus now carries edge-side sovereign coordination and isolates state per authenticated session boundary. This makes session-aware coordination possible without collapsing the whole runtime into a single undifferentiated process.',
   },
   {
     title: 'Authoritative kernel bridge',
-    description: 'Cosmic runs can bridge from the Worker into the authoritative Python world kernel, preserving world snapshots and event logs in persisted simulation metadata.',
+    description: 'Cosmic runs can bridge from the Worker into the authoritative Python world kernel, preserving world snapshots and event logs in persisted simulation metadata. The bridge is important because it connects web delivery to deeper simulation authority without hiding where that authority actually lives.',
   },
   {
     title: 'Authenticated API surface',
-    description: 'After sign-in, the Worker supplies auth state, event history, tools, simulation history, live state inspection, and session-scoped control routes.',
+    description: 'After sign-in, the Worker supplies auth state, event history, tools, simulation history, live state inspection, and session-scoped control routes. The authenticated API surface is therefore not a side channel but the operational layer through which most protected interaction now occurs.',
   },
   {
     title: 'D1-backed observability',
-    description: 'Public status still draws from aggregate D1 queries, while protected views expose per-session simulation snapshots, history, and rollback-ready state.',
+    description: 'Public status still draws from aggregate D1 queries, while protected views expose per-session simulation snapshots, history, and rollback-ready state. Observability is split intentionally so public visibility stays broad while protected insight remains tied to the correct session and state boundary.',
+  },
+]
+
+const architecturePanels = [
+  {
+    title: 'Public-to-private continuity',
+    body: 'One of the most important architectural changes is not a single component but a cleaner relationship between components. The public shell now explains the same platform that the workspace operates. Static exports, route resolution, auth boundaries, billing flows, and simulation surfaces are now described as parts of one system instead of appearing as separate site layers.',
+  },
+  {
+    title: 'Runtime boundary discipline',
+    body: 'The architecture preserves different responsibilities at different layers. Static assets handle browseable explanation. The Worker governs routing, identity, and live APIs. Durable Objects hold coordination state. The authoritative kernel carries deeper simulation authority. This separation matters because it keeps the system understandable while still allowing it to grow in capability.',
+  },
+  {
+    title: 'Operational readability',
+    body: 'Architecture is also about whether the system can explain itself. The current public pages make the deployment path and control flow more legible, so readers can understand what runs at the edge, what is session-scoped, what persists, and what moves into the authoritative kernel. That readability reduces ambiguity for both operators and future builders.',
+  },
+]
+
+const bridgePanels = [
+  {
+    title: 'Delivery path',
+    body: 'Flat assets provide reach, while the Worker supplies the intelligence of the route layer. This means the public side remains performant and simple to serve, but the system can still switch into more dynamic behavior exactly where identity, APIs, or live state require it.',
+  },
+  {
+    title: 'State path',
+    body: 'State moves through the architecture with increasing specificity. Aggregate health can remain public, session coordination can live in the world-state bus, and authoritative simulation behavior can cross into the Python kernel when the system needs a deeper model of execution and persistence.',
+  },
+  {
+    title: 'Operator path',
+    body: 'A user can move from public explanation to protected operation without crossing into a different conceptual product. That continuity is architectural, not cosmetic. It comes from aligning route design, public documentation, auth handling, and workspace capabilities into one deployable model.',
   },
 ]
 
@@ -73,8 +103,38 @@ export default function ArchitecturePage() {
         </>
       }
     >
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+        <GlassCard className="p-6" interactive>
+          <article>
+            <h2 className="text-2xl font-semibold text-quantum-white">Architectural overview</h2>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                Ionirix is now structured less like a collection of pages and more like a layered runtime with a readable public face. The architectural story begins with exported public assets, moves through Worker-controlled routing and identity, passes into state coordination, and can bridge further into an authoritative simulation kernel when the system requires deeper execution.
+              </p>
+              <p>
+                The result is a site that can remain simple where it should be simple and stateful where it must be stateful. Public pages stay browseable. Protected routes remain operational. State is scoped intentionally. Simulation authority is not hidden behind vague abstractions. Each layer exists because it carries a distinct responsibility in the broader sovereign architecture.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
+
+        <GlassCard className="p-6" interactive>
+          <aside>
+            <h2 className="text-lg font-semibold text-quantum-white">Reading note</h2>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                This page is intended to make the deploy path intelligible. It explains not just which parts exist, but why the stack is separated into these layers and what each boundary protects or enables.
+              </p>
+              <p>
+                The emphasis is on clarity: where the public shell ends, where the Worker takes over, how state is coordinated, and how deeper simulation authority is reached when required.
+              </p>
+            </div>
+          </aside>
+        </GlassCard>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
-        <GlassCard className="p-6">
+        <GlassCard className="p-6" interactive>
           <h2 className="text-2xl font-semibold text-quantum-white">System layers</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {architectureLayers.map((layer) => (
@@ -87,6 +147,43 @@ export default function ArchitecturePage() {
         </GlassCard>
 
         <PublicStatusPanel health={health} />
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {architecturePanels.map((panel) => (
+          <GlassCard key={panel.title} className="p-6" interactive>
+            <h2 className="text-lg font-semibold text-quantum-white">{panel.title}</h2>
+            <p className="mt-3 text-sm leading-7 text-quantum-white/72">{panel.body}</p>
+          </GlassCard>
+        ))}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+        <GlassCard className="p-6" interactive>
+          <article>
+            <h2 className="text-2xl font-semibold text-quantum-white">How the layers work together</h2>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
+              <p>
+                The architecture is strongest when understood as a sequence of handoffs rather than a stack of disconnected technologies. The public shell establishes context and reach. The Worker introduces route intelligence and live control. The world-state bus provides session-aware coordination. The authoritative kernel bridge deepens simulation execution where web-native layers would be insufficient on their own.
+              </p>
+              <p>
+                This means Ionirix can behave like a public publication, an authenticated operational product, and a deeper simulation system without flattening those roles into one runtime context. Each layer preserves its own job. Each boundary is there to reduce confusion, improve trust, and keep the system scalable as more features accumulate.
+              </p>
+              <p>
+                The same logic also improves maintainability. When a future operator or builder inspects the platform, they can see why something belongs in a public asset, a Worker route, a coordination layer, or a deeper kernel pathway. That architectural readability is not incidental. It is part of what makes the platform sovereign rather than improvised.
+              </p>
+            </div>
+          </article>
+        </GlassCard>
+
+        <div className="grid gap-6">
+          {bridgePanels.map((panel) => (
+            <GlassCard key={panel.title} className="p-6" interactive>
+              <h2 className="text-lg font-semibold text-quantum-white">{panel.title}</h2>
+              <p className="mt-3 text-sm leading-7 text-quantum-white/72">{panel.body}</p>
+            </GlassCard>
+          ))}
+        </div>
       </section>
     </PublicSiteShell>
   )
