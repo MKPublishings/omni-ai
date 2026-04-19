@@ -20,16 +20,7 @@ function applyViewportProfile() {
 
   const density = width < 768 ? 'compact' : width < 1440 ? 'comfortable' : 'expanded'
 
-  let gutter = 16
-  if (shape === 'portrait') {
-    gutter = width < 900 ? 14 : 20
-  } else if (shape === 'ultrawide') {
-    gutter = width < 2200 ? 28 : 36
-  } else if (shape === 'wide') {
-    gutter = width < 1600 ? 24 : 32
-  } else {
-    gutter = width < 1024 ? 16 : 24
-  }
+  const gutter = width * 0.1
 
   const maxWidth = Math.max(width - gutter * 2, 0)
 

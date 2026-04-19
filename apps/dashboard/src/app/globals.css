@@ -9,8 +9,8 @@
   :root {
     --background: var(--ix-surface-base);
     --foreground: var(--ix-text-primary);
-    --site-shell-gutter: 24px;
-    --site-shell-max-width: calc(100vw - 48px);
+    --site-shell-gutter: 10vw;
+    --site-shell-max-width: 80vw;
     --site-shell-section-gap: 1.5rem;
     --dashboard-topbar-bg: rgba(7, 10, 18, 0.78);
     --dashboard-topbar-border: rgba(255, 255, 255, 0.08);
@@ -244,14 +244,6 @@
     .chat-messages-scroll.chat-selection-active {
       touch-action: none;
       overscroll-behavior: contain;
-    }
-  }
-}
-
-@media (max-width: 767px) {
-  @layer components {
-    .site-shell-frame {
-      padding-inline: max(0.75rem, var(--site-shell-gutter));
     }
   }
 }

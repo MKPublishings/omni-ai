@@ -259,7 +259,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             statusSlot={commandStatus}
           />
 
-          <main className={clsx('min-w-0 flex-1 overflow-auto py-4 sm:py-5 md:px-6 lg:px-8', fullBleedOnMobile ? 'px-0 md:px-6 lg:px-8' : 'px-3 sm:px-4')}>
+          <main className="min-w-0 flex-1 overflow-auto py-4 sm:py-5">
             <div className={clsx('site-content-frame mx-auto flex w-full flex-col gap-5 sm:gap-6', fullBleedOnMobile ? 'px-0 md:px-0' : '')}>
               <div className={hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between'}>
                 <div className="min-w-0">
