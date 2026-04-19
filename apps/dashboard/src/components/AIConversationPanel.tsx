@@ -239,6 +239,8 @@ const ThinkingIndicator = () => {
 export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPanelProps>(
   ({ messages = [], onSendMessage, isThinking, isLoading, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
+    const [isFullscreen, setIsFullscreen] = useState(false)
+    const [canFullscreen, setCanFullscreen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const messagesContainerRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
@@ -253,6 +255,26 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
     }, [messages, isThinking])
 
     useImperativeHandle(ref, () => panelRef.current!, [])
+
+    useEffect(() => {
+      const panel = panelRef.current
+      if (!panel || typeof document === 'undefined') {
+        return
+      }
+
+      setCanFullscreen(typeof panel.requestFullscreen === 'function' && document.fullscreenEnabled !== false)
+
+      const syncFullscreenState = () => {
+        setIsFullscreen(document.fullscreenElement === panel)
+      }
+
+      syncFullscreenState()
+      document.addEventListener('fullscreenchange', syncFullscreenState)
+
+      return () => {
+        document.removeEventListener('fullscreenchange', syncFullscreenState)
+      }
+    }, [])
 
     useEffect(() => {
       if (typeof document === 'undefined') {
@@ -337,82 +359,128 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       }, 250)
     }
 
+    const handleToggleFullscreen = async () => {
+      const panel = panelRef.current
+      if (!panel || typeof document === 'undefined') {
+        return
+      }
+
+      try {
+        if (document.fullscreenElement === panel) {
+          await document.exitFullscreen()
+          return
+        }
+
+        if (typeof panel.requestFullscreen === 'function') {
+          await panel.requestFullscreen()
+        }
+      } catch {
+        return
+      }
+    }
+
     return (
       <div
+        ref={panelRef}
         className={clsx(
-          'ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]',
-          'h-full w-full',
+          'chat-fullscreen-shell h-full w-full min-w-0',
           className
         )}
         {...props}
       >
-        <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
-          <div className="flex min-w-0 items-center space-x-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
-              <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+        <div className="chat-fullscreen-panel ix-glass-sovereign flex min-h-[30rem] min-w-0 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]">
+          <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
+            <div className="flex min-w-0 items-center space-x-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
+                <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
+                <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
-              <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
-            </div>
-          </div>
-        </div>
-
-        <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
-          {isLoading && messages.length === 0 ? (
-            <ConversationSkeleton />
-          ) : (
-            <>
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
-              ))}
-              {isThinking && <ThinkingIndicator />}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <textarea
-                ref={textareaRef}
-                placeholder="Ask ION AI anything..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyPress}
-                onFocus={handleInputFocus}
-                rows={2}
-                enterKeyHint="done"
-                className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
-                disabled={isThinking}
-              />
-            </div>
-            <div className="flex w-full gap-2 sm:w-auto sm:flex-col">
+            {canFullscreen ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={handleScrollToTop}
-                className="h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
-                aria-label="Scroll to top"
-                title="Scroll to top"
+                onClick={handleToggleFullscreen}
+                className="h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
+                aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
+                title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
+                {isFullscreen ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
+                  </svg>
+                )}
+                <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
+                  {isFullscreen ? 'Exit' : 'Fullscreen'}
+                </span>
               </Button>
-              <Button
-                onClick={handleSend}
-                disabled={!inputValue.trim() || isThinking}
-                className="h-11 flex-1 rounded-2xl px-5 sm:w-11 sm:flex-none sm:px-0"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </Button>
+            ) : null}
+          </div>
+
+          <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
+            {isLoading && messages.length === 0 ? (
+              <ConversationSkeleton />
+            ) : (
+              <>
+                {messages.map((message) => (
+                  <MessageBubble key={message.id} message={message} />
+                ))}
+                {isThinking && <ThinkingIndicator />}
+              </>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Ask ION AI anything..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  onFocus={handleInputFocus}
+                  rows={2}
+                  enterKeyHint="done"
+                  className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
+                  disabled={isThinking}
+                />
+              </div>
+              <div className="flex w-full gap-2 sm:w-auto sm:flex-col">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleScrollToTop}
+                  className="h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
+                  aria-label="Scroll to top"
+                  title="Scroll to top"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || isThinking}
+                  className="h-11 flex-1 rounded-2xl px-5 sm:w-11 sm:flex-none sm:px-0"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
