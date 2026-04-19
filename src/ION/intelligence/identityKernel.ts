@@ -1,5 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
-
 export type IONIdentityMode = "Architect" | "Creative" | "Analysis" | "OS";
 
 export interface IONIdentityKernel {

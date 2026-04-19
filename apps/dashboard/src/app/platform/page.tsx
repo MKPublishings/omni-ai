@@ -38,7 +38,7 @@ export default function PlatformPage() {
   return (
     <PublicSiteShell
       title="Platform view"
-      subtitle="A public snapshot of the deployment envelope, system shape, and the path from browseable site to authenticated workspace."
+      subtitle="A public snapshot of the deployment envelope, sovereign runtime chain, and the path from browseable site to authenticated workspace."
       actions={
         <>
           <Link href="/architecture" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Architecture</Link>
@@ -51,9 +51,10 @@ export default function PlatformPage() {
         <GlassCard className="p-6">
           <h2 className="text-2xl font-semibold text-quantum-white">Deployment topology</h2>
           <ul className="mt-5 space-y-4 text-sm leading-7 text-quantum-white/72">
-            <li>The dashboard exports to static assets inside the public folder and is served through Cloudflare Workers assets.</li>
-            <li>Worker routes continue to supply authenticated system state, event history, tools, and simulations after sign-in.</li>
-            <li>The site is now split cleanly between public browseable pages and protected workspace surfaces.</li>
+            <li>The dashboard exports to static HTML inside the public folder and is served through the Cloudflare Workers assets binding.</li>
+            <li>The Worker now carries the Sovereign runtime edge layer: authenticated APIs, simulation websocket upgrades, and the Durable Object world-state bus.</li>
+            <li>Cosmic runs can bridge from the Worker to the authoritative Python world kernel while multiverse runs stay deterministic at the edge.</li>
+            <li>The site stays split cleanly between public briefings and protected operational surfaces, but both now describe the same runtime model.</li>
           </ul>
         </GlassCard>
 
@@ -63,15 +64,15 @@ export default function PlatformPage() {
       <section className="grid gap-6 md:grid-cols-3">
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Public entry points</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The public shell now exposes five exported entry points before login, making the site navigable without falling directly into the auth gate.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The public shell now acts as the Sovereign briefing layer, surfacing runtime architecture, rollout status, and capabilities before the auth boundary.</p>
         </GlassCard>
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Worker contract</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The unauthenticated status endpoint now reports deployment metadata, route counts, and live database-backed totals instead of only raw dependency placeholders.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The edge contract now spans public health, authenticated simulation control, stream upgrades, and session-scoped access to sovereign world state.</p>
         </GlassCard>
         <GlassCard className="p-6">
-          <h2 className="text-lg font-semibold text-quantum-white">Auth boundary</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Protected operational pages remain behind client-side auth while public pages focus on architecture, platform posture, and discoverability.</p>
+          <h2 className="text-lg font-semibold text-quantum-white">Authoritative kernel path</h2>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The sovereign path now runs from public explanation, to Worker edge orchestration, to a Python authoritative kernel for cosmic world-state execution.</p>
         </GlassCard>
       </section>
     </PublicSiteShell>

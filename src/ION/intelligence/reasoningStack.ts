@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import type { IONIdentityKernel } from "./identityKernel.ts";
 
 type IONRole = "system" | "user" | "assistant";

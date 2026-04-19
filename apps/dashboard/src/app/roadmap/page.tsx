@@ -10,19 +10,19 @@ import { DashboardHealthStatus, fetchPublicHealth, LIVE_REFRESH_INTERVAL_MS } fr
 const roadmapItems = [
   {
     phase: 'Live now',
-    detail: 'Public landing, platform, capabilities, architecture, and roadmap pages are exported and browseable before login.',
+    detail: 'Public landing, platform, capabilities, architecture, and roadmap pages now explain the Sovereign runtime, while the workspace exposes live sovereign and multiverse simulation inspection after login.',
   },
   {
     phase: 'Fixed recently',
-    detail: 'Worker asset resolution now prefers matching exported HTML assets for clean routes instead of collapsing routes back into the wrong page.',
+    detail: 'Simulation state access is now session-scoped, legacy runtime stepping now uses real engines, and the simulation UI can follow persisted state over websocket with polling fallback.',
   },
   {
     phase: 'Operational next',
-    detail: 'The public side can now expand into documentation, examples, and richer status narratives without changing the auth boundary.',
+    detail: 'The public side can expand into richer world-kernel documentation, bridge examples, and operational explainers without moving the auth boundary.',
   },
   {
     phase: 'Workspace next',
-    detail: 'Protected routes still have room for deeper analytics, event filtering, memory browsing, and simulation workflows after sign-in.',
+    detail: 'Protected routes still have room for command-driven world control, deeper event filtering, richer history playback, and export workflows around sovereign state.',
   },
 ]
 
@@ -57,7 +57,7 @@ export default function RoadmapPage() {
   return (
     <PublicSiteShell
       title="Roadmap"
-      subtitle="A public view of what is already live, what was corrected in the deploy path, and where the next surface area can grow."
+      subtitle="A public view of what is already live in the Sovereign rollout, what was corrected in the runtime and UI path, and where the next surface area can grow."
       actions={
         <>
           <Link href="/capabilities" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Capabilities</Link>

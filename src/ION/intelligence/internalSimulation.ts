@@ -1,6 +1,5 @@
 import type { IONIdentityKernel } from "./identityKernel.ts";
 import { runReasoningStack, type IONReasoningMessage } from "./reasoningStack.ts";
-import type { KVNamespace } from "@cloudflare/workers-types";
 
 type SimulationEnv = {
   AI?: { run?: (model: string, input: unknown) => Promise<unknown> };

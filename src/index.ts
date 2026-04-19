@@ -47,8 +47,6 @@ import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
 import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
-import type { KVNamespace, Fetcher, DurableObjectNamespace, D1Database, ScheduledController, ExecutionContext } from "@cloudflare/workers-types";
-
 export { IONSession } from "./memory/session";
 
 export interface Env {

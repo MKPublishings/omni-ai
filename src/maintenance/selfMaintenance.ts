@@ -1,4 +1,3 @@
-import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
 import { ensureIONMemorySchema, getLongTermMemoryStats, pruneMemoryOlderThanDays } from "../memory/d1Memory";
 import { pruneWorkingMemory } from "../memory/workingMemory";
 import { loadIdentityKernel, evolveIdentityKernel } from "../ION/intelligence/identityKernel";

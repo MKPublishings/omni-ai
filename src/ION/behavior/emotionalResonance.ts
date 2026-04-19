@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import { detectEmotionDetailed } from "../emotion/detector";
 
 type ResonanceEnv = {

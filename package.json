@@ -20,7 +20,7 @@
     "check:branding": "node ./scripts/check-branding.js",
     "build": "node ./scripts/build.js",
     "test": "npm run smoke:image && npm run smoke:image:worker && npm run smoke:chat-policy && npm run smoke:chat-image-intent && npm run smoke:policy-lockstep && npm run smoke:image:orchestrator-attestation && npm run test:runtime && npm run test:cosmic && npm run test:multiverse",
-    "test:runtime": "tsx --test src/runtime/tests/simulationEngine.test.ts src/runtime/tests/router.test.ts src/runtime/tests/modeRouting.test.ts src/runtime/tests/runtimeLoop.test.ts src/runtime/tests/workerRoute.test.ts src/runtime/tests/ionGateway.test.ts src/runtime/tests/premiumContracts.test.ts src/runtime/tests/stripeBilling.test.ts",
+    "test:runtime": "tsx --test src/runtime/tests/simulationEngine.test.ts src/runtime/tests/simulationWorker.test.ts src/runtime/tests/router.test.ts src/runtime/tests/modeRouting.test.ts src/runtime/tests/runtimeLoop.test.ts src/runtime/tests/workerRoute.test.ts src/runtime/tests/worldBridge.test.ts src/runtime/tests/worldWorker.test.ts src/runtime/tests/ionGateway.test.ts src/runtime/tests/premiumContracts.test.ts src/runtime/tests/stripeBilling.test.ts",
     "test:cosmic": "tsx --test src/modes/cosmic/__tests__/gravitational.test.ts src/modes/cosmic/__tests__/dynamics.test.ts src/modes/cosmic/__tests__/stellar.test.ts src/modes/cosmic/__tests__/ism.test.ts src/modes/cosmic/__tests__/integration.test.ts",
     "test:multiverse": "tsx --test src/modes/multiverse/__tests__/multiverse_seed.test.ts",
     "test:cross-browser": "node ./scripts/test-cross-browser.js",
@@ -48,6 +48,7 @@
     "mind:tokens:next": "node ./scripts/tools/printNextTaskToken.js",
     "mind:tokens:next:claim": "node ./scripts/tools/printNextTaskToken.js --claim",
     "mind:tokens:maintain": "node ./scripts/tools/runTaskTokenMaintenance.js",
+    "world:bridge:serve": ".\\.venv\\Scripts\\python.exe -m ION_ai.world.run_server",
     "sim:quantum:export": ".\\.venv\\Scripts\\python.exe ./ION_media/quantum_cognitive_sim.py --csv-out ./data/evaluations/quantum_cognitive_sim_latest.csv --json-out ./data/evaluations/quantum_cognitive_sim_latest.json",
     "codex:reindex": "node ./scripts/codex/reindex.js",
     "codex:register": "node ./scripts/codex/registerArtifact.js",
@@ -60,7 +61,6 @@
     "v2:setup": "npm run db:migrate && npm run db:seed:specs && npm run db:seed:tools"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260227.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.13.4",
     "eslint": "^10.0.2",

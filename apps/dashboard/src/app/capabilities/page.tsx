@@ -4,20 +4,20 @@ import { PublicSiteShell } from '@/components/PublicSiteShell'
 
 const capabilityCards = [
   {
-    title: 'Multi-page public surface',
-    description: 'Public visitors can now move through a landing page, platform summary, capabilities view, architecture page, and roadmap before they ever sign in.',
+    title: 'Sovereign public briefings',
+    description: 'Public visitors can move through landing, platform, capabilities, architecture, and roadmap pages that explain the Sovereign runtime before they ever sign in.',
   },
   {
     title: 'Protected live workspace',
-    description: 'Authenticated routes expose live Worker-backed status, event history, tools, simulations, settings, and memory context.',
+    description: 'Authenticated routes expose live Worker-backed status, event history, tools, simulations, settings, memory context, and a sovereign simulation inspector.',
+  },
+  {
+    title: 'World-state operations',
+    description: 'Cosmic simulations can now drive the sovereign world kernel, persist snapshots, and expose world metadata back into the workspace UI.',
   },
   {
     title: 'Cloudflare-first delivery',
-    description: 'The site exports static HTML into the public asset directory while the Worker continues to handle API and auth responsibilities.',
-  },
-  {
-    title: 'Responsive structure',
-    description: 'The earlier overlapping dashboard composition has been replaced with responsive grids and stable navigation shells.',
+    description: 'The site still exports static HTML into the public asset directory while the Worker handles auth, live APIs, and simulation stream upgrades.',
   },
 ]
 
@@ -25,7 +25,7 @@ export default function CapabilitiesPage() {
   return (
     <PublicSiteShell
       title="Capabilities"
-      subtitle="A public catalog of what the ION AI site currently exposes across both public and authenticated sections."
+      subtitle="A public catalog of what the ION AI site now exposes across the Sovereign public shell and the authenticated operational workspace."
       actions={
         <>
           <Link href="/roadmap" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Roadmap</Link>
@@ -46,19 +46,19 @@ export default function CapabilitiesPage() {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Public discovery</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Architecture and roadmap now give visitors two more browseable stops before authentication.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Architecture and roadmap now explain the sovereign rollout itself, not just the fact that public pages exist.</p>
         </GlassCard>
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Public telemetry</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Public status cards now show route counts, deployment metadata, and live database totals without requiring a session.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Public status cards show route counts, deployment metadata, and aggregate system totals while the deeper sovereign state remains session-scoped.</p>
         </GlassCard>
         <GlassCard className="p-6">
-          <h2 className="text-lg font-semibold text-quantum-white">Worker asset routing</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Clean routes resolve to their exported HTML counterparts before falling back to the landing page.</p>
+          <h2 className="text-lg font-semibold text-quantum-white">Simulation streaming</h2>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Authenticated simulation views can now follow live run updates over websocket with polling fallback, keeping the UI aligned with persisted snapshots.</p>
         </GlassCard>
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Workspace depth</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Protected analytics, events, simulations, tools, memory, and settings remain available after sign-in.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Protected analytics, events, simulations, tools, memory, and settings remain available after sign-in, with simulations now showing sovereign and multiverse-specific telemetry.</p>
         </GlassCard>
       </section>
     </PublicSiteShell>

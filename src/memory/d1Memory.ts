@@ -1,5 +1,3 @@
-import type { D1Database } from "@cloudflare/workers-types";
-
 type D1Env = {
   ION_DB?: D1Database;
 };

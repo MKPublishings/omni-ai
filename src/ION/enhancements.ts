@@ -1,5 +1,3 @@
-import type { Fetcher, KVNamespace } from "@cloudflare/workers-types";
-
 type WorkerEnv = {
   ASSETS?: Fetcher;
   MEMORY?: KVNamespace;

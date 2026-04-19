@@ -1,4 +1,3 @@
-import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
 import { getLongTermMemoryStats } from "../memory/d1Memory";
 import { loadIdentityKernel } from "../ION/intelligence/identityKernel";
 import { getInternalGoals } from "../ION/autonomy/goalsRegistry";

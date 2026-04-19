@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
+import { SimulationInspector } from '@/components/SimulationInspector'
 import { StatCard } from '@/components/StatCard'
 import { Table } from '@/components/Table'
 import { DashboardSimulationRun, fetchSimulationHistory, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
 export default function SimulationsPage() {
   const [runs, setRuns] = useState<DashboardSimulationRun[]>([])
+  const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -44,11 +46,39 @@ export default function SimulationsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (runs.length === 0) {
+      setSelectedSimulationId(null)
+      return
+    }
+
+    if (!selectedSimulationId || !runs.some((run) => run.id === selectedSimulationId)) {
+      setSelectedSimulationId(runs[0]?.id || null)
+    }
+  }, [runs, selectedSimulationId])
+
   const completedRuns = useMemo(() => runs.filter((run) => run.status === 'completed').length, [runs])
   const activeRuns = useMemo(() => runs.filter((run) => run.status === 'running').length, [runs])
+  const selectedRun = useMemo(
+    () => runs.find((run) => run.id === selectedSimulationId) || null,
+    [runs, selectedSimulationId]
+  )
 
   const columns = [
-    { key: 'mode', header: 'Mode', sortable: true },
+    {
+      key: 'mode',
+      header: 'Mode',
+      sortable: true,
+      render: (value: string, row: DashboardSimulationRun) => (
+        <button
+          type="button"
+          onClick={() => setSelectedSimulationId(row.id)}
+          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] transition ${row.id === selectedSimulationId ? 'border-spectral-cyan-300/36 bg-spectral-cyan-400/14 text-spectral-cyan-100' : 'border-quantum-white/10 bg-quantum-white/[0.03] text-quantum-white/78 hover:border-quantum-white/18 hover:bg-quantum-white/[0.06]'}`}
+        >
+          {String(value || row.mode || 'unknown')}
+        </button>
+      ),
+    },
     { key: 'status', header: 'Status', sortable: true },
     { key: 'current_step', header: 'Step', render: (value: number | undefined) => value ?? 0 },
     {
@@ -76,18 +106,17 @@ export default function SimulationsPage() {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <GlassCard className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Simulation history</h2>
+          <p className="mt-2 text-sm leading-6 text-quantum-white/64">Select any run in the mode column to open the live inspector. Active sovereign and multiverse runs will stream snapshot changes into the panel beside the archive.</p>
           <div className="mt-6">
             <Table data={runs} columns={columns} loading={loading} emptyMessage="No simulation runs have been recorded for this session" />
           </div>
         </GlassCard>
 
         <GlassCard tier={2} className="p-6">
-          <h2 className="text-xl font-semibold text-quantum-white">Operator notes</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/72">
-            <li>Simulation history is scoped to the authenticated session returned by the Worker.</li>
-            <li>Once new scenarios execute, this page will export their records into the static site shell automatically.</li>
-            <li>The responsive layout keeps the archive and context panel separated on desktop and stacked on mobile.</li>
-          </ul>
+          <h2 className="text-xl font-semibold text-quantum-white">Live simulation inspector</h2>
+          <div className="mt-5">
+            <SimulationInspector simulationId={selectedSimulationId} selectedRun={selectedRun} />
+          </div>
         </GlassCard>
       </section>
     </DashboardShell>

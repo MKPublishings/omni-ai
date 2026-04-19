@@ -10,19 +10,27 @@ import { DashboardHealthStatus, fetchPublicHealth, LIVE_REFRESH_INTERVAL_MS } fr
 const architectureLayers = [
   {
     title: 'Static public shell',
-    description: 'The public-facing pages export to flat HTML assets so Cloudflare can serve them without a Node runtime.',
+    description: 'The public-facing pages export to flat HTML assets so Cloudflare can serve the Sovereign briefing layer without a Node runtime.',
   },
   {
     title: 'Worker route layer',
-    description: 'The Worker resolves clean routes to exported HTML assets first, then falls back to the landing page for unknown navigations.',
+    description: 'The Worker resolves clean routes to exported HTML assets first, then switches into authenticated APIs and websocket upgrades for operational flows.',
+  },
+  {
+    title: 'World-state bus',
+    description: 'A Durable Object-backed world-state bus now carries edge-side sovereign coordination and isolates state per authenticated session boundary.',
+  },
+  {
+    title: 'Authoritative kernel bridge',
+    description: 'Cosmic runs can bridge from the Worker into the authoritative Python world kernel, preserving world snapshots and event logs in persisted simulation metadata.',
   },
   {
     title: 'Authenticated API surface',
-    description: 'After sign-in, the Worker continues to supply auth state, event history, tools, and simulation data through API routes.',
+    description: 'After sign-in, the Worker supplies auth state, event history, tools, simulation history, live state inspection, and session-scoped control routes.',
   },
   {
     title: 'D1-backed observability',
-    description: 'Public status now draws from live D1 queries for aggregate counts, while protected views expose deeper per-session data.',
+    description: 'Public status still draws from aggregate D1 queries, while protected views expose per-session simulation snapshots, history, and rollback-ready state.',
   },
 ]
 
@@ -57,7 +65,7 @@ export default function ArchitecturePage() {
   return (
     <PublicSiteShell
       title="Architecture"
-      subtitle="A public explanation of how exported pages, Worker routing, and authenticated APIs now combine into one deployable site."
+      subtitle="A public explanation of how exported pages, Worker routing, the world-state bus, and the authoritative kernel now combine into one deployable site."
       actions={
         <>
           <Link href="/roadmap" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Roadmap</Link>
@@ -68,7 +76,7 @@ export default function ArchitecturePage() {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
         <GlassCard className="p-6">
           <h2 className="text-2xl font-semibold text-quantum-white">System layers</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {architectureLayers.map((layer) => (
               <div key={layer.title} className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-5">
                 <h3 className="text-lg font-semibold text-quantum-white">{layer.title}</h3>

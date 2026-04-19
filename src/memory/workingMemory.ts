@@ -1,5 +1,3 @@
-import type { DurableObjectNamespace, KVNamespace } from "@cloudflare/workers-types";
-
 type WorkingMemoryEnv = {
   MEMORY?: KVNamespace;
   ION_SESSION?: DurableObjectNamespace;

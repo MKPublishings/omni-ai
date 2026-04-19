@@ -6,7 +6,6 @@
  * Orchestrates all engines, workers, and middleware.
  */
 
-import type { ExecutionContext } from '@cloudflare/workers-types';
 import { Router } from './router';
 import { EventBus } from './engines/event-bus';
 import { MemoryEngine } from './engines/memory-engine';
@@ -21,9 +20,11 @@ import { ToolsWorker } from './api/tools-worker';
 import { SpecsWorker } from './api/specs-worker';
 import { SimulationWorker } from './api/simulation-worker';
 import { SystemWorker } from './api/system-worker';
+import { WorldWorker } from './api/world-worker';
 import { AuthWorker } from './api/auth-worker';
 import { PremiumWorker } from './api/premium-worker';
 import IONWorker from './index.ts';
+export { WorldStateBusDurableObject } from './world/durable-object';
 
 // Middleware
 import { authMiddleware } from './middleware/auth';
@@ -38,6 +39,10 @@ interface WorkerEnv {
   CONFIG?: KVNamespace;
   MIND?: KVNamespace;
   MEMORY?: KVNamespace;
+  WORLD_STATE_BUS?: DurableObjectNamespace;
+  WORLD_KERNEL_BRIDGE_URL?: string;
+  WORLD_KERNEL_BRIDGE_TOKEN?: string;
+  SIMULATION_STREAM_POLL_MS?: string;
   TEXT_GENERATION?: any; // Cloudflare Workers AI binding
   ENVIRONMENT?: string;
   VERSION?: string;
@@ -136,9 +141,43 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
 
   // WebSocket upgrade routes
   if (request.headers.get('upgrade') === 'websocket') {
-    // TODO: Parse URL and delegate to appropriate WebSocket handler
-    // if (url.pathname === '/api/simulation/stream') { ... }
-    // if (url.pathname === '/api/system/stream') { ... }
+    if (url.pathname === '/api/simulation/stream') {
+      const authResult = await authMiddleware(request, env);
+      if (!authResult.valid || !authResult.context) {
+        return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const simulationId = url.searchParams.get('id') || url.searchParams.get('simulationId');
+      if (!simulationId) {
+        return new Response(JSON.stringify({ error: 'Missing simulation id' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const WebSocketPairCtor = (globalThis as typeof globalThis & { WebSocketPair?: new () => { 0: WebSocket; 1: WebSocket } }).WebSocketPair;
+      if (!WebSocketPairCtor) {
+        return new Response('WebSocket upgrade is not available in this runtime', { status: 501 });
+      }
+
+      const pair = new WebSocketPairCtor();
+      const client = pair[0];
+      const server = pair[1];
+      server.accept();
+
+      const eventBus = new EventBus();
+      const simulationWorker = new SimulationWorker(db, eventBus);
+      await simulationWorker.handleWebSocket(server, simulationId, {
+        sessionId: authResult.context.sessionId,
+        pollIntervalMs: Number(env.SIMULATION_STREAM_POLL_MS || 1500),
+      });
+
+      return new Response(null, { status: 101, webSocket: client } as ResponseInit);
+    }
+
     return new Response('WebSocket upgrade not yet implemented', { status: 501 });
   }
 
@@ -162,6 +201,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const toolsWorker = new ToolsWorker(db, toolRegistry, eventBus);
   const specsWorker = new SpecsWorker(db, env.CACHE as KVNamespace);
   const simulationWorker = new SimulationWorker(db, eventBus);
+  const worldWorker = new WorldWorker();
   const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
   const authWorker = new AuthWorker(env.DB, env);
   const premiumWorker = new PremiumWorker(db, eventBus, toolRegistry, env);
@@ -305,6 +345,16 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('GET', '/api/simulation/snapshot', compose((r: any, e: any, c: any, p: any) => simulationWorker.getSnapshot(r, e, c, p)));
   router.add('POST', '/api/simulation/rollback', compose((r: any, e: any, c: any, p: any) => simulationWorker.rollback(r, e, c, p)));
   router.add('GET', '/api/simulation/history', compose((r: any, e: any, c: any, p: any) => simulationWorker.history(r, e, c, p)));
+
+  // ========== WORLD API ROUTES ==========
+  router.add('GET', '/api/world/state', compose((r: any, e: any, c: any, p: any) => worldWorker.getState(r, e, c, p)));
+  router.add('GET', '/api/world/events', compose((r: any, e: any, c: any, p: any) => worldWorker.getEvents(r, e, c, p)));
+  router.add('GET', '/api/world/capabilities', compose((r: any, e: any, c: any, p: any) => worldWorker.getCapabilities(r, e, c, p)));
+  router.add('GET', '/api/world/health', compose((r: any, e: any, c: any, p: any) => worldWorker.getHealth(r, e, c, p)));
+  router.add('POST', '/api/world/command', compose((r: any, e: any, c: any, p: any) => worldWorker.command(r, e, c, p)));
+  router.add('POST', '/api/world/pause', compose((r: any, e: any, c: any, p: any) => worldWorker.pause(r, e, c, p)));
+  router.add('POST', '/api/world/resume', compose((r: any, e: any, c: any, p: any) => worldWorker.resume(r, e, c, p)));
+  router.add('POST', '/api/world/persist', compose((r: any, e: any, c: any, p: any) => worldWorker.persist(r, e, c, p)));
 
   // ========== SYSTEM API ROUTES ==========
   router.add('GET', '/api/system/health', (r: any, e: any, c: any, p: any) => systemWorker.getHealth(r, e, c, p));

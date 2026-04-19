@@ -1,4 +1,4 @@
-import { AuthUser, authorizedFetch, getApiUrl } from './auth'
+import { AuthUser, authorizedFetch, getApiUrl, getStoredToken } from './auth'
 
 export const LIVE_REFRESH_INTERVAL_MS = 120000
 
@@ -68,6 +68,51 @@ export interface DashboardSimulationRun {
   created_at: string
   updated_at?: string
   current_step?: number
+}
+
+export interface DashboardSimulationStateEntity {
+  id?: string
+  type?: string
+  [key: string]: unknown
+}
+
+export interface DashboardSimulationState {
+  entities: DashboardSimulationStateEntity[]
+  environment: Record<string, unknown>
+  rules: Array<Record<string, unknown>>
+  stepNumber: number
+  timestamp: string
+  metadata: Record<string, unknown>
+}
+
+export interface DashboardSimulationSnapshotMeta {
+  step: number
+  checksum: string
+  createdAt: string
+}
+
+export interface DashboardSimulationRecord extends DashboardSimulationRun {
+  config?: string
+  seed?: string | null
+  max_steps?: number | null
+  completed_at?: string | null
+}
+
+export interface DashboardSimulationStateResponse {
+  simulation: DashboardSimulationRecord
+  latestSnapshot: DashboardSimulationSnapshotMeta | null
+  state: DashboardSimulationState | null
+}
+
+export interface DashboardSimulationStreamMessage {
+  type: 'connection' | 'snapshot' | 'update' | 'error'
+  simulationId?: string
+  timestamp?: string
+  pollIntervalMs?: number
+  simulation?: DashboardSimulationRecord
+  snapshot?: DashboardSimulationSnapshotMeta | null
+  state?: DashboardSimulationState | null
+  error?: string
 }
 
 export interface DashboardChatPreferences {
@@ -177,6 +222,22 @@ export async function fetchSimulationHistory(limit = 12): Promise<DashboardSimul
   return Array.isArray(payload.runs) ? payload.runs : []
 }
 
+export async function fetchSimulationState(simulationId: string): Promise<DashboardSimulationStateResponse> {
+  const payload = await fetchAuthorizedJson<DashboardSimulationStateResponse>(`/api/simulation/state?id=${encodeURIComponent(simulationId)}`)
+
+  return {
+    simulation: payload.simulation,
+    latestSnapshot: payload.latestSnapshot
+      ? {
+          step: Number(payload.latestSnapshot.step ?? 0),
+          checksum: String(payload.latestSnapshot.checksum || ''),
+          createdAt: String(payload.latestSnapshot.createdAt || ''),
+        }
+      : null,
+    state: payload.state,
+  }
+}
+
 export async function fetchTools(): Promise<DashboardToolMetadata[]> {
   const payload = await fetchAuthorizedJson<{ tools: DashboardToolMetadata[] }>('/api/tools')
   return Array.isArray(payload.tools) ? payload.tools : []
@@ -201,6 +262,26 @@ function getLiveApiUrl(path: string): string {
   const apiUrl = getApiUrl(path)
   const separator = apiUrl.includes('?') ? '&' : '?'
   return `${apiUrl}${separator}_=${Date.now()}`
+}
+
+export function getSimulationStreamUrl(simulationId: string): string {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  const token = getStoredToken()
+  const baseUrl = getApiUrl(`/api/simulation/stream?id=${encodeURIComponent(simulationId)}`)
+  const resolvedUrl = baseUrl.startsWith('http://') || baseUrl.startsWith('https://')
+    ? new URL(baseUrl)
+    : new URL(baseUrl, window.location.origin)
+
+  resolvedUrl.protocol = resolvedUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+
+  if (token) {
+    resolvedUrl.searchParams.set('token', token)
+  }
+
+  return resolvedUrl.toString()
 }
 
 export function fetchChatSettings(): Promise<{ preferences: DashboardChatPreferences }> {

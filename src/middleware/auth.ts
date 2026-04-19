@@ -30,6 +30,7 @@ export async function authMiddleware(
 ): Promise<{ valid: boolean; context?: AuthContext; error?: string }> {
   try {
     const authDb = env.ION_DB || env.DB;
+    const requestUrl = new URL(request.url);
 
     // Get session ID from Authorization header or cookie
     const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
@@ -40,6 +41,15 @@ export async function authMiddleware(
     // Try Authorization header (Bearer token)
     if (authHeader?.startsWith('Bearer ')) {
       sessionId = authHeader.substring(7);
+    }
+
+    // WebSocket clients cannot reliably set custom Authorization headers, so allow
+    // a token query parameter for authenticated upgrade requests.
+    if (!sessionId) {
+      const queryToken = requestUrl.searchParams.get('token') || requestUrl.searchParams.get('access_token');
+      if (queryToken) {
+        sessionId = queryToken;
+      }
     }
 
     // Try cookie: ion_token=... or legacy session=...

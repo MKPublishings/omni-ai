@@ -1,4 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
 import { advanceSimulationState, type SimulationContext } from "../ION/simulation/engine.ts";
 import { loadIdentityKernel, evolveIdentityKernel } from "../ION/intelligence/identityKernel.ts";
 import { runInternalSimulation } from "../ION/intelligence/internalSimulation.ts";

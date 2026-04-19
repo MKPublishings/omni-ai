@@ -1,5 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
-
 type PersonaEnv = {
   MIND?: KVNamespace;
 };

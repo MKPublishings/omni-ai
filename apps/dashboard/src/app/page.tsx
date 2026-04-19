@@ -16,27 +16,27 @@ const roamCards = [
   {
     title: 'Platform',
     href: '/platform',
-    description: 'See the Cloudflare deployment shape and a public health snapshot before login.',
+    description: 'See the edge deployment shape, sovereign runtime path, and public health snapshot before login.',
   },
   {
     title: 'Capabilities',
     href: '/capabilities',
-    description: 'Browse the current public and protected feature surfaces that the site now exposes.',
+    description: 'Browse the sovereign world, simulation streaming, and protected control-surface capabilities now exposed.',
   },
   {
     title: 'Architecture',
     href: '/architecture',
-    description: 'See how exported pages, Worker routing, and authenticated APIs fit together.',
+    description: 'See how exported pages, Worker routing, Durable Objects, and the authoritative world kernel fit together.',
   },
   {
     title: 'Roadmap',
     href: '/roadmap',
-    description: 'Review what is already live, what was fixed, and what the next public iterations should target.',
+    description: 'Review what is already live in the Sovereign rollout, what was hardened, and what the next UI iterations should target.',
   },
   {
     title: 'Workspace login',
     href: '/login',
-    description: 'Enter the live authenticated workspace with tools, simulations, events, memory, and analytics.',
+    description: 'Enter the authenticated workspace with live simulation inspection, events, tools, memory, and analytics.',
   },
 ]
 
@@ -70,8 +70,8 @@ export default function LandingPage() {
 
   return (
     <PublicSiteShell
-      title="ION AI now has a real public front door and a larger workspace behind it."
-      subtitle="Browse the public site, inspect the platform surface, and then step into the authenticated operational workspace when you are ready."
+      title="ION AI now exposes the Sovereign runtime from the public shell through the live workspace."
+      subtitle="Browse the public site, inspect the edge-to-kernel platform shape, and then step into the authenticated workspace for live sovereign and multiverse operations."
       actions={
         <>
           <Link href="/pricing" className="rounded-full border border-spectral-cyan-500/18 bg-spectral-cyan-500/10 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/18">View pricing</Link>
@@ -98,20 +98,20 @@ export default function LandingPage() {
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <GlassCard className="p-6">
-          <h2 className="text-lg font-semibold text-quantum-white">Public pages</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Home, platform, capabilities, architecture, and roadmap are now part of the exported site and work without authentication.</p>
+          <h2 className="text-lg font-semibold text-quantum-white">Public briefings</h2>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Home, platform, capabilities, architecture, and roadmap now explain the Sovereign runtime, deploy shape, and operational posture without requiring login.</p>
         </GlassCard>
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Workspace routes</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Overview, assistant, analytics, events, simulations, tools, memory, and settings are organized behind login.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Overview, assistant, analytics, events, simulations, tools, memory, and settings stay behind login, with the simulations view now exposing live sovereign inspection.</p>
         </GlassCard>
         <GlassCard className="p-6">
-          <h2 className="text-lg font-semibold text-quantum-white">Responsive layout</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The new structure avoids the old overlap problems by using stable grids and dedicated shells.</p>
+          <h2 className="text-lg font-semibold text-quantum-white">Live runtime UI</h2>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">The workspace now exposes live simulation history, sovereign kernel telemetry, multiverse query metadata, and stream-aware inspection rather than static scenario tables alone.</p>
         </GlassCard>
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Cloudflare deploy path</h2>
-          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Every page exports into the public asset directory, then the Worker serves it through the existing assets binding.</p>
+          <p className="mt-3 text-sm leading-6 text-quantum-white/72">Every public page still exports into the asset directory, while the Worker handles auth, simulation APIs, websocket upgrades, and the world-state bus boundary.</p>
         </GlassCard>
       </section>
     </PublicSiteShell>

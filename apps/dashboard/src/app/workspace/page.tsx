@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
@@ -76,7 +77,7 @@ export default function WorkspacePage() {
   return (
     <DashboardShell
       title="ION control surface"
-      subtitle="A multi-page operational workspace for system health, events, tools, simulations, and agent activity."
+      subtitle="A multi-page operational workspace for system health, sovereign simulations, event activity, tools, and agent operations."
     >
       {error && (
         <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">
@@ -103,7 +104,7 @@ export default function WorkspacePage() {
         <StatCard
           title="Simulation Runs"
           value={loading || !status ? '...' : status.counts.simulationRuns}
-          trend={{ direction: 'neutral', value: 'Scenario memory' }}
+          trend={{ direction: 'neutral', value: 'Sovereign + multiverse archive' }}
         />
       </section>
 
@@ -152,10 +153,24 @@ export default function WorkspacePage() {
           <GlassCard tier={2} className="p-6">
             <h2 className="text-lg font-semibold text-quantum-white">What changed in this build</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/72">
-              <li>Public landing, platform, and capabilities pages are now browseable before login.</li>
-              <li>The workspace now lives on its own protected route, keeping public and private navigation separate.</li>
-              <li>Additional events and memory pages expand the site beyond the first dashboard pass.</li>
+              <li>The simulation runtime now connects real multiverse, deterministic, and sovereign world execution paths instead of a placeholder step loop.</li>
+              <li>The simulations page now supports live inspection with sovereign kernel telemetry, multiverse query metadata, and stream-aware updates.</li>
+              <li>Public pages now explain the Sovereign runtime and deployment model rather than only the public-site rollout itself.</li>
             </ul>
+          </GlassCard>
+
+          <GlassCard className="p-6">
+            <h2 className="text-lg font-semibold text-quantum-white">Sovereign launch points</h2>
+            <div className="mt-4 grid gap-3">
+              <Link href="/simulations" className="rounded-2xl border border-spectral-cyan-400/18 bg-spectral-cyan-500/[0.08] p-4 transition hover:border-spectral-cyan-300/30 hover:bg-spectral-cyan-500/[0.12]">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-spectral-cyan-100">Live inspector</h3>
+                <p className="mt-2 text-sm leading-6 text-quantum-white/72">Open sovereign and multiverse runs with live state streaming, world identity, anomaly counts, and query metadata.</p>
+              </Link>
+              <Link href="/events" className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-4 transition hover:border-quantum-white/16 hover:bg-quantum-white/[0.06]">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-quantum-white">Event traces</h3>
+                <p className="mt-2 text-sm leading-6 text-quantum-white/72">Review the recent event stream feeding simulation state changes and worker-side operational activity.</p>
+              </Link>
+            </div>
           </GlassCard>
         </div>
       </section>

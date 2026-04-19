@@ -9,17 +9,34 @@
 import type { RouteParams } from '../router';
 import { SimulationRuntime } from '../engines/simulation-runtime';
 import { EventBus } from '../engines/event-bus';
-import type { SimulationInitRequest, SimulationStepRequest } from '../types/simulation.types';
+import type { SimulationInitRequest, SimulationState, SimulationStepRequest } from '../types/simulation.types';
+
+type SimulationStreamOptions = {
+  sessionId: string;
+  pollIntervalMs?: number;
+};
+
+type SimulationSocketLike = Pick<WebSocket, 'send' | 'close'> & {
+  addEventListener?: (type: string, listener: (...args: unknown[]) => void) => void;
+};
 
 export class SimulationWorker {
   private db: D1Database;
   private runtime: SimulationRuntime;
   private eventBus: EventBus;
+  private static readonly DEFAULT_STREAM_POLL_MS = 1500;
 
   constructor(db: D1Database, eventBus: EventBus) {
     this.db = db;
     this.runtime = new SimulationRuntime(db, eventBus);
     this.eventBus = eventBus;
+  }
+
+  private getRuntimeOptions(env: any): { bridgeEndpoint?: string; bridgeApiKey?: string } {
+    return {
+      bridgeEndpoint: typeof env?.WORLD_KERNEL_BRIDGE_URL === 'string' ? env.WORLD_KERNEL_BRIDGE_URL : undefined,
+      bridgeApiKey: typeof env?.WORLD_KERNEL_BRIDGE_TOKEN === 'string' ? env.WORLD_KERNEL_BRIDGE_TOKEN : undefined,
+    };
   }
 
   /**
@@ -51,6 +68,22 @@ export class SimulationWorker {
         .bind(id, sessionId, body.mode, JSON.stringify(body.config), body.seed ?? null, body.maxSteps ?? null, now, now)
         .run();
 
+      const initializedState = await this.runtime.initializeRun(
+        {
+          id,
+          session_id: sessionId,
+          mode: body.mode,
+          config: JSON.stringify(body.config),
+          seed: body.seed ?? null,
+          current_step: 0,
+        },
+        this.getRuntimeOptions(env)
+      );
+
+      if (!initializedState) {
+        return new Response(JSON.stringify({ error: 'Failed to initialize simulation state' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+
       await this.eventBus.emit('simulation.initialized', 'simulation-worker', {
         simulationId: id,
         mode: body.mode,
@@ -60,8 +93,9 @@ export class SimulationWorker {
         {
           simulationId: id,
           mode: body.mode,
-          status: 'initializing',
+          status: 'running',
           createdAt: now,
+          state: initializedState,
         },
         { status: 201 }
       );
@@ -87,7 +121,7 @@ export class SimulationWorker {
         return new Response(JSON.stringify({ error: 'Missing simulationId' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const loaded = await this.runtime.loadState(body.simulationId);
+      const loaded = await this.runtime.loadState(body.simulationId, sessionId);
       if (!loaded) {
         return new Response(JSON.stringify({ error: 'Simulation not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       }
@@ -105,7 +139,10 @@ export class SimulationWorker {
           };
 
       // Execute step
-      const result = await this.runtime.step(body.simulationId, currentState);
+      const result = await this.runtime.step(loaded.runRecord, currentState, {
+        ...this.getRuntimeOptions(env),
+        stepCount: body.count,
+      });
       if (!result) {
         return new Response(JSON.stringify({ error: 'Step execution failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
@@ -139,7 +176,7 @@ export class SimulationWorker {
         return new Response(JSON.stringify({ error: 'Missing simulationId' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const success = await this.runtime.terminate(body.simulationId);
+      const success = await this.runtime.terminateForSession(body.simulationId, sessionId);
 
       if (!success) {
         return new Response(JSON.stringify({ error: 'Terminate failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
@@ -169,7 +206,7 @@ export class SimulationWorker {
         return new Response(JSON.stringify({ error: 'Missing id parameter' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const loaded = await this.runtime.loadState(id);
+      const loaded = await this.runtime.loadState(id, sessionId);
       if (!loaded) {
         return new Response(JSON.stringify({ error: 'Simulation not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
       }
@@ -205,6 +242,11 @@ export class SimulationWorker {
         return new Response(JSON.stringify({ error: 'Missing id parameter' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
 
+      const loaded = await this.runtime.loadState(simulationId, sessionId);
+      if (!loaded) {
+        return new Response(JSON.stringify({ error: 'Simulation not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+      }
+
       const state = await this.runtime.getStateAtStep(simulationId, step);
       if (!state) {
         return new Response(JSON.stringify({ error: 'Snapshot not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
@@ -233,7 +275,7 @@ export class SimulationWorker {
         return new Response(JSON.stringify({ error: 'Missing simulationId or toStep' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
 
-      const state = await this.runtime.rollback(body.simulationId, body.toStep);
+      const state = await this.runtime.rollbackForSession(body.simulationId, sessionId, body.toStep);
       if (!state) {
         return new Response(JSON.stringify({ error: 'Rollback failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
       }
@@ -287,30 +329,143 @@ export class SimulationWorker {
     }
   }
 
+  private async loadStreamState(simulationId: string, sessionId: string): Promise<{
+    runRecord: any;
+    state: SimulationState | null;
+    snapshot: { step: number; checksum: string; createdAt: string } | null;
+  } | null> {
+    const loaded = await this.runtime.loadState(simulationId, sessionId);
+    if (!loaded) {
+      return null;
+    }
+
+    const state = loaded.snapshot ? JSON.parse(loaded.snapshot.stateBlog) as SimulationState : null;
+
+    return {
+      runRecord: loaded.runRecord,
+      state,
+      snapshot: loaded.snapshot
+        ? {
+            step: loaded.snapshot.step,
+            checksum: loaded.snapshot.checksum,
+            createdAt: loaded.snapshot.createdAt,
+          }
+        : null,
+    };
+  }
+
+  private buildStreamFingerprint(payload: {
+    runRecord: { status?: string; current_step?: number; updated_at?: string };
+    snapshot: { step: number; checksum: string; createdAt: string } | null;
+  }): string {
+    return [
+      String(payload.runRecord.status || 'unknown'),
+      String(payload.runRecord.current_step ?? 0),
+      String(payload.runRecord.updated_at || ''),
+      String(payload.snapshot?.checksum || 'no-checksum'),
+      String(payload.snapshot?.step ?? -1),
+    ].join(':');
+  }
+
+  private async pushStreamState(
+    webSocket: SimulationSocketLike,
+    simulationId: string,
+    sessionId: string,
+    lastFingerprint: { value: string | null },
+    messageType: 'snapshot' | 'update' = 'update'
+  ): Promise<boolean> {
+    const payload = await this.loadStreamState(simulationId, sessionId);
+    if (!payload) {
+      webSocket.send(JSON.stringify({ type: 'error', error: 'Simulation not found' }));
+      webSocket.close(1008, 'Simulation not found');
+      return false;
+    }
+
+    const fingerprint = this.buildStreamFingerprint(payload);
+    if (fingerprint === lastFingerprint.value) {
+      return true;
+    }
+
+    lastFingerprint.value = fingerprint;
+    webSocket.send(
+      JSON.stringify({
+        type: messageType,
+        simulationId,
+        timestamp: new Date().toISOString(),
+        simulation: payload.runRecord,
+        snapshot: payload.snapshot,
+        state: payload.state,
+      })
+    );
+
+    const status = String(payload.runRecord.status || '').toLowerCase();
+    if (status === 'completed' || status === 'terminated' || status === 'error') {
+      webSocket.close(1000, 'Simulation stream complete');
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * WebSocket handler for /api/simulation/stream
-   * Upgrades connection and streams simulation state updates
-   * TODO: Implement WebSocket upgrade in main worker.ts
+   * Streams simulation state updates by polling the persisted runtime snapshots.
    */
-  async handleWebSocket(webSocket: WebSocket, simulationId: string): Promise<void> {
-    // Stub: send initial state and step updates
+  async handleWebSocket(webSocket: SimulationSocketLike, simulationId: string, options: SimulationStreamOptions): Promise<void> {
     try {
-      const loaded = await this.runtime.loadState(simulationId);
-      if (!loaded) {
-        webSocket.send(JSON.stringify({ error: 'Simulation not found' }));
-        webSocket.close(1000);
-        return;
-      }
+      let closed = false;
+      let intervalHandle: ReturnType<typeof setInterval> | null = null;
+      const lastFingerprint = { value: null as string | null };
+      const pollIntervalMs = Math.max(50, Math.floor(options.pollIntervalMs || SimulationWorker.DEFAULT_STREAM_POLL_MS));
 
-      // Send initial state
+      const closeStream = () => {
+        closed = true;
+        if (intervalHandle) {
+          clearInterval(intervalHandle);
+          intervalHandle = null;
+        }
+      };
+
+      webSocket.addEventListener?.('close', closeStream);
+      webSocket.addEventListener?.('error', closeStream);
+
       webSocket.send(
         JSON.stringify({
-          type: 'state',
-          data: loaded.snapshot ? JSON.parse(loaded.snapshot.stateBlog) : null,
+          type: 'connection',
+          simulationId,
+          pollIntervalMs,
+          timestamp: new Date().toISOString(),
         })
       );
 
-      // TODO: Listen for step events via EventBus and push updates
+      const keepStreaming = await this.pushStreamState(
+        webSocket,
+        simulationId,
+        options.sessionId,
+        lastFingerprint,
+        'snapshot'
+      );
+      if (!keepStreaming || closed) {
+        closeStream();
+        return;
+      }
+
+      intervalHandle = setInterval(() => {
+        if (closed) {
+          closeStream();
+          return;
+        }
+
+        void this.pushStreamState(webSocket, simulationId, options.sessionId, lastFingerprint).then((shouldContinue) => {
+          if (!shouldContinue) {
+            closeStream();
+          }
+        }).catch((err) => {
+          console.error('[SimulationWorker.handleWebSocket.poll]', err);
+          closeStream();
+          webSocket.close(1011, 'Simulation stream failure');
+        });
+      }, pollIntervalMs);
     } catch (err) {
       console.error('[SimulationWorker.handleWebSocket]', err);
       webSocket.close(1011);

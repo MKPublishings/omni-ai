@@ -36,3 +36,9 @@ MODEL_ION="@cf/meta/llama-3.1-8b-instruct"
 ION_MEDIA_API_KEYS="replace-with-ion-media-key"
 ION_MEDIA_HOST="127.0.0.1"
 ION_MEDIA_PORT="8788"
+
+# ===== Sovereign world bridge (Python process) =====
+# Run `npm run world:bridge:serve` and point the worker at the live bridge endpoint.
+WORLD_KERNEL_BRIDGE_URL="http://127.0.0.1:8790/advance"
+# Optional bearer token for the bridge server. Match ION_WORLD_BRIDGE_TOKEN if set.
+# WORLD_KERNEL_BRIDGE_TOKEN="replace-with-world-bridge-token"

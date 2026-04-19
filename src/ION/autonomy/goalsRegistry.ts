@@ -1,5 +1,3 @@
-import type { KVNamespace } from "@cloudflare/workers-types";
-
 type GoalsEnv = {
   MIND?: KVNamespace;
 };

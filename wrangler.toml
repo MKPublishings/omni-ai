@@ -68,14 +68,14 @@ database_name = "ionirix"
 database_id = "7395c7a8-5f61-4a35-b493-bfbebfe3ef36"
 migrations_dir = "migrations"
 
-# Optional Durable Object session binding.
-# [[durable_objects.bindings]]
-# name = "ION_SESSION"
-# class_name = "IONSession"
+# Sovereign world-state bus Durable Object binding.
+[[durable_objects.bindings]]
+name = "WORLD_STATE_BUS"
+class_name = "WorldStateBusDurableObject"
 
-# [[migrations]]
-# tag = "v1"
-# new_sqlite_classes = ["IONSession"]
+[[migrations]]
+tag = "v2-world-state-bus"
+new_sqlite_classes = ["WorldStateBusDurableObject"]
 
 # Scheduled tasks for system maintenance
 [triggers]
