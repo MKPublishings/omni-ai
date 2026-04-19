@@ -89,18 +89,18 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
         </main>
 
         {footer ?? (
-          <footer className="border-t border-quantum-white/8 py-8 text-sm text-quantum-white/56">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
-              <div className="space-y-4">
-                <p className="text-sm font-semibold text-quantum-white">© 2026 Ionirix LLC. All rights reserved.</p>
-                <p className="max-w-xl leading-7 text-quantum-white/60">
+          <footer className="border-t border-quantum-white/8 py-6 text-[10px] leading-5 text-quantum-white/56 sm:py-8 sm:text-sm sm:leading-6">
+            <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+              <div className="space-y-3 sm:space-y-4">
+                <p className="text-[10px] font-semibold text-quantum-white sm:text-sm">© 2026 Ionirix LLC. All rights reserved.</p>
+                <p className="max-w-xl leading-5 text-quantum-white/60 sm:leading-7">
                   Ionirix is a sovereign intelligence architecture. All systems, interfaces, simulations, models, designs, and platform materials are the exclusive property of Ionirix LLC. Unauthorized reproduction, distribution, modification, or derivative use is strictly prohibited.
                 </p>
               </div>
 
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Legal</p>
-                <ul className="mt-4 space-y-2 text-quantum-white/64">
+                <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
                   {legalItems.map((item) => (
                     <li key={item.href}>
                       <Link href={item.href} className="transition hover:text-quantum-white">
@@ -113,7 +113,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
 
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Company</p>
-                <ul className="mt-4 space-y-2 text-quantum-white/64">
+                <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
                   {companyItems.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -122,7 +122,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
 
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Contact</p>
-                <ul className="mt-4 space-y-2 text-quantum-white/64">
+                <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
                   {contactItems.map((item) => (
                     <li key={item.label}>
                       <span className="text-quantum-white/50">{item.label}:</span>{' '}

@@ -18,9 +18,9 @@ export default function LandingPage() {
         </>
       }
       footer={
-        <footer className="border-t border-quantum-white/8 py-8 text-sm text-quantum-white/56">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
-            <section className="space-y-4">
+        <footer className="border-t border-quantum-white/8 py-6 text-[10px] leading-5 text-quantum-white/56 sm:py-8 sm:text-sm sm:leading-6">
+          <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
+            <section className="space-y-3 sm:space-y-4">
             <p>© 2026 Ionirix LLC. All rights reserved.</p>
 
             <p>
@@ -32,7 +32,7 @@ export default function LandingPage() {
 
             <section>
             <p>— Legal —</p>
-            <ul className="mt-4 space-y-2 text-quantum-white/64">
+            <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
               <li><Link href="/terms" className="transition hover:text-quantum-white">Terms of Service</Link></li>
               <li><Link href="/privacy" className="transition hover:text-quantum-white">Privacy Policy</Link></li>
               <li><Link href="/acceptable-use" className="transition hover:text-quantum-white">Acceptable Use Policy</Link></li>
@@ -44,7 +44,7 @@ export default function LandingPage() {
 
             <section>
             <p>— Company —</p>
-            <ul className="mt-4 space-y-2 text-quantum-white/64">
+            <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
               <li>Ionirix LLC (New York, USA)</li>
               <li>Registered and operating in accordance with NYS corporate law.</li>
               <li>Trademark and brand assets protected under U.S. and international IP statutes.</li>
@@ -53,7 +53,7 @@ export default function LandingPage() {
 
             <section>
             <p>— Contact —</p>
-            <ul className="mt-4 space-y-2 text-quantum-white/64">
+            <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
               <li>General Inquiries: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
               <li>Security Reports: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
               <li>Legal Notices: <a href="mailto:noreply@ionirix.com" className="transition hover:text-quantum-white">noreply@ionirix.com</a></li>
