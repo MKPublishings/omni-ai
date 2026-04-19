@@ -61,7 +61,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
 
     if (loading) {
       return (
-        <div className="ix-glass-sovereign rounded-lg overflow-hidden">
+        <div className="workspace-table-shell ix-glass-sovereign rounded-lg overflow-hidden">
           <div className="p-8 text-center">
             <div className="animate-pulse space-y-4">
               <div className="h-4 bg-quantum-white/20 rounded w-3/4 mx-auto"></div>
@@ -75,7 +75,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
 
     if (data.length === 0) {
       return (
-        <div className="ix-glass-sovereign rounded-lg overflow-hidden">
+        <div className="workspace-table-shell ix-glass-sovereign rounded-lg overflow-hidden">
           <div className="p-12 text-center">
             <svg className="w-12 h-12 text-quantum-white/40 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -92,7 +92,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
     }
 
     return (
-      <div className="ix-glass-sovereign rounded-lg overflow-hidden">
+      <div className="workspace-table-shell ix-glass-sovereign rounded-lg overflow-hidden">
         <div className="divide-y divide-quantum-white/6 md:hidden">
           {data.map((row, index) => (
             <div key={index} className="space-y-3 p-4">
@@ -115,7 +115,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
         <div className="hidden overflow-x-auto md:block">
           <table
             ref={ref}
-            className={clsx('w-full', className)}
+            className={clsx('workspace-table-desktop w-full', className)}
             {...props}
           >
             <thead>
@@ -124,7 +124,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
                   <th
                     key={String(column.key)}
                     className={clsx(
-                      'px-4 py-3 text-left text-xs font-medium text-quantum-white/64 uppercase tracking-wider',
+                      'px-[var(--workspace-table-cell-x)] py-[var(--workspace-table-cell-y)] text-left text-xs font-medium text-quantum-white/64 uppercase tracking-wider',
                       column.sortable && 'cursor-pointer hover:text-quantum-white/80 transition-colors duration-quick',
                       column.width && `w-${column.width}`
                     )}
@@ -147,7 +147,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
                   {columns.map((column) => (
                     <td
                       key={String(column.key)}
-                      className="px-4 py-3 text-sm text-quantum-white"
+                      className="px-[var(--workspace-table-cell-x)] py-[var(--workspace-table-cell-y)] text-sm text-quantum-white"
                     >
                       {column.render
                         ? column.render(row[column.key as keyof typeof row], row)

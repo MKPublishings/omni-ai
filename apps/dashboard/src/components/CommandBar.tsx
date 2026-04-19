@@ -36,7 +36,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
       <div
         ref={ref}
         className={clsx(
-          'dashboard-topbar border-b px-3 py-3 sm:px-4 md:px-6',
+          'workspace-commandbar dashboard-topbar border-b px-3 py-3 sm:px-4 md:px-6',
           'flex flex-col gap-3 lg:h-16 lg:flex-row lg:items-center lg:justify-between lg:py-0',
           className
         )}
@@ -86,7 +86,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
           </button>
         </div>
 
-        <div className="w-full lg:mx-8 lg:max-w-xl lg:flex-1">
+        <div className="workspace-commandbar-search w-full lg:mx-8 lg:flex-1">
           <div className="relative">
             <input
               type="search"

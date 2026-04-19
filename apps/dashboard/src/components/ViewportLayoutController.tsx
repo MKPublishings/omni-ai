@@ -23,12 +23,31 @@ function applyViewportProfile() {
   const gutter = width * 0.1
 
   const maxWidth = Math.max(width - gutter * 2, 0)
+  const commandMaxWidth = shape === 'portrait'
+    ? maxWidth
+    : shape === 'ultrawide'
+      ? Math.min(maxWidth * 0.42, 960)
+      : shape === 'wide'
+        ? Math.min(maxWidth * 0.4, 840)
+        : Math.min(maxWidth * 0.38, 760)
+
+  const panelPadding = density === 'compact' ? 16 : density === 'expanded' ? 28 : 24
+  const statMinHeight = density === 'compact' ? 124 : density === 'expanded' ? 176 : 152
+  const tableCellX = density === 'expanded' ? 20 : 16
+  const tableCellY = density === 'expanded' ? 16 : 12
+  const contentGap = density === 'expanded' ? '1.75rem' : '1.5rem'
 
   root.dataset.viewportShape = shape
   root.dataset.viewportDensity = density
   root.style.setProperty('--site-shell-gutter', `${gutter}px`)
   root.style.setProperty('--site-shell-max-width', `${maxWidth}px`)
   root.style.setProperty('--site-shell-section-gap', width >= 1800 ? '1.75rem' : '1.5rem')
+  root.style.setProperty('--workspace-command-max-width', `${commandMaxWidth}px`)
+  root.style.setProperty('--workspace-panel-padding', `${panelPadding}px`)
+  root.style.setProperty('--workspace-stat-min-height', `${statMinHeight}px`)
+  root.style.setProperty('--workspace-table-cell-x', `${tableCellX}px`)
+  root.style.setProperty('--workspace-table-cell-y', `${tableCellY}px`)
+  root.style.setProperty('--workspace-content-gap', contentGap)
 }
 
 export function ViewportLayoutController() {

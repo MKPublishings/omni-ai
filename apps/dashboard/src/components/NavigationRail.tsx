@@ -24,27 +24,37 @@ const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
       <button
         ref={ref}
         className={clsx(
-          'relative flex items-center w-full rounded-xl px-3.5 py-3 text-left transition-all duration-quick ease-sovereign',
-          'hover:bg-quantum-white/10 focus:outline-none focus:ring-2 focus:ring-ion-blue-500',
-          active && 'bg-ion-blue-500 text-quantum-white',
+          'dashboard-nav-item relative flex w-full min-w-0 items-center overflow-hidden rounded-2xl text-left transition-all duration-quick ease-sovereign',
+          'focus:outline-none focus:ring-2 focus:ring-ion-blue-500',
+          collapsed ? 'justify-center px-0 py-3' : 'justify-start px-4 py-3.5',
+          active && 'dashboard-nav-item-active text-quantum-white',
           !active && 'text-quantum-white/64 hover:text-quantum-white',
-          collapsed ? 'justify-center' : 'justify-start',
           className
         )}
         title={collapsed ? label : undefined}
         {...props}
       >
-        <div className="flex-shrink-0 w-6 h-6">
+        {active && (
+          <div
+            aria-hidden="true"
+            className={clsx(
+              'absolute rounded-full bg-quantum-white/90 transition-all duration-quick',
+              collapsed ? 'left-1/2 top-1.5 h-1.5 w-8 -translate-x-1/2' : 'left-2 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full rounded-l-none'
+            )}
+          />
+        )}
+
+        <div className={clsx('relative z-[1] flex min-w-0 items-center', collapsed ? 'justify-center' : 'w-full gap-3')}>
+          <div className={clsx('flex h-6 w-6 shrink-0 items-center justify-center', active ? 'text-quantum-white' : 'text-current')}>
           {icon}
+          </div>
+
+          {!collapsed && (
+            <span className="min-w-0 flex-1 truncate text-sm font-medium leading-6">
+              {label}
+            </span>
+          )}
         </div>
-        {!collapsed && (
-          <span className="ml-3 text-sm font-medium truncate">
-            {label}
-          </span>
-        )}
-        {active && !collapsed && (
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-quantum-white rounded-r-md" />
-        )}
       </button>
     )
   }
@@ -60,7 +70,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
       <div
         ref={ref}
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden border-r border-quantum-white/8 bg-pine-black-900/95 backdrop-blur-xl shadow-2xl',
+          'dashboard-navigation-rail fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden border-r border-quantum-white/8 bg-pine-black-900/95 backdrop-blur-xl shadow-2xl',
           'transition-all duration-standard ease-sovereign md:relative md:z-auto md:translate-x-0 md:shadow-none',
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           collapsed ? 'md:w-20' : 'md:w-72',
@@ -95,7 +105,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
           )}
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className={clsx('flex-1 overflow-y-auto px-3 py-4', collapsed ? 'space-y-2' : 'space-y-1.5')}>
           {children}
         </nav>
 

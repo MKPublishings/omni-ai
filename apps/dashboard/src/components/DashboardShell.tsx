@@ -238,7 +238,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
               icon={item.icon}
               label={item.label}
               active={isNavigationItemActive(pathname, item.href)}
-              collapsed={navCollapsed}
+              collapsed={isMobileViewport ? false : navCollapsed}
               onClick={() => router.push(item.href)}
             />
           ))}
@@ -260,9 +260,9 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
           />
 
           <main className="min-w-0 flex-1 overflow-auto py-4 sm:py-5">
-            <div className={clsx('site-content-frame mx-auto flex w-full flex-col gap-5 sm:gap-6', fullBleedOnMobile ? 'px-0 md:px-0' : '')}>
-              <div className={hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between'}>
-                <div className="min-w-0">
+            <div className={clsx('workspace-shell-frame site-content-frame mx-auto flex w-full min-w-0 flex-col gap-5 sm:gap-6', fullBleedOnMobile ? 'px-0 md:px-0' : '')}>
+              <div className={clsx('workspace-page-intro', hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>
+                <div className="workspace-page-intro-copy min-w-0">
                   <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1>
                   {subtitle ? <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
                 </div>
