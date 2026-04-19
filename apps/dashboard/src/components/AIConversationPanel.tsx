@@ -239,12 +239,14 @@ const ThinkingIndicator = () => {
 export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPanelProps>(
   ({ messages = [], onSendMessage, isThinking, isLoading, className, ...props }, ref) => {
     const [inputValue, setInputValue] = useState('')
-    const [isFullscreen, setIsFullscreen] = useState(false)
-    const [canFullscreen, setCanFullscreen] = useState(false)
+    const [isNativeFullscreen, setIsNativeFullscreen] = useState(false)
+    const [isOverlayFullscreen, setIsOverlayFullscreen] = useState(false)
+    const [canNativeFullscreen, setCanNativeFullscreen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const messagesContainerRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const isFullscreen = isNativeFullscreen || isOverlayFullscreen
 
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView()
@@ -262,10 +264,14 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         return
       }
 
-      setCanFullscreen(typeof panel.requestFullscreen === 'function' && document.fullscreenEnabled !== false)
+      setCanNativeFullscreen(typeof panel.requestFullscreen === 'function' && document.fullscreenEnabled !== false)
 
       const syncFullscreenState = () => {
-        setIsFullscreen(document.fullscreenElement === panel)
+        const active = document.fullscreenElement === panel
+        setIsNativeFullscreen(active)
+        if (active) {
+          setIsOverlayFullscreen(false)
+        }
       }
 
       syncFullscreenState()
@@ -275,6 +281,23 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         document.removeEventListener('fullscreenchange', syncFullscreenState)
       }
     }, [])
+
+    useEffect(() => {
+      if (typeof document === 'undefined') {
+        return
+      }
+
+      const { body } = document
+      const previousOverflow = body.style.overflow
+
+      if (isOverlayFullscreen) {
+        body.style.overflow = 'hidden'
+      }
+
+      return () => {
+        body.style.overflow = previousOverflow
+      }
+    }, [isOverlayFullscreen])
 
     useEffect(() => {
       if (typeof document === 'undefined') {
@@ -371,9 +394,12 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           return
         }
 
-        if (typeof panel.requestFullscreen === 'function') {
+        if (canNativeFullscreen && typeof panel.requestFullscreen === 'function') {
           await panel.requestFullscreen()
+          return
         }
+
+        setIsOverlayFullscreen((value) => !value)
       } catch {
         return
       }
@@ -384,11 +410,12 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         ref={panelRef}
         className={clsx(
           'chat-fullscreen-shell flex h-full w-full min-w-0 flex-col',
+          isOverlayFullscreen && 'fixed inset-0 z-50 bg-pine-black-900/98 p-[5vw] sm:p-[5vw]',
           className
         )}
         {...props}
       >
-        <div className="chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]">
+        <div className={clsx('chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]', isOverlayFullscreen && 'min-h-0 rounded-[1.25rem] sm:rounded-[1.5rem]')}>
           <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
@@ -401,30 +428,28 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
               </div>
             </div>
-            {canFullscreen ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleToggleFullscreen}
-                className="h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
-                aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
-                title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
-              >
-                {isFullscreen ? (
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
-                  </svg>
-                ) : (
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
-                  </svg>
-                )}
-                <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
-                  {isFullscreen ? 'Exit' : 'Fullscreen'}
-                </span>
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleToggleFullscreen}
+              className="h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
+              aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
+              title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
+            >
+              {isFullscreen ? (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
+                </svg>
+              )}
+              <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
+                {isFullscreen ? 'Exit' : 'Fullscreen'}
+              </span>
+            </Button>
           </div>
 
           <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
