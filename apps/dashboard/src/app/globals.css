@@ -538,6 +538,95 @@
     color: rgba(15, 23, 42, 0.88);
   }
 
+  html[data-dashboard-theme='light'] {
+    --theme-text-strong: rgba(15, 23, 42, 0.94);
+    --theme-text-body: rgba(15, 23, 42, 0.82);
+    --theme-text-muted: rgba(15, 23, 42, 0.68);
+    --theme-text-subtle: rgba(15, 23, 42, 0.56);
+    --theme-text-faint: rgba(15, 23, 42, 0.42);
+    --theme-text-accent: rgba(8, 47, 73, 0.9);
+  }
+
+  html[data-dashboard-theme='light'] [class*='text-white'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white'] {
+    color: var(--theme-text-strong) !important;
+  }
+
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/84'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/80'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/78'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/74'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/72'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/70'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/68'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/64'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/62'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/60'],
+  html[data-dashboard-theme='light'] [class*='text-white/80'],
+  html[data-dashboard-theme='light'] [class*='text-white/72'],
+  html[data-dashboard-theme='light'] [class*='text-white/70'],
+  html[data-dashboard-theme='light'] [class*='text-white/68'],
+  html[data-dashboard-theme='light'] [class*='text-white/64'],
+  html[data-dashboard-theme='light'] [class*='text-white/60'] {
+    color: var(--theme-text-body) !important;
+  }
+
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/56'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/54'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/52'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/50'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/48'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/46'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/44'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/42'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/40'],
+  html[data-dashboard-theme='light'] [class*='text-quantum-white/36'],
+  html[data-dashboard-theme='light'] [class*='text-white/56'],
+  html[data-dashboard-theme='light'] [class*='text-white/48'],
+  html[data-dashboard-theme='light'] [class*='text-white/40'] {
+    color: var(--theme-text-subtle) !important;
+  }
+
+  html[data-dashboard-theme='light'] [class*='text-spectral-cyan-100'],
+  html[data-dashboard-theme='light'] [class*='text-spectral-cyan-300'],
+  html[data-dashboard-theme='light'] [class*='text-spectral-cyan-400'] {
+    color: var(--theme-text-accent) !important;
+  }
+
+  html[data-dashboard-theme='light'] [class*='placeholder-quantum-white/40'],
+  html[data-dashboard-theme='light'] [class*='placeholder-white/40'] {
+    color: var(--theme-text-subtle) !important;
+  }
+
+  html[data-dashboard-theme='light'] .theme-button-primary,
+  html[data-dashboard-theme='light'] .theme-button-primary * {
+    color: rgba(7, 10, 18, 0.92) !important;
+  }
+
+  html[data-dashboard-theme='light'] .theme-button-primary {
+    border-color: rgba(14, 116, 144, 0.22);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.14);
+  }
+
+  html[data-dashboard-theme='light'] .chat-message-user,
+  html[data-dashboard-theme='light'] .chat-message-user * {
+    color: rgba(7, 10, 18, 0.92) !important;
+  }
+
+  html[data-dashboard-theme='light'] .chat-message-user .chat-message-timestamp {
+    color: rgba(7, 10, 18, 0.62) !important;
+  }
+
+  html[data-dashboard-theme='light'] .dashboard-nav-item-active,
+  html[data-dashboard-theme='light'] .dashboard-nav-item-active * {
+    color: rgba(7, 10, 18, 0.92) !important;
+  }
+
+  html[data-dashboard-theme='light'] .ion-billing-premium-badge,
+  html[data-dashboard-theme='light'] .ion-billing-premium-badge * {
+    color: rgba(8, 47, 73, 0.88) !important;
+  }
+
   html[data-dashboard-theme='light'] .theme-button-secondary:hover,
   html[data-dashboard-theme='light'] .theme-button-ghost:hover {
     background: rgba(15, 23, 42, 0.06);
