@@ -211,7 +211,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }
 
   return (
-    <div className="min-h-screen flex bg-pine-black-900 relative overflow-hidden">
+    <div className="dashboard-theme-shell relative flex min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
 
       <div className="relative z-10 flex min-h-screen w-full">
@@ -219,7 +219,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
           <button
             type="button"
             aria-label="Close navigation overlay"
-            className="fixed inset-0 z-30 bg-pine-black-900/70 backdrop-blur-sm md:hidden"
+            className="dashboard-mobile-overlay fixed inset-0 z-30 bg-pine-black-900/70 backdrop-blur-sm md:hidden"
             onClick={() => setMobileNavOpen(false)}
           />
         )}
@@ -265,8 +265,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
               {hasPageIntro ? (
                 <div className={clsx('workspace-page-intro', hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>
                   <div className="workspace-page-intro-copy min-w-0">
-                    {title ? <h1 className="text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1> : null}
-                    {subtitle ? <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
+                    {title ? <h1 className="theme-page-title text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1> : null}
+                    {subtitle ? <p className="theme-page-subtitle mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
                   </div>
 
                   {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}

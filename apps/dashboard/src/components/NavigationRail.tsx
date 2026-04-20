@@ -24,6 +24,7 @@ const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
       <button
         ref={ref}
         className={clsx(
+          'theme-nav-item',
           'dashboard-nav-item relative flex w-full min-w-0 items-center overflow-hidden rounded-2xl text-left transition-all duration-quick ease-sovereign',
           'focus:outline-none focus:ring-2 focus:ring-ion-blue-500',
           collapsed ? 'justify-center px-0 py-3' : 'justify-start px-4 py-3.5',
@@ -70,6 +71,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
       <div
         ref={ref}
         className={clsx(
+          'theme-navigation-rail',
           'dashboard-navigation-rail fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden border-r border-quantum-white/8 bg-pine-black-900/95 backdrop-blur-xl shadow-2xl',
           'transition-all duration-standard ease-sovereign md:relative md:z-auto md:translate-x-0 md:shadow-none',
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -85,7 +87,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
               <span className="text-sm font-bold text-quantum-white">IX</span>
             </div>
             {expanded && (
-              <span className="ml-3 truncate text-lg font-semibold text-quantum-white">
+              <span className="theme-nav-brand ml-3 truncate text-lg font-semibold text-quantum-white">
                 Ionirix
               </span>
             )}
@@ -95,7 +97,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
             <button
               type="button"
               aria-label="Close navigation"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/10 text-quantum-white/72 transition hover:bg-quantum-white/8 hover:text-quantum-white md:hidden"
+              className="theme-nav-close inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/10 text-quantum-white/72 transition hover:bg-quantum-white/8 hover:text-quantum-white md:hidden"
               onClick={onRequestClose}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,8 +118,8 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
             </div>
             {expanded && (
               <div className="ml-3 min-w-0">
-                <p className="text-quantum-white text-sm font-medium truncate">{userName}</p>
-                <p className="text-quantum-white/64 text-xs truncate">{userRole}</p>
+                <p className="theme-nav-user-name text-quantum-white text-sm font-medium truncate">{userName}</p>
+                <p className="theme-nav-user-role text-quantum-white/64 text-xs truncate">{userRole}</p>
               </div>
             )}
           </div>

@@ -28,6 +28,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={clsx(
+          'theme-button',
+          variant === 'primary' && 'theme-button-primary',
+          variant === 'secondary' && 'theme-button-secondary',
+          variant === 'ghost' && 'theme-button-ghost',
           'inline-flex items-center justify-center rounded-md font-medium transition-all duration-quick ease-sovereign',
           'focus:outline-none focus:ring-2 focus:ring-ion-blue-500 focus:ring-offset-2 focus:ring-offset-pine-black-900',
           'disabled:opacity-50 disabled:cursor-not-allowed',

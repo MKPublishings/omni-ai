@@ -66,7 +66,7 @@ function SourceChip({ source }: { source: NonNullable<Message['sources']>[number
       href={source.url}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex max-w-full items-center gap-2 rounded-full border border-quantum-white/12 bg-quantum-white/5 px-3 py-1.5 text-xs text-quantum-white/84 transition hover:bg-quantum-white/10"
+      className="chat-source-chip inline-flex max-w-full items-center gap-2 rounded-full border border-quantum-white/12 bg-quantum-white/5 px-3 py-1.5 text-xs text-quantum-white/84 transition hover:bg-quantum-white/10"
       title={source.title}
     >
       {showFavicon && faviconUrl ? (
@@ -77,7 +77,7 @@ function SourceChip({ source }: { source: NonNullable<Message['sources']>[number
           onError={() => setShowFavicon(false)}
         />
       ) : null}
-      <span className="shrink-0 uppercase tracking-[0.16em] text-quantum-white/48">{sourceLabel}</span>
+      <span className="chat-source-label shrink-0 uppercase tracking-[0.16em] text-quantum-white/48">{sourceLabel}</span>
       <span className="truncate">{source.title}</span>
     </a>
   )
@@ -135,25 +135,25 @@ function renderMessageText(content: string) {
   return segments.map((segment, index) => {
     if (segment.type === 'code') {
       return (
-        <div key={`code-${index}`} className="overflow-hidden rounded-2xl border border-quantum-white/12 bg-pine-black-900/70">
-          <div className="border-b border-quantum-white/8 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-quantum-white/48">
+        <div key={`code-${index}`} className="chat-code-block overflow-hidden rounded-2xl border border-quantum-white/12 bg-pine-black-900/70">
+          <div className="chat-code-language border-b border-quantum-white/8 px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-quantum-white/48">
             {segment.language}
           </div>
-          <pre className="chat-selectable overflow-x-auto px-3 py-3 text-[12px] leading-6 text-spectral-cyan-300 sm:px-4 sm:text-[13px]"><code>{segment.content}</code></pre>
+          <pre className="chat-code-content chat-selectable overflow-x-auto px-3 py-3 text-[12px] leading-6 text-spectral-cyan-300 sm:px-4 sm:text-[13px]"><code>{segment.content}</code></pre>
         </div>
       )
     }
 
     if (looksPreformattedText(segment.content)) {
       return (
-        <pre key={`text-${index}`} className="chat-selectable overflow-x-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-quantum-white sm:text-[13px]">
+        <pre key={`text-${index}`} className="chat-preformatted-text chat-selectable overflow-x-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-quantum-white sm:text-[13px]">
           {segment.content}
         </pre>
       )
     }
 
     return (
-      <div key={`text-${index}`} className="chat-selectable whitespace-pre-wrap break-words text-sm leading-6 text-quantum-white sm:text-[0.95rem] sm:leading-7">
+      <div key={`text-${index}`} className="chat-rich-text chat-selectable whitespace-pre-wrap break-words text-sm leading-6 text-quantum-white sm:text-[0.95rem] sm:leading-7">
         {segment.content}
       </div>
     )
@@ -171,10 +171,10 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
+        'chat-message-bubble chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
         isUser
-          ? 'bg-ion-blue-600 text-quantum-white'
-          : 'ix-glass-sovereign text-quantum-white'
+          ? 'chat-message-user bg-ion-blue-600 text-quantum-white'
+          : 'chat-message-assistant ix-glass-sovereign text-quantum-white'
       )}>
         {renderedSegments.length > 0 ? <div className="space-y-3">{renderedSegments}</div> : null}
         {message.image ? (
@@ -190,7 +190,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
               <a
                 href={message.image.src}
                 download={message.image.filename || 'ion-image.png'}
-                className="inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white transition hover:bg-quantum-white/8"
+                className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white transition hover:bg-quantum-white/8"
               >
                 Download image
               </a>
@@ -199,7 +199,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
         ) : null}
         {!isUser && sources.length > 0 ? (
           <div className={clsx(message.content || message.image ? 'mt-3' : '')}>
-            <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-quantum-white/48">
+            <div className="chat-sources-heading mb-2 text-[11px] uppercase tracking-[0.2em] text-quantum-white/48">
               Sources
             </div>
             <div className="flex flex-wrap gap-2">
@@ -209,7 +209,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
             </div>
           </div>
         ) : null}
-        <span className="mt-2 block select-none text-xs opacity-60">
+        <span className="chat-message-timestamp mt-2 block select-none text-xs opacity-60">
           {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -220,14 +220,14 @@ const MessageBubble = ({ message }: { message: Message }) => {
 const ThinkingIndicator = () => {
   return (
     <div className="flex justify-start mb-4">
-      <div className="ix-glass-sovereign px-4 py-3 rounded-lg">
+      <div className="chat-thinking-bubble ix-glass-sovereign rounded-lg px-4 py-3">
         <div className="flex items-center space-x-2">
           <div className="flex space-x-1">
             <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
             <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
             <div className="h-2 w-2 rounded-full bg-spectral-cyan-400"></div>
           </div>
-          <span className="text-spectral-cyan-400 text-sm font-medium uppercase tracking-wider">
+          <span className="chat-thinking-label text-sm font-medium uppercase tracking-wider text-spectral-cyan-400">
             Processing
           </span>
         </div>
@@ -416,7 +416,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         {...props}
       >
         <div className={clsx('chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]', isOverlayFullscreen && 'min-h-0 rounded-[1.25rem] sm:rounded-[1.5rem]')}>
-          <div className="flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
+          <div className="chat-panel-header flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
                 <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,8 +424,8 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 </svg>
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
-                <p className="text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
+                <h3 className="chat-app-title text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
+                <p className="chat-app-subtitle text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
               </div>
             </div>
             <Button
@@ -433,7 +433,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
               variant="ghost"
               size="sm"
               onClick={handleToggleFullscreen}
-              className="h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
+              className="chat-icon-button h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
               aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
               title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
             >
@@ -466,7 +466,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-quantum-white/8 p-2.5 sm:p-4">
+          <div className="chat-panel-footer border-t border-quantum-white/8 p-2.5 sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1">
                 <textarea
@@ -478,7 +478,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   onFocus={handleInputFocus}
                   rows={2}
                   enterKeyHint="done"
-                  className="chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
+                  className="chat-input-field chat-selectable min-h-[48px] w-full resize-none rounded-2xl border border-quantum-white/12 bg-transparent px-4 py-3 text-[16px] leading-6 text-quantum-white placeholder-quantum-white/40 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm sm:leading-5"
                   disabled={isThinking}
                 />
               </div>
@@ -488,7 +488,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   variant="ghost"
                   size="sm"
                   onClick={handleScrollToTop}
-                  className="h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
+                  className="chat-icon-button h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
