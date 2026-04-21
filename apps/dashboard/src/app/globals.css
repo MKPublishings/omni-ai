@@ -31,8 +31,8 @@
     --theme-chat-input-bg: transparent;
     --theme-chat-input-border: rgba(255, 255, 255, 0.12);
     --theme-chat-control-fg: rgba(255, 255, 255, 0.72);
-    --site-shell-gutter: 10vw;
-    --site-shell-max-width: 80vw;
+    --site-shell-gutter: 5vw;
+    --site-shell-max-width: 90vw;
     --site-shell-section-gap: 1.5rem;
     --workspace-command-max-width: 760px;
     --workspace-panel-padding: 24px;
@@ -119,6 +119,15 @@
   html,
   body {
     min-height: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  @layer base {
+    :root {
+      --site-shell-gutter: 10vw;
+      --site-shell-max-width: 80vw;
+    }
   }
 }
 
