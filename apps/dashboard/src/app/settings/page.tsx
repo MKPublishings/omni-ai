@@ -22,6 +22,7 @@ import {
   updateChatSettings,
 } from '@/lib/dashboard'
 import { AuthUser } from '@/lib/auth'
+import { clearStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 import {
   buildWorkspaceFormation,
   CAPABILITY_CATALOG,
@@ -270,9 +271,9 @@ export default function SettingsPage() {
 
       if (typeof window !== 'undefined') {
         if (preferencesDraft.theme === 'system') {
-          window.localStorage.removeItem('ion-dashboard-theme')
+          clearStoredDashboardTheme()
         } else {
-          window.localStorage.setItem('ion-dashboard-theme', preferencesDraft.theme)
+          writeStoredDashboardTheme(preferencesDraft.theme)
         }
       }
 

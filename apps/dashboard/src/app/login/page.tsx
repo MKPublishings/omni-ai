@@ -31,18 +31,21 @@ function buildVerificationDeliveryNotice(input: {
   return input.fallbackMessage
 }
 
-async function resolvePostAuthRoute(defaultPath: string): Promise<string> {
+async function resolvePostAuthRoute(defaultPath: string, identifier?: string): Promise<string> {
   try {
     const workspace = await fetchOnboardingWorkspace()
     if (workspace?.primaryRoute) {
       clearWorkspaceFormation()
+      if (identifier) {
+        clearWorkspaceFormation(identifier)
+      }
       return workspace.primaryRoute
     }
   } catch {
     // Fall through to local backup or default route.
   }
 
-  const localFormation = loadWorkspaceFormation()
+  const localFormation = loadWorkspaceFormation(identifier)
   if (localFormation?.primaryRoute) {
     return localFormation.primaryRoute
   }
@@ -136,7 +139,7 @@ function LoginPageContent() {
       }
 
       storeAuthSession(data)
-      const destination = await resolvePostAuthRoute(nextPath)
+      const destination = await resolvePostAuthRoute(nextPath, email)
       router.push(destination)
 
     } catch (err) {

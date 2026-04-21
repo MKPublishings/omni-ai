@@ -6,9 +6,11 @@ import { AmbientBackground } from '@/components/AmbientBackground'
 import { Button } from '@/components/Button'
 import { GlassCard } from '@/components/GlassCard'
 import { clearAuthSession, getStoredToken } from '@/lib/auth'
+import { clearStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 import { fetchDashboardUser, fetchOnboardingWorkspace } from '@/lib/dashboard'
 import {
   clearPersistedOnboardingState,
+  clearWorkspaceFormation,
   createInitialOnboardingState,
   evaluateAdaptiveBehaviors,
   firstInvalidStep,
@@ -181,9 +183,15 @@ export function OnboardingPage() {
 
   const canGoBack = state.currentStep !== 'account'
   const nextLabel = state.currentStep === 'confirmation' ? 'Create account' : 'Continue'
+  const onboardingScopeHints = [state.account.email, state.account.username].map((value) => String(value || '').trim()).filter(Boolean)
 
   const handleReset = () => {
     clearPersistedOnboardingState()
+    clearPersistedOnboardingState(onboardingScopeHints)
+    clearWorkspaceFormation()
+    clearWorkspaceFormation(onboardingScopeHints)
+    clearStoredDashboardTheme()
+    clearStoredDashboardTheme(onboardingScopeHints)
     setVerificationNotice('')
     setVerificationUrl(null)
     dispatch({ type: 'RESET' })
@@ -211,10 +219,10 @@ export function OnboardingPage() {
     dispatch({ type: 'BEGIN_SUBMIT' })
 
     try {
-      saveWorkspaceFormation(state.formation)
+      saveWorkspaceFormation(state.formation, state.account.email || state.account.username)
 
       if (state.preferences.theme !== 'system' && typeof window !== 'undefined') {
-        window.localStorage.setItem('ion-dashboard-theme', state.preferences.theme)
+        writeStoredDashboardTheme(state.preferences.theme, state.account.email || state.account.username)
       }
 
       const result = await submitOnboardingAccount(state.account, {
@@ -236,6 +244,9 @@ export function OnboardingPage() {
       dispatch({ type: 'SUBMIT_SUCCESS' })
       if (result.workspaceProvisioned !== false) {
         clearPersistedOnboardingState()
+        clearPersistedOnboardingState(onboardingScopeHints)
+        clearWorkspaceFormation()
+        clearWorkspaceFormation(onboardingScopeHints)
       }
       router.push(state.formation.primaryRoute)
     } catch (error) {

@@ -10,6 +10,7 @@ import { CommandBar } from './CommandBar'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser, fetchOnboardingWorkspace, type DashboardOnboardingWorkspace } from '@/lib/dashboard'
 import { GlassCard } from './GlassCard'
+import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 import { sortRoutesByWorkspaceIntent, summarizeWorkspaceIntent } from '@/lib/workspace-shell'
 import { PremiumBadge } from '@/ui/billing/PremiumBadge'
 import { usePremiumStatus } from '@/ui/billing/usePremiumStatus'
@@ -135,7 +136,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }, [])
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem('ion-dashboard-theme')
+    const savedTheme = readStoredDashboardTheme()
     if (savedTheme === 'light' || savedTheme === 'dark') {
       setTheme(savedTheme)
       return
@@ -147,7 +148,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
 
   useEffect(() => {
     document.documentElement.dataset.dashboardTheme = theme
-    window.localStorage.setItem('ion-dashboard-theme', theme)
+    writeStoredDashboardTheme(theme)
   }, [theme])
 
   useEffect(() => {

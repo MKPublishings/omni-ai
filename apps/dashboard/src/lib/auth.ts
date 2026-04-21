@@ -26,6 +26,95 @@ export interface VerifyEmailResponse {
 const TOKEN_KEY = 'ion_token';
 const USER_KEY = 'ion_user';
 
+type StorageScopeSource = string | Pick<AuthUser, 'id' | 'email' | 'username'> | null | undefined;
+
+function normalizeScopeSegment(value: string): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function readStoredUserFromLocalStorage(): AuthUser | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return safeJsonParse<AuthUser>(window.localStorage.getItem(USER_KEY));
+}
+
+function resolveScopeSource(input?: StorageScopeSource): string {
+  if (typeof input === 'string') {
+    const normalized = normalizeScopeSegment(input);
+    return normalized || 'anonymous';
+  }
+
+  if (input?.id) {
+    return `user-${normalizeScopeSegment(input.id)}`;
+  }
+
+  if (input?.email) {
+    return `email-${normalizeScopeSegment(input.email)}`;
+  }
+
+  if (input?.username) {
+    return `username-${normalizeScopeSegment(input.username)}`;
+  }
+
+  const storedUser = readStoredUserFromLocalStorage();
+  if (storedUser?.id) {
+    return `user-${normalizeScopeSegment(storedUser.id)}`;
+  }
+
+  return 'anonymous';
+}
+
+function migrateScopedLocalStorageValue(baseKey: string, targetScope: StorageScopeSource, sourceScopes: StorageScopeSource[]): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const targetKey = buildUserScopedStorageKey(baseKey, targetScope);
+  if (window.localStorage.getItem(targetKey)) {
+    return;
+  }
+
+  const candidateKeys = [
+    baseKey,
+    ...sourceScopes.map((scope) => buildUserScopedStorageKey(baseKey, scope)),
+  ];
+
+  for (const candidateKey of candidateKeys) {
+    const value = window.localStorage.getItem(candidateKey);
+    if (!value) {
+      continue;
+    }
+
+    window.localStorage.setItem(targetKey, value);
+    if (candidateKey === baseKey) {
+      window.localStorage.removeItem(candidateKey);
+    }
+    return;
+  }
+}
+
+function migrateAuthenticatedLocalStorage(user: AuthUser): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const sourceScopes: StorageScopeSource[] = [
+    user.email,
+    user.username,
+    'anonymous',
+  ];
+
+  migrateScopedLocalStorageValue('ion-dashboard-theme', user, sourceScopes);
+  migrateScopedLocalStorageValue('ionirix:onboarding:draft', user, sourceScopes);
+  migrateScopedLocalStorageValue('ionirix:onboarding:formation', user, sourceScopes);
+}
+
 function buildAuthCookie(token: string, expiresAt?: string): string {
   const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
   const expires = expiresAt ? `; Expires=${new Date(expiresAt).toUTCString()}` : '';
@@ -79,10 +168,11 @@ export function getStoredToken(): string | null {
 }
 
 export function getStoredUser(): AuthUser | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  return safeJsonParse<AuthUser>(window.localStorage.getItem(USER_KEY));
+  return readStoredUserFromLocalStorage();
+}
+
+export function buildUserScopedStorageKey(baseKey: string, scopeSource?: StorageScopeSource): string {
+  return `${baseKey}:${resolveScopeSource(scopeSource)}`;
 }
 
 export function storeAuthSession(payload: AuthResponse): void {
@@ -91,6 +181,7 @@ export function storeAuthSession(payload: AuthResponse): void {
   }
   window.localStorage.setItem(TOKEN_KEY, payload.token);
   window.localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+  migrateAuthenticatedLocalStorage(payload.user);
   writeAuthCookie(payload.token, payload.expiresAt);
 }
 

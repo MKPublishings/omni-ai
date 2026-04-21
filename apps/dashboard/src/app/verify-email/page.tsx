@@ -10,18 +10,21 @@ import { resendVerification, verifyEmailToken } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { clearWorkspaceFormation, loadWorkspaceFormation } from '@/onboarding'
 
-async function resolveVerifiedRoute(): Promise<string> {
+async function resolveVerifiedRoute(scopeHint?: string): Promise<string> {
   try {
     const workspace = await fetchOnboardingWorkspace()
     if (workspace?.primaryRoute) {
       clearWorkspaceFormation()
+      if (scopeHint) {
+        clearWorkspaceFormation(scopeHint)
+      }
       return workspace.primaryRoute
     }
   } catch {
     // Fall through to local backup or default route.
   }
 
-  const localFormation = loadWorkspaceFormation()
+  const localFormation = loadWorkspaceFormation(scopeHint)
   if (localFormation?.primaryRoute) {
     return localFormation.primaryRoute
   }
@@ -56,7 +59,7 @@ export default function VerifyEmailPage() {
         if (result.ok) {
           setStatus('success')
           setMessage('Email verified. Your Ionirix account is now active.')
-          const destination = await resolveVerifiedRoute()
+          const destination = await resolveVerifiedRoute(pendingEmail)
           window.setTimeout(() => {
             router.push(destination)
           }, 900)
