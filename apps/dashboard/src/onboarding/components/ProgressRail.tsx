@@ -63,10 +63,10 @@ export function ProgressRail({ currentStep, compact = false }: ProgressRailProps
                   </h3>
                 </div>
                 <span className={clsx(
-                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold sm:h-12 sm:w-12',
                   isActive && 'bg-spectral-cyan-400 text-pine-black-900',
                   isComplete && 'bg-emerald-400 text-pine-black-900',
-                  !isActive && !isComplete && 'border border-quantum-white/12 text-quantum-white/72',
+                  !isActive && !isComplete && 'border-quantum-white/14 text-quantum-white/72',
                 )}>
                   {index + 1}
                 </span>
