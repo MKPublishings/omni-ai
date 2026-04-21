@@ -146,10 +146,19 @@
     margin-inline: auto;
   }
 
+  .site-content-frame-mobile-bleed {
+    max-width: none;
+  }
+
   .workspace-shell-frame {
     width: 100%;
     gap: var(--workspace-content-gap);
     padding-inline: var(--workspace-content-inset);
+  }
+
+  .workspace-shell-frame-mobile-bleed {
+    padding-left: max(env(safe-area-inset-left), 0.4rem);
+    padding-right: max(env(safe-area-inset-right), 0.4rem);
   }
 
   .workspace-page-intro {
@@ -175,6 +184,16 @@
 
   .workspace-commandbar-search {
     max-inline-size: min(100%, var(--workspace-command-max-width));
+  }
+
+  @media (min-width: 768px) {
+    .site-content-frame-mobile-bleed {
+      max-width: var(--site-shell-max-width);
+    }
+
+    .workspace-shell-frame-mobile-bleed {
+      padding-inline: var(--workspace-content-inset);
+    }
   }
 
   .workspace-table-shell {
