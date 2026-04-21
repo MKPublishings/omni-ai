@@ -657,7 +657,7 @@ export default function AssistantPage() {
           onSendMessage={handleSendMessage}
           isThinking={isThinking}
           isLoading={isLoadingHistory}
-          className="-mx-[3%] h-[calc(100svh-8.5rem)] min-h-[calc(100svh-8.5rem)] w-[calc(100%+6%)] rounded-none border-x-0 sm:mx-0 sm:min-h-[680px] sm:w-full sm:rounded-[1.5rem] sm:border-x xl:min-h-[calc(100svh-12rem)]"
+          className="relative left-1/2 h-[calc(100svh-8.5rem)] min-h-[calc(100svh-8.5rem)] w-[96vw] max-w-none -translate-x-1/2 rounded-none border-x-0 sm:left-auto sm:min-h-[680px] sm:w-full sm:translate-x-0 sm:rounded-[1.5rem] sm:border-x xl:min-h-[calc(100svh-12rem)]"
         />
       </div>
     </DashboardShell>
