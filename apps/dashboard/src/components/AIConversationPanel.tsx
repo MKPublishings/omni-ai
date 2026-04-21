@@ -410,7 +410,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         ref={panelRef}
         className={clsx(
           'chat-fullscreen-shell flex h-full w-full min-w-0 flex-col',
-          isOverlayFullscreen && 'chat-overlay-fullscreen fixed inset-0 z-50 p-[5vw] sm:p-[5vw]',
+          isOverlayFullscreen && 'chat-overlay-fullscreen fixed inset-0 z-50 p-[2vw] sm:p-[5vw]',
           className
         )}
         {...props}
