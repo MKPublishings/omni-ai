@@ -40,16 +40,16 @@ export function AccountStep({ value, errors, onChange }: AccountStepProps) {
         <div className="min-w-0 grid gap-4">
           <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
             <p className="text-sm font-semibold text-quantum-white">Identity details</p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
+            <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quantum-white/44">Display name</label>
                 <Input value={value.displayName} onChange={(event) => onChange({ displayName: event.target.value })} placeholder="Display name" className="mt-3 h-12 rounded-2xl px-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quantum-white/44">Username</label>
                 <Input value={value.username} onChange={(event) => onChange({ username: event.target.value.toLowerCase() })} placeholder="Username" className="mt-3 h-12 rounded-2xl px-4" autoCapitalize="none" autoCorrect="off" />
               </div>
-              <div className="sm:col-span-2">
+              <div className="min-w-0 sm:col-span-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quantum-white/44">Email address</label>
                 <Input value={value.email} onChange={(event) => onChange({ email: event.target.value.trim() })} placeholder="Email address" type="email" className="mt-3 h-12 rounded-2xl px-4" autoCapitalize="none" autoCorrect="off" />
               </div>
@@ -58,12 +58,12 @@ export function AccountStep({ value, errors, onChange }: AccountStepProps) {
 
           <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
             <p className="text-sm font-semibold text-quantum-white">Credential lock</p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
+            <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quantum-white/44">Password</label>
                 <Input value={value.password} onChange={(event) => onChange({ password: event.target.value })} placeholder="Password" type="password" className="mt-3 h-12 rounded-2xl px-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quantum-white/44">Confirm password</label>
                 <Input value={value.confirmPassword} onChange={(event) => onChange({ confirmPassword: event.target.value })} placeholder="Confirm password" type="password" className="mt-3 h-12 rounded-2xl px-4" />
               </div>

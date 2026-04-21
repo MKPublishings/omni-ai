@@ -11,7 +11,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={clsx(
-          'h-10 px-3 bg-transparent border rounded-md text-quantum-white placeholder-quantum-white/40',
+          'h-10 w-full min-w-0 max-w-full px-3 bg-transparent border rounded-md text-quantum-white placeholder-quantum-white/40',
           'transition-all duration-quick ease-sovereign',
           'focus:outline-none focus:ring-2 focus:ring-ion-blue-500',
           error
