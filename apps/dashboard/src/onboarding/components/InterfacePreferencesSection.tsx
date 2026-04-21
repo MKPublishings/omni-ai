@@ -26,14 +26,14 @@ function SegmentedControl<T extends string>({
   return (
     <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
       <p className="text-sm font-medium text-quantum-white">{label}</p>
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onChange(option)}
             className={clsx(
-              'rounded-full border px-4 py-2 text-sm capitalize transition-colors',
+              'rounded-full border px-4 py-2 text-center text-sm capitalize transition-colors',
               value === option
                 ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10 text-quantum-white'
                 : 'border-quantum-white/10 bg-black/10 text-quantum-white/64 hover:text-quantum-white'
@@ -56,15 +56,15 @@ export function InterfacePreferencesSection({
   description,
 }: InterfacePreferencesSectionProps) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.96fr)]">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.96fr)] xl:gap-6">
       <div className="space-y-6">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-semibold text-quantum-white">{title}</h2>
-          {description ? <p className="mt-4 text-sm leading-7 text-quantum-white/68">{description}</p> : null}
+          <h2 className="mt-3 text-[1.9rem] font-semibold text-quantum-white sm:text-3xl">{title}</h2>
+          {description ? <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7">{description}</p> : null}
         </div>
 
-        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-6">
           <p className="text-sm font-semibold text-quantum-white">Appearance and pace</p>
           <div className="mt-4 grid gap-4">
             <SegmentedControl label="Theme" value={value.theme} options={['system', 'dark', 'light']} onChange={(theme) => onChange({ theme })} />
@@ -75,7 +75,7 @@ export function InterfacePreferencesSection({
       </div>
 
       <div className="space-y-6">
-        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-6">
           <p className="text-sm font-semibold text-quantum-white">Shell arrangement</p>
           <div className="mt-4 grid gap-4">
             <SegmentedControl label="Layout mode" value={value.layoutMode} options={['grid', 'stack', 'focus']} onChange={(layoutMode) => onChange({ layoutMode })} />
@@ -83,7 +83,7 @@ export function InterfacePreferencesSection({
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-4 rounded-[1.75rem] border border-quantum-white/10 bg-black/10 px-5 py-5 text-sm text-quantum-white/72">
+        <label className="flex flex-col gap-4 rounded-[1.75rem] border border-quantum-white/10 bg-black/10 px-4 py-4 text-sm text-quantum-white/72 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
           <span>
             Enable full onboarding telemetry capture
             <span className="mt-1 block text-xs leading-5 text-quantum-white/48">Stores richer draft analytics for the workspace formation handoff.</span>

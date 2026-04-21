@@ -13,7 +13,7 @@ interface WorkspaceStepProps {
 
 export function WorkspaceStep({ value, errors, onChange, onToggleCapability }: WorkspaceStepProps) {
   return (
-    <GlassCard className="rounded-[2rem] p-6 sm:p-8">
+    <GlassCard className="rounded-[1.9rem] p-5 sm:rounded-[2rem] sm:p-8">
       <WorkspaceConfigurationSection
         value={value}
         errors={errors}

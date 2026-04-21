@@ -12,7 +12,7 @@ interface PreferencesStepProps {
 
 export function PreferencesStep({ value, errors, onChange }: PreferencesStepProps) {
   return (
-    <GlassCard className="rounded-[2rem] p-6 sm:p-8">
+    <GlassCard className="rounded-[1.9rem] p-5 sm:rounded-[2rem] sm:p-8">
       <InterfacePreferencesSection
         value={value}
         errors={errors}

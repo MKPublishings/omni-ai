@@ -12,12 +12,12 @@ export function ConfirmationStep({ state, errors }: ConfirmationStepProps) {
   const enabledModules = state.formation.modules.filter((module) => module.enabled)
 
   return (
-    <GlassCard className="rounded-[2rem] p-6 sm:p-8 lg:p-9">
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.9fr)]">
+    <GlassCard className="rounded-[1.9rem] p-5 sm:rounded-[2rem] sm:p-8 lg:p-9">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.9fr)] xl:gap-6">
         <div className="space-y-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Confirmation step</p>
-          <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Review the formation output.</h2>
-          <p className="mt-4 text-sm leading-7 text-quantum-white/68">
+          <h2 className="mt-3 text-[1.9rem] font-semibold text-quantum-white sm:text-3xl">Review the formation output.</h2>
+          <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7">
             Account provisioning will create the identity boundary first, then the onboarding client will persist the generated workspace plan locally and hand the user into verification or the live workspace route.
           </p>
 

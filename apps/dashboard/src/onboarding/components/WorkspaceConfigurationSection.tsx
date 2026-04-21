@@ -27,16 +27,16 @@ export function WorkspaceConfigurationSection({
   description,
 }: WorkspaceConfigurationSectionProps) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
       <div className="space-y-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
-          <h2 className="mt-3 text-3xl font-semibold text-quantum-white">{title}</h2>
-          {description ? <p className="mt-4 text-sm leading-7 text-quantum-white/68">{description}</p> : null}
+          <h2 className="mt-3 text-[1.9rem] font-semibold text-quantum-white sm:text-3xl">{title}</h2>
+          {description ? <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7">{description}</p> : null}
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-5">
+          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
             <label className="text-sm font-medium text-quantum-white">Workspace name</label>
             <p className="mt-1 text-xs leading-5 text-quantum-white/48">The primary label shown across the workspace shell.</p>
             <Input
@@ -47,7 +47,7 @@ export function WorkspaceConfigurationSection({
             />
           </div>
 
-          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-5">
+          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
             <label className="text-sm font-medium text-quantum-white">Workspace slug</label>
             <p className="mt-1 text-xs leading-5 text-quantum-white/48">The URL-safe identifier used for workspace routing and formation.</p>
             <Input
@@ -61,7 +61,7 @@ export function WorkspaceConfigurationSection({
           </div>
         </div>
 
-        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-5">
+        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
           <label className="text-sm font-medium text-quantum-white">Operating role</label>
           <div className="mt-3 grid grid-cols-2 gap-3">
             {roles.map((role) => (
@@ -70,7 +70,7 @@ export function WorkspaceConfigurationSection({
                 type="button"
                 onClick={() => onChange({ role })}
                 className={clsx(
-                  'rounded-2xl border px-4 py-3 text-left text-sm transition-colors',
+                  'rounded-2xl border px-3.5 py-3 text-left text-sm transition-colors sm:px-4',
                   value.role === role
                     ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10 text-quantum-white'
                     : 'border-quantum-white/10 bg-pine-black-900/20 text-quantum-white/64 hover:text-quantum-white'
@@ -82,7 +82,7 @@ export function WorkspaceConfigurationSection({
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-3 rounded-[1.6rem] border border-quantum-white/10 bg-black/10 px-5 py-4 text-sm text-quantum-white/72">
+        <label className="flex flex-col gap-4 rounded-[1.6rem] border border-quantum-white/10 bg-black/10 px-4 py-4 text-sm text-quantum-white/72 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <span>
             Enable team-oriented workspace posture
             <span className="mt-1 block text-xs leading-5 text-quantum-white/48">Use the collaborative shell model for shared operations, memory, and launch paths.</span>
@@ -90,7 +90,7 @@ export function WorkspaceConfigurationSection({
           <input type="checkbox" checked={value.teamMode} onChange={(event) => onChange({ teamMode: event.target.checked })} className="h-4 w-4 rounded border-quantum-white/20 bg-transparent" />
         </label>
 
-        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-5">
+        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
           <label className="text-sm font-medium text-quantum-white">Workspace intent</label>
           <textarea
             value={value.intent}
@@ -101,7 +101,7 @@ export function WorkspaceConfigurationSection({
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+      <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-6">
         <p className="text-sm font-medium text-quantum-white">Launch modules</p>
         <p className="mt-2 text-sm leading-6 text-quantum-white/60">Select the surfaces this workspace should emphasize first. These choices determine the saved primary route and shell priority.</p>
         <div className="mt-4 grid gap-3">
@@ -114,7 +114,7 @@ export function WorkspaceConfigurationSection({
                 type="button"
                 onClick={() => onToggleCapability(capability.id)}
                 className={clsx(
-                  'rounded-[1.5rem] border p-4 text-left transition-colors',
+                  'rounded-[1.5rem] border p-3.5 text-left transition-colors sm:p-4',
                   active
                     ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10'
                     : 'border-quantum-white/10 bg-pine-black-900/20 hover:border-quantum-white/20'

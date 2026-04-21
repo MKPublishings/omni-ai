@@ -13,11 +13,11 @@ export function AdaptiveAssistPanel({ state, layout, behaviors }: AdaptiveAssist
   const enabledModules = state.formation.modules.filter((module) => module.enabled)
 
   return (
-    <div className="space-y-4">
-      <GlassCard tier={2} className="rounded-[1.75rem] p-5 sm:p-6">
+    <div className="space-y-4 xl:sticky xl:top-6">
+      <GlassCard tier={2} className="rounded-[1.65rem] p-4 sm:rounded-[1.75rem] sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Adaptive posture</p>
         <h2 className="mt-2 text-xl font-semibold text-quantum-white">Reflow-aware shell</h2>
-        <dl className="mt-5 grid gap-3 text-sm text-quantum-white/68">
+        <dl className="mt-4 grid gap-3 text-sm text-quantum-white/68 sm:mt-5">
           <div className="flex flex-col gap-1 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <dt>Viewport mode</dt>
             <dd className="font-medium text-quantum-white">{layout.breakpoint}</dd>
@@ -37,7 +37,7 @@ export function AdaptiveAssistPanel({ state, layout, behaviors }: AdaptiveAssist
         </dl>
       </GlassCard>
 
-      <GlassCard tier={3} className="rounded-[1.75rem] p-5 sm:p-6">
+      <GlassCard tier={3} className="rounded-[1.65rem] p-4 sm:rounded-[1.75rem] sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Adaptive behaviors</p>
         {behaviors.length === 0 ? (
           <p className="mt-4 text-sm leading-6 text-quantum-white/64">No exceptional behaviors are active. The surface is running in its baseline deterministic mode.</p>
@@ -56,7 +56,7 @@ export function AdaptiveAssistPanel({ state, layout, behaviors }: AdaptiveAssist
         )}
       </GlassCard>
 
-      <GlassCard tier={3} className="rounded-[1.75rem] p-5 sm:p-6">
+      <GlassCard tier={3} className="rounded-[1.65rem] p-4 sm:rounded-[1.75rem] sm:p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Formation summary</p>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/64">
           {state.formation.summary.map((item) => (
