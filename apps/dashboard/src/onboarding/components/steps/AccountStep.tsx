@@ -15,16 +15,20 @@ export function AccountStep({ value, errors, onChange }: AccountStepProps) {
   return (
     <GlassCard className="rounded-[1.9rem] p-5 sm:rounded-[2rem] sm:p-8 lg:p-9">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:gap-6">
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Account step</p>
           <h2 className="mt-3 text-[1.9rem] font-semibold text-quantum-white sm:text-3xl">Provision the identity surface.</h2>
-          <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7">
+          <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:hidden">
+            Finish the account details needed to open the workspace.
+          </p>
+          <p className="mt-4 hidden text-sm leading-7 text-quantum-white/68 sm:block">
             The onboarding state machine will not move forward until the account fields satisfy the same constraints enforced by the Worker signup endpoint.
           </p>
 
           <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 text-sm leading-6 text-quantum-white/64 sm:p-5">
             <p className="font-semibold text-quantum-white">Identity rules</p>
-            <p className="mt-2">Use the same account boundary that will persist into the live dashboard. Display name, username, and email should be production-ready before you move forward.</p>
+            <p className="mt-2 sm:hidden">Use the final display name, username, and email for this account.</p>
+            <p className="mt-2 hidden sm:block">Use the same account boundary that will persist into the live dashboard. Display name, username, and email should be production-ready before you move forward.</p>
           </div>
 
           <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 text-sm leading-6 text-quantum-white/64 sm:p-5">
@@ -33,7 +37,7 @@ export function AccountStep({ value, errors, onChange }: AccountStepProps) {
           </div>
         </div>
 
-        <div className="grid gap-4">
+        <div className="min-w-0 grid gap-4">
           <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-5">
             <p className="text-sm font-semibold text-quantum-white">Identity details</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
