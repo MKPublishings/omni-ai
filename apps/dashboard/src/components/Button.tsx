@@ -23,10 +23,11 @@ const sizeClasses: Record<ButtonSize, string> = {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', glow, className, children, ...props }, ref) => {
+  ({ variant = 'primary', size = 'md', glow, className, children, type = 'button', ...props }, ref) => {
     return (
       <button
         ref={ref}
+        type={type}
         className={clsx(
           'theme-button',
           variant === 'primary' && 'theme-button-primary',

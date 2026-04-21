@@ -34,7 +34,7 @@ function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onChange(option)}
             className={clsx(
-              'min-w-0 rounded-[1.15rem] border px-3 py-2.5 text-center text-[13px] font-medium capitalize leading-5 transition-colors sm:min-h-[3rem] sm:rounded-full sm:px-4 sm:text-sm',
+              'inline-flex min-h-[3rem] w-full items-center justify-center rounded-[1.15rem] border px-3 py-2.5 text-center text-[13px] font-medium capitalize leading-5 transition-colors sm:rounded-full sm:px-4 sm:text-sm',
               value === option
                 ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10 text-quantum-white'
                 : 'border-quantum-white/10 bg-black/10 text-quantum-white/64 hover:text-quantum-white'
