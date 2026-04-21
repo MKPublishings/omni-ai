@@ -42,7 +42,7 @@ export function OnboardingShell({
   const copyrightYear = new Date().getFullYear()
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1480px] flex-col px-3 py-4 sm:px-5 sm:py-6 lg:px-8 lg:py-10 xl:px-10">
+    <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1480px] flex-col px-[5%] py-4 sm:px-5 sm:py-6 lg:px-8 lg:py-10 xl:px-10">
       <header className="grid gap-4 xl:grid-cols-[minmax(0,1.16fr)_minmax(20rem,0.84fr)] xl:items-stretch">
         <GlassCard className="rounded-[1.85rem] p-5 sm:rounded-[2rem] sm:p-7 lg:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Ionirix sovereign onboarding</p>

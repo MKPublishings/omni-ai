@@ -34,7 +34,7 @@ function LoadingSurface() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
-      <div className="relative z-10 mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <div className="relative z-10 mx-auto max-w-[1440px] px-[5%] py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
           <div className="space-y-4">
             <div className="h-4 w-40 rounded-full bg-quantum-white/10" />
@@ -52,7 +52,7 @@ function DraftRecoverySurface({ onReset }: { onReset: () => void }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-[5%] py-10 sm:px-4">
         <GlassCard className="w-full max-w-2xl rounded-[2rem] p-8 sm:p-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-signal-400">Draft recovery required</p>
           <h1 className="mt-4 text-3xl font-semibold text-quantum-white">The saved onboarding draft could not be restored safely.</h1>

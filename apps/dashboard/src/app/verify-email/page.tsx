@@ -120,7 +120,7 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pine-black-900 px-4 py-10">
+    <div className="min-h-screen bg-pine-black-900 px-[5%] py-10 sm:px-4">
       <div className="mx-auto max-w-xl">
         <GlassCard className="p-6 sm:p-8">
           <p className="text-[11px] uppercase tracking-[0.28em] text-quantum-white/42">Ionirix</p>

@@ -344,7 +344,7 @@ export default function SettingsPage() {
   return (
     <DashboardShell
       title="Settings"
-      subtitle="Account controls, workspace shell configuration, onboarding preferences, and cross-session continuity for the current signed-in operator."
+      subtitle="Account controls, workspace shell settings, onboarding preferences, and continuity for the current signed-in operator."
     >
       {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
 
@@ -355,7 +355,10 @@ export default function SettingsPage() {
               <div className="max-w-3xl">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Settings system</p>
                 <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Keep onboarding and settings in the same operating model.</h2>
-                <p className="mt-4 text-sm leading-7 text-quantum-white/68">
+                <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:hidden">
+                  The same workspace shell and interface controls stay available here after onboarding.
+                </p>
+                <p className="mt-4 hidden text-sm leading-7 text-quantum-white/68 sm:block">
                   The workspace shell, launch modules, interface posture, and chat continuity now live side by side here, so any account can reach the same controls after onboarding completes.
                 </p>
               </div>
@@ -363,19 +366,19 @@ export default function SettingsPage() {
               <div className="grid gap-3 sm:grid-cols-2 xl:w-[26rem]">
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Primary route</p>
-                  <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.primaryRoute || '/workspace'}</p>
+                  <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{onboardingWorkspace?.primaryRoute || '/workspace'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Enabled modules</p>
-                  <p className="mt-2 text-lg font-semibold text-quantum-white">{enabledModules}</p>
+                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{enabledModules}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Capability score</p>
-                  <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.capabilityScore ?? workspaceDraft.capabilities.length}</p>
+                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{onboardingWorkspace?.capabilityScore ?? workspaceDraft.capabilities.length}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Provisioning</p>
-                  <p className="mt-2 text-lg font-semibold capitalize text-quantum-white">{onboardingWorkspace?.provisioningStatus || 'not saved'}</p>
+                  <p className="mt-2 break-words text-base font-semibold capitalize text-quantum-white sm:text-lg">{onboardingWorkspace?.provisioningStatus || 'not saved'}</p>
                 </div>
               </div>
             </div>
@@ -383,12 +386,12 @@ export default function SettingsPage() {
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)]">
               <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-quantum-white/48">Saved workspace summary</p>
-                    <h3 className="mt-2 text-xl font-semibold text-quantum-white">{onboardingWorkspace?.workspaceName || workspaceDraft.name}</h3>
-                    <p className="mt-1 text-sm text-quantum-white/60">/{onboardingWorkspace?.workspaceSlug || workspaceDraft.slug}</p>
+                    <h3 className="mt-2 break-words text-lg font-semibold text-quantum-white sm:text-xl">{onboardingWorkspace?.workspaceName || workspaceDraft.name}</h3>
+                    <p className="mt-1 break-all text-sm text-quantum-white/60">/{onboardingWorkspace?.workspaceSlug || workspaceDraft.slug}</p>
                   </div>
-                  <span className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-quantum-white/58">
+                  <span className="inline-flex w-fit items-center rounded-full border border-quantum-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-quantum-white/58">
                     {onboardingWorkspace?.updatedAt ? new Date(onboardingWorkspace.updatedAt).toLocaleString() : 'Not saved yet'}
                   </span>
                 </div>
@@ -492,15 +495,18 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-quantum-white">Workspace and onboarding settings</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-7 text-quantum-white/68">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-quantum-white/68 sm:hidden">
+              Adjust the same workspace shell and interface settings used during onboarding.
+            </p>
+            <p className="mt-2 hidden max-w-3xl text-sm leading-7 text-quantum-white/68 sm:block">
               These are the same workspace formation and interface controls used during onboarding, now available in settings for any signed-in account.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" size="sm" onClick={handleResetWorkspaceSettings} disabled={isSavingWorkspace || (!workspaceSettingsDirty && workspaceDraftInitialized)}>
+          <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+            <Button className="w-full sm:w-auto" variant="secondary" size="sm" onClick={handleResetWorkspaceSettings} disabled={isSavingWorkspace || (!workspaceSettingsDirty && workspaceDraftInitialized)}>
               Revert changes
             </Button>
-            <Button size="sm" onClick={handleSaveWorkspaceSettings} disabled={isSavingWorkspace}>
+            <Button className="w-full sm:w-auto" size="sm" onClick={handleSaveWorkspaceSettings} disabled={isSavingWorkspace}>
               {isSavingWorkspace ? 'Saving workspace...' : 'Save workspace settings'}
             </Button>
           </div>
@@ -526,6 +532,7 @@ export default function SettingsPage() {
             eyebrow="Interface behavior"
             title="Calibrate layout, density, motion, and telemetry."
             description="These saved settings drive the same shell behavior model used during onboarding, so the account keeps one consistent interface posture across devices."
+            mobileDescription="Keep one interface posture across mobile, desktop, and any other signed-in session."
           />
         </GlassCard>
 

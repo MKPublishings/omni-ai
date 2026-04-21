@@ -176,7 +176,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-pine-black-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-pine-black-900 px-[5%] py-4 sm:p-4">
       {/* Ambient Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-transparent via-spectral-cyan-500/5 to-transparent rotate-45 animate-shimmer" />
@@ -333,7 +333,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-pine-black-900 p-4 text-sm text-quantum-white/68">Loading sign-in...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-pine-black-900 px-[5%] py-4 text-sm text-quantum-white/68 sm:p-4">Loading sign-in...</div>}>
       <LoginPageContent />
     </Suspense>
   )
