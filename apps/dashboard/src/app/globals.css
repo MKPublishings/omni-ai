@@ -859,7 +859,7 @@
 
     .chat-fullscreen-shell:fullscreen .chat-fullscreen-panel,
     .chat-overlay-fullscreen .chat-fullscreen-panel {
-      border-radius: 0;
+      border-radius: 1.25rem;
       min-height: 100svh;
     }
   }
