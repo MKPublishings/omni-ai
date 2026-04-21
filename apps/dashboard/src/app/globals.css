@@ -857,7 +857,7 @@
     .chat-overlay-fullscreen {
       padding-top: max(env(safe-area-inset-top), 0.4rem);
       padding-right: max(env(safe-area-inset-right), 0.4rem);
-      padding-bottom: max(env(safe-area-inset-bottom), 0.45rem);
+      padding-bottom: env(safe-area-inset-bottom);
       padding-left: max(env(safe-area-inset-left), 0.4rem);
     }
 
