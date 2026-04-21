@@ -294,7 +294,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
                     {subtitle ? <p className="theme-page-subtitle mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
                   </div>
 
-                  {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
+                  {actions && <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">{actions}</div>}
                 </div>
               ) : null}
 
@@ -306,7 +306,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
                       <h2 className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent.focusLabel} for {workspaceIntent.workspaceName}</h2>
                       <p className="mt-2 max-w-4xl text-sm leading-6 text-quantum-white/68">{workspaceIntent.focusDescription}</p>
                     </div>
-                    <div className="flex flex-wrap gap-3 xl:justify-end">
+                    <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap xl:justify-end">
                       <span className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-quantum-white/58">
                         {workspaceIntent.collaborationLabel}
                       </span>

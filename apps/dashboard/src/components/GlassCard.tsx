@@ -28,7 +28,7 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
       <div
         ref={ref}
         className={clsx(
-          'theme-glass-card',
+          'theme-glass-card min-w-0 max-w-full',
           tierClasses[tier],
           glow && glowClasses[glow],
           interactive && 'cursor-pointer',

@@ -26,7 +26,7 @@ export function PublicPolicyPage({ title, subtitle, sections }: PublicPolicyPage
       }
     >
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-        <GlassCard className="p-6">
+        <GlassCard className="p-5 sm:p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-400">Legal surface</p>
           <h2 className="mt-4 text-2xl font-semibold text-quantum-white">Ionirix public policy record</h2>
           <p className="mt-3 text-sm leading-7 text-quantum-white/72">
@@ -34,24 +34,24 @@ export function PublicPolicyPage({ title, subtitle, sections }: PublicPolicyPage
           </p>
         </GlassCard>
 
-        <GlassCard className="p-6">
+        <GlassCard className="p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Policy metadata</h2>
           <dl className="mt-4 space-y-3 text-sm text-quantum-white/72">
-            <div className="flex items-start justify-between gap-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <dt className="text-quantum-white/48">Entity</dt>
-              <dd className="text-right">Ionirix LLC</dd>
+              <dd className="break-words sm:text-right">Ionirix LLC</dd>
             </div>
-            <div className="flex items-start justify-between gap-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <dt className="text-quantum-white/48">Jurisdiction</dt>
-              <dd className="text-right">New York, USA</dd>
+              <dd className="break-words sm:text-right">New York, USA</dd>
             </div>
-            <div className="flex items-start justify-between gap-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <dt className="text-quantum-white/48">Last updated</dt>
-              <dd className="text-right">April 19, 2026</dd>
+              <dd className="break-words sm:text-right">April 19, 2026</dd>
             </div>
-            <div className="flex items-start justify-between gap-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <dt className="text-quantum-white/48">Contact</dt>
-              <dd className="text-right">
+              <dd className="break-words sm:text-right">
                 <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a>
               </dd>
             </div>
@@ -61,7 +61,7 @@ export function PublicPolicyPage({ title, subtitle, sections }: PublicPolicyPage
 
       <section className="grid gap-6">
         {sections.map((section) => (
-          <GlassCard key={section.title} className="p-6">
+          <GlassCard key={section.title} className="p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-quantum-white">{section.title}</h2>
             <div className="mt-4 space-y-4 text-sm leading-7 text-quantum-white/72">
               {section.paragraphs.map((paragraph) => (

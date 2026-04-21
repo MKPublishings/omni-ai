@@ -49,8 +49,8 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
     <div className="public-theme-shell relative min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
 
-      <div className="site-shell-frame relative z-10 mx-auto flex min-h-screen w-full flex-col py-6">
-        <header className="theme-public-header ix-glass-ambient flex flex-col gap-4 rounded-2xl border border-quantum-white/8 px-5 py-4 md:flex-row md:items-center md:justify-between">
+      <div className="site-shell-frame relative z-10 mx-auto flex min-h-screen w-full flex-col py-4 sm:py-6">
+        <header className="theme-public-header ix-glass-ambient flex flex-col gap-4 rounded-2xl border border-quantum-white/8 px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-spectral-cyan-500 text-sm font-bold text-pine-black-900">
               IX
@@ -61,32 +61,32 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
             </div>
           </div>
 
-          <nav className="theme-public-nav flex flex-wrap items-center gap-3 text-sm text-quantum-white/72">
+          <nav className="theme-public-nav flex flex-wrap items-center gap-2 text-sm text-quantum-white/72 sm:gap-3">
             {publicLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-full px-3 py-2 transition hover:bg-quantum-white/8 hover:text-quantum-white">
+              <Link key={link.href} href={link.href} className="rounded-full px-3 py-2 text-[13px] transition hover:bg-quantum-white/8 hover:text-quantum-white sm:text-sm">
                 {link.label}
               </Link>
             ))}
           </nav>
         </header>
 
-        <main className="flex-1 py-8 md:py-10">
-          <header className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-end">
+        <main className="flex-1 py-6 sm:py-8 md:py-10">
+          <header className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-end">
             <div>
               <p className="theme-public-eyebrow text-sm font-semibold uppercase tracking-[0.28em] text-spectral-cyan-400">Public entry</p>
-              <h1 className="theme-public-title mt-4 max-w-4xl text-4xl font-bold leading-tight text-quantum-white md:text-5xl lg:text-6xl">{title}</h1>
-              <p className="theme-public-subtitle mt-5 max-w-3xl text-base leading-7 text-quantum-white/72 md:text-lg">{subtitle}</p>
+              <h1 className="theme-public-title mt-4 max-w-4xl text-[2.15rem] font-bold leading-tight text-quantum-white sm:text-4xl md:text-5xl lg:text-6xl">{title}</h1>
+              <p className="theme-public-subtitle mt-4 max-w-3xl text-sm leading-6 text-quantum-white/72 sm:mt-5 sm:text-base sm:leading-7 md:text-lg">{subtitle}</p>
             </div>
 
-            <div className="flex flex-col gap-4 md:items-end">
+            <div className="flex min-w-0 flex-col gap-4 md:items-end">
               {heroMeta}
-              <div className="flex flex-wrap items-center gap-3 md:justify-end">
+              <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center md:justify-end">
                 {actions}
               </div>
             </div>
           </header>
 
-          <div className="mt-10 grid gap-6">{children}</div>
+          <div className="mt-8 grid gap-5 sm:mt-10 sm:gap-6">{children}</div>
         </main>
 
         {footer ?? (
