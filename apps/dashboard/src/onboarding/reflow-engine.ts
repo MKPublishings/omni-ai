@@ -17,6 +17,7 @@ export function resolveReflowLayout(viewport: ViewportProfile, state: Onboarding
   const stacked = viewport.breakpoint !== 'desktop'
   const focused = state.preferences.layoutMode === 'focus'
   const compactDensity = state.preferences.density === 'compact'
+  const spaciousDensity = state.preferences.density === 'spacious'
 
   return {
     breakpoint: viewport.breakpoint,
@@ -24,14 +25,14 @@ export function resolveReflowLayout(viewport: ViewportProfile, state: Onboarding
     assistPlacement: stacked ? 'inline' : 'side',
     contentColumns: stacked ? 1 : 2,
     shellClassName: clsx(
-      'grid gap-4 lg:gap-6',
-      stacked ? 'grid-cols-1' : 'xl:grid-cols-[minmax(216px,0.68fr)_minmax(0,1.35fr)_minmax(260px,0.8fr)] lg:grid-cols-[minmax(216px,0.72fr)_minmax(0,1fr)]',
+      'grid items-start gap-4 lg:gap-6',
+      stacked ? 'grid-cols-1' : 'lg:grid-cols-[minmax(220px,0.72fr)_minmax(0,1fr)] xl:grid-cols-[minmax(224px,0.66fr)_minmax(0,1.34fr)_minmax(272px,0.82fr)]',
     ),
     contentClassName: clsx(
       'min-w-0',
       stacked ? 'order-2' : 'lg:col-start-2',
       focused && !stacked && 'xl:pr-2',
-      compactDensity ? 'space-y-4' : 'space-y-5',
+      compactDensity ? 'space-y-4' : spaciousDensity ? 'space-y-6' : 'space-y-5',
     ),
     asideClassName: clsx(
       'min-w-0',

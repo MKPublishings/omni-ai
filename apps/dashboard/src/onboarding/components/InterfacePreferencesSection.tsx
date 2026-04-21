@@ -24,7 +24,7 @@ function SegmentedControl<T extends string>({
   onChange: (nextValue: T) => void
 }) {
   return (
-    <div>
+    <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
       <p className="text-sm font-medium text-quantum-white">{label}</p>
       <div className="mt-3 flex flex-wrap gap-3">
         {options.map((option) => (
@@ -56,7 +56,7 @@ export function InterfacePreferencesSection({
   description,
 }: InterfacePreferencesSectionProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.96fr)]">
       <div className="space-y-6">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
@@ -64,19 +64,29 @@ export function InterfacePreferencesSection({
           {description ? <p className="mt-4 text-sm leading-7 text-quantum-white/68">{description}</p> : null}
         </div>
 
-        <SegmentedControl label="Theme" value={value.theme} options={['system', 'dark', 'light']} onChange={(theme) => onChange({ theme })} />
-        <SegmentedControl label="Density" value={value.density} options={['compact', 'comfortable', 'spacious']} onChange={(density) => onChange({ density })} />
-        <SegmentedControl label="Motion" value={value.motion} options={['full', 'reduced', 'none']} onChange={(motion) => onChange({ motion })} />
+        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+          <p className="text-sm font-semibold text-quantum-white">Appearance and pace</p>
+          <div className="mt-4 grid gap-4">
+            <SegmentedControl label="Theme" value={value.theme} options={['system', 'dark', 'light']} onChange={(theme) => onChange({ theme })} />
+            <SegmentedControl label="Density" value={value.density} options={['compact', 'comfortable', 'spacious']} onChange={(density) => onChange({ density })} />
+            <SegmentedControl label="Motion" value={value.motion} options={['full', 'reduced', 'none']} onChange={(motion) => onChange({ motion })} />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
-        <SegmentedControl label="Layout mode" value={value.layoutMode} options={['grid', 'stack', 'focus']} onChange={(layoutMode) => onChange({ layoutMode })} />
-        <SegmentedControl label="Sidebar position" value={value.sidebarPosition} options={['left', 'right', 'hidden']} onChange={(sidebarPosition) => onChange({ sidebarPosition })} />
+        <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+          <p className="text-sm font-semibold text-quantum-white">Shell arrangement</p>
+          <div className="mt-4 grid gap-4">
+            <SegmentedControl label="Layout mode" value={value.layoutMode} options={['grid', 'stack', 'focus']} onChange={(layoutMode) => onChange({ layoutMode })} />
+            <SegmentedControl label="Sidebar position" value={value.sidebarPosition} options={['left', 'right', 'hidden']} onChange={(sidebarPosition) => onChange({ sidebarPosition })} />
+          </div>
+        </div>
 
-        <label className="flex items-center justify-between gap-4 rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4 text-sm text-quantum-white/72">
+        <label className="flex items-center justify-between gap-4 rounded-[1.75rem] border border-quantum-white/10 bg-black/10 px-5 py-5 text-sm text-quantum-white/72">
           <span>
             Enable full onboarding telemetry capture
-            <span className="mt-1 block text-xs text-quantum-white/48">Stores richer draft analytics for the workspace formation handoff.</span>
+            <span className="mt-1 block text-xs leading-5 text-quantum-white/48">Stores richer draft analytics for the workspace formation handoff.</span>
           </span>
           <input type="checkbox" checked={value.telemetryOptIn} onChange={(event) => onChange({ telemetryOptIn: event.target.checked })} className="h-4 w-4 rounded border-quantum-white/20 bg-transparent" />
         </label>

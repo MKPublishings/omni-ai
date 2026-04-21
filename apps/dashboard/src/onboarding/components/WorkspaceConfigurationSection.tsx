@@ -27,7 +27,7 @@ export function WorkspaceConfigurationSection({
   description,
 }: WorkspaceConfigurationSectionProps) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
       <div className="space-y-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
@@ -36,7 +36,7 @@ export function WorkspaceConfigurationSection({
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-[1.35rem] border border-quantum-white/10 bg-black/10 p-4">
+          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-5">
             <label className="text-sm font-medium text-quantum-white">Workspace name</label>
             <p className="mt-1 text-xs leading-5 text-quantum-white/48">The primary label shown across the workspace shell.</p>
             <Input
@@ -47,7 +47,7 @@ export function WorkspaceConfigurationSection({
             />
           </div>
 
-          <div className="rounded-[1.35rem] border border-quantum-white/10 bg-black/10 p-4">
+          <div className="rounded-[1.45rem] border border-quantum-white/10 bg-black/10 p-5">
             <label className="text-sm font-medium text-quantum-white">Workspace slug</label>
             <p className="mt-1 text-xs leading-5 text-quantum-white/48">The URL-safe identifier used for workspace routing and formation.</p>
             <Input
@@ -61,7 +61,7 @@ export function WorkspaceConfigurationSection({
           </div>
         </div>
 
-        <div>
+        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-5">
           <label className="text-sm font-medium text-quantum-white">Operating role</label>
           <div className="mt-3 grid grid-cols-2 gap-3">
             {roles.map((role) => (
@@ -73,7 +73,7 @@ export function WorkspaceConfigurationSection({
                   'rounded-2xl border px-4 py-3 text-left text-sm transition-colors',
                   value.role === role
                     ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10 text-quantum-white'
-                    : 'border-quantum-white/10 bg-black/10 text-quantum-white/64 hover:text-quantum-white'
+                    : 'border-quantum-white/10 bg-pine-black-900/20 text-quantum-white/64 hover:text-quantum-white'
                 )}
               >
                 {role}
@@ -82,12 +82,15 @@ export function WorkspaceConfigurationSection({
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-3 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 text-sm text-quantum-white/72">
-          <span>Enable team-oriented workspace posture</span>
+        <label className="flex items-center justify-between gap-3 rounded-[1.6rem] border border-quantum-white/10 bg-black/10 px-5 py-4 text-sm text-quantum-white/72">
+          <span>
+            Enable team-oriented workspace posture
+            <span className="mt-1 block text-xs leading-5 text-quantum-white/48">Use the collaborative shell model for shared operations, memory, and launch paths.</span>
+          </span>
           <input type="checkbox" checked={value.teamMode} onChange={(event) => onChange({ teamMode: event.target.checked })} className="h-4 w-4 rounded border-quantum-white/20 bg-transparent" />
         </label>
 
-        <div>
+        <div className="rounded-[1.6rem] border border-quantum-white/10 bg-black/10 p-5">
           <label className="text-sm font-medium text-quantum-white">Workspace intent</label>
           <textarea
             value={value.intent}
@@ -98,8 +101,9 @@ export function WorkspaceConfigurationSection({
         </div>
       </div>
 
-      <div>
+      <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
         <p className="text-sm font-medium text-quantum-white">Launch modules</p>
+        <p className="mt-2 text-sm leading-6 text-quantum-white/60">Select the surfaces this workspace should emphasize first. These choices determine the saved primary route and shell priority.</p>
         <div className="mt-4 grid gap-3">
           {CAPABILITY_CATALOG.map((capability) => {
             const active = value.capabilities.includes(capability.id)
@@ -113,7 +117,7 @@ export function WorkspaceConfigurationSection({
                   'rounded-[1.5rem] border p-4 text-left transition-colors',
                   active
                     ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10'
-                    : 'border-quantum-white/10 bg-black/10 hover:border-quantum-white/20'
+                    : 'border-quantum-white/10 bg-pine-black-900/20 hover:border-quantum-white/20'
                 )}
               >
                 <div className="flex items-start justify-between gap-3">

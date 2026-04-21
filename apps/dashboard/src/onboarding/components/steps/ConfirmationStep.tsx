@@ -12,16 +12,16 @@ export function ConfirmationStep({ state, errors }: ConfirmationStepProps) {
   const enabledModules = state.formation.modules.filter((module) => module.enabled)
 
   return (
-    <GlassCard className="rounded-[2rem] p-6 sm:p-8">
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.88fr)]">
-        <div>
+    <GlassCard className="rounded-[2rem] p-6 sm:p-8 lg:p-9">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.9fr)]">
+        <div className="space-y-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Confirmation step</p>
           <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Review the formation output.</h2>
           <p className="mt-4 text-sm leading-7 text-quantum-white/68">
             Account provisioning will create the identity boundary first, then the onboarding client will persist the generated workspace plan locally and hand the user into verification or the live workspace route.
           </p>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <article className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/44">Account</p>
               <h3 className="mt-2 text-lg font-semibold text-quantum-white">{state.account.displayName}</h3>
@@ -34,9 +34,24 @@ export function ConfirmationStep({ state, errors }: ConfirmationStepProps) {
             </article>
           </div>
 
-          <div className="mt-6 rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
+          <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-5">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/44">Workspace intent</p>
             <p className="mt-3 text-sm leading-7 text-quantum-white/68">{state.workspace.intent}</p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <article className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/44">Capability score</p>
+              <h3 className="mt-2 text-2xl font-semibold text-quantum-white">{state.formation.capabilityScore}</h3>
+            </article>
+            <article className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/44">Telemetry</p>
+              <h3 className="mt-2 text-lg font-semibold capitalize text-quantum-white">{state.formation.orchestration.telemetry}</h3>
+            </article>
+            <article className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/44">Collaboration</p>
+              <h3 className="mt-2 text-lg font-semibold capitalize text-quantum-white">{state.formation.orchestration.collaboration}</h3>
+            </article>
           </div>
         </div>
 
