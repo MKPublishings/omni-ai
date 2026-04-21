@@ -852,5 +852,15 @@
     .workspace-shell-frame {
       padding-inline: 5%;
     }
+
+    .chat-fullscreen-shell:fullscreen {
+      padding: 0;
+    }
+
+    .chat-fullscreen-shell:fullscreen .chat-fullscreen-panel,
+    .chat-overlay-fullscreen .chat-fullscreen-panel {
+      border-radius: 0;
+      min-height: 100svh;
+    }
   }
 }

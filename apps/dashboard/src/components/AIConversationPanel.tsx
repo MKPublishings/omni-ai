@@ -410,12 +410,13 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         ref={panelRef}
         className={clsx(
           'chat-fullscreen-shell flex h-full w-full min-w-0 flex-col',
-          isOverlayFullscreen && 'chat-overlay-fullscreen fixed inset-0 z-50 p-[2vw] sm:p-[5vw]',
-          className
+          isOverlayFullscreen && 'chat-overlay-fullscreen fixed inset-0 z-50 p-0 sm:p-[5vw]',
+          className,
+          isFullscreen && 'left-0 w-full !translate-x-0'
         )}
         {...props}
       >
-        <div className={clsx('chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]', isOverlayFullscreen && 'min-h-0 rounded-[1.25rem] sm:rounded-[1.5rem]')}>
+        <div className={clsx('chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]', isOverlayFullscreen && 'min-h-0 rounded-none sm:rounded-[1.5rem]')}>
           <div className="chat-panel-header flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-4 lg:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
