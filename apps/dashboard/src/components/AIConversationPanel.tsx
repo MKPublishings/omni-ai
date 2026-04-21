@@ -171,7 +171,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={clsx(
-        'chat-message-bubble chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[82%] sm:px-4 sm:py-3 lg:max-w-xl',
+        'chat-message-bubble chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[85%] sm:px-4 sm:py-3 lg:max-w-[44rem]',
         isUser
           ? 'chat-message-user bg-ion-blue-600 text-quantum-white'
           : 'chat-message-assistant ix-glass-sovereign text-quantum-white'
@@ -416,7 +416,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         {...props}
       >
         <div className={clsx('chat-fullscreen-panel ix-glass-sovereign flex h-full min-h-[30rem] min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] sm:min-h-[40rem] sm:rounded-[1.5rem]', isOverlayFullscreen && 'min-h-0 rounded-[1.25rem] sm:rounded-[1.5rem]')}>
-          <div className="chat-panel-header flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-5">
+          <div className="chat-panel-header flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-4 lg:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
                 <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">

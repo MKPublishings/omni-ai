@@ -650,7 +650,26 @@ export default function AssistantPage() {
       hidePageIntroOnMobile
       fullBleedOnMobile
     >
-      <section className="assistant-static-page w-full md:px-0">
+      <section className="assistant-static-page w-full space-y-4 md:px-0 sm:space-y-5">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
+          <GlassCard className="rounded-[1.75rem] p-5 sm:p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Live assistant</p>
+            <h2 className="mt-2 text-2xl font-semibold text-quantum-white">Grounded reasoning and image generation in one surface.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-quantum-white/68">
+              The assistant routes between faster internal reasoning, grounded internet retrieval, and image generation while keeping the conversation continuous across signed-in sessions.
+            </p>
+          </GlassCard>
+
+          <GlassCard tier={2} className="rounded-[1.75rem] p-5 sm:p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Session posture</p>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/64">
+              <li>{isLoadingHistory ? 'Restoring saved history from your account and local cache.' : 'Conversation history is live and ready.'}</li>
+              <li>{isThinking ? 'The assistant is currently processing a request.' : 'The assistant is standing by for a prompt.'}</li>
+              <li>{messages.length} messages currently loaded in this surface.</li>
+            </ul>
+          </GlassCard>
+        </div>
+
         <div className="min-h-[calc(100svh-8.5rem)] w-full sm:min-h-[680px] xl:min-h-[calc(100svh-12rem)]">
           <AIConversationPanel
             messages={messages}

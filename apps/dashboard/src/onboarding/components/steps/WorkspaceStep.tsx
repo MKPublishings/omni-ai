@@ -18,7 +18,7 @@ const roles: ExperienceLevel[] = ['founder', 'operator', 'builder', 'analyst']
 export function WorkspaceStep({ value, errors, onChange, onToggleCapability }: WorkspaceStepProps) {
   return (
     <GlassCard className="rounded-[2rem] p-6 sm:p-8">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="space-y-5">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Workspace step</p>

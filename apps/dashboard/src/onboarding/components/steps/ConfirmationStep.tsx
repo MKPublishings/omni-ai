@@ -13,7 +13,7 @@ export function ConfirmationStep({ state, errors }: ConfirmationStepProps) {
 
   return (
     <GlassCard className="rounded-[2rem] p-6 sm:p-8">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.88fr)]">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.88fr)]">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Confirmation step</p>
           <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Review the formation output.</h2>

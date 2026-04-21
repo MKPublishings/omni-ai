@@ -114,6 +114,7 @@
     color: var(--ix-text-primary);
     background: var(--ix-surface-base);
     font-family: var(--ix-font-body);
+    overflow-x: hidden;
   }
 
   html,
@@ -133,17 +134,22 @@
 
 @layer components {
   .site-shell-frame {
-    width: min(100%, var(--site-shell-max-width));
-    padding-inline: var(--site-shell-gutter);
+    width: 100%;
+    max-width: calc(var(--site-shell-max-width) + (var(--site-shell-gutter) * 2));
+    margin-inline: auto;
+    padding-inline: clamp(1rem, var(--site-shell-gutter), 5rem);
   }
 
   .site-content-frame {
-    width: min(100%, var(--site-shell-max-width));
+    width: 100%;
+    max-width: var(--site-shell-max-width);
+    margin-inline: auto;
   }
 
   .workspace-shell-frame {
+    width: 100%;
     gap: var(--workspace-content-gap);
-    padding-inline: var(--workspace-content-inset);
+    padding-inline: clamp(1rem, calc(var(--site-shell-gutter) * 0.45), 2rem);
   }
 
   .workspace-page-intro {
@@ -152,6 +158,15 @@
 
   .workspace-page-intro-copy {
     max-width: min(72rem, 100%);
+  }
+
+  .site-shell-frame > *,
+  .site-content-frame > *,
+  .workspace-shell-frame > *,
+  .workspace-shell-frame section,
+  .workspace-shell-frame section > *,
+  .public-theme-shell main > * {
+    min-width: 0;
   }
 
   .workspace-commandbar {

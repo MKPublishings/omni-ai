@@ -99,7 +99,7 @@ export default function ProfilePage() {
       {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
       {success && <GlassCard tier={2} className="p-4 text-sm text-spectral-cyan-300">{success}</GlassCard>}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
         <GlassCard className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Identity editor</h2>
           <form className="mt-5 space-y-4" onSubmit={handleSave}>

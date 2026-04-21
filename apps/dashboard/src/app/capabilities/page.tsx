@@ -64,7 +64,7 @@ export default function CapabilitiesPage() {
         </>
       }
     >
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(17rem,0.85fr)]">
         <GlassCard className="p-6" interactive>
           <article>
             <h2 className="text-2xl font-semibold text-quantum-white">Capability overview</h2>
@@ -131,7 +131,7 @@ export default function CapabilitiesPage() {
         </GlassCard>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
         <GlassCard className="p-6" interactive>
           <article>
             <h2 className="text-2xl font-semibold text-quantum-white">Why these capabilities matter</h2>

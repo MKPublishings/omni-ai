@@ -18,19 +18,19 @@ export function AdaptiveAssistPanel({ state, layout, behaviors }: AdaptiveAssist
         <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Adaptive posture</p>
         <h2 className="mt-2 text-xl font-semibold text-quantum-white">Reflow-aware shell</h2>
         <dl className="mt-5 grid gap-3 text-sm text-quantum-white/68">
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3">
+          <div className="flex flex-col gap-1 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <dt>Viewport mode</dt>
             <dd className="font-medium text-quantum-white">{layout.breakpoint}</dd>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3">
+          <div className="flex flex-col gap-1 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <dt>Layout posture</dt>
             <dd className="font-medium text-quantum-white">{state.preferences.layoutMode}</dd>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3">
+          <div className="flex flex-col gap-1 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <dt>Sidebar anchor</dt>
             <dd className="font-medium text-quantum-white">{state.preferences.sidebarPosition}</dd>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3">
+          <div className="flex flex-col gap-1 rounded-2xl border border-quantum-white/10 bg-black/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <dt>Enabled launch modules</dt>
             <dd className="font-medium text-quantum-white">{enabledModules.length}</dd>
           </div>

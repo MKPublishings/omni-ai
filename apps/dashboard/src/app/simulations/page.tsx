@@ -103,7 +103,7 @@ export default function SimulationsPage() {
         <StatCard title="Latest Mode" value={runs[0]?.mode || 'None'} trend={{ direction: 'neutral', value: 'Newest entry' }} />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.75fr)]">
         <GlassCard className="p-6">
           <h2 className="text-xl font-semibold text-quantum-white">Simulation history</h2>
           <p className="mt-2 text-sm leading-6 text-quantum-white/64">Select any run in the mode column to open the live inspector. Active sovereign and multiverse runs will stream snapshot changes into the panel beside the archive.</p>

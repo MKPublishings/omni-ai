@@ -40,8 +40,8 @@ export function OnboardingShell({
   const compactRail = layout.breakpoint === 'mobile'
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
-      <header className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-end">
+    <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10 xl:px-10">
+      <header className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] xl:items-end">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Ionirix sovereign onboarding</p>
           <h1 className="mt-4 max-w-5xl text-4xl font-semibold leading-tight text-quantum-white sm:text-5xl">Build the workspace before the workspace opens.</h1>
@@ -69,13 +69,13 @@ export function OnboardingShell({
 
           <GlassCard tier={2} className="mt-4 rounded-[1.75rem] p-4 sm:mt-5 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-quantum-white">Workspace target</p>
                 <p className="mt-1 text-sm leading-6 text-quantum-white/64">
                   Primary route: {state.formation.primaryRoute} | Workspace ID: {state.formation.workspaceId}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 sm:justify-end">
                 <Button type="button" variant="ghost" onClick={onReset} className="rounded-full px-5">
                   Reset draft
                 </Button>

@@ -103,7 +103,7 @@ export default function ArchitecturePage() {
         </>
       }
     >
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(17rem,0.85fr)]">
         <GlassCard className="p-6" interactive>
           <article>
             <h2 className="text-2xl font-semibold text-quantum-white">Architectural overview</h2>
@@ -133,7 +133,7 @@ export default function ArchitecturePage() {
         </GlassCard>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
         <GlassCard className="p-6" interactive>
           <h2 className="text-2xl font-semibold text-quantum-white">System layers</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -158,7 +158,7 @@ export default function ArchitecturePage() {
         ))}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
         <GlassCard className="p-6" interactive>
           <article>
             <h2 className="text-2xl font-semibold text-quantum-white">How the layers work together</h2>

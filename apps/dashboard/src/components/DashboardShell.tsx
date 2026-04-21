@@ -260,7 +260,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             statusSlot={commandStatus}
           />
 
-          <main className="min-w-0 flex-1 overflow-auto py-4 sm:py-5">
+          <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto py-4 sm:py-5">
             <div className="workspace-shell-frame site-content-frame mx-auto flex w-full min-w-0 flex-col gap-5 sm:gap-6">
               {hasPageIntro ? (
                 <div className={clsx('workspace-page-intro', hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>

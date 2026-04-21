@@ -14,7 +14,7 @@ export function getViewportProfile(width: number, height: number): ViewportProfi
 }
 
 export function resolveReflowLayout(viewport: ViewportProfile, state: OnboardingState): ReflowLayout {
-  const stacked = viewport.breakpoint === 'mobile'
+  const stacked = viewport.breakpoint !== 'desktop'
   const focused = state.preferences.layoutMode === 'focus'
   const compactDensity = state.preferences.density === 'compact'
 
@@ -25,7 +25,7 @@ export function resolveReflowLayout(viewport: ViewportProfile, state: Onboarding
     contentColumns: stacked ? 1 : 2,
     shellClassName: clsx(
       'grid gap-4 lg:gap-6',
-      stacked ? 'grid-cols-1' : 'xl:grid-cols-[minmax(240px,0.72fr)_minmax(0,1.5fr)_minmax(280px,0.82fr)] lg:grid-cols-[240px_minmax(0,1fr)]',
+      stacked ? 'grid-cols-1' : 'xl:grid-cols-[minmax(216px,0.68fr)_minmax(0,1.35fr)_minmax(260px,0.8fr)] lg:grid-cols-[minmax(216px,0.72fr)_minmax(0,1fr)]',
     ),
     contentClassName: clsx(
       'min-w-0',

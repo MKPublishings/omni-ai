@@ -87,7 +87,7 @@ export function SimulationInspector({ simulationId, selectedRun }: SimulationIns
 
       {error ? <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div> : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-2">
         <div className="rounded-2xl border border-quantum-white/8 bg-pine-black-900/45 p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-quantum-white/42">Step</p>
           <p className="mt-3 text-2xl font-semibold text-quantum-white">{loading && !state ? '...' : formatNumber(state?.stepNumber ?? activeSimulation.current_step ?? 0)}</p>
@@ -118,7 +118,7 @@ export function SimulationInspector({ simulationId, selectedRun }: SimulationIns
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 2xl:grid-cols-2">
             <div className="rounded-2xl border border-quantum-white/8 bg-pine-black-900/35 p-4">
               <p className="text-[10px] uppercase tracking-[0.22em] text-quantum-white/42">Kernel tick</p>
               <p className="mt-2 text-xl font-semibold text-quantum-white">{formatNumber(sovereignSnapshot.tick ?? state?.stepNumber ?? 0)}</p>
