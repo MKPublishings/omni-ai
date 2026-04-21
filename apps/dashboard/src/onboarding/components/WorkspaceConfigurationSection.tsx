@@ -13,9 +13,18 @@ interface WorkspaceConfigurationSectionProps {
   eyebrow: string
   title: string
   description?: string
+  mobileDescription?: string
 }
 
 const roles: ExperienceLevel[] = ['founder', 'operator', 'builder', 'analyst']
+
+const MOBILE_CAPABILITY_COPY: Partial<Record<WorkspaceCapabilityId, string>> = {
+  assistant: 'Chat, reasoning, and guided actions.',
+  analytics: 'Health views and totals.',
+  automation: 'Tools, commands, and orchestration.',
+  memory: 'Saved context and continuity.',
+  simulations: 'Live simulation control.',
+}
 
 export function WorkspaceConfigurationSection({
   value,
@@ -25,6 +34,7 @@ export function WorkspaceConfigurationSection({
   eyebrow,
   title,
   description,
+  mobileDescription,
 }: WorkspaceConfigurationSectionProps) {
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
@@ -32,7 +42,8 @@ export function WorkspaceConfigurationSection({
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
           <h2 className="mt-3 text-[1.9rem] font-semibold text-quantum-white sm:text-3xl">{title}</h2>
-          {description ? <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7">{description}</p> : null}
+          {mobileDescription ? <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:hidden">{mobileDescription}</p> : null}
+          {description ? <p className={clsx('mt-4 text-sm leading-6 text-quantum-white/68 sm:leading-7', mobileDescription ? 'hidden sm:block' : '')}>{description}</p> : null}
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -101,12 +112,14 @@ export function WorkspaceConfigurationSection({
         </div>
       </div>
 
-      <div className="rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-6">
+      <div className="min-w-0 rounded-[1.75rem] border border-quantum-white/10 bg-black/10 p-4 sm:p-6">
         <p className="text-sm font-medium text-quantum-white">Launch modules</p>
-        <p className="mt-2 text-sm leading-6 text-quantum-white/60">Select the surfaces this workspace should emphasize first. These choices determine the saved primary route and shell priority.</p>
+        <p className="mt-2 text-sm leading-6 text-quantum-white/60 sm:hidden">Choose the first surfaces this workspace should open with.</p>
+        <p className="mt-2 hidden text-sm leading-6 text-quantum-white/60 sm:block">Select the surfaces this workspace should emphasize first. These choices determine the saved primary route and shell priority.</p>
         <div className="mt-4 grid gap-3">
           {CAPABILITY_CATALOG.map((capability) => {
             const active = value.capabilities.includes(capability.id)
+            const mobileDescription = MOBILE_CAPABILITY_COPY[capability.id] || capability.description
 
             return (
               <button
@@ -114,20 +127,21 @@ export function WorkspaceConfigurationSection({
                 type="button"
                 onClick={() => onToggleCapability(capability.id)}
                 className={clsx(
-                  'rounded-[1.5rem] border p-3.5 text-left transition-colors sm:p-4',
+                  'min-w-0 rounded-[1.5rem] border p-3 text-left transition-colors sm:p-4',
                   active
                     ? 'border-spectral-cyan-400/40 bg-spectral-cyan-500/10'
                     : 'border-quantum-white/10 bg-pine-black-900/20 hover:border-quantum-white/20'
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-quantum-white">{capability.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-quantum-white/62">{capability.description}</p>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h3 className="break-words text-sm font-semibold text-quantum-white">{capability.title}</h3>
+                    <p className="mt-1 text-[13px] leading-5 text-quantum-white/62 sm:hidden">{mobileDescription}</p>
+                    <p className="mt-2 hidden text-sm leading-6 text-quantum-white/62 sm:block">{capability.description}</p>
                   </div>
                   <span
                     className={clsx(
-                      'rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em]',
+                      'inline-flex w-fit shrink-0 items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em]',
                       active ? 'bg-spectral-cyan-400 text-pine-black-900' : 'border border-quantum-white/12 text-quantum-white/56'
                     )}
                   >

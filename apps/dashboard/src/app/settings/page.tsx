@@ -521,6 +521,7 @@ export default function SettingsPage() {
             eyebrow="Workspace shell"
             title="Organize the launch surface."
             description="Adjust naming, posture, module access, and operating intent without sending users back through the onboarding route."
+            mobileDescription="Adjust the workspace name, launch modules, and intent without leaving settings."
           />
         </GlassCard>
 

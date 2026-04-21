@@ -110,27 +110,30 @@ export default function WorkspacePage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Systems surface</p>
-              <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Keep the operational tiles aligned to the workspace shell.</h2>
-              <p className="mt-4 text-sm leading-7 text-quantum-white/68">
+              <h2 className="mt-3 text-2xl font-semibold text-quantum-white sm:text-3xl">Keep the operational tiles aligned to the workspace shell.</h2>
+              <p className="mt-4 text-sm leading-6 text-quantum-white/68 sm:hidden">
+                System health, events, and launch paths stay aligned to the current shell focus.
+              </p>
+              <p className="mt-4 hidden text-sm leading-7 text-quantum-white/68 sm:block">
                 {workspaceIntent?.focusDescription || 'This overview concentrates system health, recent events, and launch paths into one operational surface.'}
               </p>
             </div>
-            <div className="grid gap-3 sm:min-w-[15rem] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="grid min-w-0 gap-3 sm:min-w-[15rem] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Focus</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent?.focusLabel || 'System overview'}</p>
+                <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{workspaceIntent?.focusLabel || 'System overview'}</p>
               </div>
               <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Primary route</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent?.primaryRoute || '/workspace'}</p>
+                <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{workspaceIntent?.primaryRoute || '/workspace'}</p>
               </div>
               <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Enabled modules</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent?.enabledModuleCount ?? 0}</p>
+                <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{workspaceIntent?.enabledModuleCount ?? 0}</p>
               </div>
               <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Posture</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent?.collaborationLabel || 'System posture'}</p>
+                <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{workspaceIntent?.collaborationLabel || 'System posture'}</p>
               </div>
             </div>
           </div>
@@ -208,7 +211,8 @@ export default function WorkspacePage() {
               {priorityRoutes.map((route) => (
                 <Link key={route} href={route} className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-4 transition hover:border-quantum-white/16 hover:bg-quantum-white/[0.06]">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-quantum-white">{routeLabels[route] || route}</h3>
-                  <p className="mt-2 text-sm leading-6 text-quantum-white/72">Route prioritized from the current workspace intent and enabled module selection.</p>
+                  <p className="mt-2 text-sm leading-5 text-quantum-white/72 sm:hidden">Priority route from the current shell focus.</p>
+                  <p className="mt-2 hidden text-sm leading-6 text-quantum-white/72 sm:block">Route prioritized from the current workspace intent and enabled module selection.</p>
                 </Link>
               ))}
               {priorityRoutes.length === 0 ? (
@@ -255,11 +259,13 @@ export default function WorkspacePage() {
             <div className="mt-4 grid gap-3">
               <Link href={workspaceIntent?.primaryRoute || '/simulations'} className="rounded-2xl border border-spectral-cyan-400/18 bg-spectral-cyan-500/[0.08] p-4 transition hover:border-spectral-cyan-300/30 hover:bg-spectral-cyan-500/[0.12]">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-spectral-cyan-100">Live inspector</h3>
-                <p className="mt-2 text-sm leading-6 text-quantum-white/72">Open the route most aligned with the current shell focus, then branch into sovereign and multiverse runs with live state streaming.</p>
+                <p className="mt-2 text-sm leading-5 text-quantum-white/72 sm:hidden">Open the current focus route and branch into live runs.</p>
+                <p className="mt-2 hidden text-sm leading-6 text-quantum-white/72 sm:block">Open the route most aligned with the current shell focus, then branch into sovereign and multiverse runs with live state streaming.</p>
               </Link>
               <Link href="/events" className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-4 transition hover:border-quantum-white/16 hover:bg-quantum-white/[0.06]">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-quantum-white">Event traces</h3>
-                <p className="mt-2 text-sm leading-6 text-quantum-white/72">Review the recent event stream feeding simulation state changes and worker-side operational activity.</p>
+                <p className="mt-2 text-sm leading-5 text-quantum-white/72 sm:hidden">Review the recent worker event stream.</p>
+                <p className="mt-2 hidden text-sm leading-6 text-quantum-white/72 sm:block">Review the recent event stream feeding simulation state changes and worker-side operational activity.</p>
               </Link>
             </div>
           </GlassCard>
