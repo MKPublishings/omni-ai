@@ -37,7 +37,7 @@ export function WorkspaceConfigurationSection({
   mobileDescription,
 }: WorkspaceConfigurationSectionProps) {
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] xl:gap-6">
       <div className="space-y-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">{eyebrow}</p>
@@ -107,7 +107,7 @@ export function WorkspaceConfigurationSection({
             value={value.intent}
             onChange={(event) => onChange({ intent: event.target.value })}
             placeholder="Describe what this workspace will govern, coordinate, or produce."
-            className="mt-3 min-h-[160px] w-full rounded-[1.5rem] border border-quantum-white/12 bg-transparent px-4 py-3 text-sm text-quantum-white placeholder:text-quantum-white/40 focus:border-ion-blue-500 focus:outline-none focus:ring-2 focus:ring-ion-blue-500"
+            className="mt-3 min-h-[200px] w-full rounded-[1.5rem] border border-quantum-white/12 bg-transparent px-5 py-4 text-base leading-7 text-quantum-white placeholder:text-quantum-white/40 focus:border-ion-blue-500 focus:outline-none focus:ring-2 focus:ring-ion-blue-500 sm:min-h-[220px]"
           />
         </div>
       </div>
