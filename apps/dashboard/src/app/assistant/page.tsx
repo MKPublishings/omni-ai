@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
+import { GlassCard } from '@/components/GlassCard'
 import { getApiUrl, getStoredToken } from '@/lib/auth'
 import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
