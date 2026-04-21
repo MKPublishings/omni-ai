@@ -1,0 +1,22 @@
+.glass-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--surface-radius);
+  box-shadow: var(--shadow-deep);
+  backdrop-filter: blur(var(--glass-blur));
+  padding: var(--space-8);
+}
+
+.glass-card.is-glowing {
+  box-shadow: var(--shadow-deep), var(--shadow-glow);
+}
+
+.glass-card.is-interactive:hover {
+  border-color: var(--glass-border-active);
+  background: var(--glass-bg-hover);
+}
+
+.depth-0 { z-index: 1; }
+.depth-1 { z-index: 10; }
+.depth-2 { z-index: 20; }
+.depth-3 { z-index: 30; }

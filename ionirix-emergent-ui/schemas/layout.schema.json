@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ionirix.dev/schemas/layout.schema.json",
+  "title": "IonirixLayoutSchema",
+  "description": "Declarative layout definition for Ionirix Emergent-UI surfaces",
+  "type": "object",
+  "required": ["version", "surface"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "surface": {
+      "type": "object",
+      "required": ["id", "type", "zones"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": {
+          "enum": ["grid", "flex", "stack", "float", "emergent"]
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "component"],
+            "properties": {
+              "id": { "type": "string" },
+              "component": { "type": "string" },
+              "area": { "type": "string" },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "behavior": { "type": "string" },
+              "responsive": {
+                "type": "object",
+                "properties": {
+                  "collapse": {
+                    "enum": ["hide", "minimize", "stack", "merge"]
+                  },
+                  "threshold": {
+                    "type": "integer",
+                    "description": "Viewport width in px below which collapse activates"
+                  },
+                  "reflow": {
+                    "type": "boolean",
+                    "description": "Whether to trigger ReflowEngine on collapse"
+                  }
+                }
+              },
+              "constraints": {
+                "type": "object",
+                "properties": {
+                  "minWidth": { "type": "string" },
+                  "maxWidth": { "type": "string" },
+                  "minHeight": { "type": "string" },
+                  "aspectRatio": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "grid": {
+          "type": "object",
+          "properties": {
+            "columns": { "type": "string" },
+            "rows": { "type": "string" },
+            "gap": { "type": "string" },
+            "areas": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "behaviors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "trigger", "action", "target"],
+        "properties": {
+          "id": { "type": "string" },
+          "trigger": { "type": "string" },
+          "action": { "type": "string" },
+          "target": { "type": "string" },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "transitions": {
+      "type": "object",
+      "properties": {
+        "duration": { "type": "string", "default": "300ms" },
+        "easing": {
+          "type": "string",
+          "default": "cubic-bezier(0.16, 1, 0.3, 1)"
+        },
+        "stagger": {
+          "type": "integer",
+          "default": 50,
+          "description": "Stagger delay in ms between zone transitions"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "component"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "component": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

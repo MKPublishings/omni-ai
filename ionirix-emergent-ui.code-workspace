@@ -1,0 +1,84 @@
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": "ionirix-emergent-ui"
+    },
+    {
+      "name": "Core Engine",
+      "path": "ionirix-emergent-ui/src/core/engine"
+    },
+    {
+      "name": "State Machines",
+      "path": "ionirix-emergent-ui/src/core/state"
+    },
+    {
+      "name": "Registry",
+      "path": "ionirix-emergent-ui/src/core/registry"
+    },
+    {
+      "name": "Events",
+      "path": "ionirix-emergent-ui/src/core/events"
+    },
+    {
+      "name": "Schema",
+      "path": "ionirix-emergent-ui/src/core/schema"
+    },
+    {
+      "name": "Components",
+      "path": "ionirix-emergent-ui/src/components"
+    },
+    {
+      "name": "Hooks",
+      "path": "ionirix-emergent-ui/src/hooks"
+    },
+    {
+      "name": "Types",
+      "path": "ionirix-emergent-ui/src/types"
+    },
+    {
+      "name": "Styles",
+      "path": "ionirix-emergent-ui/src/styles"
+    },
+    {
+      "name": "Tests",
+      "path": "ionirix-emergent-ui/tests"
+    },
+    {
+      "name": "Docs",
+      "path": "ionirix-emergent-ui/docs"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "ionirix-emergent-ui/node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2,
+    "typescript.preferences.quoteStyle": "single",
+    "files.associations": {
+      "*.schema.json": "json"
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.turbo": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "statelyai.stately-vscode",
+      "bradlc.vscode-tailwindcss",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "rbbit.typescript-hero",
+      "ms-vscode.vscode-typescript-next",
+      "vitest.explorer",
+      "streetsidesoftware.code-spell-checker"
+    ]
+  }
+}

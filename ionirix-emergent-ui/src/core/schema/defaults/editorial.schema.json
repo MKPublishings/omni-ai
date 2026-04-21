@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "migration": {
+    "family": "ionirix-emergent-ui",
+    "revision": 1
+  },
+  "surface": {
+    "id": "editorial-root",
+    "type": "emergent",
+    "replayTargetSurface": "editorial-root",
+    "replayTargetSurfaces": ["editorial-root", "dashboard-root"],
+    "defaultExportProfile": "audit",
+    "exportProfiles": {
+      "compact": {
+        "includeSummary": false,
+        "includeMutationBatches": false,
+        "includeLayoutHashes": false,
+        "maxEvents": 3,
+        "maxMutationsPerEvent": 2
+      },
+      "audit": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 6,
+        "maxMutationsPerEvent": 4
+      },
+      "full": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 12,
+        "maxMutationsPerEvent": 12
+      }
+    },
+    "zoneGroups": {
+      "content-cluster": ["editorial-body"],
+      "context-cluster": ["editorial-context"]
+    },
+    "zones": [
+      {
+        "id": "editorial-body",
+        "component": "EditorialCanvas",
+        "area": "body",
+        "priority": 100
+      },
+      {
+        "id": "editorial-context",
+        "component": "EditorialContextPanel",
+        "area": "context",
+        "priority": 70
+      }
+    ],
+    "grid": {
+      "columns": "1fr 280px",
+      "rows": "1fr",
+      "gap": "20px",
+      "areas": ["body context"]
+    }
+  },
+  "telemetry": {
+    "rules": [
+      {
+        "id": "editorial-withdraw-context",
+        "when": {
+          "match": "any",
+          "layoutMode": "stack",
+          "minAbsHorizontalBalance": 0.22,
+          "maxCollisionCount": 0,
+          "minZonePriority": 100,
+          "collisionSeverity": "none",
+          "relation": {
+            "zoneGroupA": "context-cluster",
+            "zoneGroupB": "content-cluster",
+            "relativePosition": "right",
+            "allowInverse": true,
+            "overlap": false
+          }
+        },
+        "apply": [
+          { "target": "editorial-context", "property": "visibility", "value": "hidden" },
+          { "target": "editorial-context", "property": "data-telemetry-state", "value": "withdrawn" },
+          { "targetGroup": "content-cluster", "property": "scale", "value": 1.04 },
+          { "targetGroup": "content-cluster", "property": "data-telemetry-state", "value": "immersive" }
+        ],
+        "otherwise": [
+          { "target": "editorial-context", "property": "visibility", "value": "visible" },
+          { "target": "editorial-context", "property": "data-telemetry-state", "value": "anchored" },
+          { "targetGroup": "content-cluster", "property": "scale", "value": 1 },
+          { "targetGroup": "content-cluster", "property": "data-telemetry-state", "value": "stable" }
+        ]
+      }
+    ]
+  },
+  "transitions": {
+    "duration": "420ms",
+    "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "stagger": 36,
+    "yOffset": 14,
+    "scaleDelta": 0.02,
+    "policies": {
+      "telemetry": {
+        "duration": "340ms",
+        "yOffset": 10,
+        "scaleDelta": 0.04
+      },
+      "replay": {
+        "duration": "520ms",
+        "yOffset": 18,
+        "scaleDelta": 0.045
+      },
+      "presence": {
+        "duration": "300ms",
+        "yOffset": 16,
+        "scaleDelta": 0.024
+      }
+    }
+  }
+}

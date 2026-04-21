@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ionirix.dev/schemas/behavior.schema.json",
+  "title": "IonirixBehaviorSchema",
+  "type": "object",
+  "required": ["id", "name", "description", "priority", "trigger"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "trigger": { "type": "string" }
+  }
+}

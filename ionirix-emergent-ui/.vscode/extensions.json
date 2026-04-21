@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "statelyai.stately-vscode",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "rbbit.typescript-hero",
+    "ms-vscode.vscode-typescript-next",
+    "vitest.explorer",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

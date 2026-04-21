@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "migration": {
+    "family": "ionirix-emergent-ui",
+    "revision": 1
+  },
+  "surface": {
+    "id": "dashboard-root",
+    "type": "emergent",
+    "replayTargetSurface": "dashboard-root",
+    "replayTargetSurfaces": ["dashboard-root", "onboarding-root"],
+    "defaultExportProfile": "audit",
+    "exportProfiles": {
+      "compact": {
+        "includeSummary": false,
+        "includeMutationBatches": false,
+        "includeLayoutHashes": false,
+        "maxEvents": 3,
+        "maxMutationsPerEvent": 2
+      },
+      "audit": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 6,
+        "maxMutationsPerEvent": 4
+      },
+      "full": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 12,
+        "maxMutationsPerEvent": 12
+      }
+    },
+    "zoneGroups": {
+      "header-cluster": ["command-bar"],
+      "workspace-cluster": ["workspace-main"]
+    },
+    "zones": [
+      {
+        "id": "command-bar",
+        "component": "DashboardCommandCenter",
+        "area": "header",
+        "priority": 90
+      },
+      {
+        "id": "workspace-main",
+        "component": "DashboardWorkspacePanel",
+        "area": "main",
+        "priority": 95
+      },
+      {
+        "id": "layout-inspector",
+        "component": "LayoutInspectorPanel",
+        "area": "inspector",
+        "priority": 55
+      }
+    ],
+    "grid": {
+      "columns": "minmax(0, 1fr) 320px",
+      "rows": "auto 1fr",
+      "gap": "16px",
+      "areas": ["header header", "main inspector"]
+    }
+  },
+  "telemetry": {
+    "rules": [
+      {
+        "id": "dashboard-compress-header",
+        "when": {
+          "match": "any",
+          "layoutMode": "stack",
+          "minAbsVerticalBalance": 0.1,
+          "minZonePriority": 90,
+          "collisionSeverity": "none"
+        },
+        "apply": [
+          { "target": "command-bar", "property": "visibility", "value": "collapsed" },
+          { "target": "command-bar", "property": "data-telemetry-state", "value": "compressed" },
+          { "targetGroup": "workspace-cluster", "property": "scale", "value": 1.03 },
+          { "targetGroup": "workspace-cluster", "property": "data-telemetry-state", "value": "expanded" }
+        ],
+        "otherwise": [
+          { "target": "command-bar", "property": "visibility", "value": "visible" },
+          { "target": "command-bar", "property": "data-telemetry-state", "value": "balanced" },
+          { "targetGroup": "workspace-cluster", "property": "scale", "value": 1 },
+          { "targetGroup": "workspace-cluster", "property": "data-telemetry-state", "value": "stable" }
+        ]
+      }
+    ]
+  },
+  "transitions": {
+    "duration": "380ms",
+    "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "stagger": 40,
+    "yOffset": 10,
+    "scaleDelta": 0.015,
+    "policies": {
+      "telemetry": {
+        "duration": "300ms",
+        "yOffset": 8,
+        "scaleDelta": 0.028
+      },
+      "replay": {
+        "duration": "480ms",
+        "yOffset": 14,
+        "scaleDelta": 0.035
+      },
+      "presence": {
+        "duration": "260ms",
+        "yOffset": 12,
+        "scaleDelta": 0.018
+      }
+    }
+  }
+}

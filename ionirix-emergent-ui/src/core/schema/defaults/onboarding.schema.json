@@ -1,0 +1,255 @@
+{
+  "version": "1.0.0",
+  "migration": {
+    "family": "ionirix-emergent-ui",
+    "revision": 1
+  },
+  "surface": {
+    "id": "onboarding-root",
+    "type": "emergent",
+    "replayTargetSurface": "onboarding-root",
+    "replayTargetSurfaces": ["onboarding-root", "dashboard-root", "editorial-root"],
+    "replayRouting": {
+      "defaultTargetSurface": "onboarding-root",
+      "availableTargetSurfaces": ["onboarding-root", "dashboard-root", "editorial-root"],
+      "rules": [
+        {
+          "id": "route-environment-to-dashboard",
+          "when": {
+            "machineState": ["environmentSetup", "summary"]
+          },
+          "targetSurface": "dashboard-root",
+          "availableTargetSurfaces": ["dashboard-root", "onboarding-root"]
+        },
+        {
+          "id": "route-spatial-capability-to-editorial",
+          "when": {
+            "includesCapabilities": ["spatial"]
+          },
+          "targetSurface": "editorial-root",
+          "availableTargetSurfaces": ["editorial-root", "dashboard-root", "onboarding-root"]
+        }
+      ]
+    },
+    "defaultExportProfile": "audit",
+    "exportProfiles": {
+      "compact": {
+        "includeSummary": true,
+        "includeMutationBatches": false,
+        "includeLayoutHashes": false,
+        "maxEvents": 3,
+        "maxMutationsPerEvent": 2
+      },
+      "audit": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 6,
+        "maxMutationsPerEvent": 4
+      },
+      "full": {
+        "includeSummary": true,
+        "includeMutationBatches": true,
+        "includeLayoutHashes": true,
+        "maxEvents": 12,
+        "maxMutationsPerEvent": 12
+      }
+    },
+    "zoneGroups": {
+      "primary-content": ["step-content", "context-panel"],
+      "supporting-controls": ["progress-rail", "action-bar"]
+    },
+    "zones": [
+      {
+        "id": "progress-rail",
+        "component": "IonProgress",
+        "area": "rail",
+        "priority": 100,
+        "behavior": "contextual-elevation",
+        "responsive": {
+          "collapse": "minimize",
+          "threshold": 640,
+          "reflow": false
+        },
+        "constraints": {
+          "minWidth": "48px",
+          "maxWidth": "240px",
+          "minHeight": "100vh"
+        }
+      },
+      {
+        "id": "step-content",
+        "component": "StepRenderer",
+        "area": "main",
+        "priority": 95,
+        "behavior": "adaptive-reveal",
+        "responsive": {
+          "collapse": "stack",
+          "threshold": 640,
+          "reflow": true
+        },
+        "constraints": {
+          "minWidth": "320px",
+          "maxWidth": "720px"
+        }
+      },
+      {
+        "id": "context-panel",
+        "component": "ContextRibbon",
+        "area": "context",
+        "priority": 60,
+        "behavior": "progressive-disclosure",
+        "responsive": {
+          "collapse": "hide",
+          "threshold": 768,
+          "reflow": true
+        },
+        "constraints": {
+          "minWidth": "200px",
+          "maxWidth": "320px"
+        }
+      },
+      {
+        "id": "spatial-preview",
+        "component": "SpatialPreviewPanel",
+        "area": "preview",
+        "priority": 40,
+        "behavior": "spatial-collapse",
+        "responsive": {
+          "collapse": "hide",
+          "threshold": 1024,
+          "reflow": true
+        },
+        "constraints": {
+          "minWidth": "280px",
+          "aspectRatio": "16/9"
+        }
+      },
+      {
+        "id": "action-bar",
+        "component": "ActionBarPanel",
+        "area": "actions",
+        "priority": 90,
+        "responsive": {
+          "collapse": "stack",
+          "threshold": 480,
+          "reflow": false
+        },
+        "constraints": {
+          "minHeight": "56px"
+        }
+      }
+    ],
+    "grid": {
+      "columns": "auto 1fr 280px",
+      "rows": "1fr auto",
+      "gap": "16px",
+      "areas": ["rail main context", "rail actions actions"]
+    }
+  },
+  "behaviors": [
+    {
+      "id": "reveal-context-on-selection",
+      "trigger": "SELECT_CAPABILITY",
+      "action": "adaptive-reveal",
+      "target": "context-panel",
+      "params": {
+        "delay": 300,
+        "direction": "right"
+      }
+    },
+    {
+      "id": "collapse-preview-on-narrow",
+      "trigger": "VIEWPORT_RESIZE",
+      "action": "spatial-collapse",
+      "target": "spatial-preview",
+      "params": {
+        "threshold": 1024,
+        "animation": "slide-out"
+      }
+    },
+    {
+      "id": "elevate-active-step",
+      "trigger": "INTERACTION",
+      "action": "contextual-elevation",
+      "targetGroup": "primary-content",
+      "params": {
+        "zIndexDelta": 10,
+        "scaleFactor": 1.01,
+        "glowColor": "#0A84FF"
+      }
+    },
+    {
+      "id": "disclose-advanced-options",
+      "trigger": "CONFIGURE_ENV",
+      "action": "progressive-disclosure",
+      "targetGroup": "primary-content",
+      "params": {
+        "depthThreshold": 3,
+        "revealSelector": ".advanced-options"
+      }
+    }
+  ],
+  "transitions": {
+    "duration": "500ms",
+    "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "stagger": 60,
+    "yOffset": 18,
+    "scaleDelta": 0.01,
+    "blurCollapsed": "blur(1px)",
+    "policies": {
+      "behavior": {
+        "duration": "420ms",
+        "scaleDelta": 0.012,
+        "blurCollapsed": "blur(0.5px)"
+      },
+      "telemetry": {
+        "duration": "360ms",
+        "yOffset": 12,
+        "scaleDelta": 0.018
+      },
+      "replay": {
+        "duration": "560ms",
+        "yOffset": 20,
+        "scaleDelta": 0.022
+      },
+      "presence": {
+        "duration": "320ms",
+        "yOffset": 16,
+        "scaleDelta": 0.02
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "welcome",
+      "title": "Welcome",
+      "component": "WelcomePane",
+      "description": "Introduce the Ionirix emergent onboarding system."
+    },
+    {
+      "id": "profiling",
+      "title": "Profile",
+      "component": "WelcomePane",
+      "description": "Capture the user role and experience."
+    },
+    {
+      "id": "capabilitySelection",
+      "title": "Capabilities",
+      "component": "CapabilitySelector",
+      "description": "Select desired capabilities and focus areas."
+    },
+    {
+      "id": "environmentSetup",
+      "title": "Environment",
+      "component": "EnvironmentConfigurator",
+      "description": "Tune theme, density, and motion preferences."
+    },
+    {
+      "id": "summary",
+      "title": "Summary",
+      "component": "FlowSummary",
+      "description": "Review selections before completion."
+    }
+  ]
+}
