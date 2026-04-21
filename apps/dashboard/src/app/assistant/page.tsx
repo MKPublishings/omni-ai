@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AmbientBackground } from '@/components/AmbientBackground'
+import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
 import { getApiUrl, getStoredToken } from '@/lib/auth'
 import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
-import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 
 type ConversationMessage = {
   id: string
@@ -421,19 +420,6 @@ export default function AssistantPage() {
   const [isThinking, setIsThinking] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
 
-  useEffect(() => {
-    const savedTheme = readStoredDashboardTheme()
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      document.documentElement.dataset.dashboardTheme = savedTheme
-      return
-    }
-
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const fallbackTheme = prefersDark ? 'dark' : 'light'
-    document.documentElement.dataset.dashboardTheme = fallbackTheme
-    writeStoredDashboardTheme(fallbackTheme)
-  }, [])
-
   const upsertAssistantMessage = (id: string, patch: Partial<ConversationMessage>) => {
     setMessages((current) => {
       const exists = current.some((message) => message.id === id)
@@ -658,17 +644,22 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="assistant-static-page relative min-h-screen overflow-hidden bg-pine-black-900">
-      <AmbientBackground />
-      <div className="relative z-10 min-h-screen w-full px-0 py-0 sm:px-4 sm:py-4">
+    <DashboardShell
+      title=""
+      subtitle=""
+      hidePageIntroOnMobile
+      fullBleedOnMobile
+      hideWorkspaceIntentBanner
+    >
+      <div className="assistant-static-page w-full">
         <AIConversationPanel
           messages={messages}
           onSendMessage={handleSendMessage}
           isThinking={isThinking}
           isLoading={isLoadingHistory}
-          className="h-screen min-h-screen w-full rounded-none border-x-0 border-y-0 sm:h-[calc(100svh-2rem)] sm:min-h-[680px] sm:rounded-[1.5rem] sm:border xl:h-[calc(100svh-2rem)]"
+          className="h-[calc(100svh-8.5rem)] min-h-[calc(100svh-8.5rem)] w-full rounded-none border-x-0 sm:min-h-[680px] sm:rounded-[1.5rem] sm:border-x xl:min-h-[calc(100svh-12rem)]"
         />
       </div>
-    </div>
+    </DashboardShell>
   )
 }

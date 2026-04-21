@@ -22,6 +22,7 @@ interface DashboardShellProps {
   actions?: ReactNode
   hidePageIntroOnMobile?: boolean
   fullBleedOnMobile?: boolean
+  hideWorkspaceIntentBanner?: boolean
 }
 
 interface NavigationEntry {
@@ -109,7 +110,7 @@ function isNavigationItemActive(pathname: string, href: string): boolean {
   return pathname.startsWith(`${href}/`)
 }
 
-export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false, fullBleedOnMobile = false }: DashboardShellProps) {
+export function DashboardShell({ title, subtitle, children, actions, hidePageIntroOnMobile = false, fullBleedOnMobile = false, hideWorkspaceIntentBanner = false }: DashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const premium = usePremiumStatus()
@@ -297,7 +298,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
                 </div>
               ) : null}
 
-              {workspaceIntent && pathname !== '/settings' ? (
+              {workspaceIntent && pathname !== '/settings' && !hideWorkspaceIntentBanner ? (
                 <GlassCard tier={2} className="rounded-[1.6rem] p-4 sm:p-5">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                     <div className="min-w-0">
