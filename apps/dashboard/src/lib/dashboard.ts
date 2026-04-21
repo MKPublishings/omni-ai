@@ -132,6 +132,19 @@ export interface DashboardChatHistoryTurn {
   createdAt: string
 }
 
+export interface DashboardOnboardingWorkspaceModule {
+  id: string
+  label: string
+  route: string
+  priority: number
+  enabled: boolean
+}
+
+export interface DashboardOnboardingWorkspaceContext {
+  workspace?: Record<string, unknown>
+  preferences?: Record<string, unknown>
+}
+
 export interface DashboardOnboardingWorkspace {
   id: string
   userId: string
@@ -142,8 +155,31 @@ export interface DashboardOnboardingWorkspace {
   capabilityScore: number
   provisioningStatus: 'pending-verification' | 'active'
   source: string
+  shell: Record<string, unknown>
+  modules: DashboardOnboardingWorkspaceModule[]
+  orchestration: Record<string, unknown>
+  summary: string[]
+  context: DashboardOnboardingWorkspaceContext
   createdAt: string
   updatedAt: string
+}
+
+export interface DashboardOnboardingWorkspaceInput {
+  formation: {
+    workspaceId: string
+    workspaceName: string
+    workspaceSlug: string
+    primaryRoute: string
+    capabilityScore: number
+    shell: Record<string, unknown>
+    modules: DashboardOnboardingWorkspaceModule[]
+    orchestration: Record<string, unknown>
+    summary: string[]
+  }
+  context: {
+    workspace: Record<string, unknown>
+    preferences: Record<string, unknown>
+  }
 }
 
 export function formatDuration(totalSeconds: number): string {
@@ -225,6 +261,16 @@ export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
   const payload = await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace')
   return payload.workspace ?? null
+}
+
+export function provisionOnboardingWorkspace(input: DashboardOnboardingWorkspaceInput): Promise<{ workspace: DashboardOnboardingWorkspace }> {
+  return fetchAuthorizedMutation('/api/onboarding/workspace', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
 }
 
 export function fetchSystemStatus(): Promise<DashboardSystemStatus> {
