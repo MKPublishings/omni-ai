@@ -416,8 +416,19 @@ export default function SettingsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
+        <div className="lg:col-span-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-quantum-white">Account and deployment context</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-quantum-white/68">
+                Core operator identity, verification state, and live deployment facts for the current authenticated session.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <GlassCard className="p-6">
-          <h2 className="text-xl font-semibold text-quantum-white">Account</h2>
+          <h3 className="text-xl font-semibold text-quantum-white">Account</h3>
           <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
             <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Display name</dt>
@@ -446,7 +457,7 @@ export default function SettingsPage() {
         </GlassCard>
 
         <GlassCard tier={2} className="p-6">
-          <h2 className="text-xl font-semibold text-quantum-white">Deployment context</h2>
+          <h3 className="text-xl font-semibold text-quantum-white">Deployment context</h3>
           <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
             <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <dt>Platform</dt>
@@ -513,6 +524,17 @@ export default function SettingsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+        <div className="lg:col-span-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-quantum-white">Continuity controls</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-quantum-white/68">
+                Cross-session memory behavior, history export, and state recovery controls for assistant continuity.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <GlassCard className="p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -599,6 +621,17 @@ export default function SettingsPage() {
       </section>
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="md:col-span-2 xl:col-span-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-quantum-white">Lifecycle notes</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-quantum-white/68">
+                Reference cards for profile editing, verification behavior, and the way saved shell settings travel across devices.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <GlassCard className="p-6">
           <h2 className="text-lg font-semibold text-quantum-white">Profile controls</h2>
           <p className="mt-3 text-sm leading-6 text-quantum-white/72">Use the profile page to edit your display name and username, then return here for deployment and verification status.</p>

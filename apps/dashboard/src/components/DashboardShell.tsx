@@ -8,7 +8,9 @@ import { AmbientBackground } from './AmbientBackground'
 import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
-import { fetchDashboardUser } from '@/lib/dashboard'
+import { fetchDashboardUser, fetchOnboardingWorkspace, type DashboardOnboardingWorkspace } from '@/lib/dashboard'
+import { GlassCard } from './GlassCard'
+import { sortRoutesByWorkspaceIntent, summarizeWorkspaceIntent } from '@/lib/workspace-shell'
 import { PremiumBadge } from '@/ui/billing/PremiumBadge'
 import { usePremiumStatus } from '@/ui/billing/usePremiumStatus'
 
@@ -115,6 +117,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [workspace, setWorkspace] = useState<DashboardOnboardingWorkspace | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   useEffect(() => {
@@ -157,8 +160,12 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
       }
 
       try {
-        const payload = await fetchDashboardUser()
+        const [payload, nextWorkspace] = await Promise.all([
+          fetchDashboardUser(),
+          fetchOnboardingWorkspace().catch(() => null),
+        ])
         setUser(payload.user)
+        setWorkspace(nextWorkspace)
       } catch {
         clearAuthSession()
         router.push('/login')
@@ -177,11 +184,16 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const filteredNavigation = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
-      return navigationItems
+      return sortRoutesByWorkspaceIntent(navigationItems, workspace)
     }
 
-    return navigationItems.filter((item) => item.label.toLowerCase().includes(query))
-  }, [searchValue])
+    return sortRoutesByWorkspaceIntent(
+      navigationItems.filter((item) => item.label.toLowerCase().includes(query)),
+      workspace
+    )
+  }, [searchValue, workspace])
+
+  const workspaceIntent = useMemo(() => summarizeWorkspaceIntent(workspace), [workspace])
 
   const handleLogout = () => {
     clearAuthSession()
@@ -195,11 +207,22 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const navigationExpanded = isMobileViewport ? mobileNavOpen : !navCollapsed
   const hasPageIntro = Boolean(title || subtitle || actions)
 
-  const commandStatus = premium.loading
+  const premiumStatus = premium.loading
     ? <span className="hidden rounded-full border border-quantum-white/12 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-quantum-white/52 xl:inline-flex">Checking plan</span>
     : premium.isPremium
       ? <PremiumBadge compact label={premium.accessTier === 'enterprise' ? 'Enterprise active' : 'Premium active'} />
       : <Link href="/pricing" className="hidden rounded-full border border-spectral-cyan-500/22 bg-spectral-cyan-500/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16 xl:inline-flex">Upgrade</Link>
+
+  const commandStatus = (
+    <>
+      {workspaceIntent ? (
+        <span className="hidden rounded-full border border-quantum-white/12 bg-quantum-white/[0.04] px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-quantum-white/68 xl:inline-flex">
+          {workspaceIntent.focusLabel}
+        </span>
+      ) : null}
+      {premiumStatus}
+    </>
+  )
 
   const handleToggleNavigation = () => {
     if (isMobileViewport) {
@@ -271,6 +294,29 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
 
                   {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
                 </div>
+              ) : null}
+
+              {workspaceIntent && pathname !== '/settings' ? (
+                <GlassCard tier={2} className="rounded-[1.6rem] p-4 sm:p-5">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Workspace intent</p>
+                      <h2 className="mt-2 text-lg font-semibold text-quantum-white">{workspaceIntent.focusLabel} for {workspaceIntent.workspaceName}</h2>
+                      <p className="mt-2 max-w-4xl text-sm leading-6 text-quantum-white/68">{workspaceIntent.focusDescription}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3 xl:justify-end">
+                      <span className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-quantum-white/58">
+                        {workspaceIntent.collaborationLabel}
+                      </span>
+                      <Link href={workspaceIntent.primaryRoute} className="inline-flex items-center rounded-full border border-spectral-cyan-500/22 bg-spectral-cyan-500/10 px-4 py-2 text-sm font-medium text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16">
+                        Open focus route
+                      </Link>
+                      <Link href="/settings" className="inline-flex items-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">
+                        Adjust shell
+                      </Link>
+                    </div>
+                  </div>
+                </GlassCard>
               ) : null}
 
               {children}
