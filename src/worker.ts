@@ -23,6 +23,7 @@ import { SystemWorker } from './api/system-worker';
 import { WorldWorker } from './api/world-worker';
 import { AuthWorker } from './api/auth-worker';
 import { PremiumWorker } from './api/premium-worker';
+import { OnboardingWorker } from './api/onboarding-worker';
 import IONWorker from './index.ts';
 export { WorldStateBusDurableObject } from './world/durable-object';
 
@@ -205,6 +206,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   const systemWorker = new SystemWorker(db, env.MEMORY, eventBus, env);
   const authWorker = new AuthWorker(env.DB, env);
   const premiumWorker = new PremiumWorker(db, eventBus, toolRegistry, env);
+  const onboardingWorker = new OnboardingWorker(env.DB);
 
   // Middleware functions
   const withAuth = (handler: any) =>
@@ -259,6 +261,9 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   router.add('POST', '/api/auth/resend-verification', async (r: Request) => authWorker.resendVerification(r));
   router.add('PUT', '/api/auth/profile', async (r: Request) => authWorker.updateProfile(r));
   router.add('POST', '/api/auth/logout', async (r: Request) => authWorker.logout(r));
+
+  router.add('GET', '/api/onboarding/workspace', compose((r: Request) => onboardingWorker.getCurrentWorkspace(r)));
+  router.add('POST', '/api/onboarding/workspace', compose((r: Request) => onboardingWorker.provisionWorkspace(r)));
 
   router.add('GET', '/api/account/entitlements/me', compose((r: Request) => premiumWorker.getMyEntitlements(r)));
 

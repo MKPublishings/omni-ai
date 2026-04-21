@@ -132,6 +132,20 @@ export interface DashboardChatHistoryTurn {
   createdAt: string
 }
 
+export interface DashboardOnboardingWorkspace {
+  id: string
+  userId: string
+  workspaceId: string
+  workspaceName: string
+  workspaceSlug: string
+  primaryRoute: string
+  capabilityScore: number
+  provisioningStatus: 'pending-verification' | 'active'
+  source: string
+  createdAt: string
+  updatedAt: string
+}
+
 export function formatDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return 'just started'
@@ -206,6 +220,11 @@ async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Prom
 
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
   return fetchAuthorizedJson('/api/auth/me')
+}
+
+export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
+  const payload = await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace')
+  return payload.workspace ?? null
 }
 
 export function fetchSystemStatus(): Promise<DashboardSystemStatus> {

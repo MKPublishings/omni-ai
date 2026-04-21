@@ -2,12 +2,35 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/Button'
 import { GlassCard } from '@/components/GlassCard'
 import { Input } from '@/components/Input'
 import { resendVerification, verifyEmailToken } from '@/lib/auth'
+import { fetchOnboardingWorkspace } from '@/lib/dashboard'
+import { clearWorkspaceFormation, loadWorkspaceFormation } from '@/onboarding'
+
+async function resolveVerifiedRoute(): Promise<string> {
+  try {
+    const workspace = await fetchOnboardingWorkspace()
+    if (workspace?.primaryRoute) {
+      clearWorkspaceFormation()
+      return workspace.primaryRoute
+    }
+  } catch {
+    // Fall through to local backup or default route.
+  }
+
+  const localFormation = loadWorkspaceFormation()
+  if (localFormation?.primaryRoute) {
+    return localFormation.primaryRoute
+  }
+
+  return '/workspace'
+}
 
 export default function VerifyEmailPage() {
+  const router = useRouter()
   const [status, setStatus] = useState<'verifying' | 'success' | 'expired' | 'invalid' | 'used' | 'missing' | 'error'>('verifying')
   const [message, setMessage] = useState('Verifying your email now...')
   const [email, setEmail] = useState('')
@@ -17,6 +40,11 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('token') || ''
+    const pendingEmail = new URLSearchParams(window.location.search).get('email') || ''
+    if (pendingEmail) {
+      setEmail(pendingEmail)
+    }
+
     if (!token) {
       setStatus('missing')
       setMessage('A verification token is required.')
@@ -24,10 +52,14 @@ export default function VerifyEmailPage() {
     }
 
     verifyEmailToken(token)
-      .then((result) => {
+      .then(async (result) => {
         if (result.ok) {
           setStatus('success')
           setMessage('Email verified. Your Ionirix account is now active.')
+          const destination = await resolveVerifiedRoute()
+          window.setTimeout(() => {
+            router.push(destination)
+          }, 900)
           return
         }
 
@@ -53,8 +85,8 @@ export default function VerifyEmailPage() {
             setMessage(result.error || 'Email verification failed.')
             break
         }
-      })
-  }, [])
+        })
+      }, [router])
 
   const canResend = status === 'expired' || status === 'invalid' || status === 'missing' || status === 'error'
 

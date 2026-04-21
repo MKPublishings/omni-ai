@@ -20,6 +20,7 @@
     "check:branding": "node ./scripts/check-branding.js",
     "build": "node ./scripts/build.js",
     "test": "npm run smoke:image && npm run smoke:image:worker && npm run smoke:chat-policy && npm run smoke:chat-image-intent && npm run smoke:policy-lockstep && npm run smoke:image:orchestrator-attestation && npm run test:runtime && npm run test:cosmic && npm run test:multiverse",
+    "test:dashboard:e2e": "npm run build --workspace @ionirix/dashboard && playwright test -c apps/dashboard/playwright.config.ts",
     "test:runtime": "tsx --test src/runtime/tests/simulationEngine.test.ts src/runtime/tests/simulationWorker.test.ts src/runtime/tests/router.test.ts src/runtime/tests/modeRouting.test.ts src/runtime/tests/runtimeLoop.test.ts src/runtime/tests/workerRoute.test.ts src/runtime/tests/worldBridge.test.ts src/runtime/tests/worldWorker.test.ts src/runtime/tests/ionGateway.test.ts src/runtime/tests/premiumContracts.test.ts src/runtime/tests/stripeBilling.test.ts",
     "test:cosmic": "tsx --test src/modes/cosmic/__tests__/gravitational.test.ts src/modes/cosmic/__tests__/dynamics.test.ts src/modes/cosmic/__tests__/stellar.test.ts src/modes/cosmic/__tests__/ism.test.ts src/modes/cosmic/__tests__/integration.test.ts",
     "test:multiverse": "tsx --test src/modes/multiverse/__tests__/multiverse_seed.test.ts",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.59.1",
     "@types/node": "^22.13.4",
     "eslint": "^10.0.2",
     "globals": "^17.3.0",

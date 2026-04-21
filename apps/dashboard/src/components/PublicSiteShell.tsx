@@ -13,6 +13,7 @@ interface PublicSiteShellProps {
 
 const publicLinks = [
   { href: '/', label: 'Home' },
+  { href: '/onboarding', label: 'Onboarding' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/platform', label: 'Platform' },
   { href: '/capabilities', label: 'Capabilities' },

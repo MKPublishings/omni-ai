@@ -1,4 +1,9 @@
 import {
+  activateProvisionedWorkspaces,
+  parseProvisionWorkspaceInput,
+  provisionUserWorkspace,
+} from '../onboarding/provisioning';
+import {
   AuthConflictError,
   consumeEmailVerificationToken,
   createEmailVerification,
@@ -29,6 +34,12 @@ type AuthWorkerEnv = {
   EMAIL_FROM?: string;
   EMAIL_REPLY_TO?: string;
   MAILCHANNELS_API_URL?: string;
+};
+
+type SignupOnboardingPayload = {
+  formation?: unknown;
+  context?: unknown;
+  source?: unknown;
 };
 
 function json(data: unknown, status = 200): Response {
@@ -211,6 +222,14 @@ export class AuthWorker {
     const password = String(body?.password || '');
     const displayName = String(body?.displayName || '').trim();
     const username = String(body?.username || '').trim();
+    const onboardingPayload = body?.onboarding as SignupOnboardingPayload | undefined;
+
+    if (onboardingPayload) {
+      const parsedProvisioning = parseProvisionWorkspaceInput(onboardingPayload);
+      if (!parsedProvisioning.ok) {
+        return json({ error: parsedProvisioning.error }, 400);
+      }
+    }
 
     if (!displayName || displayName.length < 2) {
       return json({ error: 'Display name must be at least 2 characters.' }, 400);
@@ -244,6 +263,30 @@ export class AuthWorker {
       username: user.username,
     });
 
+    let workspaceProvisioned = false;
+    let workspaceProvisionError: string | null = null;
+
+    if (onboardingPayload) {
+      const parsedProvisioning = parseProvisionWorkspaceInput(onboardingPayload);
+      if (parsedProvisioning.ok) {
+        try {
+          await provisionUserWorkspace(this.db!, user.id, parsedProvisioning.data, {
+            status: 'pending-verification',
+            source: 'signup-onboarding',
+          });
+          workspaceProvisioned = true;
+        } catch (error) {
+          workspaceProvisionError = error instanceof Error ? error.message : 'Workspace provisioning could not be persisted.';
+          logAuthDelivery('signup_workspace_provision_failed', {
+            requestId,
+            userId: user.id,
+            email: maskEmail(user.email),
+            error: sanitizeErrorMessage(workspaceProvisionError),
+          }, 'error');
+        }
+      }
+    }
+
     const delivery = await this.issueVerification(request, user, 'signup', requestId);
 
     return json({
@@ -253,6 +296,8 @@ export class AuthWorker {
       verificationProvider: delivery.verificationProvider,
       verificationEmailSent: delivery.verificationEmailSent,
       verificationEmailError: delivery.verificationEmailError,
+      workspaceProvisioned,
+      workspaceProvisionError,
       user,
     }, 201);
   }
@@ -397,6 +442,8 @@ export class AuthWorker {
     if (result.status === 'not_found' || !result.user) {
       return json({ error: 'This verification link is invalid.', code: 'EMAIL_VERIFICATION_INVALID' }, 400);
     }
+
+    await activateProvisionedWorkspaces(this.db!, result.user.id);
 
     return json({ ok: true, user: result.user, verified: true, code: 'EMAIL_VERIFICATION_VERIFIED' });
   }

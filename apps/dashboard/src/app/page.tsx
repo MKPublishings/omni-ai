@@ -12,6 +12,7 @@ export default function LandingPage() {
       }
       actions={
         <>
+          <Link href="/onboarding" className="rounded-full border border-spectral-cyan-400/20 bg-spectral-cyan-500/10 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16">Start onboarding</Link>
           <Link href="/platform" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Platform</Link>
           <Link href="/roadmap" className="rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">Roadmap</Link>
           <Link href="/login" className="rounded-full bg-ion-blue-500 px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-ion-blue-600">Enter workspace</Link>

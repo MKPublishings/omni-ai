@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { clearAuthSession, getApiUrl, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
+import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
+import { clearWorkspaceFormation, loadWorkspaceFormation } from '@/onboarding'
 
 type AuthMode = 'login' | 'signup'
 
@@ -27,6 +29,25 @@ function buildVerificationDeliveryNotice(input: {
   }
 
   return input.fallbackMessage
+}
+
+async function resolvePostAuthRoute(defaultPath: string): Promise<string> {
+  try {
+    const workspace = await fetchOnboardingWorkspace()
+    if (workspace?.primaryRoute) {
+      clearWorkspaceFormation()
+      return workspace.primaryRoute
+    }
+  } catch {
+    // Fall through to local backup or default route.
+  }
+
+  const localFormation = loadWorkspaceFormation()
+  if (localFormation?.primaryRoute) {
+    return localFormation.primaryRoute
+  }
+
+  return defaultPath
 }
 
 function LoginPageContent() {
@@ -115,7 +136,8 @@ function LoginPageContent() {
       }
 
       storeAuthSession(data)
-  router.push(nextPath)
+      const destination = await resolvePostAuthRoute(nextPath)
+      router.push(destination)
 
     } catch (err) {
       if (!(err instanceof Error && err.message.includes('verification'))) {
@@ -293,6 +315,9 @@ function LoginPageContent() {
         <div className="mt-8 text-center">
           <p className="text-quantum-white/40 text-sm">
             Email sign-up is enabled. Usernames can sign in too. Passwords require at least 8 characters with a letter and a number.
+          </p>
+          <p className="mt-3 text-sm text-quantum-white/56">
+            Prefer guided setup? <Link href="/onboarding" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Open the onboarding flow</Link>
           </p>
           <p className="mt-3 text-sm text-quantum-white/56">
             <Link href="/" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Return to the public site</Link>
