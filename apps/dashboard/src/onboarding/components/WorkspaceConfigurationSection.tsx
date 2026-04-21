@@ -35,8 +35,31 @@ export function WorkspaceConfigurationSection({
           {description ? <p className="mt-4 text-sm leading-7 text-quantum-white/68">{description}</p> : null}
         </div>
 
-        <Input value={value.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Workspace name" className="h-12 rounded-2xl px-4" />
-        <Input value={value.slug} onChange={(event) => onChange({ slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })} placeholder="workspace-slug" className="h-12 rounded-2xl px-4" autoCapitalize="none" autoCorrect="off" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-[1.35rem] border border-quantum-white/10 bg-black/10 p-4">
+            <label className="text-sm font-medium text-quantum-white">Workspace name</label>
+            <p className="mt-1 text-xs leading-5 text-quantum-white/48">The primary label shown across the workspace shell.</p>
+            <Input
+              value={value.name}
+              onChange={(event) => onChange({ name: event.target.value })}
+              placeholder="Workspace name"
+              className="mt-3 h-12 rounded-2xl px-4"
+            />
+          </div>
+
+          <div className="rounded-[1.35rem] border border-quantum-white/10 bg-black/10 p-4">
+            <label className="text-sm font-medium text-quantum-white">Workspace slug</label>
+            <p className="mt-1 text-xs leading-5 text-quantum-white/48">The URL-safe identifier used for workspace routing and formation.</p>
+            <Input
+              value={value.slug}
+              onChange={(event) => onChange({ slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+              placeholder="workspace-slug"
+              className="mt-3 h-12 rounded-2xl px-4"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+          </div>
+        </div>
 
         <div>
           <label className="text-sm font-medium text-quantum-white">Operating role</label>

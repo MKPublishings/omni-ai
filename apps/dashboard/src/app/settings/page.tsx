@@ -347,71 +347,79 @@ export default function SettingsPage() {
     >
       {error && <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">{error}</GlassCard>}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
+      <section>
         <GlassCard className="p-6 sm:p-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Settings system</p>
-              <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Keep onboarding and settings in the same operating model.</h2>
-              <p className="mt-4 text-sm leading-7 text-quantum-white/68">
-                The workspace shell, launch modules, interface posture, and chat continuity now live side by side here, so any account can reach the same controls after onboarding completes.
-              </p>
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-spectral-cyan-300">Settings system</p>
+                <h2 className="mt-3 text-3xl font-semibold text-quantum-white">Keep onboarding and settings in the same operating model.</h2>
+                <p className="mt-4 text-sm leading-7 text-quantum-white/68">
+                  The workspace shell, launch modules, interface posture, and chat continuity now live side by side here, so any account can reach the same controls after onboarding completes.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:w-[26rem]">
+                <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Primary route</p>
+                  <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.primaryRoute || '/workspace'}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Enabled modules</p>
+                  <p className="mt-2 text-lg font-semibold text-quantum-white">{enabledModules}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Capability score</p>
+                  <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.capabilityScore ?? workspaceDraft.capabilities.length}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Provisioning</p>
+                  <p className="mt-2 text-lg font-semibold capitalize text-quantum-white">{onboardingWorkspace?.provisioningStatus || 'not saved'}</p>
+                </div>
+              </div>
             </div>
-            <div className="grid gap-3 sm:min-w-[15rem] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Primary route</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.primaryRoute || '/workspace'}</p>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)]">
+              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-quantum-white/48">Saved workspace summary</p>
+                    <h3 className="mt-2 text-xl font-semibold text-quantum-white">{onboardingWorkspace?.workspaceName || workspaceDraft.name}</h3>
+                    <p className="mt-1 text-sm text-quantum-white/60">/{onboardingWorkspace?.workspaceSlug || workspaceDraft.slug}</p>
+                  </div>
+                  <span className="inline-flex items-center rounded-full border border-quantum-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-quantum-white/58">
+                    {onboardingWorkspace?.updatedAt ? new Date(onboardingWorkspace.updatedAt).toLocaleString() : 'Not saved yet'}
+                  </span>
+                </div>
+
+                <dl className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-4">
+                    <dt className="text-[11px] uppercase tracking-[0.22em] text-quantum-white/44">Interface shell</dt>
+                    <dd className="mt-2 text-sm font-medium text-quantum-white">{preferencesDraft.layoutMode} · {preferencesDraft.sidebarPosition} · {preferencesDraft.density}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-quantum-white/8 bg-quantum-white/[0.03] p-4">
+                    <dt className="text-[11px] uppercase tracking-[0.22em] text-quantum-white/44">Telemetry posture</dt>
+                    <dd className="mt-2 text-sm font-medium text-quantum-white">{preferencesDraft.telemetryOptIn ? 'Full capture' : 'Essential only'}</dd>
+                  </div>
+                </dl>
               </div>
-              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Enabled modules</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{enabledModules}</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Capability score</p>
-                <p className="mt-2 text-lg font-semibold text-quantum-white">{onboardingWorkspace?.capabilityScore ?? workspaceDraft.capabilities.length}</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Provisioning</p>
-                <p className="mt-2 text-lg font-semibold capitalize text-quantum-white">{onboardingWorkspace?.provisioningStatus || 'not saved'}</p>
+
+              <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-5 sm:p-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-quantum-white/48">Formation notes</p>
+                {Array.isArray(onboardingWorkspace?.summary) && onboardingWorkspace.summary.length > 0 ? (
+                  <ul className="mt-4 space-y-3 text-sm leading-6 text-quantum-white/68">
+                    {onboardingWorkspace.summary.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-4 text-sm leading-6 text-quantum-white/60">
+                    Save the workspace shell to generate a current formation summary for this account.
+                  </p>
+                )}
               </div>
             </div>
           </div>
-        </GlassCard>
-
-        <GlassCard tier={2} className="p-6 sm:p-7">
-          <h2 className="text-xl font-semibold text-quantum-white">Saved workspace summary</h2>
-          <dl className="mt-4 space-y-4 text-sm text-quantum-white/72">
-            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <dt>Workspace</dt>
-              <dd className="break-words font-medium text-quantum-white sm:text-right">{onboardingWorkspace?.workspaceName || workspaceDraft.name}</dd>
-            </div>
-            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <dt>Slug</dt>
-              <dd className="break-words font-medium text-quantum-white sm:text-right">/{onboardingWorkspace?.workspaceSlug || workspaceDraft.slug}</dd>
-            </div>
-            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <dt>Interface shell</dt>
-              <dd className="break-words font-medium text-quantum-white sm:text-right">{preferencesDraft.layoutMode} · {preferencesDraft.sidebarPosition} · {preferencesDraft.density}</dd>
-            </div>
-            <div className="flex flex-col gap-1 border-b border-quantum-white/8 pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <dt>Telemetry posture</dt>
-              <dd className="break-words font-medium text-quantum-white sm:text-right">{preferencesDraft.telemetryOptIn ? 'Full' : 'Essential'}</dd>
-            </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <dt>Last saved</dt>
-              <dd className="break-words font-medium text-quantum-white sm:text-right">{onboardingWorkspace?.updatedAt ? new Date(onboardingWorkspace.updatedAt).toLocaleString() : 'Not saved yet'}</dd>
-            </div>
-          </dl>
-          {Array.isArray(onboardingWorkspace?.summary) && onboardingWorkspace.summary.length > 0 ? (
-            <div className="mt-5 rounded-[1.5rem] border border-quantum-white/10 bg-black/10 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-quantum-white/48">Formation notes</p>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-quantum-white/68">
-                {onboardingWorkspace.summary.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </GlassCard>
       </section>
 
