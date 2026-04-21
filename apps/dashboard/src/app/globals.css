@@ -853,14 +853,20 @@
       padding-inline: 5%;
     }
 
-    .chat-fullscreen-shell:fullscreen {
-      padding: 0;
+    .chat-fullscreen-shell:fullscreen,
+    .chat-overlay-fullscreen {
+      padding-top: max(env(safe-area-inset-top), 0.4rem);
+      padding-right: max(env(safe-area-inset-right), 0.4rem);
+      padding-bottom: max(env(safe-area-inset-bottom), 0.45rem);
+      padding-left: max(env(safe-area-inset-left), 0.4rem);
     }
 
     .chat-fullscreen-shell:fullscreen .chat-fullscreen-panel,
     .chat-overlay-fullscreen .chat-fullscreen-panel {
       border-radius: 1.25rem;
-      min-height: 100svh;
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
     }
   }
 }
