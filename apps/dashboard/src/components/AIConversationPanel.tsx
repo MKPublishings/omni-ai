@@ -359,6 +359,15 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
       }
     }
 
+    const handleScrollToBottom = () => {
+      const scroller = messagesContainerRef.current
+      if (scroller) {
+        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
+      }
+
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+
     const handleKeyPress = (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -429,28 +438,43 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 <p className="chat-app-subtitle text-[11px] text-quantum-white/64 sm:text-xs">Cognitive Operating System</p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleToggleFullscreen}
-              className="chat-icon-button h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
-              aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
-              title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
-            >
-              {isFullscreen ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleScrollToBottom}
+                className="chat-icon-button h-9 rounded-full px-3 text-quantum-white/72 sm:h-10"
+                aria-label="Scroll to bottom"
+                title="Scroll to bottom"
+              >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
-                </svg>
-              )}
-              <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
-                {isFullscreen ? 'Exit' : 'Fullscreen'}
-              </span>
-            </Button>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleFullscreen}
+                className="chat-icon-button h-9 gap-2 rounded-full px-3 text-quantum-white/72 sm:h-10"
+                aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
+                title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
+              >
+                {isFullscreen ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
+                  </svg>
+                )}
+                <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
+                  {isFullscreen ? 'Exit' : 'Fullscreen'}
+                </span>
+              </Button>
+            </div>
           </div>
 
           <div ref={messagesContainerRef} className="chat-messages-scroll flex-1 overflow-y-auto px-2.5 py-3 sm:px-4 sm:py-5">
@@ -483,13 +507,13 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   disabled={isThinking}
                 />
               </div>
-              <div className="flex w-full gap-2 sm:w-auto sm:flex-col">
+              <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleScrollToTop}
-                  className="chat-icon-button h-11 flex-1 rounded-2xl px-4 text-quantum-white/72 sm:w-11 sm:flex-none sm:px-0"
+                  className="chat-icon-button h-11 w-11 shrink-0 rounded-2xl px-0 text-quantum-white/72"
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
