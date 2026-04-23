@@ -524,7 +524,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 <Button
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isThinking}
-                  className="h-11 flex-1 rounded-2xl px-5 sm:w-11 sm:flex-none sm:px-0"
+                  className="h-11 w-11 shrink-0 rounded-2xl px-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
