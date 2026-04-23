@@ -365,6 +365,19 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
         scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' })
       }
 
+      const pageScroller = panelRef.current?.closest('main')
+      if (pageScroller instanceof HTMLElement) {
+        pageScroller.scrollTo({ top: pageScroller.scrollHeight, behavior: 'smooth' })
+      }
+
+      if (typeof window !== 'undefined') {
+        const pageHeight = Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight
+        )
+        window.scrollTo({ top: pageHeight, behavior: 'smooth' })
+      }
+
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
 
@@ -513,12 +526,12 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   variant="ghost"
                   size="sm"
                   onClick={handleScrollToTop}
-                  className="chat-icon-button h-11 w-11 shrink-0 rounded-2xl px-0 text-quantum-white/72"
+                  className="h-11 w-11 shrink-0 rounded-2xl border-transparent bg-transparent px-0 text-quantum-white/72 hover:bg-transparent active:bg-transparent"
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 15l-7-7-7 7" />
                   </svg>
                 </Button>
                 <Button
