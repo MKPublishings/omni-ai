@@ -376,9 +376,15 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           document.body.scrollHeight
         )
         window.scrollTo({ top: pageHeight, behavior: 'smooth' })
-      }
 
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        window.requestAnimationFrame(() => {
+          const refreshedPageHeight = Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight
+          )
+          window.scrollTo({ top: refreshedPageHeight, behavior: 'smooth' })
+        })
+      }
     }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -457,13 +463,13 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 variant="ghost"
                 size="sm"
                 onClick={handleScrollToBottom}
-                className="chat-icon-button h-9 rounded-full px-3 text-quantum-white/72 sm:h-10"
+                className="chat-icon-button h-11 w-11 shrink-0 rounded-2xl px-0 text-quantum-white"
                 aria-label="Scroll to bottom"
                 title="Scroll to bottom"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
+                  ↓
+                </span>
               </Button>
               <Button
                 type="button"
