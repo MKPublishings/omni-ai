@@ -530,9 +530,9 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
-                  <svg className="h-5.5 w-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M19 15l-7-7-7 7" />
-                  </svg>
+                  <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
+                    ↑
+                  </span>
                 </Button>
                 <Button
                   onClick={handleSend}
@@ -541,10 +541,9 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   aria-label="Send message"
                   title="Send message"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 11.5L20 4l-5.5 16-3.5-5-5.5-3.5Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M10.5 15 20 4" />
-                  </svg>
+                  <span className="text-[1.2rem] font-semibold leading-none" aria-hidden="true">
+                    ➤
+                  </span>
                 </Button>
               </div>
             </div>
