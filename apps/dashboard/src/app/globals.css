@@ -867,9 +867,13 @@
 
 @media (max-width: 767px) {
   @layer components {
-    .site-shell-frame,
     .workspace-shell-frame {
-      padding-inline: 5%;
+      padding-inline: 2%;
+    }
+
+    .workspace-shell-frame-mobile-bleed {
+      padding-left: max(env(safe-area-inset-left), 2%);
+      padding-right: max(env(safe-area-inset-right), 2%);
     }
 
     .chat-fullscreen-shell:fullscreen,
