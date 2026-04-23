@@ -526,11 +526,11 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   variant="ghost"
                   size="sm"
                   onClick={handleScrollToTop}
-                  className="h-11 w-11 shrink-0 rounded-2xl border-transparent bg-transparent px-0 text-quantum-white/72 hover:bg-transparent active:bg-transparent"
+                  className="chat-icon-button h-11 w-11 shrink-0 rounded-2xl px-0 text-quantum-white/72"
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 15l-7-7-7 7" />
                   </svg>
                 </Button>
@@ -538,9 +538,12 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isThinking}
                   className="h-11 w-11 shrink-0 rounded-2xl px-0"
+                  aria-label="Send message"
+                  title="Send message"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M5 12h10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M11 6l6 6-6 6" />
                   </svg>
                 </Button>
               </div>
