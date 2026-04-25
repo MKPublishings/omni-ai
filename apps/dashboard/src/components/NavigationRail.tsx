@@ -5,6 +5,7 @@ interface NavigationRailProps extends HTMLAttributes<HTMLDivElement> {
   collapsed?: boolean
   mobileOpen?: boolean
   mobileViewport?: boolean
+  side?: 'left' | 'right'
   onRequestClose?: () => void
   userName?: string
   userRole?: string
@@ -64,17 +65,19 @@ const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
 NavItem.displayName = 'NavItem'
 
 export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
-  ({ collapsed = false, mobileOpen = true, mobileViewport = false, onRequestClose, userName = 'Ionirix User', userRole = 'Operator', userInitial = 'I', className, children, ...props }, ref) => {
+  ({ collapsed = false, mobileOpen = true, mobileViewport = false, side = 'left', onRequestClose, userName = 'Ionirix User', userRole = 'Operator', userInitial = 'I', className, children, ...props }, ref) => {
     const expanded = mobileViewport ? mobileOpen : !collapsed
+    const anchoredRight = side === 'right'
 
     return (
       <div
         ref={ref}
         className={clsx(
           'theme-navigation-rail',
-          'dashboard-navigation-rail fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden border-r border-quantum-white/8 bg-pine-black-900/95 backdrop-blur-xl shadow-2xl',
+          'dashboard-navigation-rail fixed inset-y-0 z-40 flex flex-col overflow-hidden border-quantum-white/8 bg-pine-black-900/95 backdrop-blur-xl shadow-2xl',
+          anchoredRight ? 'right-0 border-l md:border-r-0 md:border-l' : 'left-0 border-r md:border-l-0 md:border-r',
           'transition-all duration-standard ease-sovereign md:relative md:z-auto md:translate-x-0 md:shadow-none',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+          mobileOpen ? 'translate-x-0' : anchoredRight ? 'translate-x-full md:translate-x-0' : '-translate-x-full md:translate-x-0',
           collapsed ? 'md:w-20' : 'md:w-72',
           'w-[min(86vw,22rem)] md:max-w-none',
           className

@@ -12,6 +12,7 @@ interface CommandBarProps extends HTMLAttributes<HTMLDivElement> {
   onToggleTheme?: () => void
   onToggleNavigation?: () => void
   navigationExpanded?: boolean
+  navigationToggleVisible?: boolean
   onLogout?: () => void
   statusSlot?: ReactNode
 }
@@ -27,6 +28,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
     onToggleTheme,
     onToggleNavigation,
     navigationExpanded,
+    navigationToggleVisible = true,
     onLogout,
     statusSlot,
     className,
@@ -68,22 +70,24 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
             )}
           </div>
 
-          <button
-            type="button"
-            aria-label={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
-            title={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
-            className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full lg:hidden"
-            onClick={onToggleNavigation}
-          >
-            <svg
-              className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {navigationToggleVisible && (
+            <button
+              type="button"
+              aria-label={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
+              title={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
+              className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full lg:hidden"
+              onClick={onToggleNavigation}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+              <svg
+                className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="workspace-commandbar-search w-full lg:mx-8 lg:flex-1">
@@ -104,24 +108,26 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
         </div>
 
         <div className="flex items-center justify-between gap-2 lg:flex-1 lg:justify-end">
-          <div className="hidden items-center gap-2 lg:flex">
-            <button
-              type="button"
-              aria-label={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
-              title={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
-              className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
-              onClick={onToggleNavigation}
-            >
-              <svg
-                className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          {navigationToggleVisible && (
+            <div className="hidden items-center gap-2 lg:flex">
+              <button
+                type="button"
+                aria-label={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
+                title={navigationExpanded ? 'Collapse navigation' : 'Expand navigation'}
+                className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
+                onClick={onToggleNavigation}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+                <svg
+                  className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             {statusSlot ? <div className="hidden xl:flex xl:items-center xl:gap-2">{statusSlot}</div> : null}

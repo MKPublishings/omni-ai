@@ -14,6 +14,13 @@ import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashb
 import { sortRoutesByWorkspaceIntent, summarizeWorkspaceIntent } from '@/lib/workspace-shell'
 import { PremiumBadge } from '@/ui/billing/PremiumBadge'
 import { usePremiumStatus } from '@/ui/billing/usePremiumStatus'
+import { loadWorkspaceFormation, type WorkspaceFormation } from '@/onboarding'
+import {
+  buildDashboardShellLayoutClasses,
+  DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT,
+  resolveDashboardShellArrangement,
+  WORKSPACE_FORMATION_STORAGE_PREFIX,
+} from './dashboard-shell-layout'
 
 interface DashboardShellProps {
   title: string
@@ -120,6 +127,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const [searchValue, setSearchValue] = useState('')
   const [user, setUser] = useState<AuthUser | null>(null)
   const [workspace, setWorkspace] = useState<DashboardOnboardingWorkspace | null>(null)
+  const [localFormation, setLocalFormation] = useState<WorkspaceFormation | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   useEffect(() => {
@@ -153,6 +161,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }, [theme])
 
   useEffect(() => {
+    setLocalFormation(loadWorkspaceFormation())
+
     const bootstrap = async () => {
       const token = getStoredToken()
 
@@ -183,6 +193,27 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
     }
   }, [pathname, isMobileViewport])
 
+  useEffect(() => {
+    const syncFormation = () => {
+      setLocalFormation(loadWorkspaceFormation())
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (!event.key || event.key.startsWith(WORKSPACE_FORMATION_STORAGE_PREFIX)) {
+        syncFormation()
+      }
+    }
+
+    syncFormation()
+    window.addEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, syncFormation)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, syncFormation)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
   const filteredNavigation = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
@@ -196,6 +227,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }, [searchValue, workspace])
 
   const workspaceIntent = useMemo(() => summarizeWorkspaceIntent(workspace), [workspace])
+  const shellArrangement = useMemo(() => resolveDashboardShellArrangement(workspace, localFormation), [workspace, localFormation])
+  const shellLayout = useMemo(() => buildDashboardShellLayoutClasses(shellArrangement), [shellArrangement])
 
   const handleLogout = () => {
     clearAuthSession()
@@ -227,6 +260,10 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   )
 
   const handleToggleNavigation = () => {
+    if (shellLayout.navHidden) {
+      return
+    }
+
     if (isMobileViewport) {
       setMobileNavOpen((value) => !value)
       return
@@ -239,8 +276,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
     <div className="dashboard-theme-shell relative flex min-h-screen overflow-hidden bg-pine-black-900">
       <AmbientBackground />
 
-      <div className="relative z-10 flex min-h-screen w-full">
-        {isMobileViewport && mobileNavOpen && (
+      <div className={shellLayout.shellRowClassName}>
+        {isMobileViewport && mobileNavOpen && !shellLayout.navHidden && (
           <button
             type="button"
             aria-label="Close navigation overlay"
@@ -249,26 +286,29 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
           />
         )}
 
-        <NavigationRail
-          collapsed={navCollapsed}
-          mobileOpen={isMobileViewport ? mobileNavOpen : true}
-          mobileViewport={isMobileViewport}
-          onRequestClose={() => setMobileNavOpen(false)}
-          userName={user?.displayName || 'Loading'}
-          userRole={user?.role || 'Member'}
-          userInitial={(user?.displayName || user?.username || 'I').charAt(0).toUpperCase()}
-        >
-          {filteredNavigation.map((item) => (
-            <NavItem
-              key={item.href}
-              icon={item.icon}
-              label={item.label}
-              active={isNavigationItemActive(pathname, item.href)}
-              collapsed={isMobileViewport ? false : navCollapsed}
-              onClick={() => router.push(item.href)}
-            />
-          ))}
-        </NavigationRail>
+        {!shellLayout.navHidden && (
+          <NavigationRail
+            side={shellLayout.navSide}
+            collapsed={navCollapsed}
+            mobileOpen={isMobileViewport ? mobileNavOpen : true}
+            mobileViewport={isMobileViewport}
+            onRequestClose={() => setMobileNavOpen(false)}
+            userName={user?.displayName || 'Loading'}
+            userRole={user?.role || 'Member'}
+            userInitial={(user?.displayName || user?.username || 'I').charAt(0).toUpperCase()}
+          >
+            {filteredNavigation.map((item) => (
+              <NavItem
+                key={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={isNavigationItemActive(pathname, item.href)}
+                collapsed={isMobileViewport ? false : navCollapsed}
+                onClick={() => router.push(item.href)}
+              />
+            ))}
+          </NavigationRail>
+        )}
 
         <div className="flex min-w-0 flex-1 flex-col">
           <CommandBar
@@ -280,7 +320,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             isDarkMode={theme === 'dark'}
             onToggleTheme={handleToggleTheme}
             onToggleNavigation={handleToggleNavigation}
-            navigationExpanded={navigationExpanded}
+            navigationExpanded={shellLayout.navHidden ? false : navigationExpanded}
+            navigationToggleVisible={!shellLayout.navHidden}
             onLogout={handleLogout}
             statusSlot={commandStatus}
           />
@@ -288,13 +329,13 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
           <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto py-4 sm:py-5">
             <div
               className={clsx(
-                'workspace-shell-frame site-content-frame mx-auto flex w-full min-w-0 flex-col gap-5 sm:gap-6',
+                shellLayout.frameClassName,
                 fullBleedOnMobile && 'workspace-shell-frame-mobile-bleed site-content-frame-mobile-bleed'
               )}
             >
               {hasPageIntro ? (
-                <div className={clsx('workspace-page-intro', hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>
-                  <div className="workspace-page-intro-copy min-w-0">
+                <div className={clsx(shellLayout.introClassName, hidePageIntroOnMobile ? 'hidden md:flex md:flex-col md:gap-4 xl:flex-row xl:items-start xl:justify-between' : 'flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between')}>
+                  <div className={shellLayout.introCopyClassName}>
                     {title ? <h1 className="theme-page-title text-2xl font-bold text-quantum-white sm:text-3xl">{title}</h1> : null}
                     {subtitle ? <p className="theme-page-subtitle mt-2 max-w-3xl text-sm leading-6 text-quantum-white/64 md:text-base">{subtitle}</p> : null}
                   </div>

@@ -44,6 +44,7 @@ import {
 } from '@/onboarding'
 import { InterfacePreferencesSection } from '@/onboarding/components/InterfacePreferencesSection'
 import { WorkspaceConfigurationSection } from '@/onboarding/components/WorkspaceConfigurationSection'
+import { dispatchDashboardShellSettingsUpdated } from '@/components/dashboard-shell-layout'
 
 const onboardingDefaults = createInitialOnboardingState()
 const capabilityIds = new Set<WorkspaceCapabilityId>(CAPABILITY_CATALOG.map((capability) => capability.id))
@@ -286,6 +287,7 @@ export default function SettingsPage() {
       })
 
       setOnboardingWorkspace(payload.workspace)
+      dispatchDashboardShellSettingsUpdated()
       setWorkspaceActionMessage('Workspace shell and onboarding settings saved.')
       setWorkspaceSettingsDirty(false)
       setWorkspaceDraftInitialized(true)
