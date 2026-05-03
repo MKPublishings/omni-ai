@@ -151,7 +151,13 @@ export default function SettingsPage() {
   const loadSettings = () => {
     setError('')
     setCachedMessageCount(getCachedAssistantMessageCount())
-    Promise.all([fetchDashboardUser(), fetchSystemStatus(), fetchChatSettings(), fetchChatHistory(200), fetchOnboardingWorkspace()])
+    Promise.all([
+      fetchDashboardUser(),
+      fetchSystemStatus(),
+      fetchChatSettings(),
+      fetchChatHistory(200),
+      fetchOnboardingWorkspace().catch(() => null),
+    ])
       .then(([userPayload, nextStatus, chatSettingsPayload, chatHistoryPayload, onboardingWorkspacePayload]) => {
         setUser(userPayload.user)
         setStatus(nextStatus)

@@ -316,15 +316,19 @@ export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWor
         method: 'POST',
         cache: 'no-store',
         headers: {
+          'Content-Type': 'application/json',
           'Cache-Control': 'no-cache',
         },
+        body: JSON.stringify({}),
       })
     : await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace').catch(() => fetchAuthorizedLocalJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
         method: 'POST',
         cache: 'no-store',
         headers: {
+          'Content-Type': 'application/json',
           'Cache-Control': 'no-cache',
         },
+        body: JSON.stringify({}),
       }))
   return payload.workspace ?? null
 }
