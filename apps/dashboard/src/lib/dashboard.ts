@@ -250,6 +250,16 @@ async function fetchAuthorizedJsonWithInit<T>(path: string, init: RequestInit): 
   return response.json() as Promise<T>
 }
 
+async function fetchAuthorizedLocalJsonWithInit<T>(path: string, init: RequestInit): Promise<T> {
+  const response = await authorizedFetch(path, init)
+
+  if (!response.ok) {
+    throw new Error(`Request failed for ${path}: ${response.status}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
 async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Promise<T> {
   const response = await authorizedFetch(getApiUrl(path), init)
   const payload = await response.json().catch(() => ({}))
@@ -265,27 +275,41 @@ async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Prom
 }
 
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
-  return process.env.NEXT_PUBLIC_ION_API_URL?.trim()
-    ? fetchAuthorizedJson('/api/auth/me')
-    : fetchAuthorizedJsonWithInit('/api/auth/me', {
-        method: 'POST',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      })
+  if (!process.env.NEXT_PUBLIC_ION_API_URL?.trim()) {
+    return fetchAuthorizedLocalJsonWithInit('/api/auth/me', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
+  }
+
+  return fetchAuthorizedJson<{ user: AuthUser }>('/api/auth/me').catch(() => fetchAuthorizedLocalJsonWithInit<{ user: AuthUser }>('/api/auth/me', {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  }))
 }
 
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
-  const payload = process.env.NEXT_PUBLIC_ION_API_URL?.trim()
-    ? await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace')
-    : await fetchAuthorizedJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
+  const payload = !process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+    ? await fetchAuthorizedLocalJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
         method: 'POST',
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
         },
       })
+    : await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace').catch(() => fetchAuthorizedLocalJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      }))
   return payload.workspace ?? null
 }
 
