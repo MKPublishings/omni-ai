@@ -21,6 +21,10 @@ export interface VerifyEmailResponse {
   verified?: boolean;
   code?: string;
   error?: string;
+  token?: string;
+  sessionId?: string;
+  expiresAt?: string;
+  accessTier?: string;
 }
 
 const TOKEN_KEY = 'ion_token';

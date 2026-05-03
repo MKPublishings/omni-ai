@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { loginLocalUser } from '@/lib/local-auth-server'
+import { getLocalSession } from '@/lib/local-auth-server'
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({}))
-  const result = await loginLocalUser(request, body)
+  const result = await getLocalSession(request)
   return NextResponse.json(result.body, { status: result.status, headers: { 'Cache-Control': 'no-store' } })
 }

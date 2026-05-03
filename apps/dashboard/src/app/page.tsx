@@ -57,7 +57,7 @@ export default function LandingPage() {
             <ul className="mt-3 space-y-1.5 text-quantum-white/64 sm:mt-4 sm:space-y-2">
               <li>General Inquiries: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
               <li>Security Reports: <a href="mailto:support@ionirix.net" className="transition hover:text-quantum-white">support@ionirix.net</a></li>
-              <li>Legal Notices: <a href="mailto:noreply@ionirix.com" className="transition hover:text-quantum-white">noreply@ionirix.com</a></li>
+              <li>Legal Notices: <a href="mailto:mail@ionirix.com" className="transition hover:text-quantum-white">mail@ionirix.com</a></li>
             </ul>
             </section>
           </div>

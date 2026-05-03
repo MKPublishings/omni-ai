@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/Button'
 import { GlassCard } from '@/components/GlassCard'
 import { Input } from '@/components/Input'
-import { resendVerification, verifyEmailToken } from '@/lib/auth'
+import { resendVerification, storeAuthSession, verifyEmailToken } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { clearWorkspaceFormation, loadWorkspaceFormation } from '@/onboarding'
 
@@ -57,6 +57,15 @@ export default function VerifyEmailPage() {
     verifyEmailToken(token)
       .then(async (result) => {
         if (result.ok) {
+          if (result.token && result.sessionId && result.expiresAt && result.user) {
+            storeAuthSession({
+              token: result.token,
+              sessionId: result.sessionId,
+              expiresAt: result.expiresAt,
+              user: result.user,
+              ...(result.accessTier ? { accessTier: result.accessTier } : {}),
+            })
+          }
           setStatus('success')
           setMessage('Email verified. Your Ionirix account is now active.')
           const destination = await resolveVerifiedRoute(pendingEmail)

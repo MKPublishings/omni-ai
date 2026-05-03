@@ -237,7 +237,7 @@ export function OnboardingPage() {
         dispatch({ type: 'SUBMIT_VERIFICATION_REQUIRED' })
         setVerificationNotice(result.verificationNotice)
         setVerificationUrl(result.verificationUrl ?? null)
-        router.push(`/verify-email?email=${encodeURIComponent(state.account.email.trim())}`)
+        router.push(result.verificationUrl ?? `/verify-email?email=${encodeURIComponent(state.account.email.trim())}`)
         return
       }
 

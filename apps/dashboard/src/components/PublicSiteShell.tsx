@@ -41,7 +41,7 @@ const companyItems = [
 const contactItems = [
   { label: 'General Inquiries', href: 'mailto:support@ionirix.net', value: 'support@ionirix.net' },
   { label: 'Security Reports', href: 'mailto:support@ionirix.net', value: 'support@ionirix.net' },
-  { label: 'Legal Notices', href: 'mailto:noreply@ionirix.com', value: 'noreply@ionirix.com' },
+  { label: 'Legal Notices', href: 'mailto:mail@ionirix.com', value: 'mail@ionirix.com' },
 ]
 
 export function PublicSiteShell({ title, subtitle, children, actions, footer, heroMeta }: PublicSiteShellProps) {

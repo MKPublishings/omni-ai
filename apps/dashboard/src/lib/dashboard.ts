@@ -240,6 +240,16 @@ async function fetchAuthorizedJson<T>(path: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
+async function fetchAuthorizedJsonWithInit<T>(path: string, init: RequestInit): Promise<T> {
+  const response = await authorizedFetch(getApiUrl(path), init)
+
+  if (!response.ok) {
+    throw new Error(`Request failed for ${path}: ${response.status}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
 async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Promise<T> {
   const response = await authorizedFetch(getApiUrl(path), init)
   const payload = await response.json().catch(() => ({}))
@@ -255,11 +265,27 @@ async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Prom
 }
 
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
-  return fetchAuthorizedJson('/api/auth/me')
+  return process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+    ? fetchAuthorizedJson('/api/auth/me')
+    : fetchAuthorizedJsonWithInit('/api/auth/me', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
 }
 
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
-  const payload = await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace')
+  const payload = process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+    ? await fetchAuthorizedJson<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace')
+    : await fetchAuthorizedJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
   return payload.workspace ?? null
 }
 

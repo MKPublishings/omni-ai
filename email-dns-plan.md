@@ -6,10 +6,10 @@ Current worker sender configuration:
 
 ```toml
 EMAIL_TRANSPORT = "resend"
-EMAIL_FROM = "noreply@ionirix.com"
+EMAIL_FROM = "mail@ionirix.com"
 ```
 
-Because the sender is `noreply@ionirix.com`, the Resend-verified sending domain must be `ionirix.com`.
+Because the sender is `mail@ionirix.com`, the Resend-verified sending domain must be `ionirix.com`.
 
 ## DNS Requirements
 
@@ -91,8 +91,8 @@ Current config in `wrangler.toml`:
 
 ```toml
 EMAIL_TRANSPORT = "resend"
-EMAIL_FROM = "noreply@ionirix.com"
-EMAIL_REPLY_TO = "mirnes@ionirix.com"
+EMAIL_FROM = "mail@ionirix.com"
+EMAIL_REPLY_TO = "mail@ionirix.com"
 ```
 
 The `RESEND_API_KEY` secret has already been uploaded to the Cloudflare Worker for this project.
@@ -129,7 +129,7 @@ If delivery fails, inspect the structured provider metadata already emitted by t
 
 Only one of these configurations should exist at a time:
 
-- Apex mode: `EMAIL_FROM = noreply@ionirix.com` with apex SPF, apex DKIM, apex DMARC
-- Subdomain mode: `EMAIL_FROM = noreply@subdomain.ionirix.com` with matching SPF, DKIM, and DMARC on that same subdomain
+- Apex mode: `EMAIL_FROM = mail@ionirix.com` with apex SPF, apex DKIM, apex DMARC
+- Subdomain mode: `EMAIL_FROM = mail@subdomain.ionirix.com` with matching SPF, DKIM, and DMARC on that same subdomain
 
 Do not mix apex SPF with subdomain DKIM or vice versa.

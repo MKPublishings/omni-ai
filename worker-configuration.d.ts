@@ -9,8 +9,8 @@ declare namespace Cloudflare {
 	interface Env {
 		ION_ENV: "production";
 		EMAIL_TRANSPORT: "resend";
-		EMAIL_FROM: "noreply@ionirix.com";
-		EMAIL_REPLY_TO: "mirnes@ionirix.com";
+        EMAIL_FROM: "mail@ionirix.com";
+        EMAIL_REPLY_TO: "mail@ionirix.com";
 		MAILCHANNELS_API_URL: "https://api.mailchannels.net/tx/v1/send";
 		OMNI_ENV: string;
 		OMNI_MEDIA_API_BASE_URL: string;
