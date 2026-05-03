@@ -1,4 +1,4 @@
-import { AuthUser, authorizedFetch, getApiUrl, getStoredToken } from './auth'
+import { AuthUser, authorizedFetch, getApiUrl, getStoredToken, getStoredUser } from './auth'
 
 export const LIVE_REFRESH_INTERVAL_MS = 120000
 
@@ -276,22 +276,38 @@ async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Prom
 
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
   if (!process.env.NEXT_PUBLIC_ION_API_URL?.trim()) {
-    return fetchAuthorizedLocalJsonWithInit('/api/auth/me', {
+    return fetchAuthorizedLocalJsonWithInit<{ user: AuthUser }>('/api/auth/me', {
       method: 'POST',
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache',
       },
+    }).catch(() => {
+      const storedUser = getStoredUser()
+      if (storedUser) {
+        return { user: storedUser }
+      }
+
+      throw new Error('Stored session user is unavailable.')
     })
   }
 
-  return fetchAuthorizedJson<{ user: AuthUser }>('/api/auth/me').catch(() => fetchAuthorizedLocalJsonWithInit<{ user: AuthUser }>('/api/auth/me', {
-    method: 'POST',
-    cache: 'no-store',
-    headers: {
-      'Cache-Control': 'no-cache',
-    },
-  }))
+  return fetchAuthorizedJson<{ user: AuthUser }>('/api/auth/me')
+    .catch(() => fetchAuthorizedLocalJsonWithInit<{ user: AuthUser }>('/api/auth/me', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    }))
+    .catch(() => {
+      const storedUser = getStoredUser()
+      if (storedUser) {
+        return { user: storedUser }
+      }
+
+      throw new Error('Stored session user is unavailable.')
+    })
 }
 
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
