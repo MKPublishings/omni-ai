@@ -2,7 +2,7 @@ import { forwardRef, HTMLAttributes, useState, useRef, useEffect, useImperativeH
 import { clsx } from 'clsx'
 import { Button } from './Button'
 import { ConversationSkeleton } from './Skeleton'
-import { ArrowDownIcon, ArrowUpIcon, AssistantSparkIcon, ContractCornersIcon, ExpandCornersIcon } from './icons'
+import { AssistantSparkIcon, ContractCornersIcon, ExpandCornersIcon } from './icons'
 
 interface Message {
   id: string
@@ -466,7 +466,9 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 aria-label="Scroll to bottom"
                 title="Scroll to bottom"
               >
-                <ArrowDownIcon className="h-5 w-5" />
+                <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
+                  ↓
+                </span>
               </Button>
               <Button
                 type="button"
@@ -525,7 +527,9 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
-                    <ArrowUpIcon className="h-5 w-5" />
+                    <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
+                      ↑
+                    </span>
                 </Button>
                 <Button
                   onClick={handleSend}
