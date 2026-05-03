@@ -2,6 +2,7 @@ import { forwardRef, HTMLAttributes, useState, useRef, useEffect, useImperativeH
 import { clsx } from 'clsx'
 import { Button } from './Button'
 import { ConversationSkeleton } from './Skeleton'
+import { ArrowDownIcon, ArrowUpIcon, AssistantSparkIcon, ContractCornersIcon, ExpandCornersIcon } from './icons'
 
 interface Message {
   id: string
@@ -448,9 +449,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
           <div className="chat-panel-header flex items-center justify-between border-b border-quantum-white/8 p-3 sm:p-4 lg:p-5">
             <div className="flex min-w-0 items-center space-x-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-spectral-cyan-500 sm:h-8 sm:w-8">
-                <svg className="w-4 h-4 text-pine-black-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+                <AssistantSparkIcon className="w-4 h-4 text-pine-black-900" />
               </div>
               <div className="min-w-0">
                 <h3 className="chat-app-title text-sm font-semibold text-quantum-white sm:text-lg">ION AI</h3>
@@ -467,9 +466,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 aria-label="Scroll to bottom"
                 title="Scroll to bottom"
               >
-                <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
-                  ↓
-                </span>
+                <ArrowDownIcon className="h-5 w-5" />
               </Button>
               <Button
                 type="button"
@@ -480,15 +477,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                 aria-label={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
                 title={isFullscreen ? 'Exit fullscreen chat' : 'Open fullscreen chat'}
               >
-                {isFullscreen ? (
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m16-5h-3m3 0v3M8 21H5a2 2 0 01-2-2v-3m16 5h-3a2 2 0 01-2-2v-3m5-8V5a2 2 0 00-2-2h-3M8 16v3a2 2 0 01-2 2H5" />
-                  </svg>
-                ) : (
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8 0h3a2 2 0 002-2v-3m0-8V5a2 2 0 00-2-2h-3" />
-                  </svg>
-                )}
+                {isFullscreen ? <ContractCornersIcon className="h-4 w-4" /> : <ExpandCornersIcon className="h-4 w-4" />}
                 <span className="hidden text-xs font-medium uppercase tracking-[0.18em] sm:inline">
                   {isFullscreen ? 'Exit' : 'Fullscreen'}
                 </span>
@@ -536,9 +525,7 @@ export const AIConversationPanel = forwardRef<HTMLDivElement, AIConversationPane
                   aria-label="Scroll to top"
                   title="Scroll to top"
                 >
-                  <span className="text-[1.35rem] font-semibold leading-none" aria-hidden="true">
-                    ↑
-                  </span>
+                    <ArrowUpIcon className="h-5 w-5" />
                 </Button>
                 <Button
                   onClick={handleSend}

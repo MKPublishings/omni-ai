@@ -1,6 +1,16 @@
 import Link from 'next/link'
 import { ReactNode, forwardRef, HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
+import {
+  AssistantSparkIcon,
+  ChevronRightIcon,
+  EventsPulseIcon,
+  LogoutGateIcon,
+  MoonArcIcon,
+  SearchOrbitIcon,
+  SunGridIcon,
+  ToolsStackIcon,
+} from './icons'
 
 interface CommandBarProps extends HTMLAttributes<HTMLDivElement> {
   searchValue?: string
@@ -78,14 +88,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full lg:hidden"
               onClick={onToggleNavigation}
             >
-              <svg
-                className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRightIcon className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')} />
             </button>
           )}
         </div>
@@ -100,9 +103,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               className="dashboard-search-input h-11 w-full rounded-2xl border px-12 text-center text-sm transition-all duration-quick ease-sovereign focus:outline-none focus:ring-2 focus:ring-ion-blue-500"
             />
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg className="h-4 w-4 text-[color:var(--dashboard-topbar-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <SearchOrbitIcon className="h-4 w-4 text-[color:var(--dashboard-topbar-muted)]" />
             </div>
           </div>
         </div>
@@ -117,14 +118,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
                 className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
                 onClick={onToggleNavigation}
               >
-                <svg
-                  className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRightIcon className={clsx('h-4 w-4 transition-transform duration-standard', navigationExpanded && 'rotate-180')} />
               </button>
             </div>
           )}
@@ -138,9 +132,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               title="Open assistant"
               className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+              <AssistantSparkIcon className="h-4 w-4" />
             </Link>
 
             <Link
@@ -149,9 +141,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               title="Open events"
               className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4.868 12.683A17.925 17.925 0 0112 21c7.962 0 12-1.21 12-2.683m-12 2.683a17.925 17.925 0 01-7.132-8.317M12 21c4.411 0 8-4.03 8-9s-3.589-9-8-9-8 4.03-8 9a9.06 9.06 0 001.832 5.683L4 21l4.868-2.317z" />
-              </svg>
+              <EventsPulseIcon className="h-4 w-4" />
             </Link>
 
             <Link
@@ -160,9 +150,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               title="Open tools"
               className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317a1 1 0 011.35-.936l7 3.5a1 1 0 010 1.788l-7 3.5A1 1 0 0110 11.276V4.724a1 1 0 01.325-.407zM5 6h2v12H5z" />
-              </svg>
+              <ToolsStackIcon className="h-4 w-4" />
             </Link>
 
             <button
@@ -173,13 +161,9 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               onClick={onToggleTheme}
             >
               {isDarkMode ? (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+                <SunGridIcon className="h-4 w-4" />
               ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646a9 9 0 1011.708 11.708z" />
-                </svg>
+                <MoonArcIcon className="h-4 w-4" />
               )}
             </button>
 
@@ -199,9 +183,7 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
               onClick={onLogout}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              <LogoutGateIcon className="h-4 w-4" />
             </button>
           </div>
         </div>

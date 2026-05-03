@@ -1,6 +1,7 @@
 import { forwardRef, HTMLAttributes, useEffect } from 'react'
 import { clsx } from 'clsx'
 import { Button } from './Button'
+import { CloseCrossIcon } from './icons'
 
 interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   isOpen: boolean
@@ -70,9 +71,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                 onClick={onClose}
                 className="h-10 w-10 shrink-0 rounded-full p-0 text-quantum-white/64 hover:text-quantum-white"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <CloseCrossIcon className="w-5 h-5" />
               </Button>
             </div>
           )}

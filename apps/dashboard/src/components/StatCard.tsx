@@ -1,5 +1,6 @@
 import { forwardRef, HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
+import { TrendDownIcon, TrendFlatIcon, TrendUpIcon } from './icons'
 
 type TrendDirection = 'up' | 'down' | 'neutral'
 
@@ -17,23 +18,11 @@ const TrendIcon = ({ direction }: { direction: TrendDirection }) => {
   const iconClass = "w-3 h-3"
   switch (direction) {
     case 'up':
-      return (
-        <svg className={clsx(iconClass, "text-green-400")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-        </svg>
-      )
+      return <TrendUpIcon className={clsx(iconClass, 'text-green-400')} />
     case 'down':
-      return (
-        <svg className={clsx(iconClass, "text-amber-signal-500")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      )
+      return <TrendDownIcon className={clsx(iconClass, 'text-amber-signal-500')} />
     case 'neutral':
-      return (
-        <svg className={clsx(iconClass, "text-quantum-white/40")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
-        </svg>
-      )
+      return <TrendFlatIcon className={clsx(iconClass, 'text-quantum-white/40')} />
   }
 }
 

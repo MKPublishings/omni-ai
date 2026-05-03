@@ -1,5 +1,6 @@
 import { forwardRef, HTMLAttributes, ReactNode, useState } from 'react'
 import { clsx } from 'clsx'
+import { EmptyDataIcon, SortChevronIcon } from './icons'
 
 interface Column<T> {
   key: keyof T | string
@@ -45,17 +46,12 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
       if (sortColumn !== columnKey) return null
 
       return (
-        <svg
+        <SortChevronIcon
           className={clsx(
-            "w-4 h-4 ml-1 transition-transform duration-quick",
-            sortDirection === 'desc' && "rotate-180"
+            'w-4 h-4 ml-1 transition-transform duration-quick',
+            sortDirection === 'desc' && 'rotate-180'
           )}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        </svg>
+        />
       )
     }
 
@@ -77,9 +73,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps<any>>(
       return (
         <div className="workspace-table-shell ix-glass-sovereign rounded-lg overflow-hidden">
           <div className="p-12 text-center">
-            <svg className="w-12 h-12 text-quantum-white/40 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <EmptyDataIcon className="w-12 h-12 text-quantum-white/40 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-quantum-white/60 mb-2">
               {emptyMessage}
             </h3>

@@ -1,5 +1,6 @@
 import { forwardRef, HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
+import { CloseCrossIcon } from './icons'
 
 interface NavigationRailProps extends HTMLAttributes<HTMLDivElement> {
   collapsed?: boolean
@@ -103,9 +104,7 @@ export const NavigationRail = forwardRef<HTMLDivElement, NavigationRailProps>(
               className="theme-nav-close inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/10 text-quantum-white/72 transition hover:bg-quantum-white/8 hover:text-quantum-white md:hidden"
               onClick={onRequestClose}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <CloseCrossIcon className="h-4 w-4" />
             </button>
           )}
         </div>

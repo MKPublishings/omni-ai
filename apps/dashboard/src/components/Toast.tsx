@@ -1,5 +1,6 @@
 import { forwardRef, HTMLAttributes, useEffect, useState } from 'react'
 import { clsx } from 'clsx'
+import { CloseCrossIcon, ErrorBadgeIcon, InfoBadgeIcon, SuccessSealIcon, WarningHexIcon } from './icons'
 
 type ToastType = 'info' | 'success' | 'warning' | 'error'
 
@@ -39,29 +40,13 @@ const ToastIcon = ({ type }: { type: ToastType }) => {
 
   switch (type) {
     case 'info':
-      return (
-        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      return <InfoBadgeIcon className={iconClass} />
     case 'success':
-      return (
-        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      return <SuccessSealIcon className={iconClass} />
     case 'warning':
-      return (
-        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-        </svg>
-      )
+      return <WarningHexIcon className={iconClass} />
     case 'error':
-      return (
-        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      return <ErrorBadgeIcon className={iconClass} />
   }
 }
 
@@ -123,9 +108,7 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(
               }}
               className="inline-flex text-quantum-white/40 hover:text-quantum-white transition-colors duration-quick"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+                <CloseCrossIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
