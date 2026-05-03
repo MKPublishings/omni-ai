@@ -152,6 +152,49 @@ export function getApiUrl(path: string): string {
   return `${configuredBase.replace(/\/+$/, '')}${normalizedPath}`;
 }
 
+function resolveSameOriginFallback(input: RequestInfo | URL): string | null {
+  const configuredBase = process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+  if (!configuredBase) {
+    return null
+  }
+
+  if (typeof input !== 'string' && !(input instanceof URL)) {
+    return null
+  }
+
+  try {
+    const configuredUrl = new URL(configuredBase)
+    const targetUrl = input instanceof URL
+      ? input
+      : new URL(input, typeof window !== 'undefined' ? window.location.origin : configuredUrl.origin)
+
+    if (targetUrl.origin !== configuredUrl.origin || !targetUrl.pathname.startsWith('/api/')) {
+      return null
+    }
+
+    return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`
+  } catch {
+    return null
+  }
+}
+
+async function fetchWithApiFallback(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init)
+  } catch (error) {
+    const fallbackInput = resolveSameOriginFallback(input)
+    if (!fallbackInput) {
+      throw error
+    }
+
+    return fetch(fallbackInput, init)
+  }
+}
+
+export function fetchApi(path: string, init?: RequestInit): Promise<Response> {
+  return fetchWithApiFallback(getApiUrl(path), init)
+}
+
 function safeJsonParse<T>(value: string | null): T | null {
   if (!value) {
     return null;
@@ -211,7 +254,7 @@ export async function authorizedFetch(input: RequestInfo | URL, init?: RequestIn
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  return fetch(input, { ...init, headers, credentials: init?.credentials || 'include' });
+  return fetchWithApiFallback(input, { ...init, headers, credentials: init?.credentials || 'include' });
 }
 
 export async function updateProfile(input: { displayName: string; username: string }): Promise<AuthUser> {
@@ -236,7 +279,7 @@ export async function updateProfile(input: { displayName: string; username: stri
 }
 
 export async function verifyEmailToken(token: string): Promise<VerifyEmailResponse> {
-  const response = await fetch(getApiUrl('/api/auth/verify-email'), {
+  const response = await fetchApi('/api/auth/verify-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -252,7 +295,7 @@ export async function verifyEmailToken(token: string): Promise<VerifyEmailRespon
 }
 
 export async function resendVerification(identifier: string): Promise<{ verificationUrl?: string | null; alreadyVerified?: boolean; verificationDelivery?: string; verificationEmailSent?: boolean; verificationEmailError?: string }> {
-  const response = await fetch(getApiUrl('/api/auth/resend-verification'), {
+  const response = await fetchApi('/api/auth/resend-verification', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

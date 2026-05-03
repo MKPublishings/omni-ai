@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { clearAuthSession, getApiUrl, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
+import { clearAuthSession, fetchApi, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
@@ -93,7 +93,7 @@ function LoginPageContent() {
         throw new Error('Passwords do not match')
       }
 
-      const response = await fetch(getApiUrl(mode === 'signup' ? '/api/auth/signup' : '/api/auth/login'), {
+      const response = await fetchApi(mode === 'signup' ? '/api/auth/signup' : '/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

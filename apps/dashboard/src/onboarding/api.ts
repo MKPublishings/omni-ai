@@ -1,4 +1,4 @@
-import { getApiUrl, storeAuthSession } from '@/lib/auth'
+import { fetchApi, storeAuthSession } from '@/lib/auth'
 import type { AccountDraft, PreferencesDraft, SignupResult, WorkspaceDraft, WorkspaceFormation } from './types'
 
 interface OnboardingProvisioningPayload {
@@ -32,7 +32,7 @@ interface SignupResponse {
 }
 
 export async function submitOnboardingAccount(account: AccountDraft, onboarding?: OnboardingProvisioningPayload): Promise<SignupResult> {
-  const response = await fetch(getApiUrl('/api/auth/signup'), {
+  const response = await fetchApi('/api/auth/signup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
