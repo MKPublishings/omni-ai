@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import '../ui/billing/billing.css'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
@@ -18,7 +19,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <ViewportLayoutController />
-        <AnalyticsProvider>{children}</AnalyticsProvider>
+        <Suspense fallback={children}>
+          <AnalyticsProvider>{children}</AnalyticsProvider>
+        </Suspense>
       </body>
     </html>
   )

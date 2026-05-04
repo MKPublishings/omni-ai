@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
@@ -417,7 +417,7 @@ async function parseAssistantResponse(response: Response) {
   }
 }
 
-export default function AssistantPage() {
+function AssistantPageContent() {
   const searchParams = useSearchParams()
   const [messages, setMessages] = useState<ConversationMessage[]>(() => readCachedMessages())
   const [isThinking, setIsThinking] = useState(false)
@@ -702,5 +702,13 @@ export default function AssistantPage() {
         />
       </div>
     </DashboardShell>
+  )
+}
+
+export default function AssistantPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-pine-black-900 px-[5%] py-4 text-sm text-quantum-white/68 sm:p-4">Loading assistant...</div>}>
+      <AssistantPageContent />
+    </Suspense>
   )
 }
