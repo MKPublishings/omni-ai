@@ -18,7 +18,10 @@
   ],
   "env": {
     "JWT_SECRET": "@ion-jwt-secret",
-    "ION_API_KEY": "@ion-api-key"
+    "ION_API_KEY": "@ion-api-key",
+    "NEXT_PUBLIC_AUTH0_DOMAIN": "ion-ai.us.auth0.com",
+    "NEXT_PUBLIC_AUTH0_CLIENT_ID": "tlXPaqF8p70rPlIbKkKyEOXXJPjenTxf",
+    "NEXT_PUBLIC_AUTH0_APP_ORIGIN": "https://ionirix.com"
   },
   "functions": {
     "apps/dashboard/src/app/api/**/*.ts": {
