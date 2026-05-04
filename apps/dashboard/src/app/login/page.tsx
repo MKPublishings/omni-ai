@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Auth0LoginPanel } from '@/components/Auth0LoginPanel'
 import { clearAuthSession, fetchApi, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { trackEvent } from '@/lib/analytics'
@@ -255,7 +256,7 @@ function LoginPageContent() {
               ? 'Create an account and move into your first guided prompt.'
               : 'Enter your credentials to get back into the workspace.'}
           </p>
-          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-quantum-white/42">Email sign-up is live. Social login entry points are config-ready for Google and X.</p>
+          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-quantum-white/42">Email auth is live. Auth0 Universal Login is wired client-side for the production origin.</p>
         </div>
 
         <div className="flex bg-quantum-white/5 rounded-md p-1 mb-6">
@@ -300,6 +301,8 @@ function LoginPageContent() {
             Google and X login activate when their auth start URLs are configured for this deployment.
           </p>
         </div>
+
+        <Auth0LoginPanel />
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {mode === 'signup' && (

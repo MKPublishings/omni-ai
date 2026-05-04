@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import './globals.css'
 import '../ui/billing/billing.css'
 import { AnalyticsProvider } from '@/components/AnalyticsProvider'
+import { Auth0RuntimeProvider } from '@/components/Auth0RuntimeProvider'
 import { ViewportLayoutController } from '@/components/ViewportLayoutController'
 
 export const metadata: Metadata = {
@@ -20,7 +21,9 @@ export default function RootLayout({
       <body className="antialiased">
         <ViewportLayoutController />
         <Suspense fallback={children}>
-          <AnalyticsProvider>{children}</AnalyticsProvider>
+          <Auth0RuntimeProvider>
+            <AnalyticsProvider>{children}</AnalyticsProvider>
+          </Auth0RuntimeProvider>
         </Suspense>
       </body>
     </html>

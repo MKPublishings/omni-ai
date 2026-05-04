@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.16.2",
     "@ionirix/glass": "file:../../packages/glass",
     "@ionirix/tokens": "file:../../packages/tokens",
     "@types/jsonwebtoken": "^9.0.10",
