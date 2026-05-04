@@ -4,17 +4,11 @@ import Link from 'next/link'
 import { useSiteAuthState } from '@/lib/site-auth'
 
 export function PublicAuthControls() {
-  const { authResolved, isSiteAuthenticated, sessionUser, signOut } = useSiteAuthState()
+  const { hasWorkspaceSession, isSiteAuthenticated, sessionUser, signOut } = useSiteAuthState()
 
-  if (!authResolved) {
-    return (
-      <span className="rounded-full border border-quantum-white/10 px-3 py-2 text-[13px] text-quantum-white/46 sm:text-sm">
-        Loading
-      </span>
-    )
-  }
+  const shouldShowSignedInState = Boolean(sessionUser && (isSiteAuthenticated || hasWorkspaceSession))
 
-  if (!isSiteAuthenticated) {
+  if (!shouldShowSignedInState) {
     return (
       <>
         <Link href="/login?next=%2Fworkspace" className="rounded-full px-3 py-2 text-[13px] transition hover:bg-quantum-white/8 hover:text-quantum-white sm:text-sm">

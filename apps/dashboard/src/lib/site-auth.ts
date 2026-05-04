@@ -134,7 +134,7 @@ export function useSiteAuthState() {
     }
   }, [auth0User, getAccessTokenSilently, needsAuth0SessionSync, user])
 
-  const sessionUser = isSiteAuthenticated ? localSession.user : null
+  const sessionUser = hasWorkspaceSession ? localSession.user : null
 
   const signOut = async () => {
     clearAuthSession()
