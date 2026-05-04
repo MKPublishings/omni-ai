@@ -46,24 +46,24 @@ export function Auth0LoginPanel() {
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-spectral-cyan-500/18 bg-spectral-cyan-500/[0.06] p-4 text-sm text-quantum-white">
+    <div className="rounded-3xl border border-spectral-cyan-500/20 bg-spectral-cyan-500/[0.08] p-5 text-sm text-quantum-white shadow-[0_0_0_1px_rgba(92,246,255,0.02)] sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-spectral-cyan-300/80">Auth0 SDK</p>
-          <h2 className="mt-2 text-base font-semibold text-quantum-white">Universal Login</h2>
+          <p className="text-xs uppercase tracking-[0.22em] text-spectral-cyan-300/80">Primary Sign In</p>
+          <h2 className="mt-2 text-xl font-semibold text-quantum-white">Continue with Auth0</h2>
         </div>
         <span className="rounded-full border border-spectral-cyan-400/20 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-spectral-cyan-200/80">
-          Client-side
+          Universal Login
         </span>
       </div>
 
       <p className="mt-3 text-quantum-white/68">
-        Auth0 is configured for {auth0ClientConfig.appOrigin}. This integration uses the official React SDK and returns to the configured production origin before routing back into this login screen.
+        Use the hosted Auth0 flow for the cleanest sign-in and sign-up path.
       </p>
 
       {!isConfiguredOrigin ? (
         <p className="mt-3 rounded-xl border border-amber-signal-500/20 bg-amber-signal-500/10 px-3 py-2 text-amber-signal-500">
-          This origin is {currentOrigin || 'not available yet'}. The current Auth0 application only allows {auth0ClientConfig.appOrigin}, so local login will redirect back to production.
+          This page is running on {currentOrigin || 'an unknown origin'}. Auth0 is currently allowed only on {auth0ClientConfig.appOrigin}, so authentication will return there.
         </p>
       ) : null}
 
@@ -76,14 +76,14 @@ export function Auth0LoginPanel() {
       {isAuthenticated ? (
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-quantum-white/72">
-            Auth0 session active for <span className="font-medium text-quantum-white">{user?.email || user?.name || 'your account'}</span>.
+            Signed in as <span className="font-medium text-quantum-white">{user?.email || user?.name || 'your account'}</span>.
           </p>
           <button
             type="button"
             onClick={handleLogout}
             className="inline-flex min-h-[2.75rem] items-center justify-center rounded-full border border-quantum-white/14 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8"
           >
-            Log out from Auth0
+            Log out
           </button>
         </div>
       ) : (
@@ -92,17 +92,17 @@ export function Auth0LoginPanel() {
             type="button"
             onClick={handleSignup}
             disabled={areActionsDisabled}
-            className="inline-flex min-h-[2.75rem] items-center justify-center rounded-full bg-spectral-cyan-500 px-4 py-2 text-sm font-medium text-pine-black-900 transition hover:bg-spectral-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[3rem] items-center justify-center rounded-full bg-spectral-cyan-500 px-4 py-2 text-sm font-medium text-pine-black-900 transition hover:bg-spectral-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isLoading ? 'Loading Auth0...' : 'Sign up with Auth0'}
+            {isLoading ? 'Loading...' : 'Create account'}
           </button>
           <button
             type="button"
             onClick={handleLogin}
             disabled={areActionsDisabled}
-            className="inline-flex min-h-[2.75rem] items-center justify-center rounded-full border border-quantum-white/14 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-quantum-white/14 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isLoading ? 'Loading Auth0...' : 'Log in with Auth0'}
+            {isLoading ? 'Loading...' : 'Sign in'}
           </button>
         </div>
       )}

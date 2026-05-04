@@ -7,7 +7,6 @@ import { Auth0LoginPanel } from '@/components/Auth0LoginPanel'
 import { clearAuthSession, fetchApi, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { trackEvent } from '@/lib/analytics'
-import { getSocialProviderLinks } from '@/lib/social-auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -99,14 +98,20 @@ function LoginPageContent() {
   const [verificationNotice, setVerificationNotice] = useState('')
   const [verificationUrl, setVerificationUrl] = useState('')
   const [showUsernameField, setShowUsernameField] = useState(false)
+  const [showEmailFallback, setShowEmailFallback] = useState(false)
   const router = useRouter()
   const suggestedUsername = useMemo(() => buildSuggestedUsername(displayName, email), [displayName, email])
   const resolvedUsername = (showUsernameField ? username : suggestedUsername).trim().toLowerCase()
-  const socialProviders = useMemo(() => getSocialProviderLinks(nextPath), [nextPath])
 
   useEffect(() => {
     setMode(requestedMode)
   }, [requestedMode])
+
+  useEffect(() => {
+    if (error || verificationNotice) {
+      setShowEmailFallback(true)
+    }
+  }, [error, verificationNotice])
 
   // Check if already authenticated
   useEffect(() => {
@@ -251,15 +256,32 @@ function LoginPageContent() {
             <AssistantSparkIcon className="w-8 h-8 text-pine-black-900" />
           </div>
           <h1 className="text-2xl font-bold text-quantum-white mb-2">ION AI Dashboard</h1>
-          <p className="text-quantum-white/64">
-            {mode === 'signup'
-              ? 'Create an account and move into your first guided prompt.'
-              : 'Enter your credentials to get back into the workspace.'}
+          <p className="mx-auto max-w-md text-quantum-white/64">
+            Sign in or create your account with the hosted Auth0 flow. Email credentials are still available as a fallback.
           </p>
-          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-quantum-white/42">Email auth is live. Auth0 Universal Login is wired client-side for the production origin.</p>
         </div>
 
-        <div className="flex bg-quantum-white/5 rounded-md p-1 mb-6">
+        <Auth0LoginPanel />
+
+        <div className="mt-5 rounded-2xl border border-quantum-white/10 bg-quantum-white/[0.02] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-medium text-quantum-white">Use email instead</h2>
+              <p className="mt-1 text-xs text-quantum-white/46">Fallback for the legacy dashboard login.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEmailFallback((current) => !current)}
+              className="rounded-full border border-quantum-white/14 px-3 py-1.5 text-xs font-medium text-quantum-white/72 transition hover:bg-quantum-white/8 hover:text-quantum-white"
+            >
+              {showEmailFallback ? 'Hide' : 'Show'}
+            </button>
+          </div>
+        </div>
+
+        {showEmailFallback ? (
+        <>
+        <div className="mt-5 flex bg-quantum-white/5 rounded-md p-1 mb-6">
           <button
             type="button"
             className={`flex-1 rounded-sm py-2 text-sm transition-colors ${mode === 'login' ? 'bg-ion-blue-500 text-quantum-white' : 'text-quantum-white/64 hover:text-quantum-white'}`}
@@ -275,34 +297,6 @@ function LoginPageContent() {
             Sign Up
           </button>
         </div>
-
-        <div className="mb-6 space-y-3">
-          {socialProviders.map((provider) => provider.enabled && provider.href ? (
-            <Link
-              key={provider.id}
-              href={provider.href}
-              className="flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-quantum-white/12 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8"
-              data-analytics-event={`social_${provider.id}_clicked`}
-              data-analytics-location="login-form"
-            >
-              {provider.label}
-            </Link>
-          ) : (
-            <button
-              key={provider.id}
-              type="button"
-              disabled
-              className="flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-quantum-white/8 bg-quantum-white/[0.02] px-4 py-2 text-sm font-medium text-quantum-white/42"
-            >
-              {provider.label}
-            </button>
-          ))}
-          <p className="text-center text-xs text-quantum-white/40">
-            Google and X login activate when their auth start URLs are configured for this deployment.
-          </p>
-        </div>
-
-        <Auth0LoginPanel />
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {mode === 'signup' && (
@@ -411,10 +405,12 @@ function LoginPageContent() {
                 : 'Access ION AI'}
           </Button>
         </form>
+        </>
+        ) : null}
 
         <div className="mt-8 text-center">
           <p className="text-quantum-white/40 text-sm">
-            Email sign-up is enabled. Passwords require at least 8 characters with a letter and a number.
+            Auth0 is the recommended path. Email credentials remain available for older accounts.
           </p>
           <p className="mt-3 text-sm text-quantum-white/56">
             Prefer guided setup? <Link href="/onboarding" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Open the onboarding flow</Link>
