@@ -5,7 +5,7 @@ import { PublicSiteShell } from '@/components/PublicSiteShell'
 export default function LandingPage() {
   return (
     <PublicSiteShell
-      title="Sovereign intelligence for operators who need speed, privacy, and continuity."
+      title="Sovereign intelligence for operators who need speed, precision, and total continuity."
       subtitle="Ion helps you move from first prompt to structured execution inside a private, persistent workspace built for serious work instead of disposable chat."
       heroMeta={
         <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/68 sm:justify-end">
