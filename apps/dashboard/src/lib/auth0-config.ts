@@ -5,6 +5,14 @@ function normalizeOrigin(value?: string | null): string {
   return String(value || '').trim().replace(/\/+$/, '')
 }
 
+function getRuntimeOrigin(): string {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return normalizeOrigin(window.location.origin)
+}
+
 export interface Auth0ClientConfig {
   appOrigin: string
   clientId: string
@@ -15,7 +23,10 @@ export interface Auth0ClientConfig {
 export function getAuth0ClientConfig(): Auth0ClientConfig {
   const domain = (process.env.NEXT_PUBLIC_AUTH0_DOMAIN || DEFAULT_AUTH0_DOMAIN).trim()
   const clientId = String(process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || '').trim()
-  const appOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_AUTH0_APP_ORIGIN) || DEFAULT_AUTH0_APP_ORIGIN
+  const appOrigin =
+    normalizeOrigin(process.env.NEXT_PUBLIC_AUTH0_APP_ORIGIN) ||
+    getRuntimeOrigin() ||
+    DEFAULT_AUTH0_APP_ORIGIN
 
   return {
     appOrigin,
