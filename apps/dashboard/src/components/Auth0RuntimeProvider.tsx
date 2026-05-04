@@ -14,6 +14,14 @@ export function Auth0RuntimeProvider({ children }: { children: React.ReactNode }
     return <>{children}</>
   }
 
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin.replace(/\/+$/, '')
+
+    if (currentOrigin !== auth0ClientConfig.appOrigin) {
+      return <>{children}</>
+    }
+  }
+
   const handleRedirectCallback = (appState?: AppState) => {
     router.replace(appState?.returnTo || '/')
   }
