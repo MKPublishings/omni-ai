@@ -74,7 +74,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
           <header className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:items-end">
             <div>
               <p className="theme-public-eyebrow text-sm font-semibold uppercase tracking-[0.28em] text-spectral-cyan-400">Public entry</p>
-              <h1 className="theme-public-title mt-4 max-w-4xl text-[2.15rem] font-bold leading-tight text-quantum-white sm:text-4xl md:text-5xl lg:text-6xl">{title}</h1>
+              <h1 className="theme-public-title mt-4 max-w-5xl text-[2.45rem] font-extrabold leading-[0.98] tracking-[-0.03em] text-quantum-white sm:text-[3.2rem] md:text-[4.25rem] lg:text-[5.25rem]">{title}</h1>
               <p className="theme-public-subtitle mt-4 max-w-3xl text-sm leading-6 text-quantum-white/72 sm:mt-5 sm:text-base sm:leading-7 md:text-lg">{subtitle}</p>
             </div>
 
