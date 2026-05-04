@@ -57,7 +57,7 @@ export function Auth0LoginPanel({ nextPath = '/workspace' }: { nextPath?: string
       </div>
 
       <p className="mt-3 text-quantum-white/68">
-        Use the hosted Auth0 flow for the cleanest sign-in and sign-up path.
+        Use the hosted Auth0 flow for sign-in, sign-up, and Google account access.
       </p>
 
       {!isConfiguredOrigin ? (
