@@ -20,6 +20,7 @@ const publicLinks = [
   { href: '/capabilities', label: 'Capabilities' },
   { href: '/architecture', label: 'Architecture' },
   { href: '/roadmap', label: 'Roadmap' },
+  { href: '/privacy', label: 'Privacy Policy' },
 ]
 
 const legalItems = [
