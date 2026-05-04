@@ -21,9 +21,14 @@ function getRandomResponse() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { message, mode = 'analysis' } = body
+    const latestMessage = typeof body?.message === 'string'
+      ? body.message
+      : Array.isArray(body?.messages)
+        ? [...body.messages].reverse().find((entry) => entry?.role === 'user' && typeof entry?.content === 'string')?.content
+        : ''
+    const mode = typeof body?.mode === 'string' ? body.mode : 'analysis'
 
-    if (!message) {
+    if (!latestMessage) {
       return NextResponse.json(
         { error: 'Message is required' },
         { status: 400 }
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
         response = `Routing analysis reveals: ${getRandomResponse()}`
         break
       default:
-        response = getRandomResponse()
+        response = `Prompt received: ${latestMessage.slice(0, 160)}\n\n${getRandomResponse()}`
     }
 
     return NextResponse.json({

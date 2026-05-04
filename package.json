@@ -32,6 +32,7 @@
     "smoke:premium-phase": "node ./scripts/smoke/premiumPhaseRouteSmoke.js",
     "smoke:chat-policy": "node ./scripts/smoke/chatPromptPolicySmoke.js",
     "smoke:chat-image-intent": "node ./scripts/smoke/chatImageIntentSmoke.js",
+    "validate:dashboard-api": "node ./scripts/tools/checkDashboardApiBase.js",
     "bench:chat-latency": "node ./scripts/bench/chatLatency.js",
     "smoke:policy-lockstep": "node ./scripts/smoke/policyLockstepSmoke.js",
     "validate:engine": "node ./ION-image-engine/utils/validator.js",

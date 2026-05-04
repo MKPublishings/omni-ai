@@ -65,6 +65,69 @@ interface WorkerEnv {
   STRIPE_CHECKOUT_CANCEL_URL?: string;
 }
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://ionirix.com',
+  'https://www.ionirix.com',
+];
+
+function buildAllowedOrigins(env: WorkerEnv): Set<string> {
+  const allowedOrigins = new Set(DEFAULT_ALLOWED_ORIGINS);
+  const appBaseUrl = String(env.APP_BASE_URL || '').trim();
+
+  if (appBaseUrl) {
+    try {
+      allowedOrigins.add(new URL(appBaseUrl).origin);
+    } catch {
+      // Ignore invalid APP_BASE_URL values and fall back to defaults.
+    }
+  }
+
+  return allowedOrigins;
+}
+
+function resolveCorsOrigin(request: Request, env: WorkerEnv): string | null {
+  const origin = request.headers.get('Origin');
+  if (!origin) {
+    return null;
+  }
+
+  return buildAllowedOrigins(env).has(origin) ? origin : null;
+}
+
+function buildCorsHeaders(request: Request, env: WorkerEnv): Headers {
+  const headers = new Headers({
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cache-Control, X-Requested-With, X-ION-Session-Id',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  });
+
+  const allowedOrigin = resolveCorsOrigin(request, env);
+  if (allowedOrigin) {
+    headers.set('Access-Control-Allow-Origin', allowedOrigin);
+    headers.set('Access-Control-Allow-Credentials', 'true');
+  } else {
+    headers.set('Access-Control-Allow-Origin', '*');
+  }
+
+  return headers;
+}
+
+function applyCorsHeaders(response: Response, request: Request, env: WorkerEnv): Response {
+  const headers = new Headers(response.headers);
+  buildCorsHeaders(request, env).forEach((value, key) => {
+    headers.set(key, value);
+  });
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 function isHtmlNavigationRequest(request: Request, url: URL): boolean {
   if (!['GET', 'HEAD'].includes(request.method.toUpperCase())) {
     return false;
@@ -132,11 +195,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: buildCorsHeaders(request, env),
     });
   }
 
@@ -403,7 +462,8 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   });
 
   // Dispatch request through router
-  return applyIonGateway(request, ionWorkerEnv as any, (gatewayRequest) => router.handle(gatewayRequest, env, ctx));
+  const response = await applyIonGateway(request, ionWorkerEnv as any, (gatewayRequest) => router.handle(gatewayRequest, env, ctx));
+  return url.pathname.startsWith('/api/') ? applyCorsHeaders(response, request, env) : response;
 }
 
 /**

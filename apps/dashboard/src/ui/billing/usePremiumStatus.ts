@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { authorizedFetch, getApiUrl } from '@/lib/auth'
+import { authorizedFetch, getApiUrl, shouldPreferSameOriginApi } from '@/lib/auth'
 
 export type BillingInterval = 'month' | 'year'
 
@@ -152,19 +152,26 @@ export function usePremiumStatus(options: UsePremiumStatusOptions = {}): Premium
       }
 
       try {
+        const requestInit: RequestInit = shouldPreferSameOriginApi()
+          ? {
+              method: 'POST',
+              cache: 'no-store',
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+              },
+              body: JSON.stringify({}),
+            }
+          : {
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache',
+              },
+            }
+
         const [entitlementsResponse, billingResponse] = await Promise.all([
-          authorizedFetch(getApiUrl('/api/account/entitlements/me'), {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache',
-            },
-          }),
-          authorizedFetch(getApiUrl('/api/billing/subscription'), {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache',
-            },
-          }),
+          authorizedFetch(getApiUrl('/api/account/entitlements/me'), requestInit),
+          authorizedFetch(getApiUrl('/api/billing/subscription'), requestInit),
         ])
 
         if (entitlementsResponse.status === 401 || billingResponse.status === 401) {

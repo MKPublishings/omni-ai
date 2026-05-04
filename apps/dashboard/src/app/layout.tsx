@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '../ui/billing/billing.css'
+import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import { ViewportLayoutController } from '@/components/ViewportLayoutController'
 
 export const metadata: Metadata = {
   title: 'Ionirix',
-  description: 'Sovereign Design System for Ionirix LLC',
+  description: 'Ion is a sovereign intelligence workspace for operators who need private, persistent, high-context execution.',
 }
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <ViewportLayoutController />
-        {children}
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   )

@@ -95,7 +95,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
               <div className="space-y-3 sm:space-y-4">
                 <p className="text-[10px] font-semibold text-quantum-white sm:text-sm">© 2026 Ionirix LLC. All rights reserved.</p>
                 <p className="max-w-xl leading-5 text-quantum-white/60 sm:leading-7">
-                  Ionirix is a sovereign intelligence architecture. All systems, interfaces, simulations, models, designs, and platform materials are the exclusive property of Ionirix LLC. Unauthorized reproduction, distribution, modification, or derivative use is strictly prohibited.
+                  Ion is built by Mirnes as a sovereign intelligence product under Ionirix LLC. Legal, privacy, and security controls stay visible here without taking over the page above the fold.
                 </p>
               </div>
 

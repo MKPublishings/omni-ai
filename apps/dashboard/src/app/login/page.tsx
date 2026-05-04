@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { clearAuthSession, fetchApi, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
+import { trackEvent } from '@/lib/analytics'
+import { getSocialProviderLinks } from '@/lib/social-auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -54,8 +56,38 @@ async function resolvePostAuthRoute(defaultPath: string, identifier?: string): P
   return defaultPath
 }
 
+function buildSuggestedUsername(displayName: string, email: string) {
+  const seed = (displayName || email.split('@')[0] || 'ion-operator')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^[._-]+|[._-]+$/g, '')
+
+  if (seed.length >= 3) {
+    return seed.slice(0, 32)
+  }
+
+  return `ion-${seed || 'user'}000`.slice(0, 32)
+}
+
+function appendNextParam(url: string, nextPath: string) {
+  try {
+    const resolved = new URL(url, window.location.origin)
+    if (nextPath) {
+      resolved.searchParams.set('next', nextPath)
+    }
+    return `${resolved.pathname}${resolved.search}`
+  } catch {
+    return url
+  }
+}
+
 function LoginPageContent() {
-  const [mode, setMode] = useState<AuthMode>('login')
+  const searchParams = useSearchParams()
+  const requestedMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  const nextPath = searchParams.get('next') || (requestedMode === 'signup' ? '/assistant?starter=Give%20me%20a%2060-second%20tour%20of%20ION%20and%20suggest%20my%20first%20three%20actions.' : '/workspace')
+  const [mode, setMode] = useState<AuthMode>(requestedMode)
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -65,9 +97,15 @@ function LoginPageContent() {
   const [error, setError] = useState('')
   const [verificationNotice, setVerificationNotice] = useState('')
   const [verificationUrl, setVerificationUrl] = useState('')
+  const [showUsernameField, setShowUsernameField] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const nextPath = searchParams.get('next') || '/workspace'
+  const suggestedUsername = useMemo(() => buildSuggestedUsername(displayName, email), [displayName, email])
+  const resolvedUsername = (showUsernameField ? username : suggestedUsername).trim().toLowerCase()
+  const socialProviders = useMemo(() => getSocialProviderLinks(nextPath), [nextPath])
+
+  useEffect(() => {
+    setMode(requestedMode)
+  }, [requestedMode])
 
   // Check if already authenticated
   useEffect(() => {
@@ -89,6 +127,10 @@ function LoginPageContent() {
     setError('')
 
     try {
+      if (mode === 'signup') {
+        trackEvent('signup_started', { surface: 'login-page' })
+      }
+
       if (mode === 'signup' && password !== confirmPassword) {
         throw new Error('Passwords do not match')
       }
@@ -100,7 +142,7 @@ function LoginPageContent() {
         },
         body: JSON.stringify(
           mode === 'signup'
-            ? { email, password, displayName, username }
+            ? { email, password, displayName, username: resolvedUsername }
             : { identifier: email, password }
         ),
       })
@@ -120,11 +162,18 @@ function LoginPageContent() {
           )
           setVerificationUrl(data.verificationUrl || '')
         }
+        if (mode === 'signup' && /username/i.test(String(data.error || ''))) {
+          setShowUsernameField(true)
+        }
         throw new Error(data.error || 'Login failed')
       }
 
       if (data.verificationRequired) {
         clearAuthSession()
+        trackEvent('signup_completed', {
+          surface: 'login-page',
+          verification_required: true,
+        })
         setVerificationNotice(
           buildVerificationDeliveryNotice({
             sent: Boolean(data.verificationEmailSent),
@@ -134,12 +183,23 @@ function LoginPageContent() {
             fallbackMessage: 'Account created, but verification email delivery failed. Use the verification link below before signing in.',
           })
         )
-        setVerificationUrl(data.verificationUrl || '')
+        const verificationRoute = data.verificationUrl ? appendNextParam(data.verificationUrl, nextPath) : ''
+        setVerificationUrl(verificationRoute)
+        if (verificationRoute && data.verificationEmailSent === false) {
+          router.push(verificationRoute)
+          return
+        }
         setMode('login')
         return
       }
 
       storeAuthSession(data)
+      if (mode === 'signup') {
+        trackEvent('signup_completed', {
+          surface: 'login-page',
+          verification_required: false,
+        })
+      }
       const destination = await resolvePostAuthRoute(nextPath, email)
       router.push(destination)
 
@@ -192,9 +252,10 @@ function LoginPageContent() {
           <h1 className="text-2xl font-bold text-quantum-white mb-2">ION AI Dashboard</h1>
           <p className="text-quantum-white/64">
             {mode === 'signup'
-              ? 'Create your email account to access the system'
-              : 'Enter your email credentials to access the system'}
+              ? 'Create an account and move into your first guided prompt.'
+              : 'Enter your credentials to get back into the workspace.'}
           </p>
+          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-quantum-white/42">Email sign-up is live. Social login entry points are config-ready for Google and X.</p>
         </div>
 
         <div className="flex bg-quantum-white/5 rounded-md p-1 mb-6">
@@ -214,12 +275,38 @@ function LoginPageContent() {
           </button>
         </div>
 
+        <div className="mb-6 space-y-3">
+          {socialProviders.map((provider) => provider.enabled && provider.href ? (
+            <Link
+              key={provider.id}
+              href={provider.href}
+              className="flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-quantum-white/12 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8"
+              data-analytics-event={`social_${provider.id}_clicked`}
+              data-analytics-location="login-form"
+            >
+              {provider.label}
+            </Link>
+          ) : (
+            <button
+              key={provider.id}
+              type="button"
+              disabled
+              className="flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-quantum-white/8 bg-quantum-white/[0.02] px-4 py-2 text-sm font-medium text-quantum-white/42"
+            >
+              {provider.label}
+            </button>
+          ))}
+          <p className="text-center text-xs text-quantum-white/40">
+            Google and X login activate when their auth start URLs are configured for this deployment.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-5">
           {mode === 'signup' && (
             <div>
               <Input
                 type="text"
-                placeholder="Display name"
+                placeholder="Your name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
@@ -228,7 +315,7 @@ function LoginPageContent() {
             </div>
           )}
 
-          {mode === 'signup' && (
+          {mode === 'signup' && showUsernameField && (
             <div>
               <Input
                 type="text"
@@ -240,6 +327,12 @@ function LoginPageContent() {
               />
             </div>
           )}
+
+          {mode === 'signup' && !showUsernameField ? (
+            <div className="rounded-2xl border border-quantum-white/10 bg-quantum-white/[0.03] px-4 py-3 text-sm text-quantum-white/62">
+              Username reserved as <span className="font-medium text-quantum-white">{resolvedUsername || 'ion-operator'}</span>. You can change it later.
+            </div>
+          ) : null}
 
           <div>
             <Input
@@ -303,6 +396,8 @@ function LoginPageContent() {
             className="w-full"
             disabled={isLoading}
             glow
+            data-analytics-event={mode === 'signup' ? 'signup_submit_clicked' : 'login_submit_clicked'}
+            data-analytics-location="login-form"
           >
             {isLoading
               ? mode === 'signup'
@@ -316,7 +411,7 @@ function LoginPageContent() {
 
         <div className="mt-8 text-center">
           <p className="text-quantum-white/40 text-sm">
-            Email sign-up is enabled. Usernames can sign in too. Passwords require at least 8 characters with a letter and a number.
+            Email sign-up is enabled. Passwords require at least 8 characters with a letter and a number.
           </p>
           <p className="mt-3 text-sm text-quantum-white/56">
             Prefer guided setup? <Link href="/onboarding" className="text-spectral-cyan-400 transition hover:text-spectral-cyan-300">Open the onboarding flow</Link>

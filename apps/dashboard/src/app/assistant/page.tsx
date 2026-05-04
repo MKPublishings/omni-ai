@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { DashboardShell } from '@/components/DashboardShell'
 import { AIConversationPanel } from '@/components/AIConversationPanel'
-import { getApiUrl, getStoredToken } from '@/lib/auth'
+import { getApiTargetLabel, getApiUrl, getStoredToken, shouldPreferSameOriginApi } from '@/lib/auth'
+import { trackEvent } from '@/lib/analytics'
 import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
 
@@ -416,6 +418,7 @@ async function parseAssistantResponse(response: Response) {
 }
 
 export default function AssistantPage() {
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<ConversationMessage[]>(() => readCachedMessages())
   const [isThinking, setIsThinking] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
@@ -511,8 +514,36 @@ export default function AssistantPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (isLoadingHistory || isThinking) {
+      return
+    }
+
+    const starter = searchParams.get('starter')
+    if (!starter) {
+      return
+    }
+
+    const alreadyStarted = messages.some((message) => message.type === 'user')
+    if (alreadyStarted) {
+      return
+    }
+
+    const startedKey = `ion-assistant-starter:${starter}`
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem(startedKey)) {
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(startedKey, '1')
+    }
+
+    void handleSendMessage(starter)
+  }, [isLoadingHistory, isThinking, messages, searchParams])
+
   const handleSendMessage = async (message: string) => {
     const now = Date.now()
+    const nonWelcomeCount = messages.filter((entry) => entry.id !== 'welcome').length
     const userMessage: ConversationMessage = {
       id: `${now}`,
       type: 'user',
@@ -521,6 +552,12 @@ export default function AssistantPage() {
     }
     const assistantMessageId = `${now}-reply`
 
+    if (nonWelcomeCount === 0) {
+      trackEvent('first_message_sent', {
+        surface: 'assistant',
+      })
+    }
+
     setMessages((current) => [...current, userMessage])
     setIsThinking(true)
 
@@ -528,8 +565,12 @@ export default function AssistantPage() {
       const token = getStoredToken()
       const imageRequest = isImagePrompt(message)
       const groundedInternetQuery = !imageRequest && requiresInternetGrounding(message)
-      const ionPath = groundedInternetQuery ? '/api/ION' : '/api/ION?fast=true'
-      const response = await fetch(getApiUrl(imageRequest ? '/api/image' : ionPath), {
+      const ionPath = shouldPreferSameOriginApi()
+        ? groundedInternetQuery ? '/api/ion' : '/api/ion?fast=true'
+        : groundedInternetQuery ? '/api/ION' : '/api/ION?fast=true'
+      const requestPath = imageRequest ? '/api/image' : ionPath
+      const apiTargetLabel = getApiTargetLabel(requestPath)
+      const response = await fetch(getApiUrl(requestPath), {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -634,7 +675,7 @@ export default function AssistantPage() {
         {
           id: `${Date.now()}-error`,
           type: 'ai',
-          content: 'The assistant could not reach the live Worker endpoint.',
+          content: `ION could not reach ${getApiTargetLabel('/api/ION')}. Check NEXT_PUBLIC_ION_API_URL and worker DNS, then try again.`,
           timestamp: new Date(),
         },
       ])

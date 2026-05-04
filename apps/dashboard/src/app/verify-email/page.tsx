@@ -11,6 +11,13 @@ import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { clearWorkspaceFormation, loadWorkspaceFormation } from '@/onboarding'
 
 async function resolveVerifiedRoute(scopeHint?: string): Promise<string> {
+  if (typeof window !== 'undefined') {
+    const requestedRoute = new URLSearchParams(window.location.search).get('next')
+    if (requestedRoute) {
+      return requestedRoute
+    }
+  }
+
   try {
     const workspace = await fetchOnboardingWorkspace()
     if (workspace?.primaryRoute) {

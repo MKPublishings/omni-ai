@@ -1,4 +1,4 @@
-import type { DashboardOnboardingWorkspace, DashboardOnboardingWorkspaceInput } from './dashboard'
+import type { DashboardChatHistoryTurn, DashboardChatPreferences, DashboardOnboardingWorkspace, DashboardOnboardingWorkspaceInput } from './dashboard'
 import type { AuthResponse, AuthUser } from './auth'
 
 type StoredUser = AuthUser & {
@@ -27,6 +27,8 @@ type LocalAuthState = {
   sessions: StoredSession[]
   verifications: StoredVerification[]
   workspaces: Record<string, DashboardOnboardingWorkspace>
+  chatPreferences: Record<string, DashboardChatPreferences>
+  chatHistory: Record<string, DashboardChatHistoryTurn[]>
 }
 
 type JsonResult<T> = {
@@ -111,12 +113,22 @@ function seedState(): LocalAuthState {
         updatedAt: nowIso(),
       },
     },
+    chatPreferences: {},
+    chatHistory: {},
   }
 }
 
 function getState(): LocalAuthState {
   if (!globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__) {
     globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__ = seedState()
+  }
+
+  if (!globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__.chatPreferences) {
+    globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__.chatPreferences = {}
+  }
+
+  if (!globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__.chatHistory) {
+    globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__.chatHistory = {}
   }
 
   return globalThis.__ION_DASHBOARD_LOCAL_AUTH_STATE__
@@ -525,4 +537,151 @@ export async function provisionLocalWorkspace(request: Request, input: Dashboard
   state.workspaces[auth.user.id] = workspace
 
   return jsonResult({ workspace }, 201)
+}
+
+function getDefaultChatPreferences(): DashboardChatPreferences {
+  return {
+    persistHistory: true,
+    contextCarryover: true,
+    updatedAt: nowIso(),
+  }
+}
+
+function resolveUserChatPreferences(state: LocalAuthState, userId: string): DashboardChatPreferences {
+  const existing = state.chatPreferences[userId]
+  if (existing) {
+    return existing
+  }
+
+  const next = getDefaultChatPreferences()
+  state.chatPreferences[userId] = next
+  return next
+}
+
+function deriveAccessTier(user: StoredUser): string {
+  if (user.role === 'admin') {
+    return 'enterprise'
+  }
+
+  if (user.role === 'premium' || user.role === 'enterprise') {
+    return user.role
+  }
+
+  return 'free'
+}
+
+export async function getLocalEntitlements(request: Request): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  const accessTier = deriveAccessTier(auth.user)
+  const activeEntitlement = accessTier === 'free'
+    ? null
+    : {
+        id: `entitlement-${auth.user.id}`,
+        tier: accessTier,
+        status: 'active',
+        source: 'local-dev',
+        updated_at: nowIso(),
+      }
+
+  return jsonResult({
+    accessTier,
+    activeEntitlement,
+    entitlements: activeEntitlement ? [activeEntitlement] : [],
+  })
+}
+
+export async function getLocalBillingStatus(request: Request): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  return jsonResult({
+    customer: {
+      id: `customer-${auth.user.id}`,
+      provider: 'local-dev',
+      provider_customer_id: `local-${auth.user.id}`,
+      email: auth.user.email,
+      status: auth.user.emailVerified ? 'verified' : 'pending-verification',
+      updated_at: nowIso(),
+    },
+    subscriptions: [],
+    providerConfigured: false,
+    priceConfiguration: {
+      premiumMonthly: false,
+      premiumYearly: false,
+      enterpriseMonthly: false,
+      enterpriseYearly: false,
+    },
+    priceIds: {
+      premiumMonthly: null,
+      premiumYearly: null,
+      enterpriseMonthly: null,
+      enterpriseYearly: null,
+    },
+  })
+}
+
+export async function getLocalChatHistory(request: Request, limit = 120): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  const turns = Array.isArray(state.chatHistory[auth.user.id])
+    ? state.chatHistory[auth.user.id].slice(-Math.max(1, limit))
+    : []
+
+  return jsonResult({
+    turns,
+    preferences: resolveUserChatPreferences(state, auth.user.id),
+  })
+}
+
+export async function clearLocalChatHistory(request: Request): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  const deletedCount = Array.isArray(state.chatHistory[auth.user.id]) ? state.chatHistory[auth.user.id].length : 0
+  state.chatHistory[auth.user.id] = []
+
+  return jsonResult({ ok: true, deletedCount })
+}
+
+export async function getLocalChatSettings(request: Request): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  return jsonResult({ preferences: resolveUserChatPreferences(state, auth.user.id) })
+}
+
+export async function updateLocalChatSettings(request: Request, body: Partial<Pick<DashboardChatPreferences, 'persistHistory' | 'contextCarryover'>>): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const auth = getSessionAuth(state, request)
+  if (!auth) {
+    return jsonResult({ error: 'Invalid or expired session.' }, 401)
+  }
+
+  const current = resolveUserChatPreferences(state, auth.user.id)
+  const next: DashboardChatPreferences = {
+    persistHistory: body.persistHistory ?? current.persistHistory,
+    contextCarryover: body.contextCarryover ?? current.contextCarryover,
+    updatedAt: nowIso(),
+  }
+  state.chatPreferences[auth.user.id] = next
+
+  return jsonResult({ preferences: next })
 }

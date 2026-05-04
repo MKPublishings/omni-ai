@@ -29,6 +29,9 @@ export interface VerifyEmailResponse {
 
 const TOKEN_KEY = 'ion_token';
 const USER_KEY = 'ion_user';
+const API_TARGET_QUERY_PARAM = 'apiTarget';
+
+const LOCALHOST_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
 
 type StorageScopeSource = string | Pick<AuthUser, 'id' | 'email' | 'username'> | null | undefined;
 
@@ -141,9 +144,54 @@ function clearAuthCookie(): void {
   document.cookie = `${TOKEN_KEY}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
 }
 
+export function shouldPreferSameOriginApi(): boolean {
+  if (typeof window !== 'undefined') {
+    const isLocalhost = LOCALHOST_HOSTNAMES.has(window.location.hostname.toLowerCase());
+    if (isLocalhost) {
+      const requestedTarget = new URLSearchParams(window.location.search).get(API_TARGET_QUERY_PARAM)?.trim().toLowerCase();
+      if (requestedTarget === 'remote') {
+        return false;
+      }
+
+      if (requestedTarget === 'local') {
+        return true;
+      }
+    }
+
+    return isLocalhost;
+  }
+
+  return process.env.NODE_ENV !== 'production';
+}
+
+export function getConfiguredApiBaseUrl(): string | null {
+  const configuredBase = process.env.NEXT_PUBLIC_ION_API_URL?.trim() || '';
+  if (!configuredBase || shouldPreferSameOriginApi()) {
+    return null;
+  }
+
+  return configuredBase;
+}
+
+export function getApiTargetLabel(path?: string): string {
+  const configuredBase = getConfiguredApiBaseUrl();
+  if (!configuredBase) {
+    return 'the same-origin API';
+  }
+
+  try {
+    const target = path
+      ? new URL(path.startsWith('/') ? path : `/${path}`, configuredBase)
+      : new URL(configuredBase);
+    return target.origin;
+  } catch {
+    return configuredBase;
+  }
+}
+
 export function getApiUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const configuredBase = process.env.NEXT_PUBLIC_ION_API_URL?.trim();
+  const configuredBase = getConfiguredApiBaseUrl();
 
   if (!configuredBase) {
     return normalizedPath;
@@ -153,7 +201,7 @@ export function getApiUrl(path: string): string {
 }
 
 function resolveSameOriginFallback(input: RequestInfo | URL): string | null {
-  const configuredBase = process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+  const configuredBase = getConfiguredApiBaseUrl()
   if (!configuredBase) {
     return null
   }

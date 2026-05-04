@@ -1,4 +1,4 @@
-import { AuthUser, authorizedFetch, getApiUrl, getStoredToken, getStoredUser } from './auth'
+import { AuthUser, authorizedFetch, getApiUrl, getStoredToken, getStoredUser, shouldPreferSameOriginApi } from './auth'
 
 export const LIVE_REFRESH_INTERVAL_MS = 120000
 
@@ -275,7 +275,7 @@ async function fetchAuthorizedMutation<T>(path: string, init: RequestInit): Prom
 }
 
 export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
-  if (!process.env.NEXT_PUBLIC_ION_API_URL?.trim()) {
+  if (shouldPreferSameOriginApi()) {
     return fetchAuthorizedLocalJsonWithInit<{ user: AuthUser }>('/api/auth/me', {
       method: 'POST',
       cache: 'no-store',
@@ -311,7 +311,7 @@ export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
 }
 
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
-  const payload = !process.env.NEXT_PUBLIC_ION_API_URL?.trim()
+  const payload = shouldPreferSameOriginApi()
     ? await fetchAuthorizedLocalJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
         method: 'POST',
         cache: 'no-store',
@@ -420,6 +420,16 @@ export function getSimulationStreamUrl(simulationId: string): string {
 }
 
 export function fetchChatSettings(): Promise<{ preferences: DashboardChatPreferences }> {
+  if (shouldPreferSameOriginApi()) {
+    return fetchAuthorizedLocalJsonWithInit('/api/chat/settings', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
+  }
+
   return fetchAuthorizedJson('/api/chat/settings')
 }
 
@@ -434,6 +444,18 @@ export function updateChatSettings(input: Partial<Pick<DashboardChatPreferences,
 }
 
 export function fetchChatHistory(limit = 120): Promise<{ turns: DashboardChatHistoryTurn[]; preferences: DashboardChatPreferences }> {
+  if (shouldPreferSameOriginApi()) {
+    return fetchAuthorizedLocalJsonWithInit('/api/chat/history', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify({ limit }),
+    })
+  }
+
   return fetchAuthorizedJson(`/api/chat/history?limit=${limit}`)
 }
 
