@@ -4,12 +4,11 @@ import { useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
 import { getAuth0ClientConfig, getAuth0ReturnToUrl } from '@/lib/auth0-config'
 
-const auth0ClientConfig = getAuth0ClientConfig()
-const auth0ReturnToUrl = getAuth0ReturnToUrl()
-
 export function Auth0LoginPanel({ nextPath = '/workspace' }: { nextPath?: string }) {
   const { error, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
   const [currentOrigin, setCurrentOrigin] = useState('')
+  const auth0ClientConfig = getAuth0ClientConfig()
+  const auth0ReturnToUrl = getAuth0ReturnToUrl()
 
   useEffect(() => {
     setCurrentOrigin(window.location.origin.replace(/\/+$/, ''))

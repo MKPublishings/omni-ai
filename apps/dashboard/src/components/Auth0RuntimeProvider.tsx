@@ -4,11 +4,10 @@ import { Auth0Provider, type AppState } from '@auth0/auth0-react'
 import { useRouter } from 'next/navigation'
 import { getAuth0ClientConfig, getAuth0ReturnToUrl } from '@/lib/auth0-config'
 
-const auth0ClientConfig = getAuth0ClientConfig()
-const auth0ReturnToUrl = getAuth0ReturnToUrl()
-
 export function Auth0RuntimeProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const auth0ClientConfig = getAuth0ClientConfig()
+  const auth0ReturnToUrl = getAuth0ReturnToUrl()
 
   if (!auth0ClientConfig.enabled) {
     return <>{children}</>
