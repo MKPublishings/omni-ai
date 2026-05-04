@@ -6,16 +6,34 @@ export default function LandingPage() {
   return (
     <PublicSiteShell
       title="Sovereign intelligence for operators who need ionic speed, unmatched privacy, and total continuity."
-      subtitle="Ion gives you private, persistent workspace for serious work - not another disposable chat."
+      subtitle="Ion gives you a private, persistent workspace for serious work, not another disposable chat."
       heroMeta={
-        <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/68 sm:justify-end">
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-emerald-200">Live</span>
-          <span className="rounded-full border border-spectral-cyan-400/20 bg-spectral-cyan-500/10 px-3 py-1 text-spectral-cyan-100">Sovereign Intelligence</span>
-          <span className="rounded-full border border-quantum-white/10 bg-quantum-white/5 px-3 py-1 text-quantum-white/74">Built by Mirnes</span>
-        </div>
+        <>
+          <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-quantum-white/68 sm:justify-end">
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-emerald-200">Live</span>
+            <span className="rounded-full border border-spectral-cyan-400/20 bg-spectral-cyan-500/10 px-3 py-1 text-spectral-cyan-100">Sovereign Intelligence</span>
+            <span className="rounded-full border border-quantum-white/10 bg-quantum-white/5 px-3 py-1 text-quantum-white/74">Built by Mirnes</span>
+          </div>
+          <div className="w-full max-w-xl rounded-2xl border border-quantum-white/10 bg-quantum-white/[0.04] p-4 text-left sm:text-right">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-spectral-cyan-300">Public access</p>
+            <p className="mt-2 text-sm leading-6 text-quantum-white/72">
+              This is the public Ionirix homepage. No login is required to review what Ion is, how it works, pricing, or the legal pages.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
+              <Link href="/privacy" className="inline-flex items-center rounded-full border border-quantum-white/12 px-3 py-2 text-xs font-medium text-quantum-white transition hover:bg-quantum-white/8 sm:text-sm">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="inline-flex items-center rounded-full border border-quantum-white/12 px-3 py-2 text-xs font-medium text-quantum-white transition hover:bg-quantum-white/8 sm:text-sm">
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+        </>
       }
       actions={
         <>
+          <Link href="/platform" className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-spectral-cyan-400/20 bg-spectral-cyan-500/10 px-6 py-3 text-base text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16">Explore Platform</Link>
+          <Link href="/pricing" className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-quantum-white/12 px-6 py-3 text-base text-quantum-white transition hover:bg-quantum-white/8">View Pricing</Link>
           <Link
             href="/login?mode=signup&next=%2Fassistant%3Fstarter%3DGive%2520me%2520a%252060-second%2520tour%2520of%2520ION%2520and%2520suggest%2520my%2520first%2520three%2520actions."
             className="inline-flex min-h-[3rem] items-center justify-center rounded-full bg-ion-blue-500 px-6 py-3 text-base font-semibold text-quantum-white transition hover:bg-ion-blue-600"
@@ -32,7 +50,6 @@ export default function LandingPage() {
           >
             Access Dashboard
           </Link>
-          <Link href="/pricing" className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-spectral-cyan-400/20 bg-spectral-cyan-500/10 px-6 py-3 text-base text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16">View Pricing</Link>
         </>
       }
     >

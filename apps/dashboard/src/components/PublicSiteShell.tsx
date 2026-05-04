@@ -91,6 +91,18 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
 
         {footer ?? (
           <footer className="theme-public-footer border-t border-quantum-white/8 py-6 text-[10px] leading-5 text-quantum-white/56 sm:py-8 sm:text-sm sm:leading-6">
+            <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-quantum-white/70 sm:mb-8 sm:gap-3 sm:text-sm">
+              <span className="font-semibold uppercase tracking-[0.18em] text-quantum-white/42">Public legal links</span>
+              <Link href="/privacy" className="rounded-full border border-quantum-white/12 px-3 py-1.5 transition hover:bg-quantum-white/8 hover:text-quantum-white">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="rounded-full border border-quantum-white/12 px-3 py-1.5 transition hover:bg-quantum-white/8 hover:text-quantum-white">
+                Terms of Service
+              </Link>
+              <Link href="/cookie-settings" className="rounded-full border border-quantum-white/12 px-3 py-1.5 transition hover:bg-quantum-white/8 hover:text-quantum-white">
+                Cookie Settings
+              </Link>
+            </div>
             <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
               <div className="space-y-3 sm:space-y-4">
                 <p className="text-[10px] font-semibold text-quantum-white sm:text-sm">© 2026 Ionirix LLC. All rights reserved.</p>

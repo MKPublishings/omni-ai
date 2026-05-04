@@ -2,7 +2,6 @@
 
 import Script from 'next/script'
 import { ReactNode, useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { captureUtmAttribution, trackEvent, trackPageView } from '@/lib/analytics'
 
 interface AnalyticsProviderProps {
@@ -13,19 +12,46 @@ const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com'
 
+function trackCurrentLocation() {
+  const currentUrl = new URL(window.location.href)
+  const attribution = captureUtmAttribution(currentUrl.searchParams)
+  const path = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`
+
+  trackPageView(path, attribution)
+
+  if (currentUrl.pathname === '/') {
+    trackEvent('homepage_visit', attribution)
+  }
+}
+
 export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   useEffect(() => {
-    const attribution = captureUtmAttribution(new URLSearchParams(searchParams.toString()))
-    const path = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname
-    trackPageView(path, attribution)
+    const originalPushState = window.history.pushState
+    const originalReplaceState = window.history.replaceState
 
-    if (pathname === '/') {
-      trackEvent('homepage_visit', attribution)
+    const handleNavigation = () => {
+      trackCurrentLocation()
     }
-  }, [pathname, searchParams])
+
+    window.history.pushState = function pushState(...args) {
+      originalPushState.apply(this, args)
+      handleNavigation()
+    }
+
+    window.history.replaceState = function replaceState(...args) {
+      originalReplaceState.apply(this, args)
+      handleNavigation()
+    }
+
+    window.addEventListener('popstate', handleNavigation)
+    trackCurrentLocation()
+
+    return () => {
+      window.history.pushState = originalPushState
+      window.history.replaceState = originalReplaceState
+      window.removeEventListener('popstate', handleNavigation)
+    }
+  }, [])
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
