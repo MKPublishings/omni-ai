@@ -9,6 +9,7 @@ import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser, fetchOnboardingWorkspace, type DashboardOnboardingWorkspace } from '@/lib/dashboard'
+import { useSiteAuthState } from '@/lib/site-auth'
 import { GlassCard } from './GlassCard'
 import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 import { sortRoutesByWorkspaceIntent, summarizeWorkspaceIntent } from '@/lib/workspace-shell'
@@ -134,6 +135,7 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const pathname = usePathname()
   const router = useRouter()
   const premium = usePremiumStatus()
+  const { authResolved, hasWorkspaceSession, isSiteAuthenticated, sessionUser, signOut } = useSiteAuthState()
   const [navCollapsed, setNavCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
@@ -176,6 +178,21 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   useEffect(() => {
     setLocalFormation(loadWorkspaceFormation())
 
+    if (!authResolved) {
+      return
+    }
+
+    if (!hasWorkspaceSession) {
+      if (!isSiteAuthenticated || !sessionUser) {
+        router.push('/login')
+        return
+      }
+
+      setUser(sessionUser)
+      setWorkspace(null)
+      return
+    }
+
     const bootstrap = async () => {
       const token = getStoredToken()
 
@@ -192,13 +209,19 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
         setUser(payload.user)
         setWorkspace(nextWorkspace)
       } catch {
+        if (sessionUser) {
+          setUser(sessionUser)
+          setWorkspace(null)
+          return
+        }
+
         clearAuthSession()
         router.push('/login')
       }
     }
 
     bootstrap()
-  }, [router])
+  }, [authResolved, hasWorkspaceSession, isSiteAuthenticated, router, sessionUser])
 
   useEffect(() => {
     if (isMobileViewport) {
@@ -244,8 +267,9 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const shellLayout = useMemo(() => buildDashboardShellLayoutClasses(shellArrangement), [shellArrangement])
 
   const handleLogout = () => {
-    clearAuthSession()
-    router.push('/login')
+    void signOut().finally(() => {
+      router.push('/login')
+    })
   }
 
   const handleToggleTheme = () => {

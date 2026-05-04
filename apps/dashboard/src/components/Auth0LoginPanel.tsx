@@ -7,7 +7,7 @@ import { getAuth0ClientConfig, getAuth0ReturnToUrl } from '@/lib/auth0-config'
 const auth0ClientConfig = getAuth0ClientConfig()
 const auth0ReturnToUrl = getAuth0ReturnToUrl()
 
-export function Auth0LoginPanel() {
+export function Auth0LoginPanel({ nextPath = '/workspace' }: { nextPath?: string }) {
   const { error, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
   const [currentOrigin, setCurrentOrigin] = useState('')
 
@@ -20,7 +20,7 @@ export function Auth0LoginPanel() {
 
   const handleSignup = async () => {
     await loginWithRedirect({
-      appState: { returnTo: '/login?mode=signup' },
+      appState: { returnTo: nextPath },
       authorizationParams: {
         redirect_uri: auth0ReturnToUrl,
         screen_hint: 'signup',
@@ -30,7 +30,7 @@ export function Auth0LoginPanel() {
 
   const handleLogin = async () => {
     await loginWithRedirect({
-      appState: { returnTo: '/login?mode=login' },
+      appState: { returnTo: nextPath },
       authorizationParams: {
         redirect_uri: auth0ReturnToUrl,
       },
@@ -46,8 +46,8 @@ export function Auth0LoginPanel() {
   }
 
   return (
-    <div className="rounded-3xl border border-spectral-cyan-500/20 bg-spectral-cyan-500/[0.08] p-5 text-sm text-quantum-white shadow-[0_0_0_1px_rgba(92,246,255,0.02)] sm:p-6">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-3xl border border-spectral-cyan-500/16 bg-gradient-to-br from-spectral-cyan-500/[0.08] to-ion-blue-500/[0.05] p-5 text-sm text-quantum-white sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-spectral-cyan-300/80">Primary Sign In</p>
           <h2 className="mt-2 text-xl font-semibold text-quantum-white">Continue with Auth0</h2>
@@ -92,7 +92,7 @@ export function Auth0LoginPanel() {
             type="button"
             onClick={handleSignup}
             disabled={areActionsDisabled}
-            className="inline-flex min-h-[3rem] items-center justify-center rounded-full bg-spectral-cyan-500 px-4 py-2 text-sm font-medium text-pine-black-900 transition hover:bg-spectral-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[3rem] items-center justify-center rounded-full bg-spectral-cyan-500 px-5 py-2 text-sm font-medium text-pine-black-900 transition hover:bg-spectral-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? 'Loading...' : 'Create account'}
           </button>
@@ -100,7 +100,7 @@ export function Auth0LoginPanel() {
             type="button"
             onClick={handleLogin}
             disabled={areActionsDisabled}
-            className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-quantum-white/14 bg-quantum-white/[0.03] px-4 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[3rem] items-center justify-center rounded-full border border-quantum-white/14 bg-quantum-white/[0.03] px-5 py-2 text-sm font-medium text-quantum-white transition hover:bg-quantum-white/8 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? 'Loading...' : 'Sign in'}
           </button>

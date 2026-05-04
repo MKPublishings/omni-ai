@@ -7,6 +7,7 @@ import { Auth0LoginPanel } from '@/components/Auth0LoginPanel'
 import { clearAuthSession, fetchApi, getStoredToken, resendVerification, storeAuthSession } from '@/lib/auth'
 import { fetchOnboardingWorkspace } from '@/lib/dashboard'
 import { trackEvent } from '@/lib/analytics'
+import { useSiteAuthState } from '@/lib/site-auth'
 import { GlassCard } from '@/components/GlassCard'
 import { Button } from '@/components/Button'
 import { Input } from '@/components/Input'
@@ -100,6 +101,7 @@ function LoginPageContent() {
   const [showUsernameField, setShowUsernameField] = useState(false)
   const [showEmailFallback, setShowEmailFallback] = useState(false)
   const router = useRouter()
+  const { authResolved, isSiteAuthenticated } = useSiteAuthState()
   const suggestedUsername = useMemo(() => buildSuggestedUsername(displayName, email), [displayName, email])
   const resolvedUsername = (showUsernameField ? username : suggestedUsername).trim().toLowerCase()
 
@@ -116,10 +118,10 @@ function LoginPageContent() {
   // Check if already authenticated
   useEffect(() => {
     const token = getStoredToken()
-    if (token) {
+    if (token || (authResolved && isSiteAuthenticated)) {
       router.push(nextPath)
     }
-  }, [nextPath, router])
+  }, [authResolved, isSiteAuthenticated, nextPath, router])
 
   const handleModeChange = (nextMode: AuthMode) => {
     setMode(nextMode)
@@ -261,7 +263,7 @@ function LoginPageContent() {
           </p>
         </div>
 
-        <Auth0LoginPanel />
+        <Auth0LoginPanel nextPath={nextPath} />
 
         <div className="mt-5 rounded-2xl border border-quantum-white/10 bg-quantum-white/[0.02] p-4">
           <div className="flex items-center justify-between gap-3">

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
 import { AmbientBackground } from './AmbientBackground'
+import { PublicAuthControls } from './PublicAuthControls'
 
 interface PublicSiteShellProps {
   title: string
@@ -19,8 +20,6 @@ const publicLinks = [
   { href: '/capabilities', label: 'Capabilities' },
   { href: '/architecture', label: 'Architecture' },
   { href: '/roadmap', label: 'Roadmap' },
-  { href: '/login', label: 'Login' },
-  { href: '/workspace', label: 'Workspace' },
 ]
 
 const legalItems = [
@@ -67,6 +66,7 @@ export function PublicSiteShell({ title, subtitle, children, actions, footer, he
                 {link.label}
               </Link>
             ))}
+            <PublicAuthControls />
           </nav>
         </header>
 
