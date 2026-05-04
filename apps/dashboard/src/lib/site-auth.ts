@@ -2,7 +2,7 @@
 
 import { useAuth0, type User as Auth0SdkUser } from '@auth0/auth0-react'
 import { useEffect, useMemo, useState } from 'react'
-import { type AuthUser, clearAuthSession, getStoredToken, getStoredUser, storeUserProfile } from '@/lib/auth'
+import { type AuthUser, clearAuthSession, exchangeAuth0Session, getStoredToken, getStoredUser, storeAuthSession } from '@/lib/auth'
 import { getAuth0ReturnToUrl } from '@/lib/auth0-config'
 
 function buildFallbackUsername(value: string): string {
@@ -36,9 +36,15 @@ function readLocalSession() {
   }
 }
 
+function normalizeIdentityValue(value: string | undefined | null): string {
+  return String(value || '').trim().toLowerCase()
+}
+
 export function useSiteAuthState() {
-  const { isAuthenticated, isLoading, logout, user } = useAuth0()
+  const { getAccessTokenSilently, isAuthenticated, isLoading, logout, user } = useAuth0()
   const [localSession, setLocalSession] = useState(readLocalSession)
+  const [authSyncError, setAuthSyncError] = useState('')
+  const [isAuthSyncing, setIsAuthSyncing] = useState(false)
 
   useEffect(() => {
     const sync = () => {
@@ -63,21 +69,77 @@ export function useSiteAuthState() {
     return mapAuth0UserToAuthUser(user)
   }, [isAuthenticated, user])
 
+  const hasWorkspaceSession = Boolean(localSession.token && localSession.user)
+  const needsAuth0SessionSync = Boolean(
+    auth0User && (
+      !localSession.token ||
+      !localSession.user ||
+      normalizeIdentityValue(localSession.user.email) !== normalizeIdentityValue(auth0User.email)
+    )
+  )
+  const isResolvingWorkspaceSession = Boolean(auth0User && needsAuth0SessionSync) || isAuthSyncing
+  const isSiteAuthenticated = hasWorkspaceSession && !needsAuth0SessionSync
+
   useEffect(() => {
-    if (!auth0User) {
+    if (!auth0User || !needsAuth0SessionSync) {
+      setIsAuthSyncing(false)
+      setAuthSyncError('')
       return
     }
 
-    storeUserProfile(auth0User)
-    setLocalSession(readLocalSession())
-  }, [auth0User])
+    let cancelled = false
 
-  const sessionUser = auth0User || localSession.user
-  const hasWorkspaceSession = Boolean(localSession.token)
-  const isSiteAuthenticated = Boolean(sessionUser || hasWorkspaceSession)
+    const syncAuth0Session = async () => {
+      try {
+        setIsAuthSyncing(true)
+        setAuthSyncError('')
+
+        const accessToken = await getAccessTokenSilently()
+        const payload = await exchangeAuth0Session({
+          accessToken,
+          profile: {
+            sub: user?.sub,
+            email: user?.email,
+            email_verified: user?.email_verified,
+            name: user?.name,
+            nickname: user?.nickname,
+          },
+        })
+
+        if (cancelled) {
+          return
+        }
+
+        storeAuthSession(payload)
+        setLocalSession(readLocalSession())
+      } catch (error) {
+        if (cancelled) {
+          return
+        }
+
+        clearAuthSession()
+        setLocalSession(readLocalSession())
+        setAuthSyncError(error instanceof Error ? error.message : 'Auth0 sign-in could not be completed.')
+      } finally {
+        if (!cancelled) {
+          setIsAuthSyncing(false)
+        }
+      }
+    }
+
+    void syncAuth0Session()
+
+    return () => {
+      cancelled = true
+    }
+  }, [auth0User, getAccessTokenSilently, needsAuth0SessionSync, user])
+
+  const sessionUser = isSiteAuthenticated ? localSession.user : null
 
   const signOut = async () => {
     clearAuthSession()
+    setLocalSession(readLocalSession())
+    setAuthSyncError('')
 
     if (isAuthenticated) {
       await logout({
@@ -89,10 +151,12 @@ export function useSiteAuthState() {
   }
 
   return {
-    authResolved: !isLoading,
+    authResolved: !isLoading && !isResolvingWorkspaceSession,
+    authSyncError,
     hasWorkspaceSession,
     isAuth0Authenticated: isAuthenticated,
     isSiteAuthenticated,
+    isSyncingWorkspaceSession: isAuthSyncing,
     sessionUser,
     signOut,
   }

@@ -317,6 +317,7 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   // ========== AUTH API ROUTES ==========
   router.add('POST', '/api/auth/signup', async (r: Request) => authWorker.signup(r));
   router.add('POST', '/api/auth/login', async (r: Request) => authWorker.login(r));
+  router.add('POST', '/api/auth/auth0/session', async (r: Request) => authWorker.createAuth0Session(r));
   router.add('GET', '/api/auth/google/start', async (r: Request) => authWorker.startGoogleOAuth(r));
   router.add('GET', '/api/auth/google/callback', async (r: Request) => authWorker.completeGoogleOAuth(r));
   router.add('GET', '/api/auth/me', async (r: Request) => authWorker.me(r));

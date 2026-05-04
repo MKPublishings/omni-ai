@@ -15,6 +15,14 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface Auth0SessionExchangeProfile {
+  sub?: string;
+  email?: string;
+  email_verified?: boolean;
+  name?: string;
+  nickname?: string;
+}
+
 export interface VerifyEmailResponse {
   ok: boolean;
   user?: AuthUser;
@@ -357,4 +365,21 @@ export async function resendVerification(identifier: string): Promise<{ verifica
   }
 
   return payload as { verificationUrl?: string | null; alreadyVerified?: boolean; verificationDelivery?: string; verificationEmailSent?: boolean; verificationEmailError?: string };
+}
+
+export async function exchangeAuth0Session(input: { accessToken: string; profile?: Auth0SessionExchangeProfile }): Promise<AuthResponse> {
+  const response = await fetchApi('/api/auth/auth0/session', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(typeof payload.error === 'string' ? payload.error : 'Auth0 sign-in could not be completed.');
+  }
+
+  return payload as AuthResponse;
 }

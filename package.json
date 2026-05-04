@@ -59,6 +59,8 @@
     "db:migrate:remote": "tsx src/scripts/migrate-d1.ts --remote",
     "db:seed:specs": "tsx src/scripts/sync-specs-from-codex.ts",
     "db:seed:tools": "tsx src/scripts/seed-tools.ts",
+    "auth:backfill:auth0": "tsx src/scripts/backfill-auth0-users.ts --local",
+    "auth:backfill:auth0:remote": "tsx src/scripts/backfill-auth0-users.ts --remote",
     "db:reset": "npm run db:migrate && npm run db:seed:specs && npm run db:seed:tools",
     "v2:setup": "npm run db:migrate && npm run db:seed:specs && npm run db:seed:tools"
   },

@@ -56,6 +56,16 @@ type ProfileBody = {
   username?: string
 }
 
+type Auth0SessionBody = {
+  profile?: {
+    sub?: string
+    email?: string
+    email_verified?: boolean
+    name?: string
+    nickname?: string
+  }
+}
+
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7
 const VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -146,6 +156,17 @@ function trimValue(value: string | undefined): string {
   return String(value || '').trim()
 }
 
+function buildUsernameSeed(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    const normalized = trimValue(value)
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  return 'ion-operator'
+}
+
 function validateEmail(email: string): boolean {
   return EMAIL_PATTERN.test(email)
 }
@@ -196,6 +217,24 @@ function findUserByUsername(state: LocalAuthState, username: string): StoredUser
 function findUserByIdentifier(state: LocalAuthState, identifier: string): StoredUser | undefined {
   const normalizedIdentifier = trimLower(identifier)
   return state.users.find((user) => user.email === normalizedIdentifier || user.username === normalizedIdentifier)
+}
+
+function buildUniqueUsername(state: LocalAuthState, seed: string): string {
+  const normalizedSeed = trimLower(seed)
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^[._-]+|[._-]+$/g, '')
+
+  const base = normalizedSeed.length >= 3 ? normalizedSeed.slice(0, 32) : 'ion-operator'
+  let candidate = base
+  let suffix = 1
+
+  while (findUserByUsername(state, candidate)) {
+    const suffixValue = String(suffix)
+    candidate = `${base.slice(0, Math.max(3, 32 - suffixValue.length))}${suffixValue}`
+    suffix += 1
+  }
+
+  return candidate
 }
 
 function buildVerificationUrl(request: Request, token: string, email: string): string {
@@ -396,6 +435,42 @@ export async function loginLocalUser(request: Request, body: LoginBody): Promise
       verificationEmailSent: false,
       verificationEmailError: 'Local dashboard auth exposes a direct verification link instead of sending email.',
     }, 403)
+  }
+
+  return jsonResult(createSession(state, user))
+}
+
+export async function createLocalAuth0Session(_request: Request, body: Auth0SessionBody): Promise<JsonResult<unknown>> {
+  const state = getState()
+  const profile = body.profile
+  const email = trimLower(profile?.email)
+
+  if (!validateEmail(email)) {
+    return jsonResult({ error: 'A valid Auth0 email is required.' }, 400)
+  }
+
+  if (profile?.email_verified === false) {
+    return jsonResult({ error: 'Auth0 account email is not verified.' }, 403)
+  }
+
+  let user = findUserByEmail(state, email)
+  if (!user) {
+    const currentTime = nowIso()
+    user = {
+      id: crypto.randomUUID(),
+      username: buildUniqueUsername(state, buildUsernameSeed(profile?.nickname, profile?.name, email.split('@')[0], profile?.sub)),
+      email,
+      displayName: trimValue(profile?.name) || trimValue(profile?.nickname) || email.split('@')[0] || 'ION Operator',
+      role: 'operator',
+      emailVerified: true,
+      password: crypto.randomUUID(),
+      createdAt: currentTime,
+      updatedAt: currentTime,
+    }
+    state.users.push(user)
+  } else if (!user.emailVerified) {
+    user.emailVerified = true
+    user.updatedAt = nowIso()
   }
 
   return jsonResult(createSession(state, user))

@@ -37,6 +37,7 @@ type AuthWorkerEnv = {
   EMAIL_FROM?: string;
   EMAIL_REPLY_TO?: string;
   MAILCHANNELS_API_URL?: string;
+  AUTH0_DOMAIN?: string;
   GOOGLE_OAUTH_CLIENT_ID?: string;
   GOOGLE_OAUTH_CLIENT_SECRET?: string;
 };
@@ -61,6 +62,14 @@ type GoogleUserInfo = {
   picture?: string;
 };
 
+type Auth0UserInfo = {
+  sub?: string;
+  email?: string;
+  email_verified?: boolean;
+  name?: string;
+  nickname?: string;
+};
+
 type GoogleOauthState = {
   nonce: string;
   next?: string;
@@ -73,6 +82,7 @@ const GOOGLE_OAUTH_SCOPES = ['openid', 'email', 'profile'].join(' ');
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
+const DEFAULT_AUTH0_DOMAIN = 'ion-ai.us.auth0.com';
 
 type SignupOnboardingPayload = {
   formation?: unknown;
@@ -239,6 +249,17 @@ function sanitizeErrorMessage(value: unknown, maxLength = 320): string {
     : normalized;
 }
 
+function buildUsernameSeed(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    const normalized = String(value || '').trim();
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return 'ion-operator';
+}
+
 function logAuthDelivery(event: string, data: Record<string, unknown>, level: 'log' | 'error' = 'log') {
   const payload = {
     event,
@@ -270,6 +291,32 @@ export class AuthWorker {
     }
 
     return { clientId, clientSecret };
+  }
+
+  private getAuth0Domain(): string {
+    return String(this.env?.AUTH0_DOMAIN || DEFAULT_AUTH0_DOMAIN)
+      .trim()
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/+$/, '');
+  }
+
+  private async getAuth0UserInfo(accessToken: string): Promise<Auth0UserInfo | null> {
+    const domain = this.getAuth0Domain();
+    if (!domain) {
+      return null;
+    }
+
+    const response = await fetch(`https://${domain}/userinfo`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return parseJsonSafe<Auth0UserInfo>(response);
   }
 
   private buildGoogleCallbackUrl(request: Request, state: GoogleOauthState): string {
@@ -447,6 +494,78 @@ export class AuthWorker {
       headers: {
         'Set-Cookie': clearCookie(GOOGLE_OAUTH_COOKIE, '/api/auth/google/callback'),
       },
+    });
+  }
+
+  async createAuth0Session(request: Request): Promise<Response> {
+    const dbError = this.ensureDb();
+    if (dbError) {
+      return dbError;
+    }
+
+    const requestId = getAuthRequestId(request);
+    const body = getRequestBody(await request.json().catch(() => null));
+    const accessToken = String(body?.accessToken || '').trim();
+
+    if (!accessToken) {
+      return json({ error: 'Auth0 access token is required.' }, 400);
+    }
+
+    const profile = await this.getAuth0UserInfo(accessToken);
+    if (!profile?.email) {
+      logAuthDelivery('auth0_session_profile_lookup_failed', {
+        requestId,
+      }, 'error');
+      return json({ error: 'Auth0 profile lookup failed.' }, 401);
+    }
+
+    if (profile.email_verified !== true) {
+      return json({ error: 'Auth0 account email is not verified.' }, 403);
+    }
+
+    const email = String(profile.email || '').trim().toLowerCase();
+    const displayName = String(profile.name || profile.nickname || email.split('@')[0] || 'ION Operator').trim();
+    const usernameSeed = buildUsernameSeed(profile.nickname, profile.name, email.split('@')[0], profile.sub);
+
+    let userRecord = await findUserByEmail(this.db!, email);
+    let user = userRecord
+      ? {
+          id: userRecord.id,
+          username: userRecord.username,
+          email: userRecord.email,
+          displayName: userRecord.display_name,
+          role: userRecord.role,
+          emailVerified: userRecord.email_verified === 1,
+        }
+      : null;
+
+    if (!user) {
+      user = await createTrustedUser(this.db!, {
+        email,
+        displayName,
+        username: usernameSeed,
+        emailVerified: true,
+      });
+      logAuthDelivery('auth0_session_user_created', {
+        requestId,
+        userId: user.id,
+        email: maskEmail(user.email),
+      });
+    } else if (!user.emailVerified) {
+      await markUserEmailVerified(this.db!, user.id);
+      user.emailVerified = true;
+    }
+
+    await pruneExpiredSessions(this.db!);
+    const { token, session } = await createSession(this.db!, user.id, request);
+    const accessTier = await getEffectiveAccessTier(this.db!, user.id, user.role);
+
+    return json({
+      token,
+      sessionId: session.id,
+      expiresAt: session.expires_at,
+      accessTier,
+      user,
     });
   }
 

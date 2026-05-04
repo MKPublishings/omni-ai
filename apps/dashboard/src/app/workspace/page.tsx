@@ -21,7 +21,7 @@ import {
 import { summarizeWorkspaceIntent } from '@/lib/workspace-shell'
 
 export default function WorkspacePage() {
-  const { hasWorkspaceSession, isSiteAuthenticated } = useSiteAuthState()
+  const { hasWorkspaceSession } = useSiteAuthState()
   const [status, setStatus] = useState<DashboardSystemStatus | null>(null)
   const [events, setEvents] = useState<DashboardSystemEvent[]>([])
   const [workspace, setWorkspace] = useState<DashboardOnboardingWorkspace | null>(null)
@@ -110,24 +110,6 @@ export default function WorkspacePage() {
         ? `${workspaceIntent.focusLabel} across system health, live event flow, and the routes most relevant to the current workspace intent.`
         : 'A multi-page operational workspace for system health, sovereign simulations, event activity, tools, and agent operations.'}
     >
-      {!hasWorkspaceSession && isSiteAuthenticated ? (
-        <GlassCard tier={2} className="p-5 text-sm text-quantum-white/72">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-spectral-cyan-300">Authenticated</p>
-          <h2 className="mt-3 text-lg font-semibold text-quantum-white">Your Auth0 session is active.</h2>
-          <p className="mt-3 max-w-3xl leading-7 text-quantum-white/68">
-            You are inside the workspace shell and the public site will reflect your signed-in state. Live operator telemetry still appears only when a workspace session token is present on this device.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/assistant" className="inline-flex items-center rounded-full border border-quantum-white/12 px-4 py-2 text-sm text-quantum-white transition hover:bg-quantum-white/8">
-              Open assistant
-            </Link>
-            <Link href="/pricing" className="inline-flex items-center rounded-full border border-spectral-cyan-500/22 bg-spectral-cyan-500/10 px-4 py-2 text-sm text-spectral-cyan-100 transition hover:bg-spectral-cyan-500/16">
-              View plans
-            </Link>
-          </div>
-        </GlassCard>
-      ) : null}
-
       {error && (
         <GlassCard tier={2} glow="amber" className="p-4 text-sm text-amber-signal-500">
           {error}
