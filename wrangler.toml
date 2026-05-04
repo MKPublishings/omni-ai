@@ -29,6 +29,7 @@ EMAIL_TRANSPORT = "resend"
 EMAIL_FROM = "mail@ionirix.com"
 EMAIL_REPLY_TO = "mail@ionirix.com"
 MAILCHANNELS_API_URL = "https://api.mailchannels.net/tx/v1/send"
+GOOGLE_OAUTH_CLIENT_ID = "749388562904-plnpa95kq2okerg8pv1bj5g8tvg9abp8.apps.googleusercontent.com"
 # Public outbound email plan:
 # - configure RESEND_API_KEY as a Wrangler secret
 # - verify the sending domain ionirix.com inside Resend
@@ -60,6 +61,7 @@ STRIPE_CHECKOUT_CANCEL_URL = "/billing/cancel"
 # ION_MAX_OUTPUT_TOKENS = "8192"
 # ION_ENV = "development" # set to "production" to disable debug response headers
 # Configure RESEND_API_KEY as a Wrangler secret for outbound verification email.
+# Configure GOOGLE_OAUTH_CLIENT_SECRET as a Wrangler secret for Google sign-in.
 
 # KV namespaces for phase 2-3 systems (commented out - create in Cloudflare dashboard first)
 # [[kv_namespaces]]

@@ -267,6 +267,46 @@ export async function createUser(
   };
 }
 
+export async function createTrustedUser(
+  db: D1Database,
+  input: { email: string; displayName: string; username?: string; role?: string; emailVerified?: boolean }
+): Promise<AuthenticatedUser> {
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const email = normalizeEmail(input.email);
+  const generatedPassword = crypto.randomUUID();
+  const passwordHash = await hashPassword(generatedPassword);
+  const username = await generateUniqueUsername(db, input.username || email.split('@')[0] || input.displayName);
+  const role = String(input.role || 'member').trim() || 'member';
+  const emailVerified = input.emailVerified === false ? 0 : 1;
+
+  await db
+    .prepare(
+      `INSERT INTO auth_users (
+        id, username, email, password_hash, display_name, role, email_verified, created_at, updated_at, last_login_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`
+    )
+    .bind(id, username, email, passwordHash, input.displayName, role, emailVerified, now, now)
+    .run();
+
+  return {
+    id,
+    username,
+    email,
+    displayName: input.displayName,
+    role,
+    emailVerified: emailVerified === 1,
+  };
+}
+
+export async function markUserEmailVerified(db: D1Database, userId: string): Promise<void> {
+  const now = new Date().toISOString();
+  await db
+    .prepare('UPDATE auth_users SET email_verified = 1, updated_at = ? WHERE id = ?')
+    .bind(now, userId)
+    .run();
+}
+
 export async function findUserByEmail(db: D1Database, email: string): Promise<AuthUserRecord | null> {
   const result = await db
     .prepare('SELECT * FROM auth_users WHERE email = ? LIMIT 1')

@@ -54,6 +54,8 @@ interface WorkerEnv {
   EMAIL_REPLY_TO?: string;
   MAILCHANNELS_API_URL?: string;
   RESEND_API_KEY?: string;
+  GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PUBLISHABLE_KEY?: string;
@@ -315,6 +317,8 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   // ========== AUTH API ROUTES ==========
   router.add('POST', '/api/auth/signup', async (r: Request) => authWorker.signup(r));
   router.add('POST', '/api/auth/login', async (r: Request) => authWorker.login(r));
+  router.add('GET', '/api/auth/google/start', async (r: Request) => authWorker.startGoogleOAuth(r));
+  router.add('GET', '/api/auth/google/callback', async (r: Request) => authWorker.completeGoogleOAuth(r));
   router.add('GET', '/api/auth/me', async (r: Request) => authWorker.me(r));
   router.add('POST', '/api/auth/verify-email', async (r: Request) => authWorker.verifyEmail(r));
   router.add('POST', '/api/auth/resend-verification', async (r: Request) => authWorker.resendVerification(r));
