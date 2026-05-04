@@ -1,11 +1,10 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
   "env": {
-    "JWT_SECRET": "@jwt_secret",
-    "ION_API_KEY": "@ion_api_key",
-    "NEXT_PUBLIC_ION_API_URL": "@ion_api_url"
+    "NEXT_PUBLIC_AUTH0_DOMAIN": "ion-ai.us.auth0.com",
+    "NEXT_PUBLIC_AUTH0_CLIENT_ID": "tlXPaqF8p70rPlIbKkKyEOXXJPjenTxf",
+    "NEXT_PUBLIC_AUTH0_APP_ORIGIN": "https://dashboard-ionirix.vercel.app"
   },
   "functions": {
     "src/app/api/**/*.ts": {
