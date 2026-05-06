@@ -9,6 +9,13 @@ import { NavigationRail, NavItem } from './NavigationRail'
 import { CommandBar } from './CommandBar'
 import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser, fetchOnboardingWorkspace, type DashboardOnboardingWorkspace } from '@/lib/dashboard'
+import {
+  clearStoredDashboardRecentSearches,
+  readStoredDashboardRecentSearches,
+  recordDashboardRecentSearch,
+  searchDashboardEntries,
+  writeStoredDashboardRecentSearches,
+} from '@/lib/dashboard-search'
 import { useSiteAuthState } from '@/lib/site-auth'
 import { GlassCard } from './GlassCard'
 import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
@@ -140,10 +147,13 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [user, setUser] = useState<AuthUser | null>(null)
   const [workspace, setWorkspace] = useState<DashboardOnboardingWorkspace | null>(null)
   const [localFormation, setLocalFormation] = useState<WorkspaceFormation | null>(null)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const searchStorageScope = user ?? sessionUser ?? undefined
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)')
@@ -227,7 +237,13 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
     if (isMobileViewport) {
       setMobileNavOpen(false)
     }
+    setSearchOpen(false)
+    setSearchValue('')
   }, [pathname, isMobileViewport])
+
+  useEffect(() => {
+    setRecentSearches(readStoredDashboardRecentSearches(searchStorageScope))
+  }, [searchStorageScope])
 
   useEffect(() => {
     const syncFormation = () => {
@@ -250,17 +266,21 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
     }
   }, [])
 
+  const searchResults = useMemo(() => searchDashboardEntries(searchValue), [searchValue])
+
   const filteredNavigation = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
       return sortRoutesByWorkspaceIntent(navigationItems, workspace)
     }
 
+    const matchedRoutes = new Set(searchResults.map((item) => item.href))
+
     return sortRoutesByWorkspaceIntent(
-      navigationItems.filter((item) => item.label.toLowerCase().includes(query)),
+      navigationItems.filter((item) => matchedRoutes.has(item.href)),
       workspace
     )
-  }, [searchValue, workspace])
+  }, [searchResults, searchValue, workspace])
 
   const workspaceIntent = useMemo(() => summarizeWorkspaceIntent(workspace), [workspace])
   const shellArrangement = useMemo(() => resolveDashboardShellArrangement(workspace, localFormation), [workspace, localFormation])
@@ -274,6 +294,59 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
 
   const handleToggleTheme = () => {
     setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+  }
+
+  const commitRecentSearch = (query: string) => {
+    const nextRecentSearches = recordDashboardRecentSearch(query, recentSearches)
+    setRecentSearches(nextRecentSearches)
+    writeStoredDashboardRecentSearches(nextRecentSearches, searchStorageScope)
+  }
+
+  const handleSearchSelect = (href: string, query: string) => {
+    if (query.trim()) {
+      commitRecentSearch(query)
+    }
+
+    setSearchOpen(false)
+    setSearchValue('')
+    router.push(href)
+  }
+
+  const handleSearchSubmit = () => {
+    const query = searchValue.trim()
+    if (!query) {
+      setSearchOpen(recentSearches.length > 0)
+      return
+    }
+
+    commitRecentSearch(query)
+
+    if (searchResults[0]) {
+      handleSearchSelect(searchResults[0].href, query)
+      return
+    }
+
+    setSearchOpen(true)
+  }
+
+  const handleClearSearch = () => {
+    setSearchValue('')
+    setSearchOpen(recentSearches.length > 0)
+  }
+
+  const handleClearRecentSearches = () => {
+    setRecentSearches([])
+    clearStoredDashboardRecentSearches(searchStorageScope)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setSearchOpen(true)
+  }
+
+  const handleRecentSearchSelect = (value: string) => {
+    setSearchValue(value)
+    setSearchOpen(true)
   }
 
   const navigationExpanded = isMobileViewport ? mobileNavOpen : !navCollapsed
@@ -350,7 +423,16 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
         <div className="flex min-w-0 flex-1 flex-col">
           <CommandBar
             searchValue={searchValue}
-            onSearchChange={setSearchValue}
+            onSearchChange={handleSearchChange}
+            searchResults={searchResults}
+            recentSearches={recentSearches}
+            searchOpen={searchOpen}
+            onSearchOpenChange={setSearchOpen}
+            onSearchSubmit={handleSearchSubmit}
+            onSearchSelect={(result) => handleSearchSelect(result.href, searchValue.trim() || result.title)}
+            onRecentSearchSelect={handleRecentSearchSelect}
+            onClearSearch={handleClearSearch}
+            onClearRecentSearches={handleClearRecentSearches}
             breadcrumbs={buildBreadcrumbs(pathname)}
             profileHref="/profile"
             userInitial={(user?.displayName || user?.username || 'I').charAt(0).toUpperCase()}
