@@ -1,0 +1,18 @@
+{
+  "id": "workflow-definition",
+  "name": "Eight-Point Orchestration",
+  "steps": [
+    "P1-contact",
+    "P2-operational",
+    "P3-managerial",
+    "P4-directive",
+    "P5-oversight",
+    "P6-legality",
+    "P7-societal",
+    "P8-sovereign"
+  ],
+  "automation": {
+    "requiresComplianceGate": true,
+    "busOnlyCrossPointCommunication": true
+  }
+}

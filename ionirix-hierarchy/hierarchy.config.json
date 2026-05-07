@@ -1,0 +1,226 @@
+{
+  "version": "1.0.0",
+  "constitution": "CONSTITUTION.md",
+  "points": [
+    {
+      "id": "P8",
+      "slug": "P8-sovereign",
+      "rank": 8,
+      "features": [
+        "workspace-creation",
+        "memory-engine",
+        "reasoning-modes",
+        "data-ownership"
+      ]
+    },
+    {
+      "id": "P7",
+      "slug": "P7-societal",
+      "rank": 7,
+      "features": [
+        "persona-modeling",
+        "scenario-simulation",
+        "knowledge-graph",
+        "intelligence-ingestion"
+      ]
+    },
+    {
+      "id": "P6",
+      "slug": "P6-legality",
+      "rank": 6,
+      "features": [
+        "contract-generator",
+        "compliance-engine",
+        "ip-protection",
+        "data-sovereignty-controls"
+      ]
+    },
+    {
+      "id": "P5",
+      "slug": "P5-oversight",
+      "rank": 5,
+      "features": [
+        "mrr-dashboard",
+        "value-flow-mapping",
+        "memory-archive",
+        "feedback-loops"
+      ]
+    },
+    {
+      "id": "P4",
+      "slug": "P4-directive",
+      "rank": 4,
+      "features": [
+        "positioning-engine",
+        "budget-simulator",
+        "playbook-generator",
+        "roadmap-builder"
+      ]
+    },
+    {
+      "id": "P3",
+      "slug": "P3-managerial",
+      "rank": 3,
+      "features": [
+        "command-console",
+        "campaign-tracker",
+        "feedback-intake",
+        "ab-test-engine"
+      ]
+    },
+    {
+      "id": "P2",
+      "slug": "P2-operational",
+      "rank": 2,
+      "features": [
+        "workflow-orchestration",
+        "template-library",
+        "simulation-pipeline",
+        "customer-success-rituals"
+      ]
+    },
+    {
+      "id": "P1",
+      "slug": "P1-contact",
+      "rank": 1,
+      "features": [
+        "onboarding-flow",
+        "artifact-exporter",
+        "campaign-asset-generator",
+        "unified-intake"
+      ]
+    }
+  ],
+  "eventTypes": [
+    "workspace.created",
+    "memory.snapshot.requested",
+    "reasoning.mode.changed",
+    "ownership.asserted",
+    "persona.modeled",
+    "scenario.simulated",
+    "knowledge.graph.updated",
+    "intelligence.ingested",
+    "contract.generated",
+    "compliance.checked",
+    "ip.protected",
+    "sovereignty.guard.applied",
+    "mrr.reported",
+    "value.flow.mapped",
+    "memory.archived",
+    "feedback.closed-loop",
+    "positioning.composed",
+    "budget.simulated",
+    "playbook.generated",
+    "roadmap.published",
+    "console.commanded",
+    "campaign.tracked",
+    "feedback.ingested",
+    "ab-test.evaluated",
+    "workflow.orchestrated",
+    "template.rendered",
+    "simulation.pipeline.ran",
+    "contact.intake.completed"
+  ],
+  "busTopology": {
+    "emitters": {
+      "P8": [
+        "workspace.created",
+        "memory.snapshot.requested",
+        "reasoning.mode.changed",
+        "ownership.asserted"
+      ],
+      "P7": [
+        "persona.modeled",
+        "scenario.simulated",
+        "knowledge.graph.updated",
+        "intelligence.ingested"
+      ],
+      "P6": [
+        "contract.generated",
+        "compliance.checked",
+        "ip.protected",
+        "sovereignty.guard.applied"
+      ],
+      "P5": [
+        "mrr.reported",
+        "value.flow.mapped",
+        "memory.archived",
+        "feedback.closed-loop"
+      ],
+      "P4": [
+        "positioning.composed",
+        "budget.simulated",
+        "playbook.generated",
+        "roadmap.published"
+      ],
+      "P3": [
+        "console.commanded",
+        "campaign.tracked",
+        "feedback.ingested",
+        "ab-test.evaluated"
+      ],
+      "P2": [
+        "workflow.orchestrated",
+        "template.rendered",
+        "simulation.pipeline.ran",
+        "feedback.closed-loop"
+      ],
+      "P1": [
+        "contact.intake.completed",
+        "template.rendered",
+        "campaign.tracked",
+        "playbook.generated"
+      ]
+    },
+    "subscribers": {
+      "P8": [
+        "workspace.created",
+        "ownership.asserted",
+        "compliance.checked",
+        "memory.archived"
+      ],
+      "P7": [
+        "memory.snapshot.requested",
+        "scenario.simulated",
+        "knowledge.graph.updated",
+        "feedback.ingested"
+      ],
+      "P6": [
+        "contract.generated",
+        "ip.protected",
+        "ownership.asserted",
+        "template.rendered"
+      ],
+      "P5": [
+        "mrr.reported",
+        "value.flow.mapped",
+        "feedback.closed-loop",
+        "campaign.tracked"
+      ],
+      "P4": [
+        "positioning.composed",
+        "budget.simulated",
+        "playbook.generated",
+        "contact.intake.completed"
+      ],
+      "P3": [
+        "console.commanded",
+        "ab-test.evaluated",
+        "workflow.orchestrated",
+        "feedback.ingested"
+      ],
+      "P2": [
+        "workflow.orchestrated",
+        "template.rendered",
+        "scenario.simulated",
+        "contact.intake.completed"
+      ],
+      "P1": [
+        "template.rendered",
+        "playbook.generated",
+        "campaign.tracked",
+        "contact.intake.completed"
+      ]
+    }
+  }
+}

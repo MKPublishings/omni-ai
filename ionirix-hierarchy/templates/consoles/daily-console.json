@@ -1,0 +1,11 @@
+{
+  "id": "daily-console",
+  "title": "Hierarchy Command Console",
+  "widgets": [
+    "point-status",
+    "active-campaigns",
+    "compliance-alerts",
+    "memory-archive"
+  ],
+  "layout": "two-column"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "intake-form",
+  "title": "Ionirix Unified Intake",
+  "fields": [
+    { "name": "organization", "type": "text", "required": true },
+    { "name": "primary_goal", "type": "text", "required": true },
+    { "name": "urgency", "type": "select", "options": ["low", "medium", "high"] },
+    { "name": "signal_score", "type": "number", "min": 0, "max": 100 }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "folders": [
+    {
+      "name": "Ionirix Eight-Point Hierarchy",
+      "path": "ionirix-hierarchy"
+    }
+  ],
+  "settings": {
+    "workbench.colorTheme": "Default Dark Modern",
+    "typescript.tsdk": "ionirix-hierarchy/node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "files.exclude": {
+      "**/dist": true
+    },
+    "path-intellisense.mappings": {
+      "@core": "${workspaceFolder:Ionirix Eight-Point Hierarchy}/src/core",
+      "@integrations": "${workspaceFolder:Ionirix Eight-Point Hierarchy}/src/integrations",
+      "@points": "${workspaceFolder:Ionirix Eight-Point Hierarchy}/src"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  },
+  "launch": {
+    "configurations": [
+      {
+        "name": "Hierarchy Dev",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": [
+          "run",
+          "dev"
+        ],
+        "cwd": "${workspaceFolder:Ionirix Eight-Point Hierarchy}"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Hierarchy Validate",
+        "type": "shell",
+        "command": "npm run validate",
+        "options": {
+          "cwd": "${workspaceFolder:Ionirix Eight-Point Hierarchy}"
+        },
+        "group": "build"
+      },
+      {
+        "label": "Hierarchy Audit",
+        "type": "shell",
+        "command": "npm run audit",
+        "options": {
+          "cwd": "${workspaceFolder:Ionirix Eight-Point Hierarchy}"
+        }
+      }
+    ]
+  }
+}

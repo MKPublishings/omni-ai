@@ -1,0 +1,11 @@
+{
+  "id": "compliance-checklist",
+  "domains": [
+    "constitutional-traceability",
+    "data-sovereignty",
+    "ip-protection",
+    "event-bus-authorization",
+    "audit-readiness"
+  ],
+  "requiresOperatorSignoff": true
+}

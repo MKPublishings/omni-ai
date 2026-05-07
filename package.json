@@ -8,6 +8,11 @@
   ],
   "scripts": {
     "dev": "wrangler dev",
+    "hierarchy:dev": "npm --prefix ./ionirix-hierarchy run dev",
+    "hierarchy:validate": "npm --prefix ./ionirix-hierarchy run validate",
+    "hierarchy:audit": "npm --prefix ./ionirix-hierarchy run audit",
+    "hierarchy:typecheck": "npm --prefix ./ionirix-hierarchy run typecheck",
+    "hierarchy:test": "npm --prefix ./ionirix-hierarchy run test",
     "dev:media": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev/start-media-and-worker.ps1",
     "dev:media:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev/start-media-and-worker.ps1 -Local",
     "deploy": "node ./scripts/deploy.js",

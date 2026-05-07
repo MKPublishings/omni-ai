@@ -1,0 +1,18 @@
+{
+  "name": "ionirix-eight-point-hierarchy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/bootstrap/run-dev.ts",
+    "validate": "tsx scripts/validate-hierarchy.ts",
+    "audit": "tsx scripts/audit-compliance.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.3"
+  }
+}

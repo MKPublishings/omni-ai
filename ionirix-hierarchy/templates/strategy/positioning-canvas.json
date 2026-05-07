@@ -1,0 +1,11 @@
+{
+  "id": "positioning-canvas",
+  "tiers": [
+    "foundational-claim",
+    "operator-proof",
+    "market-contrast",
+    "deployment-ritual"
+  ],
+  "voice": "sovereign",
+  "audiences": ["operators", "partners", "buyers"]
+}
