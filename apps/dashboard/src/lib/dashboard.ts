@@ -1,4 +1,6 @@
-import { AuthUser, authorizedFetch, getApiUrl, getStoredToken, getStoredUser, shouldPreferSameOriginApi } from './auth'
+import { AuthUser, authorizedFetch, buildUserScopedStorageKey, getApiUrl, getStoredToken, getStoredUser, shouldPreferSameOriginApi } from './auth'
+
+const ONBOARDING_WORKSPACE_CACHE_KEY = 'ionirix:onboarding:workspace-cache'
 
 export const LIVE_REFRESH_INTERVAL_MS = 120000
 
@@ -182,6 +184,33 @@ export interface DashboardOnboardingWorkspaceInput {
   }
 }
 
+function readCachedOnboardingWorkspace(): DashboardOnboardingWorkspace | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const storedUser = getStoredUser()
+  const rawValue = window.localStorage.getItem(buildUserScopedStorageKey(ONBOARDING_WORKSPACE_CACHE_KEY, storedUser))
+  if (!rawValue) {
+    return null
+  }
+
+  try {
+    return JSON.parse(rawValue) as DashboardOnboardingWorkspace
+  } catch {
+    return null
+  }
+}
+
+function writeCachedOnboardingWorkspace(workspace: DashboardOnboardingWorkspace): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const storedUser = getStoredUser()
+  window.localStorage.setItem(buildUserScopedStorageKey(ONBOARDING_WORKSPACE_CACHE_KEY, storedUser), JSON.stringify(workspace))
+}
+
 export function formatDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return 'just started'
@@ -330,17 +359,28 @@ export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWor
         },
         body: JSON.stringify({}),
       }))
-  return payload.workspace ?? null
+  const workspace = payload.workspace ?? readCachedOnboardingWorkspace()
+  if (workspace) {
+    writeCachedOnboardingWorkspace(workspace)
+  }
+
+  return workspace
 }
 
-export function provisionOnboardingWorkspace(input: DashboardOnboardingWorkspaceInput): Promise<{ workspace: DashboardOnboardingWorkspace }> {
-  return fetchAuthorizedMutation('/api/onboarding/workspace', {
+export async function provisionOnboardingWorkspace(input: DashboardOnboardingWorkspaceInput): Promise<{ workspace: DashboardOnboardingWorkspace }> {
+  const payload = await fetchAuthorizedMutation<{ workspace: DashboardOnboardingWorkspace }>('/api/onboarding/workspace', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(input),
   })
+
+  if (payload.workspace) {
+    writeCachedOnboardingWorkspace(payload.workspace)
+  }
+
+  return payload
 }
 
 export function fetchSystemStatus(): Promise<DashboardSystemStatus> {
