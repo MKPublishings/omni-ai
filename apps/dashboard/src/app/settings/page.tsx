@@ -90,6 +90,10 @@ function buildWorkspaceDraftFromSources(workspace: DashboardOnboardingWorkspace 
   const workspaceContext = asRecord(workspace?.context?.workspace)
   const enabledModules = workspace?.modules.filter((module) => module.enabled).map((module) => module.id as WorkspaceCapabilityId) ?? []
   const enabledFormationModules = getEnabledFormationCapabilities(localFormation)
+  const preferredCapabilities = pickCapabilities(
+    enabledFormationModules,
+    persistedDraft?.workspace.capabilities ?? onboardingDefaults.workspace.capabilities,
+  )
 
   return {
     ...onboardingDefaults.workspace,
@@ -112,14 +116,14 @@ function buildWorkspaceDraftFromSources(workspace: DashboardOnboardingWorkspace 
         ? workspaceContext.teamMode
         : (workspace?.orchestration.collaboration === 'team') || persistedDraft?.workspace.teamMode || false,
     capabilities: pickCapabilities(
-      workspaceContext.capabilities,
+      enabledFormationModules,
       pickCapabilities(
-        enabledModules,
+        persistedDraft?.workspace.capabilities,
         pickCapabilities(
-          enabledFormationModules,
-          persistedDraft?.workspace.capabilities ?? onboardingDefaults.workspace.capabilities,
+          workspaceContext.capabilities,
+          pickCapabilities(enabledModules, preferredCapabilities),
         ),
-      )
+      ),
     ),
   }
 }
