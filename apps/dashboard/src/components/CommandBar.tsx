@@ -38,6 +38,8 @@ interface CommandBarProps extends HTMLAttributes<HTMLDivElement> {
   onToggleNavigation?: () => void
   navigationExpanded?: boolean
   navigationToggleVisible?: boolean
+  showAssistantShortcut?: boolean
+  showToolsShortcut?: boolean
   onLogout?: () => void
   statusSlot?: ReactNode
 }
@@ -63,6 +65,8 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
     onToggleNavigation,
     navigationExpanded,
     navigationToggleVisible = true,
+    showAssistantShortcut = true,
+    showToolsShortcut = true,
     onLogout,
     statusSlot,
     className,
@@ -336,14 +340,16 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
           <div className="flex items-center gap-2">
             {statusSlot ? <div className="hidden xl:flex xl:items-center xl:gap-2">{statusSlot}</div> : null}
 
-            <Link
-              href="/assistant"
-              aria-label="Open assistant"
-              title="Open assistant"
-              className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
-            >
-              <AssistantSparkIcon className="h-4 w-4" />
-            </Link>
+            {showAssistantShortcut ? (
+              <Link
+                href="/assistant"
+                aria-label="Open assistant"
+                title="Open assistant"
+                className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
+              >
+                <AssistantSparkIcon className="h-4 w-4" />
+              </Link>
+            ) : null}
 
             <Link
               href="/events"
@@ -354,14 +360,16 @@ export const CommandBar = forwardRef<HTMLDivElement, CommandBarProps>(
               <EventsPulseIcon className="h-4 w-4" />
             </Link>
 
-            <Link
-              href="/tools"
-              aria-label="Open tools"
-              title="Open tools"
-              className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
-            >
-              <ToolsStackIcon className="h-4 w-4" />
-            </Link>
+            {showToolsShortcut ? (
+              <Link
+                href="/tools"
+                aria-label="Open tools"
+                title="Open tools"
+                className="dashboard-icon-button inline-flex h-10 w-10 items-center justify-center rounded-full"
+              >
+                <ToolsStackIcon className="h-4 w-4" />
+              </Link>
+            ) : null}
 
             <button
               type="button"

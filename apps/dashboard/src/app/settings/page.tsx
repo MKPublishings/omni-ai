@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/Button'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
@@ -147,6 +147,28 @@ export default function SettingsPage() {
   const [workspaceDraftInitialized, setWorkspaceDraftInitialized] = useState(false)
   const [workspaceErrors, setWorkspaceErrors] = useState<string[]>([])
   const [preferencesErrors, setPreferencesErrors] = useState<string[]>([])
+
+  const previewFormation = useMemo(() => {
+    const baseState = createInitialOnboardingState()
+
+    return buildWorkspaceFormation({
+      ...baseState,
+      account: {
+        ...baseState.account,
+        displayName: user?.displayName || baseState.account.displayName,
+        username: user?.username || baseState.account.username,
+        email: user?.email || baseState.account.email,
+      },
+      workspace: workspaceDraft,
+      preferences: preferencesDraft,
+    })
+  }, [preferencesDraft, user?.displayName, user?.email, user?.username, workspaceDraft])
+
+  const displayedPrimaryRoute = workspaceSettingsDirty ? previewFormation.primaryRoute : (onboardingWorkspace?.primaryRoute || previewFormation.primaryRoute)
+  const displayedEnabledModules = workspaceSettingsDirty
+    ? previewFormation.modules.filter((module) => module.enabled).length
+    : (onboardingWorkspace?.modules.filter((module) => module.enabled).length ?? previewFormation.modules.filter((module) => module.enabled).length)
+  const displayedCapabilityScore = workspaceSettingsDirty ? previewFormation.capabilityScore : (onboardingWorkspace?.capabilityScore ?? previewFormation.capabilityScore)
 
   const loadSettings = () => {
     setError('')
@@ -304,8 +326,6 @@ export default function SettingsPage() {
     }
   }
 
-  const enabledModules = onboardingWorkspace?.modules.filter((module) => module.enabled).length ?? workspaceDraft.capabilities.length
-
   const handleClearHistory = async () => {
     setIsClearingHistory(true)
     setActionMessage('')
@@ -374,15 +394,15 @@ export default function SettingsPage() {
               <div className="grid gap-3 sm:grid-cols-2 xl:w-[26rem]">
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Primary route</p>
-                  <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{onboardingWorkspace?.primaryRoute || '/workspace'}</p>
+                  <p className="mt-2 break-words text-base font-semibold text-quantum-white sm:text-lg">{displayedPrimaryRoute}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Enabled modules</p>
-                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{enabledModules}</p>
+                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{displayedEnabledModules}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Capability score</p>
-                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{onboardingWorkspace?.capabilityScore ?? workspaceDraft.capabilities.length}</p>
+                  <p className="mt-2 text-base font-semibold text-quantum-white sm:text-lg">{displayedCapabilityScore}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-quantum-white/10 bg-black/10 px-4 py-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-quantum-white/48">Provisioning</p>

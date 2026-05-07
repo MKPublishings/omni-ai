@@ -11,15 +11,20 @@ import { AuthUser, clearAuthSession, getStoredToken } from '@/lib/auth'
 import { fetchDashboardUser, fetchOnboardingWorkspace, type DashboardOnboardingWorkspace } from '@/lib/dashboard'
 import {
   clearStoredDashboardRecentSearches,
+  dashboardSearchEntries,
   readStoredDashboardRecentSearches,
   recordDashboardRecentSearch,
-  searchDashboardEntries,
   writeStoredDashboardRecentSearches,
 } from '@/lib/dashboard-search'
 import { useSiteAuthState } from '@/lib/site-auth'
 import { GlassCard } from './GlassCard'
 import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
-import { sortRoutesByWorkspaceIntent, summarizeWorkspaceIntent } from '@/lib/workspace-shell'
+import {
+  filterWorkspaceModuleRoutes,
+  getEnabledWorkspaceModuleRoutes,
+  sortRoutesByWorkspaceIntent,
+  summarizeWorkspaceIntent,
+} from '@/lib/workspace-shell'
 import { PremiumBadge } from '@/ui/billing/PremiumBadge'
 import { usePremiumStatus } from '@/ui/billing/usePremiumStatus'
 import { loadWorkspaceFormation, type WorkspaceFormation } from '@/onboarding'
@@ -272,18 +277,37 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
     }
   }, [])
 
-  const searchResults = useMemo(() => searchDashboardEntries(searchValue), [searchValue])
+  const enabledModuleRoutes = useMemo(() => getEnabledWorkspaceModuleRoutes(workspace), [workspace])
+  const searchableEntries = useMemo(() => filterWorkspaceModuleRoutes(dashboardSearchEntries, workspace), [workspace])
 
-  const filteredNavigation = useMemo(() => {
+  const searchResults = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
-      return sortRoutesByWorkspaceIntent(navigationItems, workspace)
+      return searchableEntries
+    }
+
+    return searchableEntries.filter((entry) => {
+      const normalizedQuery = query
+
+      return entry.title.toLowerCase().includes(normalizedQuery)
+        || entry.description.toLowerCase().includes(normalizedQuery)
+        || entry.section.toLowerCase().includes(normalizedQuery)
+        || entry.href.toLowerCase().includes(normalizedQuery)
+        || entry.keywords.some((keyword) => keyword.toLowerCase().includes(normalizedQuery))
+    })
+  }, [searchValue, searchableEntries])
+
+  const filteredNavigation = useMemo(() => {
+    const availableNavigation = filterWorkspaceModuleRoutes(navigationItems, workspace)
+    const query = searchValue.trim().toLowerCase()
+    if (!query) {
+      return sortRoutesByWorkspaceIntent(availableNavigation, workspace)
     }
 
     const matchedRoutes = new Set(searchResults.map((item) => item.href))
 
     return sortRoutesByWorkspaceIntent(
-      navigationItems.filter((item) => matchedRoutes.has(item.href)),
+      availableNavigation.filter((item) => matchedRoutes.has(item.href)),
       workspace
     )
   }, [searchResults, searchValue, workspace])
@@ -447,6 +471,8 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
             onToggleNavigation={handleToggleNavigation}
             navigationExpanded={shellLayout.navHidden ? false : navigationExpanded}
             navigationToggleVisible={!shellLayout.navHidden}
+            showAssistantShortcut={enabledModuleRoutes ? enabledModuleRoutes.has('/assistant') : true}
+            showToolsShortcut={enabledModuleRoutes ? enabledModuleRoutes.has('/tools') : true}
             onLogout={handleLogout}
             statusSlot={commandStatus}
           />

@@ -20,6 +20,8 @@ const capabilityRouteMap: Record<string, string> = {
   simulations: '/simulations',
 }
 
+const moduleRoutes = new Set(Object.values(capabilityRouteMap))
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
 }
@@ -117,6 +119,30 @@ export function summarizeWorkspaceIntent(workspace: DashboardOnboardingWorkspace
     primaryRoute: workspace.primaryRoute,
     priorityRoutes,
   }
+}
+
+export function getEnabledWorkspaceModuleRoutes(workspace: DashboardOnboardingWorkspace | null): Set<string> | null {
+  if (!workspace) {
+    return null
+  }
+
+  const enabledRoutes = Array.isArray(workspace.modules)
+    ? workspace.modules
+        .filter((module) => module.enabled)
+        .map((module) => module.route)
+        .filter((route): route is string => typeof route === 'string' && route.length > 0)
+    : []
+
+  return new Set(enabledRoutes)
+}
+
+export function filterWorkspaceModuleRoutes<T extends { href: string }>(items: T[], workspace: DashboardOnboardingWorkspace | null): T[] {
+  const enabledRoutes = getEnabledWorkspaceModuleRoutes(workspace)
+  if (!enabledRoutes) {
+    return items
+  }
+
+  return items.filter((item) => !moduleRoutes.has(item.href) || enabledRoutes.has(item.href))
 }
 
 export function sortRoutesByWorkspaceIntent<T extends { href: string }>(items: T[], workspace: DashboardOnboardingWorkspace | null): T[] {
