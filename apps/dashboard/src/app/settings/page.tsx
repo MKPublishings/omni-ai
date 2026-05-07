@@ -29,6 +29,7 @@ import {
   createInitialOnboardingState,
   loadPersistedOnboardingState,
   loadWorkspaceFormation,
+  savePersistedOnboardingState,
   saveWorkspaceFormation,
   validateStep,
   type DashboardThemePreference,
@@ -72,11 +73,23 @@ function pickCapabilities(value: unknown, fallback: WorkspaceCapabilityId[]): Wo
   return capabilities.length > 0 ? capabilities : fallback
 }
 
+function getEnabledFormationCapabilities(localFormation: ReturnType<typeof loadWorkspaceFormation>): WorkspaceCapabilityId[] {
+  if (!localFormation || !Array.isArray(localFormation.modules)) {
+    return []
+  }
+
+  return localFormation.modules
+    .filter((module) => module.enabled)
+    .map((module) => module.id)
+    .filter((entry): entry is WorkspaceCapabilityId => capabilityIds.has(entry as WorkspaceCapabilityId))
+}
+
 function buildWorkspaceDraftFromSources(workspace: DashboardOnboardingWorkspace | null): WorkspaceDraft {
   const persistedDraft = loadPersistedOnboardingState()
   const localFormation = loadWorkspaceFormation()
   const workspaceContext = asRecord(workspace?.context?.workspace)
   const enabledModules = workspace?.modules.filter((module) => module.enabled).map((module) => module.id as WorkspaceCapabilityId) ?? []
+  const enabledFormationModules = getEnabledFormationCapabilities(localFormation)
 
   return {
     ...onboardingDefaults.workspace,
@@ -100,7 +113,13 @@ function buildWorkspaceDraftFromSources(workspace: DashboardOnboardingWorkspace 
         : (workspace?.orchestration.collaboration === 'team') || persistedDraft?.workspace.teamMode || false,
     capabilities: pickCapabilities(
       workspaceContext.capabilities,
-      pickCapabilities(enabledModules, persistedDraft?.workspace.capabilities ?? onboardingDefaults.workspace.capabilities)
+      pickCapabilities(
+        enabledModules,
+        pickCapabilities(
+          enabledFormationModules,
+          persistedDraft?.workspace.capabilities ?? onboardingDefaults.workspace.capabilities,
+        ),
+      )
     ),
   }
 }
@@ -297,6 +316,7 @@ export default function SettingsPage() {
     try {
       const formation = buildWorkspaceFormation(nextState)
       saveWorkspaceFormation(formation)
+      savePersistedOnboardingState(nextState)
 
       if (typeof window !== 'undefined') {
         if (preferencesDraft.theme === 'system') {
