@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ionirix Hierarchy Command Center</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="background-grid" aria-hidden="true"></div>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Ionirix Eight-Point Hierarchy</p>
+          <h1>Command Center</h1>
+          <p class="lede">
+            Constitutional runtime visibility for all eight points, active features, and event-bus compliance.
+          </p>
+        </div>
+        <div class="hero-panel">
+          <div class="metric-stack" id="headline-metrics"></div>
+          <p class="hero-note" id="generated-at"></p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <h2>Sovereign Status</h2>
+          <p>Live structure pulled from the generated hierarchy snapshot.</p>
+        </div>
+        <div class="metric-grid" id="summary-grid"></div>
+      </section>
+
+      <section class="section split">
+        <div>
+          <div class="section-heading">
+            <h2>Eight Points</h2>
+            <p>All point modules, ranked from sovereign to contact.</p>
+          </div>
+          <div class="point-grid" id="point-grid"></div>
+        </div>
+        <div>
+          <div class="section-heading">
+            <h2>Audit Spine</h2>
+            <p>Five-section compliance readout from the validator.</p>
+          </div>
+          <div class="audit-list" id="audit-list"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <h2>Event Bus Topology</h2>
+          <p>Authorized emitters and subscribers per point.</p>
+        </div>
+        <div class="topology-grid" id="topology-grid"></div>
+      </section>
+    </main>
+    <script src="./reports/command-center-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -7,6 +7,7 @@
     "dev": "tsx src/bootstrap/run-dev.ts",
     "validate": "tsx scripts/validate-hierarchy.ts",
     "audit": "tsx scripts/audit-compliance.ts",
+    "ui:refresh": "tsx scripts/render-command-center.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "tsx --test tests/*.test.ts"
   },

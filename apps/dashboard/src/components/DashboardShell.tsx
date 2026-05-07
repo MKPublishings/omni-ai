@@ -28,6 +28,7 @@ import {
   AssistantSparkIcon,
   BillingCardIcon,
   EventsPulseIcon,
+  HierarchyTowerIcon,
   MemoryArchiveIcon,
   OverviewGridIcon,
   PricingPulseIcon,
@@ -84,6 +85,11 @@ const navigationItems: NavigationEntry[] = [
     href: '/analytics',
     label: 'Analytics',
     icon: <AnalyticsWaveIcon className="w-5 h-5" />,
+  },
+  {
+    href: '/hierarchy',
+    label: 'Hierarchy',
+    icon: <HierarchyTowerIcon className="w-5 h-5" />,
   },
   {
     href: '/events',

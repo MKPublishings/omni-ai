@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-05-07T00:20:45.709Z",
+  "summary": {
+    "checksRun": 6,
+    "criticalCount": 0,
+    "warningCount": 0,
+    "passed": true
+  },
+  "sections": [
+    {
+      "title": "Constitution",
+      "status": "pass",
+      "detail": "32 constitutional lines loaded."
+    },
+    {
+      "title": "Hierarchy Config",
+      "status": "pass",
+      "detail": "8 points, 28 event types."
+    },
+    {
+      "title": "Modules",
+      "status": "pass",
+      "detail": "8 modules and 32 feature handlers registered."
+    },
+    {
+      "title": "Metrics",
+      "status": "pass",
+      "detail": "28 authorized events and 32 subscriptions tracked."
+    },
+    {
+      "title": "Event Bus Topology",
+      "status": "pass",
+      "detail": "All registered points comply with authorized emitter/subscriber topology."
+    }
+  ],
+  "violations": []
+}

@@ -51,6 +51,13 @@ export const dashboardSearchEntries: DashboardSearchEntry[] = [
     keywords: ['simulation', 'simulations', 'scenario', 'runs', 'models', 'forecast'],
   },
   {
+    href: '/hierarchy',
+    title: 'Hierarchy',
+    description: 'Eight-point hierarchy command center, compliance spine, and bus topology.',
+    section: 'Operations',
+    keywords: ['hierarchy', 'constitution', 'sovereign', 'topology', 'compliance', 'points', 'bus'],
+  },
+  {
     href: '/tools',
     title: 'Tools',
     description: 'Tool registry, utilities, and runtime support modules.',

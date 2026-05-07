@@ -58,6 +58,14 @@
         "options": {
           "cwd": "${workspaceFolder:Ionirix Eight-Point Hierarchy}"
         }
+      },
+      {
+        "label": "Hierarchy UI Refresh",
+        "type": "shell",
+        "command": "npm run ui:refresh",
+        "options": {
+          "cwd": "${workspaceFolder:Ionirix Eight-Point Hierarchy}"
+        }
       }
     ]
   }

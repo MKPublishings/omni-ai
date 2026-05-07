@@ -147,6 +147,19 @@ export function AnalyticsWaveIcon(props: IconProps) {
   )
 }
 
+export function HierarchyTowerIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 4v16" />
+      <path d="M6.5 7.5h11" />
+      <path d="M8 11.75h8" />
+      <path d="M9.5 16h5" />
+      <path d="M7 20h10" opacity="0.45" />
+      <circle cx="12" cy="4" r="1.5" fill="currentColor" stroke="none" />
+    </BaseIcon>
+  )
+}
+
 export function SimulationOrbitIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>
