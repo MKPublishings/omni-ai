@@ -1,4 +1,5 @@
 import type { DashboardOnboardingWorkspace } from '@/lib/dashboard'
+import type { WorkspaceFormation } from '@/onboarding'
 
 export interface WorkspaceIntentSummary {
   workspaceName: string
@@ -134,6 +135,28 @@ export function getEnabledWorkspaceModuleRoutes(workspace: DashboardOnboardingWo
     : []
 
   return new Set(enabledRoutes)
+}
+
+export function getEnabledFormationModuleRoutes(formation: WorkspaceFormation | null): Set<string> | null {
+  if (!formation) {
+    return null
+  }
+
+  const enabledRoutes = Array.isArray(formation.modules)
+    ? formation.modules
+        .filter((module) => module.enabled)
+        .map((module) => module.route)
+        .filter((route): route is string => typeof route === 'string' && route.length > 0)
+    : []
+
+  return new Set(enabledRoutes)
+}
+
+export function resolveEnabledWorkspaceModuleRoutes(
+  workspace: DashboardOnboardingWorkspace | null,
+  formation: WorkspaceFormation | null,
+): Set<string> | null {
+  return getEnabledFormationModuleRoutes(formation) ?? getEnabledWorkspaceModuleRoutes(workspace)
 }
 
 export function filterWorkspaceModuleRoutes<T extends { href: string }>(items: T[], workspace: DashboardOnboardingWorkspace | null): T[] {

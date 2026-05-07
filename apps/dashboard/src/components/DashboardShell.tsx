@@ -21,7 +21,7 @@ import { GlassCard } from './GlassCard'
 import { readStoredDashboardTheme, writeStoredDashboardTheme } from '@/lib/dashboard-theme'
 import {
   filterWorkspaceModuleRoutes,
-  getEnabledWorkspaceModuleRoutes,
+  resolveEnabledWorkspaceModuleRoutes,
   sortRoutesByWorkspaceIntent,
   summarizeWorkspaceIntent,
 } from '@/lib/workspace-shell'
@@ -257,28 +257,53 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }, [searchStorageScope])
 
   useEffect(() => {
-    const syncFormation = () => {
+    const syncFormation = async () => {
       setLocalFormation(loadWorkspaceFormation())
+
+      if (!hasWorkspaceSession) {
+        return
+      }
+
+      const nextWorkspace = await fetchOnboardingWorkspace().catch(() => null)
+      setWorkspace(nextWorkspace)
     }
 
     const handleStorage = (event: StorageEvent) => {
       if (!event.key || event.key.startsWith(WORKSPACE_FORMATION_STORAGE_PREFIX)) {
-        syncFormation()
+        void syncFormation()
       }
     }
 
-    syncFormation()
-    window.addEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, syncFormation)
+    void syncFormation()
+    const handleSettingsUpdated = () => {
+      void syncFormation()
+    }
+
+    window.addEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
     window.addEventListener('storage', handleStorage)
 
     return () => {
-      window.removeEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, syncFormation)
+      window.removeEventListener(DASHBOARD_SHELL_SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
       window.removeEventListener('storage', handleStorage)
     }
-  }, [])
+  }, [hasWorkspaceSession])
 
-  const enabledModuleRoutes = useMemo(() => getEnabledWorkspaceModuleRoutes(workspace), [workspace])
-  const searchableEntries = useMemo(() => filterWorkspaceModuleRoutes(dashboardSearchEntries, workspace), [workspace])
+  const enabledModuleRoutes = useMemo(() => resolveEnabledWorkspaceModuleRoutes(workspace, localFormation), [localFormation, workspace])
+  const searchableEntries = useMemo(() => {
+    if (!enabledModuleRoutes) {
+      return dashboardSearchEntries
+    }
+
+    return dashboardSearchEntries.filter((entry) => {
+      const moduleRoute = entry.href === '/assistant'
+        || entry.href === '/analytics'
+        || entry.href === '/tools'
+        || entry.href === '/memory'
+        || entry.href === '/simulations'
+
+      return !moduleRoute || enabledModuleRoutes.has(entry.href)
+    })
+  }, [enabledModuleRoutes])
 
   const searchResults = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
@@ -298,7 +323,9 @@ export function DashboardShell({ title, subtitle, children, actions, hidePageInt
   }, [searchValue, searchableEntries])
 
   const filteredNavigation = useMemo(() => {
-    const availableNavigation = filterWorkspaceModuleRoutes(navigationItems, workspace)
+    const availableNavigation = enabledModuleRoutes
+      ? navigationItems.filter((item) => !['/assistant', '/analytics', '/tools', '/memory', '/simulations'].includes(item.href) || enabledModuleRoutes.has(item.href))
+      : filterWorkspaceModuleRoutes(navigationItems, workspace)
     const query = searchValue.trim().toLowerCase()
     if (!query) {
       return sortRoutesByWorkspaceIntent(availableNavigation, workspace)
