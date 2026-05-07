@@ -211,6 +211,47 @@ function writeCachedOnboardingWorkspace(workspace: DashboardOnboardingWorkspace)
   window.localStorage.setItem(buildUserScopedStorageKey(ONBOARDING_WORKSPACE_CACHE_KEY, storedUser), JSON.stringify(workspace))
 }
 
+function countEnabledWorkspaceModules(workspace: DashboardOnboardingWorkspace | null): number {
+  return Array.isArray(workspace?.modules) ? workspace.modules.filter((module) => module.enabled).length : 0
+}
+
+function parseWorkspaceTimestamp(value: string | undefined): number {
+  if (!value) {
+    return 0
+  }
+
+  const timestamp = Date.parse(value)
+  return Number.isFinite(timestamp) ? timestamp : 0
+}
+
+function shouldPreferCachedWorkspace(
+  fetchedWorkspace: DashboardOnboardingWorkspace | null,
+  cachedWorkspace: DashboardOnboardingWorkspace | null,
+): boolean {
+  if (!cachedWorkspace) {
+    return false
+  }
+
+  if (!fetchedWorkspace) {
+    return true
+  }
+
+  const fetchedEnabledCount = countEnabledWorkspaceModules(fetchedWorkspace)
+  const cachedEnabledCount = countEnabledWorkspaceModules(cachedWorkspace)
+  const fetchedIsSeed = fetchedWorkspace.source === 'local-seed'
+  const cachedIsSeed = cachedWorkspace.source === 'local-seed'
+
+  if (fetchedIsSeed && !cachedIsSeed) {
+    return true
+  }
+
+  if (cachedEnabledCount > fetchedEnabledCount) {
+    return true
+  }
+
+  return parseWorkspaceTimestamp(cachedWorkspace.updatedAt) > parseWorkspaceTimestamp(fetchedWorkspace.updatedAt)
+}
+
 export function formatDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
     return 'just started'
@@ -340,6 +381,7 @@ export function fetchDashboardUser(): Promise<{ user: AuthUser }> {
 }
 
 export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWorkspace | null> {
+  const cachedWorkspace = readCachedOnboardingWorkspace()
   const payload = shouldPreferSameOriginApi()
     ? await fetchAuthorizedLocalJsonWithInit<{ workspace: DashboardOnboardingWorkspace | null }>('/api/onboarding/workspace', {
         method: 'POST',
@@ -359,7 +401,8 @@ export async function fetchOnboardingWorkspace(): Promise<DashboardOnboardingWor
         },
         body: JSON.stringify({}),
       }))
-  const workspace = payload.workspace ?? readCachedOnboardingWorkspace()
+  const fetchedWorkspace = payload.workspace ?? null
+  const workspace = shouldPreferCachedWorkspace(fetchedWorkspace, cachedWorkspace) ? cachedWorkspace : fetchedWorkspace
   if (workspace) {
     writeCachedOnboardingWorkspace(workspace)
   }
