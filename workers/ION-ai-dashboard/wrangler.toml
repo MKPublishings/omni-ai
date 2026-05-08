@@ -18,8 +18,8 @@ persist = true
 head_sampling_rate = 1
 
 [vars]
-ORCHESTRATOR_URL = "https://ION-ai.ION-ai.workers.dev"
-IMAGES_URL = "https://ION-ai-images.ION-ai.workers.dev"
-AUDIO_URL = "https://ION-ai-audio.ION-ai.workers.dev"
-EMBEDDINGS_URL = "https://ION-ai-embeddings.ION-ai.workers.dev"
-ROUTER_URL = "https://ION-ai-router.ION-ai.workers.dev"
+ORCHESTRATOR_URL = "https://ionirix.com"
+IMAGES_URL = "https://ion-ai-images.omni-ai.workers.dev"
+AUDIO_URL = "https://ion-ai-audio.omni-ai.workers.dev"
+EMBEDDINGS_URL = "https://ion-ai-embeddings.omni-ai.workers.dev"
+ROUTER_URL = "https://ion-ai-router.omni-ai.workers.dev"

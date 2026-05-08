@@ -29,7 +29,7 @@ async function generate(userPrompt, options = {}) {
 
     data.negativeTags = [...new Set([...(data.negativeTags || []), ...STILL_MODE_NEGATIVE_TERMS])];
 
-    // Call the underlying model (you plug in your provider here)
+    // Default to the live image-gen worker route and keep provider fallbacks behind the router.
     const generationOptions = {
         ...finalOptions,
         ratio: options.ratio || finalOptions.ratio || "9:16",

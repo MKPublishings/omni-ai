@@ -27,6 +27,8 @@
     "build": "node ./scripts/build.js",
     "test": "npm run smoke:image && npm run smoke:image:worker && npm run smoke:chat-policy && npm run smoke:chat-image-intent && npm run smoke:policy-lockstep && npm run smoke:image:orchestrator-attestation && npm run test:runtime && npm run test:cosmic && npm run test:multiverse",
     "test:dashboard:e2e": "npm run build --workspace @ionirix/dashboard && playwright test -c apps/dashboard/playwright.config.ts",
+    "test:image-contract": "tsx --test src/runtime/tests/imageRouteFormat.test.ts src/runtime/tests/imageRouteV2.test.ts",
+    "test:image-queue-contract": "tsx --test src/runtime/tests/imageQueueContract.test.ts src/runtime/tests/imageQueueRoute.test.ts src/runtime/tests/imageQueueRouteService.test.ts src/runtime/tests/imageGenJobRunner.test.ts src/runtime/tests/imageGenQueueStorage.test.ts",
     "test:runtime": "tsx --test src/runtime/tests/simulationEngine.test.ts src/runtime/tests/simulationWorker.test.ts src/runtime/tests/router.test.ts src/runtime/tests/modeRouting.test.ts src/runtime/tests/runtimeLoop.test.ts src/runtime/tests/workerRoute.test.ts src/runtime/tests/worldBridge.test.ts src/runtime/tests/worldWorker.test.ts src/runtime/tests/ionGateway.test.ts src/runtime/tests/premiumContracts.test.ts src/runtime/tests/stripeBilling.test.ts",
     "test:cosmic": "tsx --test src/modes/cosmic/__tests__/gravitational.test.ts src/modes/cosmic/__tests__/dynamics.test.ts src/modes/cosmic/__tests__/stellar.test.ts src/modes/cosmic/__tests__/ism.test.ts src/modes/cosmic/__tests__/integration.test.ts",
     "test:multiverse": "tsx --test src/modes/multiverse/__tests__/multiverse_seed.test.ts",
@@ -35,6 +37,7 @@
     "smoke:image": "node ./ION-image-engine/utils/smokeTest.js && node ./ION-image-engine/utils/policySmokeTest.js",
     "smoke:image:worker": "node ./scripts/smoke/imageWorkerContractSmoke.js",
     "smoke:image:orchestrator-attestation": "node ./scripts/smoke/orchestratorImageAttestationSmoke.js",
+    "smoke:image:orchestrator-attestation:image-gen": "set ION_SMOKE_REQUIRE_IMAGE_GEN_V2=1&& node ./scripts/smoke/orchestratorImageAttestationSmoke.js",
     "smoke:premium-phase": "node ./scripts/smoke/premiumPhaseRouteSmoke.js",
     "smoke:chat-policy": "node ./scripts/smoke/chatPromptPolicySmoke.js",
     "smoke:chat-image-intent": "node ./scripts/smoke/chatImageIntentSmoke.js",
@@ -50,6 +53,7 @@
     "billing:check-config": "tsx src/scripts/check-billing-config.ts",
     "forensics:image": "node ./scripts/tools/runImageForensicsSweep.js",
     "forensics:image:strict": "node ./scripts/tools/runImageForensicsSweep.js --strict",
+    "forensics:image:build-output": "node ./scripts/tools/runImageForensicsSweep.js --strict --include-build-output",
     "mind:tokens": "node ./scripts/tools/printTaskTokens.js",
     "mind:tokens:set": "node ./scripts/tools/updateTaskTokenStatus.js",
     "mind:tokens:active": "node ./scripts/tools/printActiveTaskTokens.js",
@@ -81,6 +85,7 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "zod": "^3.25.76"
   }
 }

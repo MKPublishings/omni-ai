@@ -3,7 +3,7 @@
 /**
  * Build Orchestration Script
  * 
- * Builds the entire ION AI platform:
+ * Builds the entire ION Ai platform:
  * 1. Builds dashboard (Next.js) → outputs to apps/dashboard/out
  * 2. Copies dashboard output to /public
  * 3. Validates ION Image Engine

@@ -24,6 +24,7 @@ binding = "AI"
 
 [vars]
 ION_ENV = "production"
+ION_IMAGE_PIPELINE_V2 = "1"
 APP_BASE_URL = "https://ionirix.com"
 EMAIL_TRANSPORT = "resend"
 EMAIL_FROM = "mail@ionirix.com"
@@ -49,6 +50,7 @@ STRIPE_CHECKOUT_CANCEL_URL = "/billing/cancel"
 # Optional ION model alias.
 # MODEL_ION = "@cf/meta/llama-3.1-8b-instruct"
 # MODEL_IMAGE = "@cf/black-forest-labs/flux-1-schnell"
+# ION_IMAGE_LEGACY_SYNC_FALLBACK = "1" # emergency-only fallback; keep unset for normal v2 operation
 # ION_SIMULATION_PATHS = "2" # integer 2..4
 # ION_MEMORY_RETENTION_DAYS = "45"
 # ION_SESSION_MAX_AGE_HOURS = "72"

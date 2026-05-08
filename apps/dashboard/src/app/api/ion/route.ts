@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Mock ION AI responses for development
+// Mock ION Ai responses for development
 const mockResponses = [
-  "I understand your request. As ION AI, I'm processing this through my cognitive systems. The analysis shows promising patterns in the data you've provided.",
+  "I understand your request. As ION Ai, I'm processing this through my cognitive systems. The analysis shows promising patterns in the data you've provided.",
   "Based on my reasoning capabilities, I can see multiple pathways forward. Let me illuminate the key considerations for your decision.",
   "My vision systems have analyzed the information. The patterns suggest we should focus on the sovereign aspects of this implementation.",
   "Through cinematic reasoning, I envision a fluid transition between these states. The glass materials will breathe with ambient intelligence.",
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Simulate ION AI processing time
+    // Simulate ION Ai processing time
     const processingTime = Math.random() * 2000 + 1000 // 1-3 seconds
 
     await new Promise(resolve => setTimeout(resolve, processingTime))
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('ION AI API Error:', error)
+    console.error('ION Ai API Error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -15,6 +15,8 @@
 - Phase 6: Frontend mind-state telemetry + multimodal rendering
 
 ## 3. Public Runtime Endpoints
+- Canonical public base: `https://ionirix.com`
+- Current worker alias: `https://ion-ai.omni-ai.workers.dev`
 - POST /api/ION
 - POST /api/image
 - GET /api/maintenance/status

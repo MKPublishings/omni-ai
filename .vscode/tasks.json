@@ -28,6 +28,24 @@
       "problemMatcher": []
     },
     {
+      "label": "ION: Test Image Contract",
+      "type": "shell",
+      "command": "npm run test:image-contract",
+      "problemMatcher": []
+    },
+    {
+      "label": "ION: Test Image Queue Contract",
+      "type": "shell",
+      "command": "npm run test:image-queue-contract",
+      "problemMatcher": []
+    },
+    {
+      "label": "ION: Smoke Orchestrator Image-Gen Route",
+      "type": "shell",
+      "command": "npm run smoke:image:orchestrator-attestation:image-gen",
+      "problemMatcher": []
+    },
+    {
       "label": "ION: View Task Tokens",
       "type": "shell",
       "command": "node ./scripts/tools/printTaskTokens.js",

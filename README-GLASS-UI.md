@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Ionirix Glass UI System is a sovereign design language forged from Microsoft Fluent 2, OpenAI Ambient, Grok Cinematic, and original Mirnes contributions. This implementation provides a complete component library for building the ION AI platform interface.
+The Ionirix Glass UI System is a sovereign design language forged from Microsoft Fluent 2, OpenAI Ambient, Grok Cinematic, and original Mirnes contributions. This implementation provides a complete component library for building the ION Ai platform interface.
 
 ## 🚀 Live Demo
 
@@ -130,7 +130,7 @@ function MyComponent() {
 - Three-zone layout system with focus states
 - Light leak effects between zones
 - Panel drag-resize functionality
-- Real-time ION AI API integration
+- Real-time ION Ai API integration
 - Live system stats updates
 
 ### ✅ Phase 5: Motion & Polish (COMPLETE)
@@ -142,7 +142,7 @@ function MyComponent() {
 
 ### ✅ Phase 6: Integration & Deployment (COMPLETE)
 - JWT-based authentication system with secure login
-- Real ION AI API integration with authentication
+- Real ION Ai API integration with authentication
 - CI/CD pipeline with GitHub Actions
 - Automated testing and cross-browser validation
 - Production deployment configuration for Vercel/Cloudflare
@@ -238,4 +238,11 @@ The dashboard uses JWT-based authentication:
 
 ## 🌐 Production URLs
 - **Dashboard**: Deployed to Vercel
-- **ION AI API**: https://ion-ai.ion-ai.workers.dev/
+- **ION Ai API**: https://ionirix.com/
+- **ION Ai Worker Alias**: https://ion-ai.omni-ai.workers.dev/
+
+## Generated Assets
+
+- Default repo sweeps exclude the generated deployment roots `public/` and `apps/dashboard/out/` unless build-output inspection is explicitly requested.
+- `public/_next/` is only one generated subtree inside the excluded `public/` deployment root; it is not the only generated surface covered by policy.
+- If generated output under `public/` or `apps/dashboard/out/` disagrees with runtime configuration, use `wrangler.toml`, `workers/*/wrangler.toml`, and `scripts/deploy.js` as the source of truth and rebuild instead of editing generated files directly.

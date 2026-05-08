@@ -21,9 +21,9 @@ head_sampling_rate = 1
 binding = "AI"
 
 [vars]
-IMAGES_URL = "https://ION-ai-images.ION-ai.workers.dev"
-AUDIO_URL = "https://ION-ai-audio.ION-ai.workers.dev"
-EMBED_URL = "https://ION-ai-embeddings.ION-ai.workers.dev"
+IMAGES_URL = "https://ion-ai-images.omni-ai.workers.dev"
+AUDIO_URL = "https://ion-ai-audio.omni-ai.workers.dev"
+EMBED_URL = "https://ion-ai-embeddings.omni-ai.workers.dev"
 
 [[services]]
 binding = "IMAGES_SERVICE"

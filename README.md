@@ -6,6 +6,13 @@ ION Ai is a **cognitive operating system** in active unification. The current no
 
 This README provides a **complete, structured, diagram‑rich** overview of ION Ai’s architecture, philosophy, and usage.
 
+## **Runtime Targets**
+
+- **Canonical public base**: `https://ionirix.com`
+- **Current worker alias**: `https://ion-ai.omni-ai.workers.dev`
+- **Primary image route**: `POST /api/image`
+- **Current live image route header**: `X-ION-Image-Route: image-gen-v2`
+
 ---
 
 

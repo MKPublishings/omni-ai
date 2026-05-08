@@ -37,6 +37,11 @@
 - Call `GET /api/release/spec` and inspect `runtime.readiness`.
 - Proceed only when `runtime.readiness.ready: true` and `failedChecks` is empty.
 
+## 4.5) Branding Gate
+- Run `npm run check:branding` before release tagging or merge-to-main.
+- Treat `ION Ai` casing as a hard gate for authored repository content.
+- Do not relax the gate for historical or third-party wording unless the surface is truly external or generated and excluded through the generated-artifact policy.
+
 ## 5) Functional Smoke
 - Chat route (`/api/ION`) works with streaming.
 - Image generation works (`/api/image` and multimodal `/api/ION` route=image).
@@ -45,8 +50,17 @@
 - `GET /api/billing/subscription` reports `providerConfigured: true` and all price flags set.
 
 ## 6) Post-Deploy Observe
+- Treat `https://ionirix.com` as the canonical public route and `https://ion-ai.omni-ai.workers.dev` as the current worker alias.
+- Confirm `POST /api/image` on both hosts returns `X-ION-Image-Route: image-gen-v2`.
+- Confirm multimodal `/api/ION` image requests stream image payloads sourced from the v2 pipeline.
 - Check logs for `release_readiness_background` and resolve any failed checks.
 - Confirm `/api/maintenance/status` shows healthy drift/autonomy metrics over time.
+
+## 6.5) Image Route Invariant
+- `image-gen-v2` is the only supported worker image route.
+- `POST /api/image` must not emit `X-ION-Image-Fallback` or `X-ION-Image-Fallback-Reason`.
+- Multimodal `/api/ION` image requests must stream an `imageDataUrl` payload backed by v2 metadata.
+- Re-run `node ./scripts/smoke/orchestratorImageAttestationSmoke.js` and confirm baseline requests return `X-ION-Image-Route: image-gen-v2` without fallback headers.
 *** Add File: c:\Users\Slizz\OneDrive\Documents\GitHub\website\ion-ai\src\scripts\check-billing-config.ts
 /**
  * @script check-billing-config

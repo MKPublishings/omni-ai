@@ -18,5 +18,5 @@ persist = true
 head_sampling_rate = 1
 
 [vars]
-API_TARGET = "https://ION-ai.ION-ai.workers.dev"
+API_TARGET = "https://ionirix.com"
 SITE_TARGET = "https://mkptri.org"

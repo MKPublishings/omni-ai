@@ -1,7 +1,18 @@
 const fs = require("fs");
 const path = require("path");
+const {
+  filterGeneratedDeploymentArtifacts,
+  resolveExistingGeneratedDeploymentRoots,
+  toPosix
+} = require("./shared/generatedArtifactPolicy");
 
 const rootDir = process.cwd();
+
+// Branding policy:
+// - Authored source files are hard-gated to the canonical product casing: "ION Ai".
+// - Generated deployment artifacts are excluded separately via generatedArtifactPolicy.
+// - Future exceptions should be rare and justified as truly external/generated surfaces,
+//   not as a workaround for authored repo content drift.
 
 const allowedExtensions = new Set([
   ".js",
@@ -77,8 +88,9 @@ function findViolations(filePath) {
   return violations;
 }
 
-const files = walk(rootDir);
+const files = filterGeneratedDeploymentArtifacts(rootDir, walk(rootDir));
 const violations = files.flatMap(findViolations);
+const excludedGeneratedRoots = resolveExistingGeneratedDeploymentRoots(rootDir);
 
 if (violations.length > 0) {
   console.error("\nBranding consistency check failed. Use 'ION Ai' brand casing.\n");
@@ -91,7 +103,12 @@ if (violations.length > 0) {
     console.error(`...and ${violations.length - 80} more`);
   }
 
+  console.error("\nPolicy: authored sources remain hard-gated; only generated deployment output is excluded by default.\n");
+
   process.exit(1);
 }
 
+if (excludedGeneratedRoots.length > 0) {
+  console.log(`Branding consistency check excluded generated paths by default: ${excludedGeneratedRoots.join(", ")}`);
+}
 console.log("Branding consistency check passed.");

@@ -311,9 +311,66 @@ async function callStabilityImages(prompt, options) {
     return toNonEmptyBuffer(bytes, "Stability");
 }
 
+async function callIonWorkerImages(prompt, options) {
+    const endpoint =
+        options.endpoint ||
+        process.env.ION_IMAGE_WORKER_URL ||
+        process.env.ION_ORCHESTRATOR_URL ||
+        "https://ionirix.com/api/image";
+
+    const width = toPositiveInt(options.width, 2160);
+    const height = toPositiveInt(options.height, 3840);
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            userId: String(options.userId || "ion-image-engine"),
+            prompt: String(prompt || ""),
+            stylePack: String(options.stylePack || options.style || ""),
+            quality: String(options.quality || "ultra"),
+            mode: String(options.mode || "simple"),
+            ratio: String(options.ratio || toAspectRatio(width, height)),
+            resolution: String(options.resolution || `${width}x${height}`),
+            width,
+            height,
+            seed: Number.isFinite(Number(options.seed)) ? Number(options.seed) : undefined,
+            feedback: String(options.feedback || ""),
+            camera: String(options.camera || ""),
+            lighting: String(options.lighting || ""),
+            materials: Array.isArray(options.materials) ? options.materials : [],
+            safetyProfile: options.safetyProfile
+        })
+    });
+
+    if (!response.ok) {
+        const reason = await response.text();
+        throw new Error(`ION worker image generation failed (${response.status}): ${reason}`);
+    }
+
+    const json = await response.json();
+    const imageDataUrl = String(json?.imageDataUrl || "");
+    if (!imageDataUrl.startsWith("data:image/")) {
+        throw new Error("ION worker response did not include imageDataUrl");
+    }
+
+    const commaIndex = imageDataUrl.indexOf(",");
+    if (commaIndex <= 0) {
+        throw new Error("ION worker response included malformed imageDataUrl");
+    }
+
+    const buffer = Buffer.from(imageDataUrl.slice(commaIndex + 1), "base64");
+    return toNonEmptyBuffer(buffer, "ION worker");
+}
+
 async function callUnderlyingModel(prompt, options) {
     const provider = String(options.provider || "openai").toLowerCase();
     logger.info(`Calling provider: ${provider}`);
+
+    if (provider === "ion-worker") {
+        return callIonWorkerImages(prompt, options);
+    }
 
     if (provider === "openai") {
         return callOpenAIImages(prompt, options);

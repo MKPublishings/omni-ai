@@ -1,8 +1,19 @@
 {
   "minOutputSide": 256,
   "maxOutputSide": 8192,
-  "defaultModel": "ION_stability",
+  "defaultModel": "ION_worker",
   "models": {
+    "ION_worker": {
+      "name": "ION Worker Image Generator",
+      "type": "image",
+      "provider": "ion-worker",
+      "endpoint": "https://ionirix.com/api/image",
+      "fallbackModel": "ION_stability",
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
+      "defaultSteps": 28,
+      "defaultCfgScale": 5
+    },
     "ION_openai": {
       "name": "ION OpenAI Image Generator",
       "type": "image",

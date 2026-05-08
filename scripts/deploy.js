@@ -110,7 +110,8 @@ async function main() {
 
     log('🎉 ION Glass UI System deployment completed successfully!')
     log('🌐 Dashboard: https://your-dashboard-url.vercel.app')
-    log('⚡ Worker: https://ion-ai.ion-ai.workers.dev')
+    log('⚡ Worker: https://ion-ai.omni-ai.workers.dev')
+    log('🌍 Production Route: https://ionirix.com')
 
   } catch (error) {
     log(`Deployment failed: ${error.message}`, 'error')

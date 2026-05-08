@@ -169,7 +169,7 @@ test('falls back to the local formation route when login cannot load a server wo
   await page.goto('/login')
   await page.getByPlaceholder('Email or username').fill('operator@ionirix.test')
   await page.getByPlaceholder('Password').fill('Passw0rd!')
-  await page.getByRole('button', { name: 'Access ION AI' }).click()
+  await page.getByRole('button', { name: 'Access ION Ai' }).click()
 
   await page.waitForURL('**/tools')
   await expect(page).toHaveURL(/\/tools$/)

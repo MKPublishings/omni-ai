@@ -622,3 +622,56 @@ test("worker /api/ION uses direct market data for stock market prompts", async (
     globalThis.fetch = originalFetch;
   }
 });
+
+test("worker /api/ION image route streams v2 image payloads for chat clients", async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+
+  const env = {
+    AI: {
+      run: async () => ({ response: "unused-for-image-route" })
+    },
+    MEMORY: memory as any,
+    MIND: mind as any,
+    ASSETS: {
+      fetch: async () => new Response("not-found", { status: 404 })
+    },
+    MODEL_ION: "primary-model",
+    COMFYUI_MOCK: "true",
+    DEFAULT_CHECKPOINT: "noobai-xl-vpred-v1.0"
+  } as any;
+
+  const request = new Request("https://example.test/api/ION", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-ION-session-id": "worker-image-route"
+    },
+    body: JSON.stringify({
+      mode: "auto",
+      messages: [
+        {
+          role: "user",
+          content: "/image Create image of an astronaut in a greenhouse with cinematic detail."
+        }
+      ]
+    })
+  });
+
+  const response = await worker.fetch(request, env, createExecutionContext() as any);
+  const sseText = await response.text();
+  const firstEvent = extractFirstSseEvent(sseText);
+  const image = firstEvent.image as Record<string, any>;
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Content-Type"), "text/event-stream");
+  assert.equal(response.headers.get("X-ION-Orchestrator-Route"), "image");
+  assert.equal(typeof firstEvent.content, "string");
+  assert.match(String(firstEvent.content || ""), /Your image is ready\./);
+  assert.match(String(firstEvent.imageDataUrl || ""), /^data:image\/png;base64,/);
+  assert.equal(typeof image?.filename, "string");
+  assert.equal(image?.metadata?.pipeline?.version, "v2");
+  assert.equal(image?.metadata?.pipeline?.gateway, "mock");
+  assert.equal(image?.metadata?.image?.exportLocation, "chat-download");
+  assert.equal(typeof image?.model, "string");
+});

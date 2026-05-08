@@ -17,9 +17,8 @@ import {
   shouldUseKnowledgeRetrieval,
   shouldUseSystemKnowledge
 } from "./ION/enhancements";
-import { assemblePrompt } from "./ION/rendering/engine/promptAssembler";
 import { listAvailableStyles, resolveStyleName } from "./ION/rendering/styles/styleRegistry";
-import { buildLawPromptDirectives, applyLawsToVisualInfluence, type LawReference } from "./ION/laws/imageLawBridge";
+import { type LawReference } from "./ION/laws/imageLawBridge";
 import { Laws, type LawDomain } from "./ION/laws/lawRegistry";
 import { warmupConnections, getConnectionStats } from "./llm/cloudflareOptimizations";
 import { advanceSimulationState, exportSimulationState } from "./ION/simulation/engine";
@@ -45,6 +44,24 @@ import { canonicalizeIONMode, normalizeConversationHints, resolveEffectiveIONMod
 import { getSessionByToken, touchSession } from "./auth/credentials";
 import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
+import { executeIonImagePipeline } from "./image-gen/app/ion-image-pipeline";
+import { isReadableByteStream } from "./shared/image-output";
+import {
+  ION_IMAGE_DEFAULT_HEIGHT,
+  ION_IMAGE_DEFAULT_QUALITY,
+  ION_IMAGE_DEFAULT_RATIO,
+  ION_IMAGE_DEFAULT_RESOLUTION,
+  ION_IMAGE_DEFAULT_WIDTH,
+  ION_IMAGE_PROMPT_MAX_CHARS,
+  inferCameraFromPrompt as inferLegacyCameraFromPrompt,
+  inferLightingFromPrompt as inferLegacyLightingFromPrompt,
+  inferMaterialsFromPrompt as inferLegacyMaterialsFromPrompt,
+  inferStyleFromPrompt as inferLegacyStyleFromPrompt,
+  normalizeImageGenerationError as normalizeLegacyImageGenerationError,
+} from "./image-gen/app/ion-image-legacy-generation-service";
+import { buildIonImageV2RouteResponse } from "./image-gen/app/ion-image-route-format";
+import { getIonImageQueueStatusRouteResult, submitIonImageQueueRouteResult } from "./image-gen/app/ion-image-queue-route-service";
+import { buildIonImageV2RouteResult } from "./image-gen/app/ion-image-v2-route-service";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
 import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
 export { IONSession } from "./memory/session";
@@ -77,6 +94,8 @@ export interface Env {
   ION_MEDIA_API_TIMEOUT_MS?: string;
   ION_FAST_CHAT?: string;
   ION_NATIVE_STREAMING?: string;
+  ION_IMAGE_PIPELINE_V2?: string;
+  ION_IMAGE_QUEUE_V1?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -323,56 +342,6 @@ function buildWeatherSourceReference(weather: InternetWeatherResult | null): Cha
     source: "open-meteo"
   }];
 }
-
-type ImageModelConfig = {
-  model: string;
-  styleId: string;
-  width?: number;
-  height?: number;
-  ratio: string;
-  resolution: string;
-};
-
-type IONImagePromptData = {
-  userPrompt: string;
-  tokens: string[];
-  semanticExpansion: string;
-  lawTags: string[];
-  lawInfluence: {
-    ids: string[];
-    palette: string[];
-    geometry: string[];
-    motion: string[];
-    symbols: string[];
-  };
-  technicalTags: string[];
-  styleTags: string[];
-  negativeTags: string[];
-  finalPrompt: string;
-  model?: string;
-};
-
-type TimeIntent = "day" | "night" | "sunset" | "indoor" | "neutral";
-
-type IONImageOptions = {
-  mode?: string;
-  stylePack?: string;
-  laws?: LawReference[];
-  feedback?: string;
-  quality?: string;
-  seed?: number;
-  fresh?: boolean;
-  camera?: string;
-  lighting?: string;
-  materials?: string[];
-};
-
-type IONImageGenerationResult = {
-  imageDataUrl: string;
-  filename: string;
-  metadata: Record<string, unknown>;
-  model: string;
-};
 
 function toPositiveInt(value: unknown, fallback: number): number {
   const n = Number(value);
@@ -1113,73 +1082,6 @@ function evaluateSexualSafetyPrompt(text: string, safetyProfile: SafetyProfile):
   }
 
   return { blocked: false, reason: "allowed" };
-}
-
-function normalizeImageGenerationError(err: any): {
-  status: number;
-  code: string;
-  message: string;
-  details?: string;
-} {
-  const rawMessage = String(err?.message || err?.error || "").trim();
-  const value = rawMessage.toLowerCase();
-
-  if (
-    value.includes("moderat") ||
-    value.includes("safety") ||
-    value.includes("policy") ||
-    value.includes("nsfw") ||
-    value.includes("unsafe") ||
-    value.includes("content blocked")
-  ) {
-    return {
-      status: 422,
-      code: "provider-policy-blocked",
-      message: "Image provider rejected this prompt under policy constraints.",
-      details: rawMessage || undefined
-    };
-  }
-
-  if (
-    value.includes("too long") ||
-    value.includes("context length") ||
-    value.includes("max tokens") ||
-    value.includes("input is too large") ||
-    value.includes("length of '/prompt'") ||
-    (/must be\s*<=\s*\d+/.test(value) && value.includes("prompt"))
-  ) {
-    return {
-      status: 400,
-      code: "prompt-too-long",
-      message: "Prompt is too long for the image provider. Shorten the prompt and retry.",
-      details: rawMessage || undefined
-    };
-  }
-
-  if (value.includes("timeout") || value.includes("timed out") || value.includes("deadline")) {
-    return {
-      status: 504,
-      code: "provider-timeout",
-      message: "Image generation timed out. Please retry.",
-      details: rawMessage || undefined
-    };
-  }
-
-  if (value.includes("unavailable") || value.includes("overloaded") || value.includes("rate limit")) {
-    return {
-      status: 503,
-      code: "provider-unavailable",
-      message: "Image provider is temporarily unavailable. Retry shortly.",
-      details: rawMessage || undefined
-    };
-  }
-
-  return {
-    status: 500,
-    code: "image-generation-failed",
-    message: "Image generation failed.",
-    details: rawMessage || undefined
-  };
 }
 
 const INTERNET_MODE_PROFILES: Record<string, InternetSearchProfile> = {
@@ -2435,735 +2337,6 @@ function sanitizePromptText(prompt: string): string {
     .trim();
 }
 
-const ION_STYLE_PACKS: Record<string, { name: string; tags: string[] }> = {
-  mythic_cinematic: {
-    name: "Mythic Cinematic",
-    tags: ["cinematic lighting", "dramatic contrast", "symbolic composition", "high detail", "emotional depth"]
-  },
-  os_cinematic: {
-    name: "OS Cinematic",
-    tags: ["futuristic UI", "holographic overlays", "clean interface", "glowing panels"]
-  },
-  noir_tech: {
-    name: "Noir Tech",
-    tags: ["high contrast", "dark palette", "moody lighting", "cyberpunk atmosphere"]
-  }
-};
-
-const ION_IMAGE_DEFAULT_QUALITY = "ultra";
-const ION_IMAGE_DEFAULT_RATIO = "9:16";
-const ION_IMAGE_DEFAULT_RESOLUTION = "4k";
-const ION_IMAGE_DEFAULT_WIDTH = 2160;
-const ION_IMAGE_DEFAULT_HEIGHT = 3840;
-const ION_IMAGE_DIMENSION_LOCK = "strict";
-const ION_IMAGE_PROMPT_MAX_CHARS = 10000;
-const ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS = 2048;
-const ION_IMAGE_MODEL_MAX_EDGE = 2048;
-const ION_IMAGE_MODEL_MIN_EDGE = 256;
-const ION_IMAGE_MODEL_DIMENSION_STEP = 64;
-const ION_IMAGE_POLICY_FALLBACK_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
-
-const ION_QUALITY_DEFAULT = [
-  "very high image quality",
-  "4k uhd render",
-  "high detail",
-  "high-frequency texture retention",
-  "physically based rendering",
-  "physically accurate lighting",
-  "realistic material response",
-  "anti-haze clarity",
-  "anti-pixelation"
-];
-
-const ION_NEGATIVE_BASE = [
-  "no distortion",
-  "no extra limbs",
-  "no artifacts",
-  "no watermark",
-  "no blurry details",
-  "no deformed anatomy",
-  "no haze",
-  "no fog veil",
-  "no pixelation",
-  "no compression artifacts"
-];
-
-const ION_NEGATIVE_NO_OCEAN = ["no ocean", "no beach", "no water horizon"];
-
-const ION_ENVIRONMENTS = [
-  "bedroom", "room", "forest", "city", "street", "cafe", "office",
-  "studio", "kitchen", "mountains", "desert", "classroom",
-  "library", "garage", "basement", "attic", "garden", "cathedral"
-];
-
-function tokenizePrompt(text: string): string[] {
-  if (!text) return [];
-  return String(text)
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter(Boolean);
-}
-
-function inferSceneDescription(prompt: string): string {
-  const lower = String(prompt || "").toLowerCase();
-  if (lower.includes("park")) {
-    return "park environment matching the prompt, natural landscape continuity";
-  }
-  if (lower.includes("bedroom") || lower.includes("room")) {
-    return "cozy interior, detailed furniture, realistic lighting";
-  }
-  if (lower.includes("forest")) {
-    return "dense trees, atmospheric fog, grounded natural lighting";
-  }
-  if (lower.includes("city")) {
-    return "urban environment, buildings, grounded textures, depth and perspective";
-  }
-  return "coherent environment matching the subject and mood";
-}
-
-function inferTimeIntent(prompt: string): TimeIntent {
-  const lower = String(prompt || "").toLowerCase();
-
-  if (/(bedroom|room|office|studio|kitchen|indoor|interior)/.test(lower)) {
-    return "indoor";
-  }
-
-  if (/(night|midnight|starlight|starry|nighttime)/.test(lower)) {
-    return "night";
-  }
-
-  if (/(sunset|golden hour|dusk|twilight)/.test(lower)) {
-    return "sunset";
-  }
-
-  if (/(day|daytime|sunlight|morning|noon|afternoon)/.test(lower)) {
-    return "day";
-  }
-
-  return "neutral";
-}
-
-function buildTimeDirective(intent: TimeIntent): string {
-  if (intent === "night") {
-    return "nighttime scene when appropriate, coherent low-light rendering";
-  }
-
-  if (intent === "sunset") {
-    return "sunset lighting, warm sky tones";
-  }
-
-  if (intent === "day") {
-    return "daytime lighting, natural sunlight, clear atmosphere";
-  }
-
-  if (intent === "indoor") {
-    return "interior lighting setup, practical lights, no night sky elements unless requested";
-  }
-
-  return "";
-}
-
-function getStylePack(name: string): { name: string; tags: string[] } {
-  if (!name) {
-    return { name: "none", tags: [] };
-  }
-  return ION_STYLE_PACKS[name] || { name: "none", tags: [] };
-}
-
-function promptRequestsPeople(prompt: string): boolean {
-  const lower = String(prompt || "").toLowerCase();
-  return /\b(person|people|character|characters|man|woman|boy|girl|child|children|human|humans|crowd|selfie|face|worker|hiker|runner|couple|family|model|figure|silhouette|subject|pose|full[-\s]?body|upper[-\s]?body|half[-\s]?body|waist[-\s]?up)\b/.test(lower);
-}
-
-function buildStrictPromptDirective(): string {
-  return "strict prompt fidelity: include only elements explicitly requested by the user; do not add extra subjects, characters, objects, text, logos, or overlays";
-}
-
-function buildPolicySafePrompt(userPrompt: string): string {
-  const raw = sanitizePromptText(String(userPrompt || "")).trim();
-  if (!raw) return "";
-
-  const compact = raw
-    .replace(/^(please\s+)?(create|generate|make)\s+(an?\s+)?image\s+of\s+/i, "")
-    .replace(/^(please\s+)?(create|generate|make)\s+/i, "")
-    .trim();
-
-  return (compact || raw).slice(0, 700);
-}
-
-function applyPromptFreshness(options: IONImageOptions): IONImageOptions {
-  return {
-    ...options,
-    seed: Number.isFinite(options.seed) ? Number(options.seed) : Math.floor(Math.random() * 999999999),
-    fresh: true
-  };
-}
-
-function extractEnvironmentKeywords(prompt: string): string[] {
-  const lower = String(prompt || "").toLowerCase();
-  return ION_ENVIRONMENTS.filter((value) => lower.includes(value));
-}
-
-function inferStyleFromPrompt(prompt: string): string {
-  const lower = String(prompt || "").toLowerCase();
-  if (!lower) return "";
-
-  const candidates: Array<{ style: string; pattern: RegExp }> = [
-    { style: "hyper-real", pattern: /\b(hyper\s*real|hyperreal|photo\s*real|photoreal|photorealistic|photographic|photo[-\s]?realistic)\b/i },
-    { style: "semi-realistic", pattern: /\b(semi\s*realistic|stylized\s*realism|semi\s*real)\b/i },
-    { style: "vector", pattern: /\b(vector\s*art|flat\s*vector|flat\s*design|svg\s*style)\b/i },
-    { style: "logo", pattern: /\b(logo\s*design|brand\s*mark|logomark|wordmark)\b/i },
-    { style: "monochrome", pattern: /\b(monochrome|black\s*and\s*white|grayscale|greyscale)\b/i },
-    { style: "sketch", pattern: /\b(sketch|pencil\s*sketch|graphite|line\s*drawing|hand\s*drawn)\b/i },
-    { style: "vfx", pattern: /\b(vfx|cinematic\s*vfx|glitch\s*effect|holographic|particle\s*effects)\b/i },
-    { style: "text", pattern: /\b(typography|text\s*design|lettering|word\s*art)\b/i },
-    { style: "3d", pattern: /\b(3d|three\s*dimensional|cgi|rendered\s*3d)\b/i },
-    { style: "realistic", pattern: /\b(realistic|lifelike|natural\s*imperfections|photo\s*quality)\b/i }
-  ];
-
-  for (const candidate of candidates) {
-    if (candidate.pattern.test(lower)) {
-      return candidate.style;
-    }
-  }
-
-  return "";
-}
-
-function inferCameraFromPrompt(prompt: string): string {
-  const lower = String(prompt || "").toLowerCase();
-  if (!lower) return "";
-
-  if (/\b(full[-\s]?body|full[-\s]?length|head[-\s]?to[-\s]?toe|whole\s+body|entire\s+figure|standing\s+pose|body\s+shot)\b/i.test(lower)) {
-    return "wide-35mm";
-  }
-
-  if (/\b(85mm|subject lens|subject shot|headshot|bokeh shot)\b/i.test(lower)) return "prime-85mm";
-  if (/\b(35mm|wide angle|wide-angle|environmental shot|street photo)\b/i.test(lower)) return "wide-35mm";
-  if (/\b(macro|close-up macro|extreme close-up|micro detail|micro-detail)\b/i.test(lower)) return "macro";
-  if (/\b(135mm|telephoto|compressed background|long lens)\b/i.test(lower)) return "telephoto-135mm";
-
-  return "";
-}
-
-function inferLightingFromPrompt(prompt: string): string {
-  const lower = String(prompt || "").toLowerCase();
-  if (!lower) return "";
-
-  if (/\b(soft studio|beauty light|diffused studio|softbox)\b/i.test(lower)) return "studio-soft";
-  if (/\b(hard studio|hard light|sharp shadows|high contrast studio)\b/i.test(lower)) return "studio-hard";
-  if (/\b(natural daylight|daylight|golden hour daylight|outdoor sunlight)\b/i.test(lower)) return "natural-daylight";
-  if (/\b(low[-\s]?key|moody lighting|dramatic shadows|cinematic low key)\b/i.test(lower)) return "cinematic-lowkey";
-
-  return "";
-}
-
-function inferMaterialsFromPrompt(prompt: string): string[] {
-  const lower = String(prompt || "").toLowerCase();
-  if (!lower) return [];
-
-  const inferred: string[] = [];
-  if (/\b(skin|subject skin|face texture|pores)\b/i.test(lower)) inferred.push("skin");
-  if (/\b(fabric|cloth|textile|cotton|silk|denim|wool)\b/i.test(lower)) inferred.push("fabric");
-  if (/\b(metal|chrome|steel|iron|aluminum|brushed metal)\b/i.test(lower)) inferred.push("metal");
-  if (/\b(glass|crystal|transparent|refraction|window pane)\b/i.test(lower)) inferred.push("glass");
-
-  return [...new Set(inferred)];
-}
-
-function orchestrateIONImagePrompt(userPrompt: string, options: IONImageOptions): IONImagePromptData {
-  const tokens = tokenizePrompt(userPrompt);
-  const sceneDescription = inferSceneDescription(userPrompt);
-  const timeIntent = inferTimeIntent(userPrompt);
-  const timeDirective = buildTimeDirective(timeIntent);
-  const strictDirective = buildStrictPromptDirective();
-  const selectedStylePack = getStylePack(options.stylePack || "");
-  const styleAwarePrompt = assemblePrompt(userPrompt, options.stylePack || "", {
-    camera: options.camera,
-    lighting: options.lighting,
-    materials: Array.isArray(options.materials) ? options.materials : undefined
-  });
-
-  const semanticExpansion = [styleAwarePrompt, sceneDescription, timeDirective, strictDirective].filter(Boolean).join(", ");
-  const lawTags = buildLawPromptDirectives(options.laws);
-  const lawInfluence = applyLawsToVisualInfluence(options.laws);
-  const styleTags = selectedStylePack.tags || [];
-  const technicalTags: string[] = [];
-
-  const finalPrompt = [
-    semanticExpansion,
-    lawTags.join(", "),
-    styleTags.join(", "),
-    technicalTags.join(", ")
-  ].filter(Boolean).join(", ");
-
-  return {
-    userPrompt,
-    tokens,
-    semanticExpansion,
-    lawTags,
-    lawInfluence,
-    technicalTags,
-    styleTags,
-    negativeTags: [],
-    finalPrompt
-  };
-}
-
-function refineIONImagePrompt(promptData: IONImagePromptData, options: IONImageOptions): { data: IONImagePromptData; finalOptions: IONImageOptions } {
-  const data: IONImagePromptData = { ...promptData };
-
-  if (String(options?.quality || "").trim()) {
-    data.technicalTags = [...(data.technicalTags || []), ...ION_QUALITY_DEFAULT];
-  }
-
-  data.negativeTags = [...new Set(data.negativeTags || [])];
-
-  const tags = [
-    data.semanticExpansion,
-    data.lawTags.join(", "),
-    data.styleTags.join(", "),
-    data.technicalTags.join(", ")
-  ].filter(Boolean).join(", ");
-
-  let finalPrompt = tags;
-  if (data.negativeTags.length) {
-    finalPrompt += `, avoid: ${data.negativeTags.join(", ")}`;
-  }
-
-  const envKeywords = extractEnvironmentKeywords(data.userPrompt);
-  if (envKeywords.length) {
-    finalPrompt = `${finalPrompt}, environment: ${envKeywords.join(", ")}`;
-  }
-
-  data.model = "slizzai-imagegen.v2.1";
-  data.finalPrompt = finalPrompt;
-
-  return {
-    data,
-    finalOptions: applyPromptFreshness(options)
-  };
-}
-
-function parseResolution(value: string): { width: number; height: number } {
-  const match = String(value || "").trim().toLowerCase().match(/^(\d+)\s*[x×]\s*(\d+)$/i);
-  if (!match) return { width: 1024, height: 1024 };
-  return {
-    width: clamp(Number(match[1]), 256, 8192),
-    height: clamp(Number(match[2]), 256, 8192)
-  };
-}
-
-function parseRatio(value: string): { ratioW: number; ratioH: number; label: string } {
-  const normalized = String(value || "").trim().toLowerCase();
-  const presets: Record<string, [number, number]> = {
-    "1:1": [1, 1],
-    "4:3": [4, 3],
-    "3:4": [3, 4],
-    "3:2": [3, 2],
-    "2:3": [2, 3],
-    "16:9": [16, 9],
-    "9:16": [9, 16],
-    "21:9": [21, 9],
-    "9:21": [9, 21],
-    "5:4": [5, 4],
-    "4:5": [4, 5],
-    "7:5": [7, 5],
-    "5:7": [5, 7]
-  };
-
-  if (presets[normalized]) {
-    const [ratioW, ratioH] = presets[normalized];
-    return { ratioW, ratioH, label: normalized };
-  }
-
-  const match = normalized.match(/^(\d+)\s*[:/]\s*(\d+)$/);
-  if (match) {
-    const ratioW = clamp(Number(match[1]), 1, 64);
-    const ratioH = clamp(Number(match[2]), 1, 64);
-    return { ratioW, ratioH, label: `${ratioW}:${ratioH}` };
-  }
-
-  return { ratioW: 1, ratioH: 1, label: "1:1" };
-}
-
-function parseResolutionPreset(value: string, quality: string): number {
-  const normalized = String(value || "").trim().toLowerCase();
-  const presets: Record<string, number> = {
-    "sd": 512,
-    "hd": 1280,
-    "fhd": 1920,
-    "qhd": 2560,
-    "4k": 3840,
-    "5k": 5120,
-    "6k": 6144,
-    "8k": 7680
-  };
-
-  if (presets[normalized]) {
-    return presets[normalized];
-  }
-
-  if (quality === "high") return 2560;
-  if (quality === "ultra" || quality === "very_high" || quality === "very-high") return 3840;
-  return ION_IMAGE_DEFAULT_WIDTH;
-}
-
-function deriveDimensionsFromRatio(ratio: string, resolution: string, quality: string): { width: number; height: number; ratio: string } {
-  const ratioData = parseRatio(ratio);
-  const maxSide = parseResolutionPreset(resolution, quality);
-
-  let width = maxSide;
-  let height = Math.round((maxSide * ratioData.ratioH) / ratioData.ratioW);
-
-  if (height > maxSide) {
-    height = maxSide;
-    width = Math.round((maxSide * ratioData.ratioW) / ratioData.ratioH);
-  }
-
-  return {
-    width: clamp(width, 256, 8192),
-    height: clamp(height, 256, 8192),
-    ratio: ratioData.label
-  };
-}
-
-function snapModelDimension(value: number): number {
-  const clamped = clamp(Math.floor(value), ION_IMAGE_MODEL_MIN_EDGE, ION_IMAGE_MODEL_MAX_EDGE);
-  const snapped = Math.floor(clamped / ION_IMAGE_MODEL_DIMENSION_STEP) * ION_IMAGE_MODEL_DIMENSION_STEP;
-  return Math.max(ION_IMAGE_MODEL_MIN_EDGE, snapped || ION_IMAGE_MODEL_MIN_EDGE);
-}
-
-function normalizeModelRenderDimensions(width: number, height: number): { width: number; height: number } {
-  let safeWidth = clamp(Math.floor(width), ION_IMAGE_MODEL_MIN_EDGE, 8192);
-  let safeHeight = clamp(Math.floor(height), ION_IMAGE_MODEL_MIN_EDGE, 8192);
-
-  const maxEdge = Math.max(safeWidth, safeHeight);
-  if (maxEdge > ION_IMAGE_MODEL_MAX_EDGE) {
-    const scale = ION_IMAGE_MODEL_MAX_EDGE / maxEdge;
-    safeWidth = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeWidth * scale));
-    safeHeight = Math.max(ION_IMAGE_MODEL_MIN_EDGE, Math.floor(safeHeight * scale));
-  }
-
-  safeWidth = snapModelDimension(safeWidth);
-  safeHeight = snapModelDimension(safeHeight);
-
-  return {
-    width: safeWidth,
-    height: safeHeight
-  };
-}
-
-function selectImageModelConfig(
-  styleId: string,
-  quality: string | undefined,
-  env: Env,
-  requestedRatio?: string,
-  requestedResolution?: string,
-  requestedWidth?: number,
-  requestedHeight?: number
-): ImageModelConfig {
-  const explicitWidth = Number(requestedWidth);
-  const explicitHeight = Number(requestedHeight);
-  const safeQuality = String(quality || "").toLowerCase();
-
-  let width: number | undefined;
-  let height: number | undefined;
-
-  if (Number.isFinite(explicitWidth)) {
-    width = clamp(Math.floor(explicitWidth), 256, 8192);
-  }
-  if (Number.isFinite(explicitHeight)) {
-    height = clamp(Math.floor(explicitHeight), 256, 8192);
-  }
-
-  const hasExplicitSize = Number.isFinite(width) && Number.isFinite(height);
-  const hasRatioOrResolution = Boolean(String(requestedRatio || "").trim() || String(requestedResolution || "").trim());
-  if (!hasExplicitSize && hasRatioOrResolution) {
-    const computed = deriveDimensionsFromRatio(
-      requestedRatio || ION_IMAGE_DEFAULT_RATIO,
-      requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION,
-      safeQuality || ION_IMAGE_DEFAULT_QUALITY
-    );
-    width = computed.width;
-    height = computed.height;
-  }
-
-  if (!Number.isFinite(width) || !Number.isFinite(height)) {
-    width = ION_IMAGE_DEFAULT_WIDTH;
-    height = ION_IMAGE_DEFAULT_HEIGHT;
-  }
-
-  const normalizedRenderDimensions = normalizeModelRenderDimensions(
-    Number(width || ION_IMAGE_DEFAULT_WIDTH),
-    Number(height || ION_IMAGE_DEFAULT_HEIGHT)
-  );
-  width = normalizedRenderDimensions.width;
-  height = normalizedRenderDimensions.height;
-
-  const ratioLabel = String(requestedRatio || "").trim();
-  const resolutionLabel = Number.isFinite(width) && Number.isFinite(height)
-    ? `${width}x${height}`
-    : (String(requestedResolution || "").trim() || ION_IMAGE_DEFAULT_RESOLUTION);
-
-  return {
-    model: env.MODEL_IMAGE || "@cf/black-forest-labs/flux-1-schnell",
-    styleId: styleId || "auto",
-    width,
-    height,
-    ratio: ratioLabel || ION_IMAGE_DEFAULT_RATIO,
-    resolution: resolutionLabel
-  };
-}
-
-function buildImageRunPayload(prompt: string, modelConfig: ImageModelConfig, seed?: number): Record<string, unknown> {
-  const normalizedPrompt = sanitizePromptText(String(prompt || "")).trim();
-  const providerPrompt = normalizedPrompt.length > ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS
-    ? normalizedPrompt.slice(0, ION_IMAGE_PROVIDER_PROMPT_MAX_CHARS)
-    : normalizedPrompt;
-  const payload: Record<string, unknown> = {
-    prompt: providerPrompt,
-    seed
-  };
-
-  if (Number.isFinite(modelConfig.width)) {
-    payload.width = modelConfig.width;
-  }
-  if (Number.isFinite(modelConfig.height)) {
-    payload.height = modelConfig.height;
-  }
-
-  return payload;
-}
-
-function isReadableByteStream(value: unknown): value is ReadableStream {
-  return !!value && typeof (value as any).getReader === "function";
-}
-
-function base64ToBytes(base64: string): Uint8Array {
-  const normalized = String(base64 || "")
-    .replace(/\s+/g, "")
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode(...chunk);
-  }
-  return btoa(binary);
-}
-
-async function normalizeImageOutput(raw: unknown): Promise<{ bytes: Uint8Array; mimeType: string }> {
-  if (!raw) {
-    throw new Error("Empty image response");
-  }
-
-  if (raw instanceof ArrayBuffer) {
-    return { bytes: new Uint8Array(raw), mimeType: "image/png" };
-  }
-
-  if (ArrayBuffer.isView(raw)) {
-    const view = raw as ArrayBufferView;
-    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
-  }
-
-  if (isReadableByteStream(raw)) {
-    const buffer = await new Response(raw as ReadableStream).arrayBuffer();
-    return { bytes: new Uint8Array(buffer), mimeType: "image/png" };
-  }
-
-  const candidate =
-    (raw as any)?.image ??
-    (raw as any)?.result?.bytes ??
-    (raw as any)?.result?.image ??
-    (raw as any)?.data?.[0]?.b64_json ??
-    (raw as any)?.output?.[0]?.image;
-
-  if (candidate instanceof ArrayBuffer) {
-    return { bytes: new Uint8Array(candidate), mimeType: "image/png" };
-  }
-
-  if (ArrayBuffer.isView(candidate)) {
-    const view = candidate as ArrayBufferView;
-    return { bytes: new Uint8Array(view.buffer, view.byteOffset, view.byteLength), mimeType: "image/png" };
-  }
-
-  if (typeof candidate === "string") {
-    if (candidate.startsWith("data:image/")) {
-      const commaIndex = candidate.indexOf(",");
-      if (commaIndex <= 0) {
-        throw new Error("Image response included malformed data URL");
-      }
-      const header = candidate.slice(5, commaIndex);
-      const payload = candidate.slice(commaIndex + 1);
-      const mimeType = header.split(";")[0] || "image/png";
-      return { bytes: base64ToBytes(payload), mimeType };
-    }
-
-    const mimeType =
-      (raw as any)?.mimeType ||
-      (raw as any)?.contentType ||
-      (raw as any)?.content_type ||
-      "image/png";
-
-    return { bytes: base64ToBytes(candidate), mimeType };
-  }
-
-  throw new Error("Unsupported image response format");
-}
-
-function makeImageFilename(styleId: string): string {
-  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-  const safeStyle = String(styleId || "image").replace(/[^a-zA-Z0-9_-]/g, "_");
-  return `ionirix_${safeStyle}_${ts}.png`;
-}
-
-async function generateIONImageFromPrompt(env: Env, userPrompt: string, options: Partial<ImageRequestBody> = {}): Promise<IONImageGenerationResult> {
-  const promptText = sanitizePromptText(String(userPrompt || ""));
-  if (!promptText) {
-    throw new Error("Prompt is required");
-  }
-  if (promptText.length > ION_IMAGE_PROMPT_MAX_CHARS) {
-    throw new Error(`Prompt is too long. Keep it under ${ION_IMAGE_PROMPT_MAX_CHARS} characters.`);
-  }
-
-  const feedback = sanitizePromptText(String(options?.feedback || ""));
-  const requestedStylePack = sanitizePromptText(String(options?.stylePack || "")).toLowerCase();
-  const requestedLaws = Array.isArray(options?.laws)
-    ? options.laws
-        .map((law) => {
-          const id = sanitizePromptText(String(law?.id || "")).toUpperCase();
-          const mode = sanitizePromptText(String(law?.mode || "")).toLowerCase();
-          const weight = Number(law?.weight);
-          const normalizedMode: LawReference["mode"] =
-            mode === "symbolic" || mode === "structural" || mode === "color" || mode === "motion"
-              ? mode
-              : undefined;
-          return {
-            id,
-            mode: normalizedMode,
-            weight: Number.isFinite(weight) ? Math.min(1, Math.max(0, weight)) : undefined
-          };
-        })
-        .filter((law) => Boolean(law.id))
-    : [];
-
-  const requestedQuality = sanitizePromptText(String(options?.quality || "")).toLowerCase();
-  const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
-  const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
-  const visualReasoning = runVisualReasoning(promptText);
-  const promptInferredCamera = inferCameraFromPrompt(promptText) || visualReasoning.cameraIntent;
-  const promptInferredLighting = inferLightingFromPrompt(promptText) || visualReasoning.lightingIntent;
-  const promptInferredMaterials = inferMaterialsFromPrompt(promptText);
-  const effectiveStylePack = promptInferredStyle || requestedStylePack;
-  const resolvedRenderingStyle = resolveStyleName(effectiveStylePack) || "auto";
-  const requestedCameraRaw = sanitizePromptText(String(options?.camera || "")).toLowerCase();
-  const requestedLightingRaw = sanitizePromptText(String(options?.lighting || "")).toLowerCase();
-  const requestedMaterials = Array.isArray(options?.materials)
-    ? options.materials.map((item) => sanitizePromptText(String(item || "")).toLowerCase()).filter(Boolean)
-    : [];
-  const effectiveCamera = promptInferredCamera || requestedCameraRaw;
-  const effectiveLighting = promptInferredLighting || requestedLightingRaw;
-  const effectiveMaterials = promptInferredMaterials.length
-    ? promptInferredMaterials
-    : requestedMaterials.length
-      ? requestedMaterials
-      : [];
-
-  const requestedRatio = sanitizePromptText(String(options?.ratio || ""));
-  const requestedResolution = sanitizePromptText(String(options?.resolution || ""));
-  const requestedWidth = Number(options?.width);
-  const requestedHeight = Number(options?.height);
-  const effectiveRatio = requestedRatio || ION_IMAGE_DEFAULT_RATIO;
-  const effectiveResolution = requestedResolution || ION_IMAGE_DEFAULT_RESOLUTION;
-  const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
-  const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
-  const parsedSeed = Number(options?.seed);
-
-  const orchestrated = orchestrateIONImagePrompt(
-    `${promptText}, visual reasoning: ${visualReasoning.directive}`,
-    {
-      mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
-      stylePack: effectiveStylePack,
-      laws: requestedLaws,
-      quality: effectiveQuality,
-      feedback,
-      seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-      camera: effectiveCamera,
-      lighting: effectiveLighting,
-      materials: effectiveMaterials
-    }
-  );
-
-  const refined = refineIONImagePrompt(orchestrated, {
-    mode: sanitizePromptText(String(options?.mode || "simple")).toLowerCase() || "simple",
-    stylePack: effectiveStylePack,
-    laws: requestedLaws,
-    quality: effectiveQuality,
-    feedback,
-    seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-    camera: effectiveCamera,
-    lighting: effectiveLighting,
-    materials: effectiveMaterials
-  });
-
-  const modelConfig = selectImageModelConfig(
-    effectiveStylePack,
-    effectiveQuality,
-    env,
-    effectiveRatio,
-    effectiveResolution,
-    effectiveWidth,
-    effectiveHeight
-  );
-
-  const rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(refined.data.finalPrompt, modelConfig, refined.finalOptions.seed));
-
-  const normalized = await normalizeImageOutput(rawImage);
-  const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
-  const filename = makeImageFilename(modelConfig.styleId);
-
-  return {
-    imageDataUrl,
-    filename,
-    model: modelConfig.model,
-    metadata: {
-      style_id: modelConfig.styleId,
-      model: modelConfig.model,
-      ratio: modelConfig.ratio,
-      resolution: modelConfig.resolution,
-      forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
-      forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
-      forced_width: ION_IMAGE_DEFAULT_WIDTH,
-      forced_height: ION_IMAGE_DEFAULT_HEIGHT,
-      dimension_lock: ION_IMAGE_DIMENSION_LOCK,
-      quality: effectiveQuality,
-      rendering_style: resolvedRenderingStyle,
-      camera: effectiveCamera,
-      lighting: effectiveLighting,
-      materials: effectiveMaterials,
-      visual_reasoning: visualReasoning,
-      seed: refined.finalOptions.seed,
-      prompt: {
-        userPrompt: orchestrated.userPrompt,
-        semanticExpansion: orchestrated.semanticExpansion,
-        finalPrompt: refined.data.finalPrompt
-      }
-    }
-  };
-}
-
 // Warmup connections on first request (non-blocking)
 let connectionsWarmedUp = false;
 let lastReadinessAuditAt = 0;
@@ -3939,12 +3112,12 @@ export default {
         });
       }
 
-      if (url.pathname === "/api/image" && request.method !== "POST") {
+      if (url.pathname === "/api/image" && !["GET", "POST"].includes(request.method)) {
         return new Response("Method Not Allowed", {
           status: 405,
           headers: {
             ...CORS_HEADERS,
-            "Allow": "POST, OPTIONS"
+            "Allow": "GET, POST, OPTIONS"
           }
         });
       }
@@ -4139,6 +3312,32 @@ export default {
         });
       }
 
+      if (url.pathname === "/api/image" && request.method === "GET") {
+        const imageQueueV1Requested = String(url.searchParams.get("queue") || "").toLowerCase() === "v1";
+        const imageQueueV1Enabled = isEnabledFlag(env.ION_IMAGE_QUEUE_V1) || imageQueueV1Requested;
+
+        if (!imageQueueV1Enabled) {
+          return new Response("Method Not Allowed", {
+            status: 405,
+            headers: {
+              ...CORS_HEADERS,
+              "Allow": "POST, OPTIONS"
+            }
+          });
+        }
+
+        const jobId = sanitizePromptText(String(url.searchParams.get("jobId") || ""));
+        const statusResult = await getIonImageQueueStatusRouteResult(jobId, env as unknown as Record<string, unknown>);
+
+        return new Response(JSON.stringify(statusResult.body), {
+          status: statusResult.status,
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+
       if (url.pathname === "/api/image" && request.method === "POST") {
         try {
           const body = (await request.json()) as ImageRequestBody;
@@ -4184,10 +3383,10 @@ export default {
           const requestedQuality = sanitizePromptText(String(body?.quality || "")).toLowerCase();
           const effectiveQuality = requestedQuality || ION_IMAGE_DEFAULT_QUALITY;
           const requestedMode = sanitizePromptText(String(body?.mode || "simple")).toLowerCase() || "simple";
-          const promptInferredStyle = resolveStyleName(inferStyleFromPrompt(promptText));
-          const promptInferredCamera = inferCameraFromPrompt(promptText);
-          const promptInferredLighting = inferLightingFromPrompt(promptText);
-          const promptInferredMaterials = inferMaterialsFromPrompt(promptText);
+          const promptInferredStyle = resolveStyleName(inferLegacyStyleFromPrompt(promptText));
+          const promptInferredCamera = inferLegacyCameraFromPrompt(promptText);
+          const promptInferredLighting = inferLegacyLightingFromPrompt(promptText);
+          const promptInferredMaterials = inferLegacyMaterialsFromPrompt(promptText);
           const effectiveStylePack = promptInferredStyle || requestedStylePack;
           const resolvedRenderingStyle = resolveStyleName(effectiveStylePack) || "auto";
           const requestedCameraRaw = sanitizePromptText(String(body?.camera || "")).toLowerCase();
@@ -4211,6 +3410,11 @@ export default {
           const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
           const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
           const parsedSeed = Number(body?.seed);
+          const imageQueueV1Requested = String(url.searchParams.get("queue") || "").toLowerCase() === "v1";
+          const imageQueueV1Enabled = isEnabledFlag(env.ION_IMAGE_QUEUE_V1) || imageQueueV1Requested;
+          const imagePipelineV2Requested = String(url.searchParams.get("pipeline") || "").toLowerCase() === "v2";
+          const imagePipelineV2FlagEnabled = isEnabledFlag(env.ION_IMAGE_PIPELINE_V2);
+          const imagePipelineV2Enabled = imagePipelineV2FlagEnabled || imagePipelineV2Requested;
           const debugRequested =
             body?.debug === true ||
             String(url.searchParams.get("debug") || "").toLowerCase() === "true";
@@ -4261,204 +3465,132 @@ export default {
             );
           }
 
-          const orchestrated = orchestrateIONImagePrompt(promptText, {
-            mode: requestedMode,
-            stylePack: effectiveStylePack,
-            laws: requestedLaws,
-            quality: effectiveQuality,
-            feedback,
-            seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-            camera: effectiveCamera,
-            lighting: effectiveLighting,
-            materials: effectiveMaterials
-          });
-
-          const refined = refineIONImagePrompt(orchestrated, {
-            mode: requestedMode,
-            stylePack: effectiveStylePack,
-            laws: requestedLaws,
-            quality: effectiveQuality,
-            feedback,
-            seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
-            camera: effectiveCamera,
-            lighting: effectiveLighting,
-            materials: effectiveMaterials
-          });
-
-          const modelConfig = selectImageModelConfig(
-            effectiveStylePack,
-            effectiveQuality,
-            env,
-            effectiveRatio,
-            effectiveResolution,
-            effectiveWidth,
-            effectiveHeight
-          );
-          let outputModel = modelConfig.model;
-
-          let fallbackUsed = false;
-          let fallbackReason: string | null = null;
-
-          const primaryPrompt = refined.data.finalPrompt;
-          const compactPrompt = [
-            orchestrated.userPrompt,
-            ...refined.data.styleTags.slice(0, 6),
-            ...refined.data.technicalTags.slice(0, 8)
-          ]
-            .filter(Boolean)
-            .join(", ")
-            .slice(0, 900);
-          const policySafePrompt = buildPolicySafePrompt(orchestrated.userPrompt);
-
-          let rawImage: any;
-          try {
-            rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(primaryPrompt, modelConfig, refined.finalOptions.seed));
-          } catch (primaryErr: any) {
-            const normalizedPrimaryError = normalizeImageGenerationError(primaryErr);
-            const shouldRetryCompactPrompt =
-              normalizedPrimaryError.code === "prompt-too-long" ||
-              normalizedPrimaryError.code === "provider-timeout" ||
-              normalizedPrimaryError.code === "provider-unavailable" ||
-              normalizedPrimaryError.code === "provider-policy-blocked";
-
-            if (!shouldRetryCompactPrompt || (!compactPrompt && !policySafePrompt)) {
-              throw primaryErr;
-            }
-
-            fallbackUsed = true;
-            fallbackReason = normalizedPrimaryError.code;
-
-            if (normalizedPrimaryError.code === "provider-policy-blocked") {
-              const fallbackModel =
-                String(env.MODEL_IMAGE_POLICY_FALLBACK || ION_IMAGE_POLICY_FALLBACK_MODEL).trim() ||
-                ION_IMAGE_POLICY_FALLBACK_MODEL;
-              const fallbackModelConfig = {
-                ...modelConfig,
-                model: fallbackModel,
-                width: 1152,
-                height: 2048,
-                resolution: "1152x2048"
-              };
-              const retryPrompt = policySafePrompt || compactPrompt;
-              outputModel = fallbackModelConfig.model;
-              rawImage = await env.AI.run(
-                fallbackModelConfig.model,
-                buildImageRunPayload(retryPrompt, fallbackModelConfig, refined.finalOptions.seed)
-              );
-            } else {
-              rawImage = await env.AI.run(modelConfig.model, buildImageRunPayload(compactPrompt, modelConfig, refined.finalOptions.seed));
-            }
-          }
-
-          const normalized = await normalizeImageOutput(rawImage);
-          const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
-          const filename = makeImageFilename(modelConfig.styleId);
-
-          const responsePayload: Record<string, unknown> = {
-            user_id: userId,
-            imageDataUrl,
-            filename,
-            metadata: {
-              style_id: modelConfig.styleId,
-              model: outputModel,
-              ratio: modelConfig.ratio,
-              resolution: modelConfig.resolution,
-              forced_resolution: `${ION_IMAGE_DEFAULT_WIDTH}x${ION_IMAGE_DEFAULT_HEIGHT}`,
-              forced_aspect_ratio: ION_IMAGE_DEFAULT_RATIO,
-              forced_width: ION_IMAGE_DEFAULT_WIDTH,
-              forced_height: ION_IMAGE_DEFAULT_HEIGHT,
-              dimension_lock: ION_IMAGE_DIMENSION_LOCK,
-              mode: requestedMode,
-              quality: effectiveQuality,
-              rendering_style: resolvedRenderingStyle,
-              rendering_style_source: promptInferredStyle ? "prompt" : (requestedStylePack ? "session-or-request" : "auto"),
-              camera: effectiveCamera,
-              camera_source: promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "none"),
-              lighting: effectiveLighting,
-              lighting_source: promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "none"),
-              materials: effectiveMaterials,
-              materials_source: promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : "none"),
-              seed: refined.finalOptions.seed,
-              feedbackApplied: Boolean(feedback),
-              prompt: {
-                userPrompt: orchestrated.userPrompt,
-                semanticExpansion: orchestrated.semanticExpansion,
-                lawTags: refined.data.lawTags,
-                lawInfluence: refined.data.lawInfluence,
-                technicalTags: refined.data.technicalTags,
-                styleTags: refined.data.styleTags,
-                negativeTags: refined.data.negativeTags,
-                finalPrompt: refined.data.finalPrompt,
-                fallbackUsed,
-                fallbackReason
+          if (imageQueueV1Requested && imageQueueV1Enabled) {
+            const queueRouteResult = await submitIonImageQueueRouteResult(
+              {
+                userId,
+                prompt: promptText,
+                stylePack: effectiveStylePack || requestedStylePack,
+                width: effectiveWidth,
+                height: effectiveHeight,
+                seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined
               },
-              safety: {
-                ageTier: safetyProfile.ageTier,
-                explicitAllowed: safetyProfile.explicitAllowed,
-                illegalBlocked: safetyProfile.illegalBlocked
-              },
-              export_location: "chat-download"
-            }
-          };
+              env as unknown as Record<string, unknown>
+            );
 
-          if (debugRequested) {
-            responsePayload.debug = {
-              requested: {
-                mode: requestedMode,
-                stylePack: requestedStylePack,
-                inferredStyleFromPrompt: promptInferredStyle || null,
-                effectiveStylePack: effectiveStylePack || null,
-                quality: effectiveQuality,
-                renderingStyle: resolvedRenderingStyle,
-                inferredCameraFromPrompt: promptInferredCamera || null,
-                effectiveCamera: effectiveCamera,
-                inferredLightingFromPrompt: promptInferredLighting || null,
-                effectiveLighting: effectiveLighting,
-                inferredMaterialsFromPrompt: promptInferredMaterials,
-                effectiveMaterials: effectiveMaterials,
-                availableStyles: listAvailableStyles(),
-                ratio: requestedRatio,
-                resolution: requestedResolution || null,
-                width: Number.isFinite(requestedWidth) ? requestedWidth : null,
-                height: Number.isFinite(requestedHeight) ? requestedHeight : null,
-                seed: Number.isFinite(parsedSeed) ? parsedSeed : null
-              },
-              pass1_orchestrated: {
-                userPrompt: orchestrated.userPrompt,
-                tokens: orchestrated.tokens,
-                semanticExpansion: orchestrated.semanticExpansion,
-                styleTags: orchestrated.styleTags
-              },
-              pass2_technicalEnhancement: {
-                technicalTags: refined.data.technicalTags
-              },
-              pass3_negativePrompting: {
-                negativeTags: refined.data.negativeTags
-              },
-              pass4_sceneEnforcer: {
-                environmentKeywords: extractEnvironmentKeywords(orchestrated.userPrompt)
-              },
-              pass5_modelAdapter: {
-                targetModel: refined.data.model,
-                finalPrompt: refined.data.finalPrompt
-              }
-            };
-          }
+            ctx.waitUntil(queueRouteResult.backgroundTask);
 
-          return new Response(
-            JSON.stringify(responsePayload),
-            {
+            return new Response(JSON.stringify(queueRouteResult.response.body), {
+              status: queueRouteResult.response.status,
               headers: {
                 ...CORS_HEADERS,
-                "Content-Type": "application/json",
-                "X-ION-Image-Model": outputModel,
-                "Access-Control-Expose-Headers": "X-ION-Image-Model"
+                "Content-Type": "application/json"
               }
+            });
+          }
+
+          if (imagePipelineV2Enabled) {
+            try {
+              const imagePipelineStartedAt = Date.now();
+              const pipelineResult = await executeIonImagePipeline(
+                {
+                  userId,
+                  prompt: promptText,
+                  stylePack: effectiveStylePack || requestedStylePack,
+                  width: effectiveWidth,
+                  height: effectiveHeight,
+                  seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined
+                },
+                env as unknown as Record<string, unknown>
+              );
+
+              const totalMs = Date.now() - imagePipelineStartedAt;
+              const renderingStyleSource = effectiveStylePack ? "session-or-request" : "auto";
+              const cameraSource = promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "none");
+              const lightingSource = promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "none");
+              const materialsSource = promptInferredMaterials.length ? "prompt" : (requestedMaterials.length ? "session-or-request" : "none");
+              const responsePayload = await buildIonImageV2RouteResult({
+                userId,
+                mode: requestedMode,
+                quality: effectiveQuality,
+                ratio: effectiveRatio,
+                feedbackApplied: Boolean(feedback),
+                styleSource: renderingStyleSource,
+                camera: {
+                  value: effectiveCamera,
+                  source: cameraSource
+                },
+                lighting: {
+                  value: effectiveLighting,
+                  source: lightingSource
+                },
+                materials: {
+                  values: effectiveMaterials,
+                  source: materialsSource
+                },
+                safety: {
+                  ageTier: safetyProfile.ageTier,
+                  explicitAllowed: safetyProfile.explicitAllowed,
+                  illegalBlocked: safetyProfile.illegalBlocked
+                },
+                pipelineResult,
+                debugRequested: debugRequested
+                  ? {
+                    mode: requestedMode,
+                    stylePack: requestedStylePack,
+                    inferredStyleFromPrompt: promptInferredStyle || null,
+                    effectiveStylePack: effectiveStylePack || null,
+                    quality: effectiveQuality,
+                    renderingStyle: pipelineResult.request.ionMetadata.styleFamily,
+                    inferredCameraFromPrompt: promptInferredCamera || null,
+                    effectiveCamera,
+                    inferredLightingFromPrompt: promptInferredLighting || null,
+                    effectiveLighting,
+                    inferredMaterialsFromPrompt: promptInferredMaterials,
+                    effectiveMaterials,
+                    availableStyles: listAvailableStyles(),
+                    ratio: requestedRatio,
+                    resolution: requestedResolution || null,
+                    width: Number.isFinite(requestedWidth) ? requestedWidth : null,
+                    height: Number.isFinite(requestedHeight) ? requestedHeight : null,
+                    seed: Number.isFinite(parsedSeed) ? parsedSeed : null
+                  }
+                  : undefined,
+                totalMs,
+              });
+
+              return new Response(
+                JSON.stringify(responsePayload.body),
+                {
+                  headers: {
+                    ...CORS_HEADERS,
+                    ...responsePayload.headers,
+                  }
+                }
+              );
+            } catch (pipelineErr: any) {
+              throw pipelineErr;
             }
-          );
+          }
+
+          if (!imagePipelineV2Enabled) {
+            return new Response(
+              JSON.stringify({
+                error: "ION image pipeline v2 is required.",
+                code: "image-gen-v2-required"
+              }),
+              {
+                status: 503,
+                headers: {
+                  ...CORS_HEADERS,
+                  "Content-Type": "application/json"
+                }
+              }
+            );
+          }
         } catch (imageErr: any) {
           logger.error("image_generation_error", imageErr);
-          const normalizedError = normalizeImageGenerationError(imageErr);
+          const normalizedError = normalizeLegacyImageGenerationError(imageErr);
           return new Response(JSON.stringify({
             error: normalizedError.message,
             code: normalizedError.code,
@@ -4473,7 +3605,7 @@ export default {
         }
       }
 
-      if (url.pathname === "/api/chat/history" && request.method === "GET") {
+      if (url.pathname === "/api/chat/history" && (request.method === "GET" || request.method === "POST")) {
         await ensureIONMemorySchema(env);
         const authChatContext = await resolveAuthenticatedChatContext(request, env);
         if (!authChatContext?.userId) {
@@ -4486,12 +3618,20 @@ export default {
           });
         }
 
+        const requestBody = request.method === "POST"
+          ? await request.json().catch(() => ({})) as { limit?: number }
+          : {} as { limit?: number };
+        const limitFromQuery = Number(url.searchParams.get("limit"));
+        const limitFromBody = Number(requestBody.limit);
+        const limit = Number.isFinite(limitFromBody)
+          ? limitFromBody
+          : Number.isFinite(limitFromQuery)
+            ? limitFromQuery
+            : 120;
+        const turns = await getChatHistoryForUser(env, authChatContext.userId, limit);
         const preferences = await getChatPreferences(env, authChatContext.userId);
-        const turns = preferences.persistHistory
-          ? await getChatHistoryForUser(env, authChatContext.userId, clamp(Number(url.searchParams.get("limit") || 120), 1, 500))
-          : [];
 
-        return new Response(JSON.stringify({ ok: true, turns, preferences }), {
+        return new Response(JSON.stringify({ turns, preferences }), {
           headers: {
             ...CORS_HEADERS,
             "Content-Type": "application/json"
@@ -5017,23 +4157,65 @@ export default {
                 .join("\n\n")
             };
           } else if (orchestratorDecision.route === "image") {
-            const generated = await generateIONImageFromPrompt(env, latestUserText, {
-              mode: normalizedMode,
-              quality: "ultra"
-            });
+            const promptInferredStyle = resolveStyleName(inferLegacyStyleFromPrompt(latestUserText));
+            const promptInferredCamera = inferLegacyCameraFromPrompt(latestUserText);
+            const promptInferredLighting = inferLegacyLightingFromPrompt(latestUserText);
+            const promptInferredMaterials = inferLegacyMaterialsFromPrompt(latestUserText);
 
-            multimodalPayload = {
-              imageDataUrl: generated.imageDataUrl,
-              image: {
-                filename: generated.filename,
-                model: generated.model,
-                metadata: generated.metadata
-              }
-            };
+            try {
+              const imagePipelineStartedAt = Date.now();
+              const pipelineResult = await executeIonImagePipeline(
+                {
+                  userId: userId || "anonymous",
+                  prompt: latestUserText,
+                  stylePack: promptInferredStyle || undefined,
+                },
+                env as unknown as Record<string, unknown>
+              );
+              const responsePayload = await buildIonImageV2RouteResult({
+                userId: userId || "anonymous",
+                mode: normalizedMode,
+                feedbackApplied: false,
+                styleSource: "auto",
+                camera: {
+                  value: promptInferredCamera,
+                  source: promptInferredCamera ? "prompt" : "none"
+                },
+                lighting: {
+                  value: promptInferredLighting,
+                  source: promptInferredLighting ? "prompt" : "none"
+                },
+                materials: {
+                  values: promptInferredMaterials,
+                  source: promptInferredMaterials.length ? "prompt" : "none"
+                },
+                safety: {
+                  ageTier: safetyProfile.ageTier,
+                  explicitAllowed: safetyProfile.explicitAllowed,
+                  illegalBlocked: safetyProfile.illegalBlocked
+                },
+                pipelineResult,
+                totalMs: Date.now() - imagePipelineStartedAt,
+              });
 
-            result = {
-              response: `Your image is ready. Preview or download ${generated.filename}.`
-            };
+              multimodalPayload = {
+                imageDataUrl: responsePayload.body.imageDataUrl,
+                image: {
+                  filename: responsePayload.body.filename,
+                  model: responsePayload.body.metadata.model.outputModel,
+                  metadata: responsePayload.body.metadata
+                }
+              };
+
+              result = {
+                response: `Your image is ready. Preview or download ${responsePayload.body.filename}.`
+              };
+            } catch (imageErr: any) {
+              const normalizedError = normalizeLegacyImageGenerationError(imageErr);
+              result = {
+                response: normalizedError.message
+              };
+            }
           } else {
             result = await IONBrainLoop(env, runtimeCtx);
           }

@@ -1,5 +1,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const {
+  filterGeneratedDeploymentArtifacts,
+  resolveExistingGeneratedDeploymentRoots,
+  toPosix
+} = require("../shared/generatedArtifactPolicy");
 
 const ROOT = process.cwd();
 const REPORT_DIR = path.join(ROOT, "data", "logs");
@@ -119,10 +124,6 @@ const PROMPT_TRUNCATION_PATTERNS = [
   /userPrompt[^\n]*\.slice\(\s*0\s*,\s*\d+\s*\)/i
 ];
 
-function toPosix(value) {
-  return value.split(path.sep).join("/");
-}
-
 function listFilesRecursive(dir) {
   const out = [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -200,7 +201,10 @@ function isImageRelevantPath(relPath, strictMode) {
 
 function gatherForensics(options = {}) {
   const strictMode = options.strictMode === true;
+  const includeBuildOutput = options.includeBuildOutput === true;
   const allFiles = listFilesRecursive(ROOT);
+  const candidateFiles = filterGeneratedDeploymentArtifacts(ROOT, allFiles, { includeBuildOutput });
+  const excludedGeneratedRoots = resolveExistingGeneratedDeploymentRoots(ROOT);
   const pipelineFiles = [];
   const promptMatches = [];
   const suspiciousDefaults = [];
@@ -210,7 +214,7 @@ function gatherForensics(options = {}) {
   const writeWithoutGuard = [];
   const promptTruncationSignals = [];
 
-  for (const filePath of allFiles) {
+  for (const filePath of candidateFiles) {
     const relPath = toPosix(path.relative(ROOT, filePath));
     const lowerPath = relPath.toLowerCase();
     const text = readTextSafe(filePath);
@@ -265,8 +269,11 @@ function gatherForensics(options = {}) {
     generatedAt: new Date().toISOString(),
     root: toPosix(ROOT),
     strictMode,
+    includeBuildOutput,
+    excludedGeneratedRoots,
     summary: {
-      filesScanned: allFiles.length,
+      filesScanned: candidateFiles.length,
+      generatedBuildFilesExcluded: allFiles.length - candidateFiles.length,
       pipelineFiles: pipelineFiles.length,
       promptFieldsFound: promptMatches.length,
       suspiciousDefaults: suspiciousDefaults.length,
@@ -297,12 +304,19 @@ function toMarkdown(report) {
   const lines = [];
   lines.push("# ION Image Forensics Sweep");
   lines.push("");
+  lines.push("> Generated report. Treat `scripts/tools/runImageForensicsSweep.js` as the policy source and this latest markdown as the operator-facing derived artifact.");
+  lines.push("");
   lines.push(`Generated: ${report.generatedAt}`);
   lines.push(`Risk Score: ${report.riskScore}/100`);
   lines.push(`Mode: ${report.strictMode ? "strict" : "standard"}`);
+  lines.push(`Generated deployment roots included: ${report.includeBuildOutput ? "yes" : "no"}`);
   lines.push("");
   lines.push("## Summary");
   lines.push(`- Files scanned: ${report.summary.filesScanned}`);
+  lines.push(`- Generated deployment files excluded: ${report.summary.generatedBuildFilesExcluded}`);
+  if (Array.isArray(report.excludedGeneratedRoots) && report.excludedGeneratedRoots.length > 0) {
+    lines.push(`- Excluded generated roots: ${report.excludedGeneratedRoots.join(", ")}`);
+  }
   lines.push(`- Pipeline files: ${report.summary.pipelineFiles}`);
   lines.push(`- Prompt-field matches: ${report.summary.promptFieldsFound}`);
   lines.push(`- Suspicious default matches (moon/ocean/night sky): ${report.summary.suspiciousDefaults}`);
@@ -368,12 +382,17 @@ function writeReports(report) {
 function main() {
   const args = process.argv.slice(2);
   const strictMode = args.includes("--strict");
+  const includeBuildOutput = args.includes("--include-build-output");
 
-  const report = gatherForensics({ strictMode });
+  const report = gatherForensics({ strictMode, includeBuildOutput });
   const paths = writeReports(report);
+  const excludedRootsLabel = Array.isArray(report.excludedGeneratedRoots) && report.excludedGeneratedRoots.length > 0
+    ? report.excludedGeneratedRoots.join(", ")
+    : "none";
 
   console.log("[image-forensics] Sweep complete.");
   console.log(`[image-forensics] Mode: ${strictMode ? "strict" : "standard"}`);
+  console.log(`[image-forensics] Generated deployment roots: ${includeBuildOutput ? "included" : `excluded by default (${excludedRootsLabel})`}`);
   console.log(`[image-forensics] Risk score: ${report.riskScore}/100`);
   console.log(`[image-forensics] Files scanned: ${report.summary.filesScanned}`);
   console.log(`[image-forensics] JSON: ${toPosix(path.relative(ROOT, paths.latestJsonPath))}`);

@@ -257,7 +257,7 @@ function LoginPageContent() {
           <div className="w-16 h-16 bg-spectral-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <AssistantSparkIcon className="w-8 h-8 text-pine-black-900" />
           </div>
-          <h1 className="text-2xl font-bold text-quantum-white mb-2">ION AI Dashboard</h1>
+          <h1 className="text-2xl font-bold text-quantum-white mb-2">ION Ai Dashboard</h1>
           <p className="mx-auto max-w-md text-quantum-white/64">
             Sign in or create your account with the hosted Auth0 flow. Email credentials are still available as a fallback.
           </p>
@@ -404,7 +404,7 @@ function LoginPageContent() {
                 : 'Authenticating...'
               : mode === 'signup'
                 ? 'Create Account'
-                : 'Access ION AI'}
+                    : 'Access ION Ai'}
           </Button>
         </form>
         </>

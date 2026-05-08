@@ -1,3 +1,8 @@
+import {
+  isReadableByteStream,
+  normalizeGeneratedImageOutput,
+} from "../../../src/shared/image-output";
+
 interface Env {
   AI: Ai;
 }
@@ -84,18 +89,13 @@ function mergeNegativePrompt(baseNegativePrompt?: string): string {
   return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
 }
 
-function base64ToBytes(base64: string): Uint8Array {
-  const normalized = String(base64 || "")
-    .replace(/\s+/g, "")
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
+async function tryNormalizeGeneratedBytes(value: unknown): Promise<Uint8Array | null> {
+  try {
+    const normalized = await normalizeGeneratedImageOutput(value);
+    return normalized.bytes;
+  } catch {
+    return null;
   }
-  return bytes;
 }
 
 function toUint8Array(value: Uint8Array | ArrayBuffer): Uint8Array {
@@ -269,15 +269,16 @@ function isNumericByteArray(value: unknown): value is number[] {
 async function toImageBytes(value: unknown, depth = 0): Promise<Uint8Array | ArrayBuffer | null> {
   if (depth > 6) return null;
 
-  if (value instanceof Uint8Array || value instanceof ArrayBuffer) return value;
+  if (value instanceof Uint8Array || value instanceof ArrayBuffer) {
+    return (await tryNormalizeGeneratedBytes(value)) || value;
+  }
 
-  if (typeof ReadableStream !== "undefined" && value instanceof ReadableStream) {
-    return new Response(value).arrayBuffer();
+  if (isReadableByteStream(value)) {
+    return await tryNormalizeGeneratedBytes(value);
   }
 
   if (ArrayBuffer.isView(value)) {
-    const view = value as ArrayBufferView;
-    return new Uint8Array(view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength));
+    return await tryNormalizeGeneratedBytes(value);
   }
 
   if (typeof Blob !== "undefined" && value instanceof Blob) {
@@ -308,23 +309,11 @@ async function toImageBytes(value: unknown, depth = 0): Promise<Uint8Array | Arr
     if (!text) return null;
 
     if (text.startsWith("data:image/")) {
-      const commaIndex = text.indexOf(",");
-      if (commaIndex > 0) {
-        try {
-          return base64ToBytes(text.slice(commaIndex + 1));
-        } catch {
-          return null;
-        }
-      }
-      return null;
+      return tryNormalizeGeneratedBytes(text);
     }
 
     if (/^[A-Za-z0-9+/=_-]+$/.test(text) && text.length > 128) {
-      try {
-        return base64ToBytes(text);
-      } catch {
-        return null;
-      }
+      return tryNormalizeGeneratedBytes(text);
     }
 
     return null;
