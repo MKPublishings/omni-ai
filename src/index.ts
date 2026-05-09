@@ -245,7 +245,7 @@ const DIRECT_FALLBACK_DEFAULT_STEPS = 28;
 const DIRECT_FALLBACK_MAX_EDGE = 1536;
 const DIRECT_FALLBACK_FLUX_MAX_EDGE = 1024;
 const DIRECT_FALLBACK_FLUX_MAX_STEPS = 20;
-const DIRECT_FALLBACK_DEFAULT_MAX_STEPS = 50;
+const DIRECT_FALLBACK_DEFAULT_MAX_STEPS = 20;
 
 function isAnimeLikePrompt(prompt: string): boolean {
   const normalized = sanitizePromptText(String(prompt || "")).toLowerCase();
@@ -317,6 +317,11 @@ function resolveDirectFallbackConfig(env: Env, promptText: string) {
   };
 }
 
+function isNumStepsLimitError(error: unknown): boolean {
+  const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
+  return message.includes("num_steps") && (message.includes("must be <=") || message.includes("must be <=\u202f"));
+}
+
 function makeDirectFallbackFilename(styleId: string): string {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const safeStyle = String(styleId || "image").replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -356,15 +361,34 @@ async function buildDirectAiImageFallbackResponse(input: {
     fallbackConfig.maxEdge,
   );
   const startedAt = Date.now();
-  const raw = await input.env.AI.run(fallbackConfig.modelName, {
-    prompt,
-    negative_prompt: negativePrompt,
-    width: directDimensions.width,
-    height: directDimensions.height,
-    seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : undefined,
-    guidance: fallbackConfig.guidance,
-    num_steps: fallbackConfig.steps,
-  });
+  let effectiveSteps = fallbackConfig.steps;
+  let raw: unknown;
+  try {
+    raw = await input.env.AI.run(fallbackConfig.modelName, {
+      prompt,
+      negative_prompt: negativePrompt,
+      width: directDimensions.width,
+      height: directDimensions.height,
+      seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : undefined,
+      guidance: fallbackConfig.guidance,
+      num_steps: effectiveSteps,
+    });
+  } catch (initialError: unknown) {
+    if (!isNumStepsLimitError(initialError) || fallbackConfig.steps === DIRECT_FALLBACK_FLUX_MAX_STEPS) {
+      throw initialError;
+    }
+
+    effectiveSteps = DIRECT_FALLBACK_FLUX_MAX_STEPS;
+    raw = await input.env.AI.run(fallbackConfig.modelName, {
+      prompt,
+      negative_prompt: negativePrompt,
+      width: directDimensions.width,
+      height: directDimensions.height,
+      seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : undefined,
+      guidance: fallbackConfig.guidance,
+      num_steps: effectiveSteps,
+    });
+  }
   const normalized = await normalizeGeneratedImageOutput(raw);
   const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
   const filename = makeDirectFallbackFilename(input.resolvedRenderingStyle);
@@ -414,7 +438,7 @@ async function buildDirectAiImageFallbackResponse(input: {
         clipSkip: 0,
         sampler: "auto",
         scheduler: "auto",
-        steps: fallbackConfig.steps,
+        steps: effectiveSteps,
         cfgScale: fallbackConfig.guidance,
         cfgRescale: 0,
         seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : null,
