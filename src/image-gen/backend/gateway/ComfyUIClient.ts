@@ -30,6 +30,58 @@ interface ComfyUIHistoryResponse {
   };
 }
 
+interface ComfyUIObjectInfoResponse {
+  CheckpointLoaderSimple?: {
+    input?: {
+      required?: {
+        ckpt_name?: [unknown[]?];
+      };
+    };
+  };
+}
+
+function getPromptIdFromQueueEntry(entry: unknown): string {
+  if (Array.isArray(entry)) {
+    return String(entry[1] ?? '').trim();
+  }
+  if (entry && typeof entry === 'object') {
+    const record = entry as Record<string, unknown>;
+    return String(record.prompt_id ?? record.promptId ?? '').trim();
+  }
+  return '';
+}
+
+function extractCheckpointFromWorkflowNode(node: unknown): string | null {
+  if (!node || typeof node !== 'object') {
+    return null;
+  }
+
+  const record = node as Record<string, unknown>;
+  const classType = String(record.class_type ?? '');
+  if (classType !== 'CheckpointLoaderSimple') {
+    return null;
+  }
+
+  const inputs = record.inputs;
+  if (!inputs || typeof inputs !== 'object') {
+    return null;
+  }
+
+  const checkpoint = String((inputs as Record<string, unknown>).ckpt_name ?? '').trim();
+  return checkpoint || null;
+}
+
+function extractCheckpointFromWorkflow(workflow: Record<string, unknown>): string | null {
+  for (const node of Object.values(workflow)) {
+    const checkpoint = extractCheckpointFromWorkflowNode(node);
+    if (checkpoint) {
+      return checkpoint;
+    }
+  }
+
+  return null;
+}
+
 function normalizeStatus(value: string | undefined): JobStatus['status'] {
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized.includes('error') || normalized.includes('fail')) {
@@ -43,6 +95,7 @@ function normalizeStatus(value: string | undefined): JobStatus['status'] {
 
 export class ComfyUIClient implements IModelGateway {
   private readonly config = resolveComfyUIConfig();
+  private lastSubmittedCheckpoint: string | null = null;
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
     const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {
@@ -58,6 +111,8 @@ export class ComfyUIClient implements IModelGateway {
       throw new Error('ComfyUI did not return a prompt id.');
     }
 
+    this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(workflow);
+
     return { promptId };
   }
 
@@ -70,24 +125,16 @@ export class ComfyUIClient implements IModelGateway {
     const historyEntry = history[promptId];
     const queuePending = Array.isArray(queue.queue_pending) ? queue.queue_pending : [];
     const queueRunning = Array.isArray(queue.queue_running) ? queue.queue_running : [];
-    const queuedIds = [...queueRunning, ...queuePending].map((entry) => {
-      if (Array.isArray(entry)) {
-        return String(entry[1] ?? '');
-      }
-      if (entry && typeof entry === 'object') {
-        return String((entry as Record<string, unknown>).prompt_id ?? '');
-      }
-      return '';
-    });
+    const queuedIds = [...queueRunning, ...queuePending].map(getPromptIdFromQueueEntry);
 
-    const queuePosition = Math.max(0, queuedIds.indexOf(promptId));
+    const queueIndex = queuedIds.indexOf(promptId);
     const completed = Boolean(historyEntry?.status?.completed);
 
     return {
       promptId,
       status: completed ? 'completed' : normalizeStatus(historyEntry?.status?.status_str),
-      queuePosition,
-      step: completed ? 1 : 0,
+      queuePosition: queueIndex >= 0 ? queueIndex : queuePending.map(getPromptIdFromQueueEntry).indexOf(promptId),
+      step: completed ? 1 : queueRunning.some((entry) => getPromptIdFromQueueEntry(entry) === promptId) ? 1 : 0,
       totalSteps: 1,
     };
   }
@@ -146,13 +193,32 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async getLoadedModel(): Promise<string | null> {
-    const queue = await this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' });
-    return Array.isArray(queue.queue_running) ? 'unknown' : null;
+    if (this.lastSubmittedCheckpoint) {
+      return this.lastSubmittedCheckpoint;
+    }
+
+    try {
+      const objectInfo = await this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
+      const values = objectInfo.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0];
+      if (Array.isArray(values) && values.length === 1) {
+        const checkpoint = String(values[0] ?? '').trim();
+        if (checkpoint) {
+          return checkpoint;
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
   }
 
   async isHealthy(): Promise<boolean> {
     try {
-      await this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' });
+      await Promise.all([
+        this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
+        this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' }),
+      ]);
       return true;
     } catch {
       return false;

@@ -26,6 +26,9 @@ export interface ImageGenEnvironment {
   maxConcurrentJobs: number;
   jobTimeoutMs: number;
   upscaleJobTimeoutMs: number;
+  queueRuntime: 'memory' | 'kv';
+  queueStateBinding: string;
+  queueStateNamespace: string;
   imageStoragePath: string;
   thumbnailStoragePath: string;
   metadataDbUrl: string;
@@ -84,6 +87,9 @@ export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEn
     maxConcurrentJobs: readNumber(source, 'MAX_CONCURRENT_JOBS', 2),
     jobTimeoutMs: readNumber(source, 'JOB_TIMEOUT_MS', 120000),
     upscaleJobTimeoutMs: readNumber(source, 'UPSCALE_JOB_TIMEOUT_MS', 300000),
+    queueRuntime: readText(source, 'IMAGE_QUEUE_RUNTIME', 'memory') === 'kv' ? 'kv' : 'memory',
+    queueStateBinding: readText(source, 'IMAGE_QUEUE_STATE_BINDING', 'ION_IMAGE_STATE_KV'),
+    queueStateNamespace: readText(source, 'IMAGE_QUEUE_STATE_NAMESPACE', 'ion:image:queue'),
     imageStoragePath: readText(source, 'IMAGE_STORAGE_PATH', './storage/images'),
     thumbnailStoragePath: readText(source, 'THUMBNAIL_STORAGE_PATH', './storage/thumbs'),
     metadataDbUrl: readText(source, 'METADATA_DB_URL', 'sqlite:./storage/metadata.db'),

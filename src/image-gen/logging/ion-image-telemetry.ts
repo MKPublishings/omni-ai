@@ -20,6 +20,10 @@ interface CreateIonImageGenerationLogInput {
   error: ImageGenerationError | null;
 }
 
+type IonImageGenerationLogEmitter = (log: IonImageGenerationLog) => void;
+
+let telemetryEmitter: IonImageGenerationLogEmitter | null = null;
+
 export function createIonImageGenerationLog(input: CreateIonImageGenerationLogInput): IonImageGenerationLog {
   return {
     event: input.status === 'completed' ? 'ion.image.job.completed' : 'ion.image.job.failed',
@@ -38,7 +42,16 @@ export function createIonImageGenerationLog(input: CreateIonImageGenerationLogIn
   };
 }
 
+export function setIonImageGenerationLogEmitter(emitter: IonImageGenerationLogEmitter | null): void {
+  telemetryEmitter = emitter;
+}
+
 export function emitIonImageGenerationLog(log: IonImageGenerationLog): void {
+  if (telemetryEmitter) {
+    telemetryEmitter(log);
+    return;
+  }
+
   if (typeof console === 'undefined' || typeof console.info !== 'function') {
     return;
   }

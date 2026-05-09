@@ -62,6 +62,37 @@ export interface DashboardToolMetadata {
   description?: string
 }
 
+export interface DashboardImageRuntimeConfig {
+  gateway: {
+    host: string
+    wsUrl: string
+    mock: boolean
+    requestTimeoutMs: number
+    defaultCheckpoint: string
+  }
+  queue: {
+    runtime: 'memory' | 'kv'
+    stateBinding: string
+    stateNamespace: string
+    maxQueueSize: number
+    maxConcurrentJobs: number
+  }
+  storage: {
+    imageStoragePath: string
+    thumbnailStoragePath: string
+    metadataDbUrl: string
+  }
+  safety: {
+    enabled: boolean
+    nsfwThreshold: number
+    rateLimitPerHour: number
+  }
+  logging: {
+    level: string
+    format: 'json' | 'pretty'
+  }
+}
+
 export interface DashboardSimulationRun {
   id: string
   session_id: string
@@ -459,6 +490,22 @@ export async function fetchSimulationState(simulationId: string): Promise<Dashbo
 export async function fetchTools(): Promise<DashboardToolMetadata[]> {
   const payload = await fetchAuthorizedJson<{ tools: DashboardToolMetadata[] }>('/api/tools')
   return Array.isArray(payload.tools) ? payload.tools : []
+}
+
+export async function fetchImageRuntimeConfig(): Promise<DashboardImageRuntimeConfig> {
+  const response = await fetch('/api/image/runtime-config', {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Request failed for /api/image/runtime-config: ${response.status}`)
+  }
+
+  return response.json() as Promise<DashboardImageRuntimeConfig>
 }
 
 export async function fetchPublicHealth(): Promise<DashboardHealthStatus> {

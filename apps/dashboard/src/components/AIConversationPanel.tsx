@@ -18,6 +18,9 @@ interface Message {
     src: string
     filename?: string
     model?: string
+    checkpoint?: string
+    resolution?: string
+    gateway?: string
   }
 }
 
@@ -188,6 +191,9 @@ const MessageBubble = ({ message }: { message: Message }) => {
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs opacity-70">
               {message.image.filename ? <span>{message.image.filename}</span> : null}
               {message.image.model ? <span>{message.image.model}</span> : null}
+              {message.image.checkpoint && message.image.checkpoint !== message.image.model ? <span>{message.image.checkpoint}</span> : null}
+              {message.image.resolution ? <span>{message.image.resolution}</span> : null}
+              {message.image.gateway ? <span>{message.image.gateway}</span> : null}
               <a
                 href={message.image.src}
                 download={message.image.filename || 'ion-image.png'}

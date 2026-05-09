@@ -3,22 +3,71 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
-function loadImageWorkerExports() {
-  const workerPath = path.join(__dirname, "..", "..", "workers", "ION-ai-images", "src", "index.ts");
-  const source = fs.readFileSync(workerPath, "utf8");
+function resolveLocalModule(fromFile, request) {
+  const basePath = path.resolve(path.dirname(fromFile), request);
+  const candidates = [
+    basePath,
+    `${basePath}.ts`,
+    `${basePath}.js`,
+    path.join(basePath, "index.ts"),
+    path.join(basePath, "index.js"),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function transpileTypeScriptModule(filePath) {
+  const source = fs.readFileSync(filePath, "utf8");
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2020
     },
-    fileName: "ION-ai-images-index.ts"
-  }).outputText;
+    fileName: path.basename(filePath)
+  });
+
+  return transpiled.outputText;
+}
+
+function loadTypeScriptModule(filePath, cache = new Map()) {
+  const normalizedPath = path.resolve(filePath);
+  if (cache.has(normalizedPath)) {
+    return cache.get(normalizedPath).exports;
+  }
 
   const moduleRef = { exports: {} };
+  cache.set(normalizedPath, moduleRef);
+
+  const localRequire = (request) => {
+    if (!request.startsWith(".") && !path.isAbsolute(request)) {
+      return require(request);
+    }
+
+    const resolvedPath = path.isAbsolute(request)
+      ? request
+      : resolveLocalModule(normalizedPath, request);
+
+    if (!resolvedPath) {
+      throw new Error(`Unable to resolve module '${request}' from ${normalizedPath}`);
+    }
+
+    if (resolvedPath.endsWith(".ts")) {
+      return loadTypeScriptModule(resolvedPath, cache);
+    }
+
+    return require(resolvedPath);
+  };
+
   const sandbox = {
     module: moduleRef,
     exports: moduleRef.exports,
-    require,
+    require: localRequire,
     console,
     Response,
     Request,
@@ -32,8 +81,13 @@ function loadImageWorkerExports() {
     crypto
   };
 
-  vm.runInNewContext(transpiled, sandbox, { filename: "ION-ai-images-index.vm.js" });
+  vm.runInNewContext(transpileTypeScriptModule(normalizedPath), sandbox, { filename: `${normalizedPath}.vm.js` });
   return moduleRef.exports;
+}
+
+function loadImageWorkerExports() {
+  const workerPath = path.join(__dirname, "..", "..", "workers", "ION-ai-images", "src", "index.ts");
+  return loadTypeScriptModule(workerPath);
 }
 
 function expect(condition, message) {

@@ -55,21 +55,9 @@ function loadClientPolicyFn() {
 function loadServerPolicyFn() {
   const serverPath = path.join(__dirname, "..", "..", "src", "index.ts");
   const source = fs.readFileSync(serverPath, "utf8");
-  const startToken = "function evaluateSexualSafetyPrompt";
-  const endToken = "function normalizeImageGenerationError";
-  const startIndex = source.indexOf(startToken);
-  if (startIndex === -1) {
-    throw new Error("Unable to locate evaluateSexualSafetyPrompt in src/index.ts");
-  }
-  const endIndex = source.indexOf(endToken, startIndex);
-  if (endIndex === -1) {
-    throw new Error("Unable to locate function boundary after evaluateSexualSafetyPrompt in src/index.ts");
-  }
-
-  const fnSource = source.slice(startIndex, endIndex);
-  const directIllegalPattern = new RegExp(extractRegexLiteral(fnSource, "directIllegalPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
-  const illegalMinorSexualPattern = new RegExp(extractRegexLiteral(fnSource, "illegalMinorSexualPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
-  const illegalAssaultPattern = new RegExp(extractRegexLiteral(fnSource, "illegalAssaultPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
+  const directIllegalPattern = new RegExp(extractRegexLiteral(source, "directIllegalPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
+  const illegalMinorSexualPattern = new RegExp(extractRegexLiteral(source, "illegalMinorSexualPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
+  const illegalAssaultPattern = new RegExp(extractRegexLiteral(source, "illegalAssaultPattern").replace(/^\//, "").replace(/\/[gimsuy]*$/, ""), "i");
 
   const fn = (text) => {
     const input = String(text || "").toLowerCase();
@@ -83,7 +71,7 @@ function loadServerPolicyFn() {
     return { blocked: false, reason: "allowed" };
   };
 
-  return { fn, source: fnSource };
+  return { fn, source };
 }
 
 function expect(condition, message) {

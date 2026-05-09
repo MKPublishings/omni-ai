@@ -24,8 +24,8 @@ This plan translates the requirements in `Ionirix Image Generation Architecture 
 
 ### Legacy Node image engine
 
-- `ION-image-engine/core/modelRouter.js` now defaults through the live worker-backed route and only retains OpenAI/Stability as fallback providers.
-- `ION-image-engine/config/modelConfig.json` now defines the worker-backed model as the default chain.
+- `ION-image-engine/core/modelRouter.js` now operates as a worker-only compatibility wrapper over the live `/api/image` route.
+- `ION-image-engine/config/modelConfig.json` now exposes only the worker-backed model.
 - `ION-image-engine/core/IONImageGenerator.js` assembles prompts and exports files locally, but does not implement the PDF's gateway, queue, storage, or checkpoint-aware architecture.
 
 ### Existing validation surface
@@ -199,21 +199,130 @@ Validation gate:
 
 Goal: remove duplicate generation logic once the worker path is stable.
 
+Status: implemented for the legacy provider retirement slice. `ION-image-engine` now operates as a worker-backed compatibility wrapper, and the stale OpenAI/Stability model path has been removed from active config and router code.
+
 Tasks:
 
-- Deprecate the OpenAI/Stability model path in `ION-image-engine`.
-- Either delete or adapt `ION-image-engine` to become a compatibility wrapper over `src/image-gen`.
-- Remove stale config entries that imply OpenAI/Stability are still the intended primary route.
+- Completed: deprecated the OpenAI/Stability model path in `ION-image-engine`.
+- Completed: adapted `ION-image-engine` to operate as a compatibility wrapper over the worker-backed `/api/image` route.
+- Completed: removed stale config entries that implied OpenAI/Stability were still intended primary routes.
+- Completed: removed unreachable OpenAI/Stability transport helpers from the legacy router and added smoke coverage that asserts retired model names fail fast.
 
 Repo touchpoints:
 
 - `ION-image-engine/core/modelRouter.js`
 - `ION-image-engine/config/modelConfig.json`
 - `ION-image-engine/index.js`
+- `ION-image-engine/utils/smokeTest.js`
+- `ION-image-engine/utils/validator.js`
 
 Validation gate:
 
-- No remaining worker runtime path uses direct legacy sync generation or exposes `legacy-sync` response headers.
+- Passed: no remaining worker runtime path uses direct legacy sync generation or exposes `legacy-sync` response headers.
+- Passed: `npm run smoke:image`, `npm run validate:engine`, and the full `Build ION Image Engine` task succeed with the worker-only compatibility path.
+
+## Post-PDF Continuation
+
+The PDF-defined migration phases stop at Phase 6. The phases below are repo-specific continuation work derived from the remaining production gaps in the current implementation surface.
+
+### Phase 7: Durable runtime adapters
+
+Goal: replace the current in-memory queue and storage adapters with production-backed persistence so image jobs survive worker restarts and can be inspected across instances.
+
+Tasks:
+
+- Replace `InMemoryImageJobQueue` with a durable queue adapter backed by BullMQ, Durable Objects, or an equivalent persisted worker-safe abstraction.
+- Replace `InMemoryImageArtifactStorage` metadata and artifact bookkeeping with durable backing stores such as R2 plus D1.
+- Make `/api/image?queue=v1&jobId=...` read through persisted state instead of process-local singleton memory.
+- Add adapter selection through env/config so local mock mode remains fast while deployed mode becomes durable.
+
+Repo touchpoints:
+
+- `src/image-gen/app/ion-image-queue-runtime.ts`
+- `src/image-gen/queue/InMemoryImageJobQueue.ts`
+- `src/image-gen/storage/InMemoryImageArtifactStorage.ts`
+- `src/image-gen/shared/types.ts`
+- `src/index.ts`
+
+Validation gate:
+
+- Queue status survives runtime reset or singleton reset in tests.
+- Job metadata and artifact records remain queryable across separate runtime instances.
+- Image queue contract tests pass against both mock and durable adapters.
+
+### Phase 8: Production ComfyUI integration hardening
+
+Goal: move the gateway from minimal happy-path polling to a production-ready ComfyUI integration with richer health, progress, and model verification.
+
+Tasks:
+
+- Extend `ComfyUIClient` to surface loaded checkpoint identity, queue depth, and explicit failure reasons instead of returning `unknown` or generic timeouts only.
+- Add WebSocket-based progress handling or a more detailed history parser so progress events are more granular than the current step `0/1` polling flow.
+- Add workflow and checkpoint verification hooks so the deployed gateway proves the requested checkpoint and workflow variant actually ran.
+- Introduce health/readiness probes for ComfyUI connectivity that can be surfaced through an operator route or deployment readiness check.
+
+Repo touchpoints:
+
+- `src/image-gen/backend/gateway/ComfyUIClient.ts`
+- `src/image-gen/backend/gateway/workflow-builder.ts`
+- `src/image-gen/config/comfyui.config.ts`
+- `src/image-gen/app/ion-image-pipeline.ts`
+- `src/image-gen/shared/error-codes.ts`
+
+Validation gate:
+
+- Real ComfyUI runs emit non-placeholder checkpoint and queue status metadata.
+- Provider-unavailable and timeout paths map to stable error codes with reproducible tests.
+- Gateway health can distinguish reachable-but-idle, queued, and failed states.
+
+### Phase 9: Evaluation and regression harness
+
+Goal: turn the new pipeline into a measurable system with quality, latency, and policy regressions tracked from a fixed prompt corpus.
+
+Tasks:
+
+- Add a curated prompt corpus covering style families, attestation states, long prompts, safety cases, and known false-positive regressions.
+- Record expected metadata outputs such as style family, checkpoint, negative prompt shape, and prompt lineage for each scenario.
+- Add side-by-side evaluation hooks for mock versus real ComfyUI outputs and for future checkpoint swaps.
+- Summarize telemetry into regression-friendly artifacts so image changes can be reviewed before rollout.
+
+Repo touchpoints:
+
+- `scripts/smoke/orchestratorImageAttestationSmoke.js`
+- `scripts/smoke/imageWorkerContractSmoke.js`
+- `src/image-gen/logging/ion-image-telemetry.ts`
+- `src/runtime/tests/imageRouteV2.test.ts`
+- `src/runtime/tests/imageQueueContract.test.ts`
+
+Validation gate:
+
+- Prompt corpus runs produce stable metadata assertions in CI.
+- Known regression prompts stay green across route, queue, and attestation surfaces.
+- Release readiness can report image-pipeline regressions as a distinct failure class.
+
+### Phase 10: Consumer adoption and operator tooling
+
+Goal: expose the asynchronous image pipeline cleanly to dashboard, chat, and operator surfaces so the system can be operated as a first-class product path instead of a hidden backend swap.
+
+Tasks:
+
+- Surface queue and progress metadata to authenticated consumers that need image job inspection or delayed download flows.
+- Expose prompt lineage, checkpoint, and artifact metadata in operator-facing views or export tooling.
+- Add runbooks or status endpoints for gateway health, queue backlogs, and recent image failures.
+- Align frontend consumers with the v2 metadata contract so worker responses no longer need legacy compatibility assumptions.
+
+Repo touchpoints:
+
+- `src/index.ts`
+- `src/worker.ts`
+- frontend/dashboard consumers that call `/api/image`
+- smoke and runtime tests that cover chat image intent and image route behavior
+
+Validation gate:
+
+- Consumers can poll and render queue-backed image jobs without assuming immediate synchronous completion.
+- Operator surfaces can inspect recent image failures with checkpoint and request lineage context.
+- No remaining frontend path depends on deprecated legacy image response assumptions.
 
 ## First Implementation Slice
 

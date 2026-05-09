@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { access, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 interface HierarchySection {
@@ -42,6 +42,8 @@ export interface HierarchyCommandCenterData {
   }
 }
 
+const PUBLISHED_DATASET_RELATIVE_PATH = ['src', 'data', 'hierarchy-command-center.json'] as const
+
 const FALLBACK_POINT_TITLES: Record<string, string> = {
   P8: 'Sovereign Point',
   P7: 'Societal Point',
@@ -53,16 +55,65 @@ const FALLBACK_POINT_TITLES: Record<string, string> = {
   P1: 'Contact Point',
 }
 
-export async function loadHierarchyCommandCenterData(): Promise<HierarchyCommandCenterData> {
-  const repoRoot = resolve(process.cwd(), '..', '..')
-  const reportsPath = resolve(repoRoot, 'ionirix-hierarchy', 'docs', 'reports', 'command-center-data.json')
+async function resolveRepoRoot(): Promise<string> {
+  const candidates = [
+    process.cwd(),
+    resolve(process.cwd(), '..'),
+    resolve(process.cwd(), '..', '..'),
+  ]
 
+  for (const candidate of candidates) {
+    try {
+      await access(resolve(candidate, 'ionirix-hierarchy', 'hierarchy.config.json'))
+      return candidate
+    } catch {
+      // Try the next plausible workspace root.
+    }
+  }
+
+  return resolve(process.cwd(), '..', '..')
+}
+
+async function readHierarchyDataFromPath(filePath: string): Promise<HierarchyCommandCenterData | null> {
   try {
-    const raw = await readFile(reportsPath, 'utf8')
+    const raw = await readFile(filePath, 'utf8')
     return JSON.parse(raw) as HierarchyCommandCenterData
   } catch {
-    return buildFallbackHierarchyData(repoRoot)
+    return null
   }
+}
+
+async function readPublishedHierarchyData(): Promise<HierarchyCommandCenterData | null> {
+  const candidates = [
+    resolve(process.cwd(), ...PUBLISHED_DATASET_RELATIVE_PATH),
+    resolve(process.cwd(), 'apps', 'dashboard', ...PUBLISHED_DATASET_RELATIVE_PATH),
+  ]
+
+  for (const candidate of candidates) {
+    const data = await readHierarchyDataFromPath(candidate)
+    if (data) {
+      return data
+    }
+  }
+
+  return null
+}
+
+export async function loadHierarchyCommandCenterData(): Promise<HierarchyCommandCenterData> {
+  const repoRoot = await resolveRepoRoot()
+  const reportsPath = resolve(repoRoot, 'ionirix-hierarchy', 'docs', 'reports', 'command-center-data.json')
+
+  const liveData = await readHierarchyDataFromPath(reportsPath)
+  if (liveData) {
+    return liveData
+  }
+
+  const publishedData = await readPublishedHierarchyData()
+  if (publishedData) {
+    return publishedData
+  }
+
+  return buildFallbackHierarchyData(repoRoot)
 }
 
 async function buildFallbackHierarchyData(repoRoot: string): Promise<HierarchyCommandCenterData> {
@@ -70,9 +121,34 @@ async function buildFallbackHierarchyData(repoRoot: string): Promise<HierarchyCo
   const auditPath = resolve(repoRoot, 'ionirix-hierarchy', 'docs', 'reports', 'audit-report.json')
 
   const [configRaw, auditRaw] = await Promise.all([
-    readFile(configPath, 'utf8'),
+    readFile(configPath, 'utf8').catch(() => null),
     readFile(auditPath, 'utf8').catch(() => '{}'),
   ])
+
+  if (!configRaw) {
+    return {
+      generatedAt: new Date().toISOString(),
+      summary: {
+        points: 0,
+        features: 0,
+        events: 0,
+        subscriptions: 0,
+        criticalViolations: 0,
+      },
+      points: [],
+      auditSections: [
+        {
+          title: 'Hierarchy workspace',
+          status: 'warn',
+          detail: 'The ionirix-hierarchy workspace is not bundled into this dashboard deployment, so live hierarchy source files are unavailable in this environment.',
+        },
+      ],
+      busTopology: {
+        emitters: {},
+        subscribers: {},
+      },
+    }
+  }
 
   const config = JSON.parse(configRaw) as {
     points: Array<{ id: string; slug: string; features: string[] }>

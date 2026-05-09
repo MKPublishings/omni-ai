@@ -1,8 +1,12 @@
-import { forwardRef, HTMLAttributes } from 'react'
+import React, { forwardRef, HTMLAttributes } from 'react'
 import { clsx } from 'clsx'
 import { TrendDownIcon, TrendFlatIcon, TrendUpIcon } from './icons'
 
 type TrendDirection = 'up' | 'down' | 'neutral'
+
+const SPARKLINE_WIDTH = 120
+const SPARKLINE_HEIGHT = 32
+const SPARKLINE_PADDING = 3
 
 interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
   title: string
@@ -11,7 +15,33 @@ interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
     direction: TrendDirection
     value: string
   }
-  sparkline?: boolean
+  sparklineValues?: number[]
+}
+
+function normalizeSparklineValues(values: number[]): number[] {
+  return values.filter((value) => Number.isFinite(value))
+}
+
+function buildSparklinePath(values: number[]): string {
+  const points = normalizeSparklineValues(values)
+  if (points.length === 0) {
+    return ''
+  }
+
+  const minValue = Math.min(...points)
+  const maxValue = Math.max(...points)
+  const innerWidth = SPARKLINE_WIDTH - SPARKLINE_PADDING * 2
+  const innerHeight = SPARKLINE_HEIGHT - SPARKLINE_PADDING * 2
+  const denominator = Math.max(maxValue - minValue, 1)
+
+  return points
+    .map((value, index) => {
+      const x = SPARKLINE_PADDING + (points.length === 1 ? innerWidth / 2 : (index / (points.length - 1)) * innerWidth)
+      const normalized = (value - minValue) / denominator
+      const y = SPARKLINE_HEIGHT - SPARKLINE_PADDING - normalized * innerHeight
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
+    })
+    .join(' ')
 }
 
 const TrendIcon = ({ direction }: { direction: TrendDirection }) => {
@@ -27,7 +57,9 @@ const TrendIcon = ({ direction }: { direction: TrendDirection }) => {
 }
 
 export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
-  ({ title, value, trend, sparkline, className, ...props }, ref) => {
+  ({ title, value, trend, sparklineValues, className, ...props }, ref) => {
+    const sparklinePath = Array.isArray(sparklineValues) ? buildSparklinePath(sparklineValues) : ''
+
     return (
       <div
         ref={ref}
@@ -60,16 +92,23 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
             </div>
           )}
 
-          {/* Sparkline placeholder */}
-          {sparkline && (
-            <div className="mt-3 h-8 flex items-end space-x-1">
-              {[0.3, 0.5, 0.2, 0.8, 0.6, 0.9, 0.4, 0.7, 0.3, 0.8, 0.6, 1.0].map((height, i) => (
-                <div
-                  key={i}
-                  className="bg-spectral-cyan-400 rounded-sm flex-1"
-                  style={{ height: `${height * 100}%` }}
+          {sparklinePath && (
+            <div className="mt-3" aria-hidden="true">
+              <svg
+                viewBox={`0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}`}
+                className="h-8 w-full overflow-visible"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d={sparklinePath}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-spectral-cyan-400"
                 />
-              ))}
+              </svg>
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ export interface ComfyUIConnectionConfig {
   promptPath: string;
   viewPath: string;
   queuePath: string;
+  objectInfoPath: string;
   interruptPath: string;
   historyPath: (promptId: string) => string;
 }
@@ -23,6 +24,7 @@ export function resolveComfyUIConfig(source?: Record<string, unknown>): ComfyUIC
     promptPath: '/prompt',
     viewPath: '/view',
     queuePath: '/queue',
+    objectInfoPath: '/object_info',
     interruptPath: '/interrupt',
     historyPath: (promptId: string) => `/history/${encodeURIComponent(promptId)}`,
   };

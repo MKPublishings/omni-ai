@@ -23,6 +23,9 @@ type ConversationMessage = {
     src: string
     filename?: string
     model?: string
+    checkpoint?: string
+    resolution?: string
+    gateway?: string
   }
 }
 
@@ -75,6 +78,9 @@ function readCachedMessages(): ConversationMessage[] {
         src: string
         filename?: string
         model?: string
+        checkpoint?: string
+        resolution?: string
+        gateway?: string
       }
     }>
 
@@ -189,6 +195,9 @@ function extractAssistantContent(rawText: string) {
   let imageDataUrl = ''
   let imageFilename = ''
   let imageModel = ''
+  let imageCheckpoint = ''
+  let imageResolution = ''
+  let imageGateway = ''
   let sources: AssistantPayload['sources'] = []
 
   for (const line of rawText.split(/\r?\n/)) {
@@ -211,6 +220,9 @@ function extractAssistantContent(rawText: string) {
         image?: {
           filename?: string
           model?: string
+          checkpoint?: string
+          resolution?: string
+          gateway?: string
         }
         sources?: Array<{
           title?: string
@@ -229,6 +241,9 @@ function extractAssistantContent(rawText: string) {
         imageDataUrl = parsed.imageDataUrl
         imageFilename = parsed.image?.filename || ''
         imageModel = parsed.image?.model || ''
+        imageCheckpoint = parsed.image?.checkpoint || ''
+        imageResolution = parsed.image?.resolution || ''
+        imageGateway = parsed.image?.gateway || ''
       }
     } catch {
       chunks.push(payload)
@@ -240,6 +255,9 @@ function extractAssistantContent(rawText: string) {
     imageDataUrl,
     imageFilename,
     imageModel,
+    imageCheckpoint,
+    imageResolution,
+    imageGateway,
     sources,
   }
 }
@@ -250,9 +268,21 @@ function isImagePrompt(message: string) {
 }
 
 function buildImageSuccessCopy(message: string, filename?: string) {
-  void message
-  void filename
-  return ''
+  const prompt = String(message || '').replace(/^\s*\/image\s*/i, '').trim()
+  const normalizedFilename = String(filename || '').trim()
+  if (!prompt && !normalizedFilename) {
+    return 'Image generated and attached below.'
+  }
+
+  if (!prompt) {
+    return `Image generated: ${normalizedFilename}`
+  }
+
+  if (!normalizedFilename) {
+    return `Image ready for: ${prompt}`
+  }
+
+  return `Image ready for: ${prompt}\n${normalizedFilename}`
 }
 
 type AssistantPayload = {
@@ -261,6 +291,9 @@ type AssistantPayload = {
   imageDataUrl: string
   imageFilename: string
   imageModel: string
+  imageCheckpoint: string
+  imageResolution: string
+  imageGateway: string
   sources: Array<{
     title: string
     url: string
@@ -281,7 +314,44 @@ type StreamingPayload = {
   image?: {
     filename?: string
     model?: string
+    checkpoint?: string
+    resolution?: string
+    gateway?: string
   }
+}
+
+type ImageRouteJsonPayload = {
+  ok?: boolean
+  response?: string
+  content?: string
+  error?: string
+  imageDataUrl?: string
+  filename?: string
+  image?: {
+    filename?: string
+    model?: string
+    checkpoint?: string
+    resolution?: string
+    gateway?: string
+  }
+  metadata?: {
+    image?: {
+      filename?: string
+      resolution?: string
+    }
+    model?: {
+      outputModel?: string
+      checkpoint?: string
+    }
+    pipeline?: {
+      gateway?: string
+    }
+  }
+  sources?: Array<{
+    title?: string
+    url?: string
+    source?: string
+  }>
 }
 
 function normalizeSources(
@@ -309,6 +379,9 @@ function accumulateStreamingPayload(current: AssistantPayload, parsed: Streaming
     imageDataUrl: current.imageDataUrl || parsed.imageDataUrl || '',
     imageFilename: current.imageFilename || parsed.image?.filename || '',
     imageModel: current.imageModel || parsed.image?.model || '',
+    imageCheckpoint: current.imageCheckpoint || parsed.image?.checkpoint || '',
+    imageResolution: current.imageResolution || parsed.image?.resolution || '',
+    imageGateway: current.imageGateway || parsed.image?.gateway || '',
     sources: current.sources.length > 0 ? current.sources : normalizeSources(parsed.sources),
   }
 }
@@ -320,6 +393,9 @@ function createEmptyAssistantPayload(ok: boolean): AssistantPayload {
     imageDataUrl: '',
     imageFilename: '',
     imageModel: '',
+    imageCheckpoint: '',
+    imageResolution: '',
+    imageGateway: '',
     sources: [],
   }
 }
@@ -400,19 +476,25 @@ async function parseAssistantResponse(response: Response) {
       imageDataUrl: payload.imageDataUrl,
       imageFilename: payload.imageFilename,
       imageModel: payload.imageModel,
+      imageCheckpoint: payload.imageCheckpoint,
+      imageResolution: payload.imageResolution,
+      imageGateway: payload.imageGateway,
       sources: payload.sources,
     }
   }
 
-  const payload = await response.json().catch(() => ({}))
+  const payload = await response.json().catch(() => ({})) as ImageRouteJsonPayload
   return {
     ok: response.ok,
     content: response.ok
       ? payload.response || payload.content || ''
       : payload.error || '',
     imageDataUrl: payload.imageDataUrl || '',
-    imageFilename: payload.image?.filename || payload.filename || '',
-    imageModel: payload.image?.model || payload.metadata?.model || '',
+    imageFilename: payload.image?.filename || payload.metadata?.image?.filename || payload.filename || '',
+    imageModel: payload.image?.model || payload.metadata?.model?.outputModel || payload.metadata?.model?.checkpoint || '',
+    imageCheckpoint: payload.image?.checkpoint || payload.metadata?.model?.checkpoint || '',
+    imageResolution: payload.image?.resolution || payload.metadata?.image?.resolution || '',
+    imageGateway: payload.image?.gateway || payload.metadata?.pipeline?.gateway || '',
     sources: normalizeSources(payload.sources),
   }
 }
@@ -618,6 +700,9 @@ function AssistantPageContent() {
                   src: streamPayload.imageDataUrl,
                   filename: streamPayload.imageFilename,
                   model: streamPayload.imageModel,
+                  checkpoint: streamPayload.imageCheckpoint,
+                  resolution: streamPayload.imageResolution,
+                  gateway: streamPayload.imageGateway,
                 }
               : undefined,
           })
@@ -638,6 +723,9 @@ function AssistantPageContent() {
                 src: streamed.imageDataUrl,
                 filename: streamed.imageFilename,
                 model: streamed.imageModel,
+                checkpoint: streamed.imageCheckpoint,
+                resolution: streamed.imageResolution,
+                gateway: streamed.imageGateway,
               }
             : undefined,
         })
@@ -665,6 +753,9 @@ function AssistantPageContent() {
                 src: payload.imageDataUrl,
                 filename: payload.imageFilename,
                 model: payload.imageModel,
+                checkpoint: payload.imageCheckpoint,
+                resolution: payload.imageResolution,
+                gateway: payload.imageGateway,
               }
             : undefined,
         },
@@ -675,7 +766,7 @@ function AssistantPageContent() {
         {
           id: `${Date.now()}-error`,
           type: 'ai',
-          content: `ION could not reach ${getApiTargetLabel('/api/ION')}. Check NEXT_PUBLIC_ION_API_URL and worker DNS, then try again.`,
+          content: `ION could not reach ${getApiTargetLabel(isImagePrompt(message) ? '/api/image' : '/api/ION')}. Check NEXT_PUBLIC_ION_API_URL and worker DNS, then try again.`,
           timestamp: new Date(),
         },
       ])

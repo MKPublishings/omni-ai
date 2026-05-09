@@ -19,7 +19,7 @@ import {
 } from './ion-image-route-format';
 import type { IonImageV2RouteResponse } from '../shared/types';
 
-export interface BuildIonImageV2RouteResultInput extends Omit<BuildIonImageV2RouteResponseInput, 'imageDataUrl' | 'filename' | 'mimeType'> {
+export interface BuildIonImageV2RouteResultInput extends Omit<BuildIonImageV2RouteResponseInput, 'imageDataUrl' | 'filename' | 'mimeType' | 'quality' | 'ratio'> {
   totalMs: number;
   quality?: string;
   ratio?: string;

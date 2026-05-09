@@ -34,6 +34,12 @@ function validateImageEngine() {
 
     const imageEntry = require("..");
     assert(imageEntry && typeof imageEntry.IONImageGenerate === "function", "ION-image-engine/index.js must export IONImageGenerate");
+
+    const modelConfig = require("../config/modelConfig.json");
+    assert(modelConfig.defaultModel === "ION_worker", "modelConfig.json must default to the worker-backed image model");
+    assert(Object.keys(modelConfig.models || {}).length === 1, "modelConfig.json must only expose the worker compatibility model");
+    assert(modelConfig.models?.ION_worker?.provider === "ion-worker", "ION_worker must remain bound to the worker-backed provider");
+
     return { valid: true };
 }
 
