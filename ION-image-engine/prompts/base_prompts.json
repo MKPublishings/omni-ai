@@ -1,0 +1,37 @@
+{
+  "anime_woman_portrait": {
+    "name": "Anime Woman - Stable Portrait",
+    "base": "A serene anime woman with elegant, refined features standing in soft natural light. Clear, beautiful face with calm expression. Well-proportioned body with balanced anatomy. Smooth, clean shading with consistent color palette. Minimal, non-distracting background that complements without overwhelming.",
+    "composition": "Medium portrait framing. Head and shoulders fully visible. Centered in frame. Soft, warm lighting from front-left. Professional, poised posture.",
+    "style": "Anime art style, semi-realistic proportions, smooth brushwork, high quality illustration",
+    "lighting": "Soft natural light, warm tones, gentle shadows, no harsh contrast",
+    "focus": "Face: calm and beautiful, Expression: serene and composed"
+  },
+
+  "anime_woman_fullbody": {
+    "name": "Anime Woman - Full Body Stable",
+    "base": "A graceful anime woman shown in full body portrait. Natural posture and proportions. Standing confidently with elegant presence. Soft, consistent lighting throughout. Coherent background or environment that enhances without distraction.",
+    "composition": "Full body framing at distance. All extremities visible and complete. Centered composition. Balanced posture. No cropping at frame edges.",
+    "style": "Anime art style, consistent proportions, smooth finish, professional illustration",
+    "lighting": "Even, soft lighting across entire figure. No overexposed areas. Subtle depth.",
+    "focus": "Overall silhouette clarity, anatomically consistent limbs"
+  },
+
+  "character_headshot": {
+    "name": "Character Headshot - Portrait Focus",
+    "base": "A detailed character portrait featuring a clear, well-defined face with expressive features. Head and shoulders visible. Professional, studio-style lighting with soft fill. Neutral or subtle background that doesn't distract from the character.",
+    "composition": "Tight headshot framing optimized for 9:16 format. Face centered. Head positioned in upper third of frame. Both shoulders visible.",
+    "style": "Semi-realistic anime, clean line work, professional illustration quality",
+    "lighting": "Key light from 45-degree angle. Soft fill light. Balanced exposure. No harsh shadows.",
+    "focus": "Facial detail and expression clarity"
+  },
+
+  "romantic_pose": {
+    "name": "Romantic Pose - Stable Composition",
+    "base": "An anime woman in a gentle, romantic pose. Natural, graceful positioning. Soft, warm lighting. Romantic but dignified expression. Dreamy atmosphere with soft focus background.",
+    "composition": "Three-quarter view or profile. Natural body curvature without exaggeration. Head and torso clearly framed.",
+    "style": "Romantic anime art style, soft colors, dreamy quality, high finish",
+    "lighting": "Golden hour lighting, soft and warm, romantic glow, gentle depth",
+    "focus": "Expression and posture elegance"
+  }
+}

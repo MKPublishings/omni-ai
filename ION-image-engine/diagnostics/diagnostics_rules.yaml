@@ -1,0 +1,258 @@
+# Diagnostics Rules Configuration
+# Defines detection patterns and correction thresholds for stability checks
+
+diagnostics:
+  # Master on/off switches
+  enableAll: true
+  strictMode: true
+  logVerbosity: "detailed"
+
+detection:
+  # Stretching detection rules
+  anatomicalStretching:
+    enabled: true
+    priority: "critical"
+    detection:
+      torsoElongation: 1.3  # Threshold for torso being too long
+      armStretching: 1.15  # Arms longer than natural
+      legStretching: 1.15  # Legs longer than natural
+      neckStretching: 1.25  # Neck unnaturally long
+    action: "flag_and_suggest_correction"
+    severity: "HIGH"
+    correction: "Enable proportional enforcer with strict mode"
+
+  # Face slicing detection
+  featureSlicing:
+    enabled: true
+    priority: "critical"
+    detection:
+      foreheadCropping: 0.05  # Pixels from top edge
+      chinCropping: 0.05  # Pixels from bottom edge
+      eyeOcclusion: 0.10  # Eyes covered/obscured
+      mouthOcclusion: 0.10  # Mouth covered/obscured
+      sideProfileCut: 0.08  # Profile edges cut
+    action: "flag_and_prevent_output"
+    severity: "CRITICAL"
+    correction: "Reduce face-focus weight and adjust camera distance"
+
+  # Duplication detection
+  featureDuplication:
+    enabled: true
+    priority: "critical"
+    detection:
+      extraEyes: 2  # More than 2 eyes
+      extraNoses: 1  # More than 1 nose
+      extraMouths: 1  # More than 1 mouth
+      extraHeads: 1  # More than 1 head
+      extraLimbs: 0.25  # 25% more limbs than expected
+    action: "flag_and_suggest_correction"
+    severity: "CRITICAL"
+    correction: "Enable layer isolation and clarify prompt"
+
+  # Overexposure detection
+  lightingOverexposure:
+    enabled: true
+    priority: "high"
+    detection:
+      maxBrightness: 0.95  # Pixels at 95%+ brightness
+      averageBrightness: 0.85  # Average frame brightness
+      harshShadowRatio: 0.30  # High-contrast shadows
+      lightingInconsistency: 0.40  # Variance in lighting
+      blownHighlights: 0.20  # Percentage of blown pixels
+    action: "flag_and_suggest_correction"
+    severity: "HIGH"
+    correction: "Reduce light intensity and increase fill light ratio"
+
+  # Depth distortion detection
+  depthDistortion:
+    enabled: true
+    priority: "high"
+    detection:
+      depthSeparation: 0.2  # Character too close to background
+      warpingAmount: 0.2  # Background warping threshold
+      focusDrift: 0.15  # Focus distance off-target
+      depthFringeing: 0.1  # Artifact halos at depth edges
+      focusBleed: 0.15  # Blur spreading into focused areas
+    action: "flag_and_suggest_correction"
+    severity: "HIGH"
+    correction: "Increase depth separation and simplify background"
+
+  # Proportion validation
+  proportionErrors:
+    enabled: true
+    priority: "high"
+    detection:
+      headToBody: 0.15  # Head-to-body ratio deviation
+      faceHeight: 0.15  # Face height variance
+      shoulderWidth: 0.15  # Shoulder width variance
+      limbProportions: 0.15  # Limb length variance
+    action: "flag_and_suggest_correction"
+    severity: "MEDIUM"
+    correction: "Enforce head-to-body ratio in generation config"
+
+  # Composition drift
+  compositionDrift:
+    enabled: true
+    priority: "medium"
+    detection:
+      horizontalDrift: 0.10  # ±10% max from center
+      verticalDrift: 0.05  # ±5% max from target position
+      aspectRatioDrift: 0.05  # ±5% aspect ratio
+      framingInconsistency: 0.08  # Inconsistent character positioning
+    action: "flag_and_suggest_correction"
+    severity: "MEDIUM"
+    correction: "Enable composition lock with strict mode"
+
+  # Color and saturation issues
+  colorIssues:
+    enabled: true
+    priority: "low"
+    detection:
+      saturationExcess: 0.85  # Over-saturated colors
+      contrastExcess: 0.80  # Too much contrast
+      colorCasts: 0.20  # Unwanted color tints
+      posterization: 0.15  # Banding in colors
+    action: "flag_as_warning"
+    severity: "LOW"
+    correction: "Adjust color saturation and contrast in post-processing"
+
+  # Background coherence
+  backgroundIncoherence:
+    enabled: true
+    priority: "medium"
+    detection:
+      backgroundVariance: 0.20  # Allowed variation
+      textureInconsistency: 0.25  # Texture changes
+      lightingMismatch: 0.30  # Lighting mismatch with character
+      sceneDisconnection: 0.40  # Background unrelated to character
+    action: "flag_and_suggest_correction"
+    severity: "MEDIUM"
+    correction: "Simplify background and ensure coherence"
+
+# Correction responses
+corrections:
+  # Stretching fixes
+  stretchingFix:
+    enabled: true
+    priority: 1
+    steps:
+      - "increase_proportional_enforcement_weight"
+      - "reduce_face_focus_weight"
+      - "validate_limb_ratios"
+      - "enforce_torso_limits"
+  
+  # Slicing fixes
+  slicingFix:
+    enabled: true
+    priority: 1
+    steps:
+      - "reduce_face_focus_weight_to_0.5"
+      - "increase_frame_padding_to_0.2"
+      - "adjust_head_position_y_to_0.35"
+      - "zoom_out_5_percent"
+  
+  # Duplication fixes
+  duplicationFix:
+    enabled: true
+    priority: 1
+    steps:
+      - "enable_layer_isolation"
+      - "clarify_prompt"
+      - "add_antiduplication_tags"
+      - "reduce_prompt_ambiguity"
+  
+  # Overexposure fixes
+  overexposureFix:
+    enabled: true
+    priority: 2
+    steps:
+      - "reduce_main_light_intensity_to_0.8"
+      - "increase_fill_light_ratio_to_0.4"
+      - "reduce_guidance_scale_by_1.0"
+      - "add_soft_shadow_tags"
+  
+  # Depth fixes
+  depthFix:
+    enabled: true
+    priority: 2
+    steps:
+      - "increase_depth_separation_to_0.4"
+      - "simplify_background"
+      - "add_background_distance_tags"
+      - "enable_depth_of_field"
+  
+  # Composition fixes
+  compositionFix:
+    enabled: true
+    priority: 2
+    steps:
+      - "enable_horizontal_centering"
+      - "adjust_head_position_y"
+      - "enforce_safe_zones"
+      - "validate_aspect_ratio"
+
+# Pattern learning
+patterns:
+  trackRecurrentIssues: true
+  patternThreshold: 3  # Flag issue after 3 occurrences
+  analyzeFrequency: "after_every_10_renders"
+  
+  commonPatterns:
+    - type: "recurring_stretching"
+      threshold: 5
+      action: "increase_proportional_enforcement"
+    - type: "recurring_slicing"
+      threshold: 5
+      action: "reduce_face_focus_weight_globally"
+    - type: "recurring_duplication"
+      threshold: 3
+      action: "enable_layer_isolation_globally"
+
+# Quality gates
+qualityGates:
+  enabled: true
+  
+  # Hard requirements (must pass)
+  hardRequirements:
+    - "no_critical_slicing"
+    - "no_critical_duplication"
+    - "face_fully_visible"
+    - "no_extreme_stretching"
+  
+  # Soft requirements (preferably pass)
+  softRequirements:
+    - "balanced_lighting"
+    - "stable_composition"
+    - "coherent_background"
+    - "natural_proportions"
+  
+  # Minimum pass rate
+  minPassRate: 0.85
+  
+  # Action on failure
+  onFailure:
+    autoRetry: true
+    maxRetries: 3
+    degradationStrategy: "progressive"
+    logToErrorReport: true
+
+# Reporting
+reporting:
+  enabled: true
+  detail: "comprehensive"
+  
+  reports:
+    - "generation_summary"
+    - "diagnostic_findings"
+    - "correction_suggestions"
+    - "pattern_analysis"
+    - "quality_metrics"
+  
+  format: "json"
+  saveLocation: "./logs/generation"
+  
+  # Notifications
+  notifications:
+    onCriticalIssue: true
+    onQualityDropBelow: 0.80
+    summarizeDaily: true

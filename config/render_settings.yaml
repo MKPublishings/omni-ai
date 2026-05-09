@@ -1,0 +1,109 @@
+# Render Settings Configuration
+# Used by IonRenderController to maintain consistent render output quality
+
+render:
+  # Output dimensions
+  width: 720
+  height: 1280
+  aspectRatio: "9:16"
+  
+  # Sampling settings
+  samplingMethod: "DPM++ 2M Karras"
+  samplingSteps: 25
+  guidanceScale: 7.5
+  
+  # Seed management
+  useSeed: true
+  seedStrategy: "controlled" # controlled, random, consistent
+  
+# Stability module settings
+stability:
+  # Proportional enforcement
+  proportional:
+    enabled: true
+    strictMode: true
+    headToBodyRatio: 0.1333  # 1:7.5
+    shoulderWidth: 0.25
+    limbLength: 0.43
+    faceHeightRatio: 0.12
+    torsoRatio: 0.28
+    toleranceMargin: 0.05  # 5% allowed variation
+  
+  # Composition locking
+  composition:
+    enabled: true
+    strictMode: true
+    defaultTemplate: "portrait_9_16"
+    centerHorizontal: true
+    allowHorizontalShift: 0.10  # ±10% max shift
+    headPositionY: 0.35  # Head ~1/3 from top
+    headToFrameRatio: 0.25  # Head ~25% of frame height
+    safeZoneTop: 0.15
+    safeZoneBottom: 0.85
+    safeZoneLeft: 0.15
+    safeZoneRight: 0.85
+  
+  # Depth and lighting
+  depth:
+    enabled: true
+    strictMode: true
+    depthOfFieldStrength: 0.4
+    focusDistance: 0.5  # Character should be in focus
+    blurFalloff: "quadratic"
+    lightingConsistency: 0.8  # 0-1, higher = more consistent
+    mainLightAngle: 45  # degrees
+    fillLightRatio: 0.3
+    backgroundSimplicity: 0.7
+
+# Diagnostics settings
+diagnostics:
+  enabled: true
+  runAfterGeneration: true
+  autoCorrectEnabled: true
+  logLevel: "detailed"  # minimal, standard, detailed
+  
+  # Detection thresholds
+  thresholds:
+    stretchingRatio: 1.3
+    slicingEdgeDistance: 0.05  # 5% from edge
+    duplicationThreshold: 0.7
+    overexposureThreshold: 0.95
+    depthDistortionThreshold: 0.2
+  
+  # Report settings
+  report:
+    generateReport: true
+    saveFailedRenders: true
+    logPath: "./logs/generation"
+
+# Quality assurance
+qa:
+  # Minimum acceptable quality metrics
+  minPassRate: 0.85  # 85% of renders should pass
+  checkFrequency: "after_every_render"  # after_every_render, periodic
+  
+  # Quality checks
+  checks:
+    - anatomical_stability
+    - composition_stability
+    - lighting_consistency
+    - depth_coherence
+    - face_integrity
+
+# Performance
+performance:
+  parallelRenders: 1  # Number of parallel render processes
+  cachePrompts: true
+  cacheDuration: 3600  # seconds
+  maxQueueSize: 100
+
+# Logging
+logging:
+  enabled: true
+  level: "info"  # debug, info, warn, error
+  paths:
+    history: "./logs/generation/generation_history.log"
+    errors: "./logs/generation/error_reports.log"
+    diagnostics: "./logs/generation/diagnostics.log"
+  maxLogSize: 100MB
+  archiveOldLogs: true

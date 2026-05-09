@@ -1,0 +1,208 @@
+# Model Configuration
+# Defines model parameters, LoRA weights, and stability-focused generation settings
+
+models:
+  default:
+    name: "ion-anime-stable"
+    type: "diffusion"
+    precision: "fp16"
+    
+    # Base model settings
+    baseModel: "anime-semi-realistic-v1"
+    vae: "stable_vae"
+    
+    # LoRA and upscaler configuration
+    loras:
+      - name: "portrait_stable_v1"
+        weight: 1.0
+        enabled: true
+      - name: "anatomy_corrector"
+        weight: 0.8
+        enabled: true
+      - name: "composition_lock"
+        weight: 0.7
+        enabled: true
+      - name: "lighting_consistency"
+        weight: 0.6
+        enabled: true
+    
+    upscaler: "RealESRGAN_x4"
+    upscaleStrength: 0.5
+
+# Sampling configurations
+sampling:
+  primary:
+    method: "DPM++ 2M Karras"
+    steps: 25
+    guidance: 7.5
+    eta: 0.0  # Deterministic sampling
+    
+  # Alternative configurations for problem-solving
+  highQuality:
+    method: "DPM++ 2M Karras"
+    steps: 35
+    guidance: 8.0
+    eta: 0.0
+  
+  conservative:
+    method: "DPM++ 2M Karras"
+    steps: 20
+    guidance: 6.5
+    eta: 0.0
+
+# Prompt processing
+prompts:
+  # Emphasis and weight handling
+  emphasisSyntax: "alternative"  # alternative, compel, webui
+  
+  # Preprocessing
+  normalize: true
+  removeRedundancies: true
+  validateSyntax: true
+  
+  # Negative prompt merging
+  mergeNegativeTags: true
+  prioritizeAnatomicalCorrections: true
+  
+  # Tag ordering
+  tagOrder:
+    1: "mandatory_quality_tags"
+    2: "composition_tags"
+    3: "lighting_tags"
+    4: "anatomy_correction_tags"
+    5: "style_tags"
+    6: "character_tags"
+    7: "environmental_tags"
+
+# Face and hand handling (critical for stability)
+faceHandling:
+  detailedFace: true
+  faceDetailWeight: 1.2
+  
+  # Critical for preventing cropping
+  faceProtection:
+    enabled: true
+    preventCropping: true
+    ensureCompleteHead: true
+    preventSlicing: true
+    minimumFaceVisibility: 0.95  # 95% of face must be visible
+  
+  # Hand quality (secondary priority)
+  handQuality: "detailed"
+  handDetailWeight: 0.8
+
+# Anatomy and proportions (critical for stretching prevention)
+anatomy:
+  enforceProportions: true
+  proportionMode: "strict"  # strict, moderate, lenient
+  
+  # Limb length ratios
+  limbProportions:
+    armLength: 0.43  # of body height
+    legLength: 0.43  # of body height
+    headHeight: 0.1333  # of body height (1/7.5)
+    torsoHeight: 0.28  # of body height
+    shoulderWidth: 0.25  # of body height
+  
+  # Anti-stretching enforcement
+  antiStretching:
+    enabled: true
+    torsoLimit: 0.30  # Maximum torso ratio
+    limbLimit: 0.45  # Maximum limb ratio
+    faceLimit: 0.15  # Maximum face ratio
+
+# Composition and framing
+composition:
+  enforce: true
+  aspectRatioMode: "strict"  # strict, flexible
+  targetAspectRatio: 0.5625  # 9:16 portrait
+  
+  # Centering enforcement
+  horizontalCentering: true
+  verticalPositioning:
+    headPosition: "upper-third"
+    shouldersVisible: true
+    completeBodyVisible: false  # For portrait mode
+  
+  # Frame safety
+  frameSafety:
+    topPadding: 0.15  # No characters in top 15%
+    bottomPadding: 0.15  # No characters in bottom 15%
+    leftPadding: 0.15
+    rightPadding: 0.15
+
+# Lighting and color
+lighting:
+  mode: "soft-natural"  # soft-natural, studio, cinematic
+  
+  # Main light setup
+  mainLight:
+    angle: 45  # degrees
+    intensity: 1.0
+    softness: "medium"
+  
+  # Fill light (shadows)
+  fillLight:
+    intensity: 0.3
+    softness: "high"
+  
+  # Color correction
+  colorMode: "warm"  # warm, neutral, cool
+  colorBalance: 0.5
+  saturation: 0.8  # Slightly desaturated for natural look
+  contrast: 0.7  # Moderate contrast to avoid harsh shadows
+
+# Background handling (critical for depth stability)
+background:
+  simplicity: "high"  # high, medium, low
+  maxVariance: 0.2  # Maximum variation allowed
+  coherence: "high"
+  
+  # Depth separation
+  depthSeparation: 0.4  # Significant separation from character
+  depthOfField:
+    enabled: true
+    strength: 0.4
+    focusDistance: 0.5
+    blurFalloff: "quadratic"
+
+# Quality controls
+quality:
+  # Detail levels
+  detailLevel: "high"
+  refinement: "high"
+  
+  # Anti-artifact measures
+  antiArtifacts:
+    enabled: true
+    denoiseStrength: 0.3
+    smoothing: 0.2
+  
+  # Post-processing
+  postProcess:
+    sharpen: 0.3
+    denoise: 0.2
+    colorBalance: true
+
+# Generation limits and safety
+limits:
+  maxDimensions: [1024, 1792]
+  minDimensions: [512, 512]
+  maxSteps: 50
+  minSteps: 15
+  maxGuidance: 15
+  minGuidance: 3
+
+# Fallback and error handling
+fallback:
+  enableFallback: true
+  fallbackModel: "stable-anime-v1"
+  retryOnFailure: true
+  maxRetries: 2
+  
+  # Progressive degradation
+  degradationStrategy:
+    1: "reduce_guidance_scale"
+    2: "reduce_steps"
+    3: "switch_sampler"
+    4: "use_fallback_model"

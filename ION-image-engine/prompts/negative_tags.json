@@ -1,0 +1,97 @@
+{
+  "anatomical_errors": [
+    "no stretched limbs",
+    "no elongated torso",
+    "no distorted proportions",
+    "no abnormal head size",
+    "no disproportionate features",
+    "anatomically correct",
+    "realistic proportions",
+    "no oversized hands",
+    "no oversized feet",
+    "no twisted joints"
+  ],
+
+  "face_errors": [
+    "no cropped face",
+    "no sliced chin",
+    "no cropped forehead",
+    "no cropped eyes",
+    "no hidden facial features",
+    "face fully visible",
+    "complete head in frame",
+    "no partial features",
+    "no duplicated eyes",
+    "no duplicated mouth"
+  ],
+
+  "composition_errors": [
+    "no off-center drift",
+    "centered composition",
+    "no vertical drift",
+    "no horizontal shift",
+    "balanced framing",
+    "stable positioning",
+    "consistent placement",
+    "no floating elements",
+    "grounded positioning"
+  ],
+
+  "lighting_errors": [
+    "no overexposure",
+    "no harsh shadows",
+    "no spotty lighting",
+    "no inconsistent illumination",
+    "balanced lighting",
+    "soft, even light",
+    "no blown highlights",
+    "no deep blacks",
+    "professional lighting"
+  ],
+
+  "depth_errors": [
+    "no warped background",
+    "no depth distortion",
+    "clear depth separation",
+    "coherent background",
+    "no merged layers",
+    "distinct foreground and background",
+    "stable depth field",
+    "no background blur bleeding"
+  ],
+
+  "quality_errors": [
+    "no duplicated features",
+    "no extra characters",
+    "no scene clutter",
+    "clean silhouette",
+    "no chaotic background",
+    "high quality rendering",
+    "no artifacts",
+    "smooth transitions",
+    "polished finish"
+  ],
+
+  "aspect_ratio_errors": [
+    "no distorted aspect ratio",
+    "portrait orientation preserved",
+    "no stretched canvas",
+    "9:16 format maintained",
+    "no compressed width",
+    "no elongated height",
+    "natural aspect ratio"
+  ],
+
+  "mandatory_exclusions": [
+    "bad anatomy",
+    "poorly drawn hands",
+    "poorly drawn face",
+    "deformed",
+    "distorted",
+    "disfigured",
+    "worst quality",
+    "low quality",
+    "watermark",
+    "signature"
+  ]
+}
