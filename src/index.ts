@@ -244,6 +244,8 @@ const DIRECT_FALLBACK_DEFAULT_CFG = 7;
 const DIRECT_FALLBACK_DEFAULT_STEPS = 28;
 const DIRECT_FALLBACK_MAX_EDGE = 1536;
 const DIRECT_FALLBACK_FLUX_MAX_EDGE = 1024;
+const DIRECT_FALLBACK_FLUX_MAX_STEPS = 20;
+const DIRECT_FALLBACK_DEFAULT_MAX_STEPS = 50;
 
 function isAnimeLikePrompt(prompt: string): boolean {
   const normalized = sanitizePromptText(String(prompt || "")).toLowerCase();
@@ -304,11 +306,13 @@ function resolveDirectFallbackConfig(env: Env, promptText: string) {
   }
 
   const isFluxModel = /flux-1-schnell/i.test(modelName);
+  const targetSteps = animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS;
+  const maxSteps = isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_STEPS : DIRECT_FALLBACK_DEFAULT_MAX_STEPS;
   return {
     animeLike,
     modelName,
     guidance: animeLike ? 8 : DIRECT_FALLBACK_DEFAULT_CFG,
-    steps: animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS,
+    steps: Math.max(1, Math.min(targetSteps, maxSteps)),
     maxEdge: isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_EDGE : DIRECT_FALLBACK_MAX_EDGE,
   };
 }
