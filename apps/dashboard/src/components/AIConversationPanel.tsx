@@ -35,6 +35,27 @@ type MessageSegment =
   | { type: 'text'; content: string }
   | { type: 'code'; content: string; language: string }
 
+function toDisplayText(value: unknown) {
+  if (typeof value === 'string') {
+    return value.trim()
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+
+  return ''
+}
+
+function toSafeTimeLabel(value: unknown) {
+  const parsed = value instanceof Date ? value : new Date(String(value || ''))
+  if (Number.isNaN(parsed.getTime())) {
+    return '--:--'
+  }
+
+  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
 function getSourceLabel(source: string) {
   const normalized = String(source || '').trim().toLowerCase()
 
@@ -168,6 +189,12 @@ const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.type === 'user'
   const renderedSegments = message.content ? renderMessageText(message.content) : []
   const sources = Array.isArray(message.sources) ? message.sources : []
+  const imageFilename = toDisplayText(message.image?.filename)
+  const imageModel = toDisplayText(message.image?.model)
+  const imageCheckpoint = toDisplayText(message.image?.checkpoint)
+  const imageResolution = toDisplayText(message.image?.resolution)
+  const imageGateway = toDisplayText(message.image?.gateway)
+  const imageSrc = toDisplayText(message.image?.src)
 
   return (
     <div className={clsx(
@@ -181,22 +208,22 @@ const MessageBubble = ({ message }: { message: Message }) => {
           : 'chat-message-assistant ix-glass-sovereign text-quantum-white'
       )}>
         {renderedSegments.length > 0 ? <div className="space-y-3">{renderedSegments}</div> : null}
-        {message.image ? (
+        {message.image && imageSrc ? (
           <div className={clsx(message.content ? 'mt-3' : '')}>
             <img
-              src={message.image.src}
-              alt={message.image.filename || 'Generated image'}
+              src={imageSrc}
+              alt={imageFilename || 'Generated image'}
               className="max-h-[28rem] w-full rounded-2xl border border-quantum-white/10 object-cover"
             />
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs opacity-70">
-              {message.image.filename ? <span>{message.image.filename}</span> : null}
-              {message.image.model ? <span>{message.image.model}</span> : null}
-              {message.image.checkpoint && message.image.checkpoint !== message.image.model ? <span>{message.image.checkpoint}</span> : null}
-              {message.image.resolution ? <span>{message.image.resolution}</span> : null}
-              {message.image.gateway ? <span>{message.image.gateway}</span> : null}
+              {imageFilename ? <span>{imageFilename}</span> : null}
+              {imageModel ? <span>{imageModel}</span> : null}
+              {imageCheckpoint && imageCheckpoint !== imageModel ? <span>{imageCheckpoint}</span> : null}
+              {imageResolution ? <span>{imageResolution}</span> : null}
+              {imageGateway ? <span>{imageGateway}</span> : null}
               <a
-                href={message.image.src}
-                download={message.image.filename || 'ion-image.png'}
+                href={imageSrc}
+                download={imageFilename || 'ion-image.png'}
                 className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white transition hover:bg-quantum-white/8"
               >
                 Download image
@@ -217,7 +244,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
           </div>
         ) : null}
         <span className="chat-message-timestamp mt-2 block select-none text-xs opacity-60">
-          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {toSafeTimeLabel(message.timestamp)}
         </span>
       </div>
     </div>
