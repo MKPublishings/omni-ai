@@ -16,6 +16,10 @@ function isDirectRelayEnabled(): boolean {
   return ['1', 'true', 'yes', 'on'].includes(String(process.env.DASHBOARD_IMAGE_DIRECT_RELAY || '').trim().toLowerCase())
 }
 
+function normalizeAgeTier(value: unknown): 'adult' | 'minor' {
+  return String(value || '').trim().toLowerCase() === 'minor' ? 'minor' : 'adult'
+}
+
 function mapV2Failure(error: unknown): { status: number; code: string; message: string } {
   const message = String((error as { message?: string } | null)?.message || 'Image generation failed')
   const name = String((error as { name?: string } | null)?.name || '').trim()
@@ -89,7 +93,7 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
         source: 'none',
       },
       safety: {
-        ageTier: String((body.safetyProfile as { ageTier?: string } | undefined)?.ageTier || 'adult'),
+        ageTier: normalizeAgeTier((body.safetyProfile as { ageTier?: string } | undefined)?.ageTier),
         explicitAllowed: Boolean((body.safetyProfile as { explicitAllowed?: boolean } | undefined)?.explicitAllowed),
         illegalBlocked: (body.safetyProfile as { illegalBlocked?: boolean } | undefined)?.illegalBlocked !== false,
       },

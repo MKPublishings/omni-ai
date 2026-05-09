@@ -45,8 +45,8 @@ export function assemblePrompt(
   ];
 
   return {
-    positive: [...new Set(positiveTokens)].join(', '),
-    negative: [...new Set(negativeTokens.filter(Boolean))].join(', '),
+    positive: Array.from(new Set(positiveTokens)).join(', '),
+    negative: Array.from(new Set(negativeTokens.filter(Boolean))).join(', '),
     qualityTags,
     styleTags,
   };

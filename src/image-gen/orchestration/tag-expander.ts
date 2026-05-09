@@ -17,7 +17,7 @@ const TAG_MAP: Array<{ pattern: RegExp; tags: string[] }> = [
 ];
 
 function unique(values: string[]): string[] {
-  return [...new Set(values.filter(Boolean))];
+  return Array.from(new Set(values.filter(Boolean)));
 }
 
 export function expandTags(intent: ParsedIntent): TagExpansionResult {

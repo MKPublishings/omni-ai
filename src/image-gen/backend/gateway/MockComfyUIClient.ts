@@ -22,7 +22,8 @@ function writeUint32(target: Uint8Array, offset: number, value: number): void {
 function crc32(bytes: Uint8Array): number {
   let crc = 0xffffffff;
 
-  for (const byte of bytes) {
+  for (let offset = 0; offset < bytes.length; offset += 1) {
+    const byte = bytes[offset];
     crc ^= byte;
     for (let index = 0; index < 8; index += 1) {
       const mask = -(crc & 1);
@@ -37,7 +38,8 @@ function adler32(bytes: Uint8Array): number {
   let a = 1;
   let b = 0;
 
-  for (const byte of bytes) {
+  for (let offset = 0; offset < bytes.length; offset += 1) {
+    const byte = bytes[offset];
     a = (a + byte) % 65521;
     b = (b + a) % 65521;
   }

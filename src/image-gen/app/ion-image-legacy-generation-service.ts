@@ -76,7 +76,7 @@ export function inferMaterialsFromPrompt(prompt: string): string[] {
   if (/\b(fabric|cloth|textile|cotton|silk|denim|wool)\b/i.test(lower)) inferred.push("fabric");
   if (/\b(metal|chrome|steel|iron|aluminum|brushed metal)\b/i.test(lower)) inferred.push("metal");
   if (/\b(glass|crystal|transparent|refraction|window pane)\b/i.test(lower)) inferred.push("glass");
-  return [...new Set(inferred)];
+  return Array.from(new Set(inferred));
 }
 
 export function normalizeImageGenerationError(err: any): { status: number; code: string; message: string; details?: string } {
