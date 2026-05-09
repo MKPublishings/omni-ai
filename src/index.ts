@@ -239,9 +239,78 @@ function isComfyPromptAccessDeniedError(error: unknown): boolean {
   return message.includes("(403)") && message.includes("/prompt");
 }
 
-function resolveDirectImageModel(env: Env): string {
-  const configured = sanitizePromptText(String(env.MODEL_IMAGE || ""));
-  return configured || "@cf/black-forest-labs/flux-1-schnell";
+const DIRECT_FALLBACK_DEFAULT_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+const DIRECT_FALLBACK_DEFAULT_CFG = 7;
+const DIRECT_FALLBACK_DEFAULT_STEPS = 28;
+const DIRECT_FALLBACK_MAX_EDGE = 1536;
+const DIRECT_FALLBACK_FLUX_MAX_EDGE = 1024;
+
+function isAnimeLikePrompt(prompt: string): boolean {
+  const normalized = sanitizePromptText(String(prompt || "")).toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+
+  return /\b(anime|manga|waifu|niji|chibi|cel\s*shad|lineart|otaku|kawaii|studio\s*ghibli)\b/i.test(normalized);
+}
+
+function clampDimensionsToMaxEdge(width: number, height: number, maxEdge: number): { width: number; height: number } {
+  const safeWidth = Math.max(256, Math.floor(Number(width) || 0));
+  const safeHeight = Math.max(256, Math.floor(Number(height) || 0));
+
+  const largestEdge = Math.max(safeWidth, safeHeight);
+  if (largestEdge <= maxEdge) {
+    return { width: safeWidth, height: safeHeight };
+  }
+
+  const ratio = maxEdge / largestEdge;
+  const clampedWidth = Math.max(256, Math.round(safeWidth * ratio));
+  const clampedHeight = Math.max(256, Math.round(safeHeight * ratio));
+  return { width: clampedWidth, height: clampedHeight };
+}
+
+function buildDirectFallbackPrompt(promptText: string, animeLike: boolean): string {
+  const base = sanitizePromptText(promptText);
+  if (!base) {
+    return "high quality illustration, clear subject, coherent composition";
+  }
+
+  const qualitySuffix = animeLike
+    ? "anime illustration, clean line art, coherent subject anatomy, expressive face, cel-shaded color separation, clear foreground subject"
+    : "high quality composition, coherent subject, detailed textures, clear lighting";
+
+  return `${base}, ${qualitySuffix}`;
+}
+
+function buildDirectFallbackNegativePrompt(animeLike: boolean): string {
+  const baseline = "noise, grain, static, abstract texture, blurry, deformed anatomy, extra limbs, warped face, low contrast, washed out";
+  if (!animeLike) {
+    return baseline;
+  }
+
+  return `${baseline}, realistic skin pores, photoreal artifacts, monochrome haze`;
+}
+
+function resolveDirectFallbackConfig(env: Env, promptText: string) {
+  const configuredModel = sanitizePromptText(String(env.MODEL_IMAGE || ""));
+  const policyFallbackModel = sanitizePromptText(String(env.MODEL_IMAGE_POLICY_FALLBACK || ""));
+  const animeLike = isAnimeLikePrompt(promptText);
+
+  let modelName = configuredModel || DIRECT_FALLBACK_DEFAULT_MODEL;
+  if (animeLike && policyFallbackModel) {
+    modelName = policyFallbackModel;
+  } else if (animeLike && /flux-1-schnell/i.test(modelName)) {
+    modelName = DIRECT_FALLBACK_DEFAULT_MODEL;
+  }
+
+  const isFluxModel = /flux-1-schnell/i.test(modelName);
+  return {
+    animeLike,
+    modelName,
+    guidance: animeLike ? 8 : DIRECT_FALLBACK_DEFAULT_CFG,
+    steps: animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS,
+    maxEdge: isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_EDGE : DIRECT_FALLBACK_MAX_EDGE,
+  };
 }
 
 function makeDirectFallbackFilename(styleId: string): string {
@@ -274,13 +343,23 @@ async function buildDirectAiImageFallbackResponse(input: {
   requestedMaterials: string[];
   safetyProfile: SafetyProfile;
 }): Promise<Response> {
-  const modelName = resolveDirectImageModel(input.env);
+  const fallbackConfig = resolveDirectFallbackConfig(input.env, input.promptText);
+  const prompt = buildDirectFallbackPrompt(input.promptText, fallbackConfig.animeLike);
+  const negativePrompt = buildDirectFallbackNegativePrompt(fallbackConfig.animeLike);
+  const directDimensions = clampDimensionsToMaxEdge(
+    input.effectiveWidth,
+    input.effectiveHeight,
+    fallbackConfig.maxEdge,
+  );
   const startedAt = Date.now();
-  const raw = await input.env.AI.run(modelName, {
-    prompt: input.promptText,
-    width: input.effectiveWidth,
-    height: input.effectiveHeight,
+  const raw = await input.env.AI.run(fallbackConfig.modelName, {
+    prompt,
+    negative_prompt: negativePrompt,
+    width: directDimensions.width,
+    height: directDimensions.height,
     seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : undefined,
+    guidance: fallbackConfig.guidance,
+    num_steps: fallbackConfig.steps,
   });
   const normalized = await normalizeGeneratedImageOutput(raw);
   const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
@@ -309,37 +388,37 @@ async function buildDirectAiImageFallbackResponse(input: {
         originalPrompt: input.promptText,
         styleFamily: input.resolvedRenderingStyle,
         styleSource,
-        inferredMood: "unknown",
+        inferredMood: fallbackConfig.animeLike ? "stylized" : "unknown",
         confidence: 0,
         feedbackApplied: Boolean(input.feedback),
       },
       image: {
         filename,
         mimeType: normalized.mimeType,
-        width: input.effectiveWidth,
-        height: input.effectiveHeight,
+        width: directDimensions.width,
+        height: directDimensions.height,
         ratio: input.effectiveRatio,
-        resolution: `${input.effectiveWidth}x${input.effectiveHeight}`,
+        resolution: `${directDimensions.width}x${directDimensions.height}`,
         format: normalized.mimeType.includes("jpeg") ? "jpeg" : normalized.mimeType.includes("webp") ? "webp" : "png",
         exportLocation: "chat-download",
       },
       model: {
-        checkpoint: modelName,
-        outputModel: modelName,
+        checkpoint: fallbackConfig.modelName,
+        outputModel: fallbackConfig.modelName,
         predictionType: "direct",
         vae: "n/a",
         clipSkip: 0,
         sampler: "auto",
         scheduler: "auto",
-        steps: 0,
-        cfgScale: 0,
+        steps: fallbackConfig.steps,
+        cfgScale: fallbackConfig.guidance,
         cfgRescale: 0,
         seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : null,
         batchSize: 1,
       },
       prompt: {
-        positive: input.promptText,
-        negative: "",
+        positive: prompt,
+        negative: negativePrompt,
         qualityTags: [],
         styleTags: [],
       },
@@ -370,7 +449,7 @@ async function buildDirectAiImageFallbackResponse(input: {
     headers: {
       ...CORS_HEADERS,
       "Content-Type": "application/json",
-      "X-ION-Image-Model": modelName,
+      "X-ION-Image-Model": fallbackConfig.modelName,
       "X-ION-Image-Route": "image-gen-v2",
       "Access-Control-Expose-Headers": "X-ION-Image-Model",
     },
