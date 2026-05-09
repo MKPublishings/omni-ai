@@ -1,4 +1,4 @@
-name = "ION-ai-router"
+name = "ion-ai-router"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 

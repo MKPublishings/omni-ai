@@ -59,6 +59,40 @@ test('ComfyUI client marks the gateway unhealthy when object info is unavailable
   try {
     const client = new ComfyUIClient();
     assert.equal(await client.isHealthy(), false);
+    assert.match(String(client.getLastHealthFailure() || ''), /ComfyUI request failed \(404\) for \/object_info\./);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('ComfyUI client tolerates 403 on read-only queue probe when history is available', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.endsWith('/queue')) {
+      return new Response('forbidden', { status: 403 });
+    }
+    if (url.includes('/history/')) {
+      return createJsonResponse({
+        'prompt-1': {
+          status: {
+            completed: true,
+            status_str: 'success',
+          },
+        },
+      });
+    }
+
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const client = new ComfyUIClient();
+    const status = await client.getJobStatus('prompt-1');
+
+    assert.equal(status.status, 'completed');
+    assert.equal(status.queuePosition, -1);
   } finally {
     globalThis.fetch = originalFetch;
   }

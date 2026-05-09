@@ -4,7 +4,13 @@
   "env": {
     "NEXT_PUBLIC_AUTH0_DOMAIN": "ion-ai.us.auth0.com",
     "NEXT_PUBLIC_AUTH0_CLIENT_ID": "tlXPaqF8p70rPlIbKkKyEOXXJPjenTxf",
-    "NEXT_PUBLIC_AUTH0_APP_ORIGIN": "https://dashboard-ionirix.vercel.app"
+    "NEXT_PUBLIC_AUTH0_APP_ORIGIN": "https://dashboard-ionirix.vercel.app",
+    "DASHBOARD_IMAGE_DIRECT_RELAY": "true",
+    "COMFYUI_HOST": "https://worker-comfy.ionirix.com",
+    "COMFYUI_FETCH_HOST": "https://worker-comfy.ionirix.com",
+    "COMFYUI_WS": "wss://img.ionirix.com/ws",
+    "COMFYUI_MOCK": "false",
+    "DEFAULT_CHECKPOINT": "ComfyUI-Ion-RTX-v1.0.safetensors"
   },
   "functions": {
     "src/app/api/**/*.ts": {

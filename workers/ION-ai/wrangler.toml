@@ -1,4 +1,4 @@
-name = "ION-ai"
+name = "ion-ai"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
@@ -27,15 +27,15 @@ EMBED_URL = "https://ion-ai-embeddings.omni-ai.workers.dev"
 
 [[services]]
 binding = "IMAGES_SERVICE"
-service = "ION-ai-images"
+service = "ion-ai-images"
 
 [[services]]
 binding = "AUDIO_SERVICE"
-service = "ION-ai-audio"
+service = "ion-ai-audio"
 
 [[services]]
 binding = "EMBED_SERVICE"
-service = "ION-ai-embeddings"
+service = "ion-ai-embeddings"
 
 [[d1_databases]]
 binding = "ION_DB"

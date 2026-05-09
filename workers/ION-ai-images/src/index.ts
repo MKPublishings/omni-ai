@@ -2,17 +2,36 @@ import {
   isReadableByteStream,
   normalizeGeneratedImageOutput,
 } from "../../../src/shared/image-output";
+import { executeIonImagePipeline } from "../../../src/image-gen/app/ion-image-pipeline";
+import { buildIonImageV2RouteResult } from "../../../src/image-gen/app/ion-image-v2-route-service";
 
 interface Env {
-  AI: Ai;
+  AI?: Ai;
+  ION_IMAGE_PIPELINE_V2?: string;
+  COMFYUI_HOST?: string;
+  COMFYUI_WS?: string;
+  COMFYUI_MOCK?: string;
+  COMFYUI_REQUEST_TIMEOUT_MS?: string;
+  DEFAULT_CHECKPOINT?: string;
 }
 
 interface ImageRequest {
+  userId?: string;
   prompt: string;
   negative_prompt?: string;
   width?: number;
   height?: number;
   seed?: number;
+  stylePack?: string;
+  quality?: string;
+  ratio?: string;
+  mode?: string;
+  feedback?: string;
+  safetyProfile?: {
+    ageTier?: string;
+    explicitAllowed?: boolean;
+    illegalBlocked?: boolean;
+  };
 }
 
 const MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
@@ -42,6 +61,120 @@ type GenerationPayload = {
   num_steps?: number;
   guidance?: number;
 };
+
+function isEnabled(value: unknown): boolean {
+  return ["1", "true", "yes", "on"].includes(String(value ?? "").trim().toLowerCase());
+}
+
+function mapV2Failure(error: unknown): { status: number; code: string; message: string } {
+  const message = String((error as { message?: string } | null)?.message || "Image generation failed");
+  const name = String((error as { name?: string } | null)?.name || "").trim();
+
+  if (name === "E_COMFYUI_DOWN") {
+    return {
+      status: 503,
+      code: "provider-unavailable",
+      message,
+    };
+  }
+
+  if (name === "E_TIMEOUT") {
+    return {
+      status: 504,
+      code: "provider-timeout",
+      message,
+    };
+  }
+
+  return {
+    status: 500,
+    code: "image-generation-failed",
+    message,
+  };
+}
+
+async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
+  let body: ImageRequest;
+  try {
+    body = await request.json<ImageRequest>();
+  } catch {
+    return Response.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  if (!body.prompt || typeof body.prompt !== "string") {
+    return Response.json({ success: false, error: "Field 'prompt' is required" }, { status: 400 });
+  }
+
+  const normalizedPrompt = String(body.prompt || "").trim();
+  if (normalizedPrompt.length > MAX_PROMPT_CHARS) {
+    return Response.json(
+      {
+        success: false,
+        error: `Prompt is too long for image generation. Please keep it under ${MAX_PROMPT_CHARS} characters.`,
+        code: "prompt-too-long"
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const startedAt = Date.now();
+    const pipelineResult = await executeIonImagePipeline(
+      {
+        userId: String(body.userId || "anonymous").trim() || "anonymous",
+        prompt: normalizedPrompt,
+        stylePack: body.stylePack,
+        width: body.width,
+        height: body.height,
+        seed: body.seed,
+      },
+      env as unknown as Record<string, unknown>,
+    );
+
+    const responsePayload = await buildIonImageV2RouteResult({
+      userId: String(body.userId || "anonymous").trim() || "anonymous",
+      mode: String(body.mode || "simple").trim() || "simple",
+      quality: body.quality,
+      ratio: body.ratio,
+      feedbackApplied: Boolean(String(body.feedback || "").trim()),
+      styleSource: body.stylePack ? "session-or-request" : "auto",
+      camera: {
+        value: "",
+        source: "none",
+      },
+      lighting: {
+        value: "",
+        source: "none",
+      },
+      materials: {
+        values: [],
+        source: "none",
+      },
+      safety: {
+        ageTier: String(body.safetyProfile?.ageTier || "adult"),
+        explicitAllowed: Boolean(body.safetyProfile?.explicitAllowed),
+        illegalBlocked: body.safetyProfile?.illegalBlocked !== false,
+      },
+      pipelineResult,
+      totalMs: Date.now() - startedAt,
+    });
+
+    return new Response(JSON.stringify(responsePayload.body), {
+      status: 200,
+      headers: responsePayload.headers,
+    });
+  } catch (error: unknown) {
+    const failure = mapV2Failure(error);
+    return Response.json(
+      {
+        success: false,
+        code: failure.code,
+        error: failure.message,
+      },
+      { status: failure.status }
+    );
+  }
+}
 
 function parseResolutionFromPrompt(prompt: string): { width: number; height: number; source: string } | null {
   const lower = prompt.toLowerCase();
@@ -386,6 +519,10 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/generate" && request.method === "POST") {
+      if (isEnabled(env.ION_IMAGE_PIPELINE_V2)) {
+        return handleGenerateV2(request, env);
+      }
+
       return handleGenerate(request, env);
     }
 

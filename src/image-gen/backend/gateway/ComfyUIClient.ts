@@ -93,9 +93,15 @@ function normalizeStatus(value: string | undefined): JobStatus['status'] {
   return 'processing';
 }
 
+function isBypassableRead403(message: string, path: string): boolean {
+  const normalized = String(message || '').toLowerCase();
+  return normalized.includes('(403)') && normalized.includes(path.toLowerCase());
+}
+
 export class ComfyUIClient implements IModelGateway {
   private readonly config = resolveComfyUIConfig();
   private lastSubmittedCheckpoint: string | null = null;
+  private lastHealthFailure: string | null = null;
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
     const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {
@@ -117,10 +123,25 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async getJobStatus(promptId: string): Promise<JobStatus> {
-    const [queue, history] = await Promise.all([
+    const [queueResult, historyResult] = await Promise.allSettled([
       this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
       this.fetchJson<ComfyUIHistoryResponse>(this.config.historyPath(promptId), { method: 'GET' }),
     ]);
+
+    if (historyResult.status === 'rejected') {
+      throw historyResult.reason;
+    }
+
+    const history = historyResult.value;
+    let queue: ComfyUIQueueResponse = {};
+    if (queueResult.status === 'fulfilled') {
+      queue = queueResult.value;
+    } else {
+      const message = queueResult.reason instanceof Error ? queueResult.reason.message : String(queueResult.reason);
+      if (!isBypassableRead403(message, this.config.queuePath)) {
+        throw queueResult.reason;
+      }
+    }
 
     const historyEntry = history[promptId];
     const queuePending = Array.isArray(queue.queue_pending) ? queue.queue_pending : [];
@@ -213,16 +234,36 @@ export class ComfyUIClient implements IModelGateway {
     return null;
   }
 
+  getLastHealthFailure(): string | null {
+    return this.lastHealthFailure;
+  }
+
   async isHealthy(): Promise<boolean> {
-    try {
-      await Promise.all([
-        this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
-        this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' }),
-      ]);
+    const results = await Promise.allSettled([
+      this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
+      this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' }),
+    ]);
+
+    const failures = results
+      .map((result, index) => ({
+        result,
+        path: index === 0 ? this.config.queuePath : this.config.objectInfoPath,
+      }))
+      .filter((entry): entry is { result: PromiseRejectedResult; path: string } => entry.result.status === 'rejected');
+
+    if (failures.length === 0) {
+      this.lastHealthFailure = null;
       return true;
-    } catch {
-      return false;
     }
+
+    const failureMessages = failures.map((entry) => entry.result.reason instanceof Error ? entry.result.reason.message : String(entry.result.reason));
+    this.lastHealthFailure = failureMessages.join(' | ');
+
+    if (failures.every((entry, index) => isBypassableRead403(failureMessages[index], entry.path))) {
+      return true;
+    }
+
+    return false;
   }
 
   private async fetchJson<T>(path: string, init: RequestInit): Promise<T> {
@@ -246,12 +287,20 @@ export class ComfyUIClient implements IModelGateway {
   private async fetchWithTimeout(path: string, init: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.requestTimeoutMs);
+    const target = `${this.config.host}${path}`;
 
     try {
-      return await fetch(`${this.config.host}${path}`, {
+      return await fetch(target, {
         ...init,
         signal: controller.signal,
       });
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw new Error(`ComfyUI request timed out after ${this.config.requestTimeoutMs}ms for ${target}.`);
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`ComfyUI fetch failed for ${target}: ${message}`);
     } finally {
       clearTimeout(timeout);
     }

@@ -8,6 +8,7 @@ type EnvironmentSource = Record<string, unknown>;
 
 export interface ImageGenEnvironment {
   comfyuiHost: string;
+  comfyuiFetchHost: string;
   comfyuiWs: string;
   comfyuiMock: boolean;
   comfyuiRequestTimeoutMs: number;
@@ -67,8 +68,11 @@ function readBoolean(source: EnvironmentSource, key: string, fallback: boolean):
 }
 
 export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEnvironmentSource()): ImageGenEnvironment {
+  const comfyuiHost = readText(source, 'COMFYUI_HOST', 'http://localhost:8188');
+
   return {
-    comfyuiHost: readText(source, 'COMFYUI_HOST', 'http://localhost:8188'),
+    comfyuiHost,
+    comfyuiFetchHost: readText(source, 'COMFYUI_FETCH_HOST', comfyuiHost),
     comfyuiWs: readText(source, 'COMFYUI_WS', 'ws://localhost:8188/ws'),
     comfyuiMock: readBoolean(source, 'COMFYUI_MOCK', true),
     comfyuiRequestTimeoutMs: readNumber(source, 'COMFYUI_REQUEST_TIMEOUT_MS', 120000),

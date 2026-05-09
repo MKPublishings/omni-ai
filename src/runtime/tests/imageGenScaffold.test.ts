@@ -85,6 +85,7 @@ test('environment readers apply defaults and overrides deterministically', () =>
 
   const overridden = readImageGenEnvironment({
     COMFYUI_HOST: 'http://127.0.0.1:9000',
+    COMFYUI_FETCH_HOST: 'https://internal-comfy.example.com',
     COMFYUI_WS: 'ws://127.0.0.1:9000/ws',
     COMFYUI_MOCK: 'false',
     DEFAULT_STEPS: '32',
@@ -92,6 +93,7 @@ test('environment readers apply defaults and overrides deterministically', () =>
   });
 
   assert.equal(overridden.comfyuiHost, 'http://127.0.0.1:9000');
+  assert.equal(overridden.comfyuiFetchHost, 'https://internal-comfy.example.com');
   assert.equal(overridden.comfyuiWs, 'ws://127.0.0.1:9000/ws');
   assert.equal(overridden.comfyuiMock, false);
   assert.equal(overridden.defaultSteps, 32);
@@ -101,11 +103,12 @@ test('environment readers apply defaults and overrides deterministically', () =>
 test('comfyui config normalizes connection endpoints', () => {
   const config = resolveComfyUIConfig({
     COMFYUI_HOST: 'http://localhost:8188///',
+    COMFYUI_FETCH_HOST: 'https://internal-comfy.example.com///',
     COMFYUI_WS: 'ws://localhost:8188/ws',
     COMFYUI_MOCK: 'true',
   });
 
-  assert.equal(config.host, 'http://localhost:8188');
+  assert.equal(config.host, 'https://internal-comfy.example.com');
   assert.equal(config.historyPath('abc 123'), '/history/abc%20123');
   assert.equal(config.mock, true);
 });
@@ -158,7 +161,7 @@ test('mock gateway produces deterministic progress and image output', async () =
   assert.equal(events.at(-1)?.previewImageUrl, 'mock://preview/final');
 
   const image = await gateway.getOutputImage(submission.promptId);
-  assert.equal(image.byteLength > 0, true);
+  assert.equal(image.byteLength > 1000, true);
   assert.equal(image[0], 0x89);
   assert.equal(image[1], 0x50);
   assert.equal(image[2], 0x4e);

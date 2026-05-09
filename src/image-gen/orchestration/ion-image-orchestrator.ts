@@ -11,6 +11,7 @@ import { assemblePrompt } from './prompt-assembler';
 import { evaluateImagePromptSafety } from './safety-filter';
 import { resolveStyleFamily } from './style-router';
 import { expandTags } from './tag-expander';
+import { readImageGenEnvironment } from '../config/env';
 
 const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
   'intent_parse',
@@ -27,11 +28,12 @@ const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
 
 export class IonImageOrchestrator implements IOrchestrator {
   private readonly reasoningChains = new Map<string, ReasoningStepId[]>();
+  private readonly env = readImageGenEnvironment();
 
   async processRequest(userInput: UserInput): Promise<GenerationRequest> {
     const intent = parseIntent(userInput.prompt);
     const styleFamily = resolveStyleFamily(userInput.styleFamily, intent);
-    const checkpointId = userInput.checkpoint || 'noobai-xl-vpred-v1.0';
+    const checkpointId = userInput.checkpoint || this.env.defaultCheckpoint;
     const expanded = expandTags(intent);
     const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded);
     const safety = evaluateImagePromptSafety(prompt.positive, prompt.negative);

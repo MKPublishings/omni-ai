@@ -1,10 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { executeIonImagePipeline } from '../../../../../../src/image-gen/app/ion-image-pipeline'
+import { buildIonImageV2RouteResult } from '../../../../../../src/image-gen/app/ion-image-v2-route-service'
+
+export const runtime = 'nodejs'
+
 const MOCK_IMAGE_DATA_URL = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMwYjE2MjAiLz48c3RvcCBvZmZzZXQ9IjAuNSIgc3RvcC1jb2xvcj0iIzEzM2I1ZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA4YmY5YiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSIyMDQiIGN5PSIyMjAiIHI9IjEyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA4KSIvPjxjaXJjbGUgY3g9Ijc5MCIgY3k9IjMwMCIgcj0iMTgwIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDYpIi8+PHBhdGggZD0iTTIwMCA3MjBjMTEwLTE2MCAyMjAtMjQwIDMzMC0yNDBzMjIwIDgwIDMzMCAyNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjE4KSIgc3Ryb2tlLXdpZHRoPSIzMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHRleHQgeD0iMTEwIiB5PSI4MjAiIGZpbGw9IiNlNmYyZmYiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBUaW1lcyBOZXcgUm9tYW4sIHNlcmlmIiBmb250LXNpemU9IjY0IjBmb250LXdlaWdodD0iNjAwIj5JT04gSW1hZ2U8L3RleHQ+PHRleHQgeD0iMTEwIiB5PSI4ODAiIGZpbGw9InJnYmEoMjMwLDI0MiwyNTUsMC43MikiIGZvbnQtZmFtaWx5PSJHZWFnaWEsIFRpbWVzIE5ldyBSb21hbiwgc2VyaWYiIGZvbnQtc2l6ZT0iMzAiPkRhc2hib2FyZCBsb2NhbCBpbWFnZSBmYWxsYmFjayBpcyBvbmxpbmUuPC90ZXh0Pjwvc3ZnPg=='
 
 function getConfiguredApiBaseUrl(): string | null {
   const configuredBase = String(process.env.NEXT_PUBLIC_ION_API_URL || '').trim()
   return configuredBase ? configuredBase.replace(/\/+$/, '') : null
+}
+
+function isDirectRelayEnabled(): boolean {
+  return ['1', 'true', 'yes', 'on'].includes(String(process.env.DASHBOARD_IMAGE_DIRECT_RELAY || '').trim().toLowerCase())
+}
+
+function mapV2Failure(error: unknown): { status: number; code: string; message: string } {
+  const message = String((error as { message?: string } | null)?.message || 'Image generation failed')
+  const name = String((error as { name?: string } | null)?.name || '').trim()
+
+  if (name === 'E_COMFYUI_DOWN') {
+    return {
+      status: 503,
+      code: 'provider-unavailable',
+      message,
+    }
+  }
+
+  if (name === 'E_TIMEOUT') {
+    return {
+      status: 504,
+      code: 'provider-timeout',
+      message,
+    }
+  }
+
+  return {
+    status: 500,
+    code: 'image-generation-failed',
+    message,
+  }
+}
+
+async function buildDirectRelayResponse(body: Record<string, unknown>) {
+  const prompt = String(body.prompt || '').trim()
+  if (!prompt) {
+    return NextResponse.json({ success: false, error: "Field 'prompt' is required" }, {
+      status: 400,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
+
+  try {
+    const startedAt = Date.now()
+    const userId = String(body.userId || 'dashboard-relay').trim() || 'dashboard-relay'
+    const pipelineResult = await executeIonImagePipeline(
+      {
+        userId,
+        prompt,
+        stylePack: typeof body.stylePack === 'string' ? body.stylePack : undefined,
+        width: Number.isFinite(Number(body.width)) ? Number(body.width) : undefined,
+        height: Number.isFinite(Number(body.height)) ? Number(body.height) : undefined,
+        seed: Number.isFinite(Number(body.seed)) ? Number(body.seed) : undefined,
+      },
+      process.env as Record<string, unknown>,
+    )
+
+    const responsePayload = await buildIonImageV2RouteResult({
+      userId,
+      mode: String(body.mode || 'simple').trim() || 'simple',
+      quality: typeof body.quality === 'string' ? body.quality : undefined,
+      ratio: typeof body.ratio === 'string' ? body.ratio : undefined,
+      feedbackApplied: Boolean(String(body.feedback || '').trim()),
+      styleSource: body.stylePack ? 'session-or-request' : 'auto',
+      camera: {
+        value: '',
+        source: 'none',
+      },
+      lighting: {
+        value: '',
+        source: 'none',
+      },
+      materials: {
+        values: [],
+        source: 'none',
+      },
+      safety: {
+        ageTier: String((body.safetyProfile as { ageTier?: string } | undefined)?.ageTier || 'adult'),
+        explicitAllowed: Boolean((body.safetyProfile as { explicitAllowed?: boolean } | undefined)?.explicitAllowed),
+        illegalBlocked: (body.safetyProfile as { illegalBlocked?: boolean } | undefined)?.illegalBlocked !== false,
+      },
+      pipelineResult,
+      totalMs: Date.now() - startedAt,
+    })
+
+    return NextResponse.json(responsePayload.body, {
+      status: 200,
+      headers: {
+        ...responsePayload.headers,
+        'Cache-Control': 'no-store',
+      },
+    })
+  } catch (error) {
+    const failure = mapV2Failure(error)
+    return NextResponse.json({
+      success: false,
+      code: failure.code,
+      error: failure.message,
+    }, {
+      status: failure.status,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
 }
 
 function buildMockImageResponse(prompt: string) {
@@ -61,8 +173,12 @@ function buildMockImageResponse(prompt: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({})) as { prompt?: string }
+  const body = await request.json().catch(() => ({})) as Record<string, unknown>
   const configuredBase = getConfiguredApiBaseUrl()
+
+  if (isDirectRelayEnabled()) {
+    return buildDirectRelayResponse(body)
+  }
 
   if (!configuredBase) {
     return NextResponse.json(buildMockImageResponse(String(body.prompt || '')), {

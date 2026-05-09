@@ -39,10 +39,12 @@
     "smoke:image:worker": "node ./scripts/smoke/imageWorkerContractSmoke.js",
     "smoke:image:orchestrator-attestation": "node ./scripts/smoke/orchestratorImageAttestationSmoke.js",
     "smoke:image:orchestrator-attestation:image-gen": "set ION_SMOKE_REQUIRE_IMAGE_GEN_V2=1&& node ./scripts/smoke/orchestratorImageAttestationSmoke.js",
+    "smoke:image:dashboard-relay": "node ./scripts/smoke/dashboardImageRelaySmoke.js",
     "smoke:premium-phase": "node ./scripts/smoke/premiumPhaseRouteSmoke.js",
     "smoke:chat-policy": "node ./scripts/smoke/chatPromptPolicySmoke.js",
     "smoke:chat-image-intent": "node ./scripts/smoke/chatImageIntentSmoke.js",
     "validate:dashboard-api": "node ./scripts/tools/checkDashboardApiBase.js",
+    "validate:image:relay-paths": "node ./scripts/tools/validateImageRelayPaths.js",
     "bench:chat-latency": "node ./scripts/bench/chatLatency.js",
     "smoke:policy-lockstep": "node ./scripts/smoke/policyLockstepSmoke.js",
     "validate:engine": "node ./ION-image-engine/utils/validator.js",
@@ -84,7 +86,8 @@
     "globals": "^17.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.3.3",
-    "typescript-eslint": "^8.56.1"
+    "typescript-eslint": "^8.56.1",
+    "wrangler": "^4.90.0"
   },
   "dependencies": {
     "node-fetch": "^3.3.2",

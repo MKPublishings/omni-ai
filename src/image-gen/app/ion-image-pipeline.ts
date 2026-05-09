@@ -102,9 +102,17 @@ function isTerminalStatus(status: ImageJobStatus): boolean {
   return status === 'completed' || status === 'failed';
 }
 
-function throwImageError(code: 'E_COMFYUI_DOWN' | 'E_TIMEOUT'): never {
+function getGatewayHealthFailure(gateway: IModelGateway): string | null {
+  if (gateway instanceof ComfyUIClient) {
+    return gateway.getLastHealthFailure();
+  }
+
+  return null;
+}
+
+function throwImageError(code: 'E_COMFYUI_DOWN' | 'E_TIMEOUT', details?: string | null): never {
   const imageError = getImageGenerationError(code);
-  const error = new Error(imageError.message);
+  const error = new Error(details ? `${imageError.message} ${details}` : imageError.message);
   error.name = imageError.code;
   throw error;
 }
@@ -118,7 +126,7 @@ export async function executeIonImagePipelineRequest(
 
   const healthy = await gateway.isHealthy();
   if (!healthy) {
-    throwImageError('E_COMFYUI_DOWN');
+    throwImageError('E_COMFYUI_DOWN', getGatewayHealthFailure(gateway));
   }
 
   const workflow = buildComfyUIWorkflow(request);

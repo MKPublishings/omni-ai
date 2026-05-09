@@ -17,7 +17,7 @@ export function resolveComfyUIConfig(source?: Record<string, unknown>): ComfyUIC
   const env = readImageGenEnvironment(source);
 
   return {
-    host: env.comfyuiHost.replace(/\/+$/, ''),
+    host: env.comfyuiFetchHost.replace(/\/+$/, ''),
     wsUrl: env.comfyuiWs,
     mock: env.comfyuiMock,
     requestTimeoutMs: env.comfyuiRequestTimeoutMs,

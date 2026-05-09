@@ -2,6 +2,21 @@ import type { CheckpointConfig } from '../shared/types';
 import { readImageGenEnvironment } from './env';
 
 export const CHECKPOINT_REGISTRY: Record<string, CheckpointConfig> = {
+  'ComfyUI-Ion-RTX-v1.0.safetensors': {
+    id: 'ComfyUI-Ion-RTX-v1.0.safetensors',
+    displayName: 'ComfyUI Ion RTX v1.0',
+    baseModelFamily: 'illustrious-xl',
+    predictionType: 'v_prediction',
+    vae: 'sdxl-vae-fp16-fix',
+    qualityTags: ['masterpiece', 'best quality', 'absurdres'],
+    recommendedSampler: 'euler',
+    recommendedScheduler: 'normal',
+    recommendedCfgScale: 5,
+    recommendedCfgRescale: 0.2,
+    recommendedSteps: 28,
+    clipSkip: 2,
+    defaultResolution: { width: 1024, height: 1536 },
+  },
   'noobai-xl-vpred-v1.0': {
     id: 'noobai-xl-vpred-v1.0',
     displayName: 'NoobAI-XL v-pred 1.0',

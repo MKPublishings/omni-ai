@@ -5,6 +5,7 @@ const env = readImageGenEnvironment();
 const output = {
   gateway: {
     host: env.comfyuiHost,
+    fetchHost: env.comfyuiFetchHost,
     wsUrl: env.comfyuiWs,
     mock: env.comfyuiMock,
     requestTimeoutMs: env.comfyuiRequestTimeoutMs,
