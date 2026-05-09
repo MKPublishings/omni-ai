@@ -41,7 +41,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
   }
 });
 
-test('ComfyUI client marks the gateway unhealthy when object info is unavailable', async () => {
+test('ComfyUI client treats object info endpoint as optional when queue is healthy', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input) => {
@@ -58,8 +58,32 @@ test('ComfyUI client marks the gateway unhealthy when object info is unavailable
 
   try {
     const client = new ComfyUIClient();
+    assert.equal(await client.isHealthy(), true);
+    assert.equal(client.getLastHealthFailure(), null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('ComfyUI client marks the gateway unhealthy when queue endpoint is unavailable', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.endsWith('/queue')) {
+      return new Response('service unavailable', { status: 503 });
+    }
+    if (url.endsWith('/object_info')) {
+      return createJsonResponse({});
+    }
+
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const client = new ComfyUIClient();
     assert.equal(await client.isHealthy(), false);
-    assert.match(String(client.getLastHealthFailure() || ''), /ComfyUI request failed \(404\) for \/object_info\./);
+    assert.match(String(client.getLastHealthFailure() || ''), /ComfyUI request failed \(503\) for \/queue\./);
   } finally {
     globalThis.fetch = originalFetch;
   }

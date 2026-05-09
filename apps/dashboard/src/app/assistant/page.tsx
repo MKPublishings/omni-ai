@@ -325,6 +325,8 @@ type ImageRouteJsonPayload = {
   response?: string
   content?: string
   error?: string
+  message?: string
+  details?: string
   imageDataUrl?: string
   filename?: string
   image?: {
@@ -488,7 +490,7 @@ async function parseAssistantResponse(response: Response) {
     ok: response.ok,
     content: response.ok
       ? payload.response || payload.content || ''
-      : payload.error || '',
+      : payload.details || payload.message || payload.error || payload.content || '',
     imageDataUrl: payload.imageDataUrl || '',
     imageFilename: payload.image?.filename || payload.metadata?.image?.filename || payload.filename || '',
     imageModel: payload.image?.model || payload.metadata?.model?.outputModel || payload.metadata?.model?.checkpoint || '',

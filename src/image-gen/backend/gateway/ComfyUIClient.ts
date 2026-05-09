@@ -98,6 +98,16 @@ function isBypassableRead403(message: string, path: string): boolean {
   return normalized.includes('(403)') && normalized.includes(path.toLowerCase());
 }
 
+function isBypassableOptionalReadFailure(message: string, path: string): boolean {
+  const normalized = String(message || '').toLowerCase();
+  const normalizedPath = path.toLowerCase();
+  if (!normalized.includes(normalizedPath)) {
+    return false;
+  }
+
+  return normalized.includes('(403)') || normalized.includes('(404)') || normalized.includes('(405)');
+}
+
 export class ComfyUIClient implements IModelGateway {
   private readonly config = resolveComfyUIConfig();
   private lastSubmittedCheckpoint: string | null = null;
@@ -256,12 +266,23 @@ export class ComfyUIClient implements IModelGateway {
       return true;
     }
 
-    const failureMessages = failures.map((entry) => entry.result.reason instanceof Error ? entry.result.reason.message : String(entry.result.reason));
-    this.lastHealthFailure = failureMessages.join(' | ');
+    const normalizedFailures = failures.map((entry) => ({
+      path: entry.path,
+      message: entry.result.reason instanceof Error ? entry.result.reason.message : String(entry.result.reason),
+    }));
+    const hardFailures = normalizedFailures.filter((entry) => {
+      if (entry.path === this.config.objectInfoPath) {
+        return !isBypassableOptionalReadFailure(entry.message, entry.path);
+      }
+      return !isBypassableRead403(entry.message, entry.path);
+    });
 
-    if (failures.every((entry, index) => isBypassableRead403(failureMessages[index], entry.path))) {
+    if (hardFailures.length === 0) {
+      this.lastHealthFailure = null;
       return true;
     }
+
+    this.lastHealthFailure = hardFailures.map((entry) => entry.message).join(' | ');
 
     return false;
   }

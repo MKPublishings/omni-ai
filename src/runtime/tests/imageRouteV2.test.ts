@@ -236,3 +236,76 @@ test('worker /api/image ignores deprecated legacy fallback flags and still retur
     console.info = originalConsoleInfo;
   }
 });
+
+test('worker /api/image falls back to direct AI generation when ComfyUI prompt endpoint returns 403', async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/queue') && init?.method === 'GET') {
+      return new Response(JSON.stringify({ queue_running: [], queue_pending: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (url.endsWith('/object_info') && init?.method === 'GET') {
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (url.endsWith('/prompt') && init?.method === 'POST') {
+      return new Response('forbidden', { status: 403 });
+    }
+
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const env = {
+      AI: {
+        run: async () => ({ image: new Uint8Array([137, 80, 78, 71]) }),
+      },
+      MEMORY: memory as any,
+      MIND: mind as any,
+      ASSETS: {
+        fetch: async () => new Response('not-found', { status: 404 }),
+      },
+      ION_IMAGE_PIPELINE_V2: '1',
+      COMFYUI_MOCK: 'false',
+      COMFYUI_HOST: 'http://localhost:8188',
+      MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
+    } as any;
+
+    const request = new Request('https://example.test/api/image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: 'usr_test',
+        prompt: 'Photorealistic portrait of an astronaut in a greenhouse, vertical 9:16, high detail',
+        width: 1024,
+        height: 1024,
+      }),
+    });
+
+    const response = await worker.fetch(request, env, createExecutionContext() as any);
+    const body = await response.json() as Record<string, any>;
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v2');
+    assert.equal(response.headers.get('X-ION-Image-Model'), '@cf/black-forest-labs/flux-1-schnell');
+    assert.equal(typeof body.imageDataUrl, 'string');
+    assert.match(String(body.imageDataUrl || ''), /^data:image\/png;base64,/);
+    assert.equal(body.metadata?.pipeline?.gateway, 'ai-direct-fallback');
+    assert.equal(body.metadata?.request?.originalPrompt?.length > 0, true);
+    assert.equal(body.metadata?.prompt?.positive?.length > 0, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

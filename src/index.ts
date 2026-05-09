@@ -45,7 +45,7 @@ import { getSessionByToken, touchSession } from "./auth/credentials";
 import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
 import { executeIonImagePipeline } from "./image-gen/app/ion-image-pipeline";
-import { isReadableByteStream } from "./shared/image-output";
+import { bytesToBase64, isReadableByteStream, normalizeGeneratedImageOutput } from "./shared/image-output";
 import {
   ION_IMAGE_DEFAULT_HEIGHT,
   ION_IMAGE_DEFAULT_QUALITY,
@@ -229,6 +229,153 @@ type SafetyProfile = {
     acceptedAt: number;
   };
 };
+
+function isComfyPromptAccessDeniedError(error: unknown): boolean {
+  const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
+  const name = String((error as { name?: string } | null)?.name || "").toUpperCase();
+  if (name === "E_COMFYUI_DOWN" && message.includes("(403)") && message.includes("/prompt")) {
+    return true;
+  }
+  return message.includes("(403)") && message.includes("/prompt");
+}
+
+function resolveDirectImageModel(env: Env): string {
+  const configured = sanitizePromptText(String(env.MODEL_IMAGE || ""));
+  return configured || "@cf/black-forest-labs/flux-1-schnell";
+}
+
+function makeDirectFallbackFilename(styleId: string): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const safeStyle = String(styleId || "image").replace(/[^a-zA-Z0-9_-]/g, "_");
+  return `ionirix_${safeStyle}_${timestamp}.png`;
+}
+
+async function buildDirectAiImageFallbackResponse(input: {
+  env: Env;
+  userId: string;
+  promptText: string;
+  requestedMode: string;
+  effectiveQuality: string;
+  effectiveRatio: string;
+  effectiveWidth: number;
+  effectiveHeight: number;
+  parsedSeed: number;
+  resolvedRenderingStyle: string;
+  effectiveStylePack: string;
+  feedback: string;
+  effectiveCamera: string;
+  effectiveLighting: string;
+  effectiveMaterials: string[];
+  promptInferredCamera: string;
+  promptInferredLighting: string;
+  promptInferredMaterials: string[];
+  requestedCameraRaw: string;
+  requestedLightingRaw: string;
+  requestedMaterials: string[];
+  safetyProfile: SafetyProfile;
+}): Promise<Response> {
+  const modelName = resolveDirectImageModel(input.env);
+  const startedAt = Date.now();
+  const raw = await input.env.AI.run(modelName, {
+    prompt: input.promptText,
+    width: input.effectiveWidth,
+    height: input.effectiveHeight,
+    seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : undefined,
+  });
+  const normalized = await normalizeGeneratedImageOutput(raw);
+  const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
+  const filename = makeDirectFallbackFilename(input.resolvedRenderingStyle);
+  const styleSource = input.effectiveStylePack ? "session-or-request" : "auto";
+  const cameraSource = input.promptInferredCamera ? "prompt" : (input.requestedCameraRaw ? "session-or-request" : "none");
+  const lightingSource = input.promptInferredLighting ? "prompt" : (input.requestedLightingRaw ? "session-or-request" : "none");
+  const materialsSource = input.promptInferredMaterials.length ? "prompt" : (input.requestedMaterials.length ? "session-or-request" : "none");
+
+  const payload = {
+    user_id: input.userId,
+    imageDataUrl,
+    filename,
+    metadata: {
+      pipeline: {
+        version: "v2",
+        gateway: "ai-direct-fallback",
+        requestId: `fallback-${crypto.randomUUID()}`,
+        promptId: "direct-ai",
+        reasoningChain: ["comfyui-forbidden-fallback"],
+        totalMs: Date.now() - startedAt,
+      },
+      request: {
+        mode: input.requestedMode,
+        quality: input.effectiveQuality,
+        originalPrompt: input.promptText,
+        styleFamily: input.resolvedRenderingStyle,
+        styleSource,
+        inferredMood: "unknown",
+        confidence: 0,
+        feedbackApplied: Boolean(input.feedback),
+      },
+      image: {
+        filename,
+        mimeType: normalized.mimeType,
+        width: input.effectiveWidth,
+        height: input.effectiveHeight,
+        ratio: input.effectiveRatio,
+        resolution: `${input.effectiveWidth}x${input.effectiveHeight}`,
+        format: normalized.mimeType.includes("jpeg") ? "jpeg" : normalized.mimeType.includes("webp") ? "webp" : "png",
+        exportLocation: "chat-download",
+      },
+      model: {
+        checkpoint: modelName,
+        outputModel: modelName,
+        predictionType: "direct",
+        vae: "n/a",
+        clipSkip: 0,
+        sampler: "auto",
+        scheduler: "auto",
+        steps: 0,
+        cfgScale: 0,
+        cfgRescale: 0,
+        seed: Number.isFinite(input.parsedSeed) ? input.parsedSeed : null,
+        batchSize: 1,
+      },
+      prompt: {
+        positive: input.promptText,
+        negative: "",
+        qualityTags: [],
+        styleTags: [],
+      },
+      scene: {
+        camera: {
+          value: input.effectiveCamera,
+          source: cameraSource,
+        },
+        lighting: {
+          value: input.effectiveLighting,
+          source: lightingSource,
+        },
+        materials: {
+          values: input.effectiveMaterials,
+          source: materialsSource,
+        },
+      },
+      safety: {
+        ageTier: input.safetyProfile.ageTier,
+        explicitAllowed: input.safetyProfile.explicitAllowed,
+        illegalBlocked: input.safetyProfile.illegalBlocked,
+      },
+    },
+  };
+
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      "Content-Type": "application/json",
+      "X-ION-Image-Model": modelName,
+      "X-ION-Image-Route": "image-gen-v2",
+      "Access-Control-Expose-Headers": "X-ION-Image-Model",
+    },
+  });
+}
 
 type InternetSearchHit = {
   title: string;
@@ -3569,6 +3716,32 @@ export default {
                 }
               );
             } catch (pipelineErr: any) {
+              if (isComfyPromptAccessDeniedError(pipelineErr) && env.AI && typeof (env.AI as { run?: unknown }).run === "function") {
+                return buildDirectAiImageFallbackResponse({
+                  env,
+                  userId,
+                  promptText,
+                  requestedMode,
+                  effectiveQuality,
+                  effectiveRatio,
+                  effectiveWidth,
+                  effectiveHeight,
+                  parsedSeed,
+                  resolvedRenderingStyle,
+                  effectiveStylePack,
+                  feedback,
+                  effectiveCamera,
+                  effectiveLighting,
+                  effectiveMaterials,
+                  promptInferredCamera,
+                  promptInferredLighting,
+                  promptInferredMaterials,
+                  requestedCameraRaw,
+                  requestedLightingRaw,
+                  requestedMaterials,
+                  safetyProfile,
+                });
+              }
               throw pipelineErr;
             }
           }
