@@ -38,6 +38,16 @@ export function buildIonImageV2RouteResponse(
       requestId: input.pipelineResult.request.requestId,
       promptId: input.pipelineResult.promptId,
       reasoningChain: input.pipelineResult.request.ionMetadata.reasoningChain,
+      execution: input.pipelineResult.request.ionMetadata.executionPlan
+        ? {
+            ticketId: input.pipelineResult.request.ionMetadata.executionPlan.ticketId,
+            planner: input.pipelineResult.request.ionMetadata.executionPlan.planner,
+            estimatedParallelism: input.pipelineResult.request.ionMetadata.executionPlan.estimatedParallelism,
+            simulationSupportEnabled: input.pipelineResult.request.ionMetadata.executionPlan.simulationSupportEnabled,
+            entityCount: input.pipelineResult.request.ionMetadata.executionPlan.entities.length,
+            capabilities: input.pipelineResult.request.ionMetadata.executionPlan.capabilities,
+          }
+        : undefined,
     },
     request: {
       mode: input.mode,

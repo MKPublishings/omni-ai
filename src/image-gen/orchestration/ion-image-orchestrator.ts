@@ -12,6 +12,7 @@ import { evaluateImagePromptSafety } from './safety-filter';
 import { resolveStyleFamily } from './style-router';
 import { expandTags } from './tag-expander';
 import { readImageGenEnvironment } from '../config/env';
+import { buildIonImageExecutionPlan } from './entity-capability-router';
 
 const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
   'intent_parse',
@@ -22,13 +23,18 @@ const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
   'negative_assemble',
   'param_optimize',
   'safety_gate',
+  'entity_allocate',
   'workflow_build',
   'submit',
 ];
 
 export class IonImageOrchestrator implements IOrchestrator {
   private readonly reasoningChains = new Map<string, ReasoningStepId[]>();
-  private readonly env = readImageGenEnvironment();
+  private readonly env;
+
+  constructor(source?: Record<string, unknown>) {
+    this.env = readImageGenEnvironment(source);
+  }
 
   async processRequest(userInput: UserInput): Promise<GenerationRequest> {
     const intent = parseIntent(userInput.prompt);
@@ -54,6 +60,12 @@ export class IonImageOrchestrator implements IOrchestrator {
     const parameters = optimizeParameters(styleFamily, checkpointId, {
       ...userInput,
       compositionPreset: userInput.compositionPreset || prompt.compositionPreset,
+    });
+    const executionPlan = buildIonImageExecutionPlan({
+      userInput,
+      styleFamily,
+      intent,
+      maxConcurrentJobs: this.env.maxConcurrentJobs,
     });
 
     this.reasoningChains.set(requestId, [...DEFAULT_REASONING_CHAIN]);
@@ -88,6 +100,7 @@ export class IonImageOrchestrator implements IOrchestrator {
         compositionPreset: userInput.compositionPreset || prompt.compositionPreset || undefined,
         anatomyStrictMode: Boolean(userInput.anatomyStrictMode),
         kimonoMode: prompt.kimonoMode,
+        executionPlan,
       },
     };
   }

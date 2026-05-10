@@ -22,6 +22,15 @@ export type ImageVariationMode = (typeof IMAGE_VARIATION_MODES)[number];
 export const IMAGE_COMPOSITION_PRESETS = ['portrait', 'full_body', 'cinematic'] as const;
 export type ImageCompositionPreset = (typeof IMAGE_COMPOSITION_PRESETS)[number];
 
+export const ION_IMAGE_EXECUTION_CAPABILITIES = [
+  'render',
+  'prompt-engineering',
+  'simulation',
+  'infrastructure',
+  'cost-optimization',
+] as const;
+export type IonImageExecutionCapability = (typeof ION_IMAGE_EXECUTION_CAPABILITIES)[number];
+
 export const KIMONO_STYLE_PROFILE_IDS = ['soft_spring', 'twilight_festival', 'snowy_temple'] as const;
 export type KimonoStyleProfileId = (typeof KIMONO_STYLE_PROFILE_IDS)[number];
 
@@ -47,6 +56,7 @@ export const REASONING_STEP_IDS = [
   'negative_assemble',
   'param_optimize',
   'safety_gate',
+  'entity_allocate',
   'workflow_build',
   'submit',
 ] as const;
@@ -199,6 +209,27 @@ export interface IonGenerationMetadata {
   compositionPreset?: ImageCompositionPreset;
   anatomyStrictMode?: boolean;
   kimonoMode?: boolean;
+  executionPlan?: IonImageExecutionPlan;
+}
+
+export interface IonImageExecutionEntity {
+  agentId: string;
+  role: string;
+  department: string;
+  capability: IonImageExecutionCapability;
+  shardId: string;
+  rationale: string;
+}
+
+export interface IonImageExecutionPlan {
+  ticketId: string;
+  planner: string;
+  priority: string;
+  departments: string[];
+  capabilities: IonImageExecutionCapability[];
+  estimatedParallelism: number;
+  simulationSupportEnabled: boolean;
+  entities: IonImageExecutionEntity[];
 }
 
 export type InferenceSource = 'prompt' | 'session-or-request' | 'auto' | 'none';
@@ -210,6 +241,14 @@ export interface IonImageV2Metadata {
     requestId: string;
     promptId: string;
     reasoningChain: ReasoningStepId[];
+    execution?: {
+      ticketId: string;
+      planner: string;
+      estimatedParallelism: number;
+      simulationSupportEnabled: boolean;
+      entityCount: number;
+      capabilities: IonImageExecutionCapability[];
+    };
   };
   request: {
     mode: string;
@@ -448,6 +487,7 @@ export interface IonImageQueueMetadataPayload {
   checkpoint: string;
   styleFamily: StyleFamilyId;
   reasoningChain: ReasoningStepId[];
+  executionPlan?: IonImageExecutionPlan;
   postProcessing: IonImagePostProcessingSummary;
   promptAnalytics: IonImagePromptAnalytics;
   artifacts: IonImageQueueMetadataPayloadArtifact[];

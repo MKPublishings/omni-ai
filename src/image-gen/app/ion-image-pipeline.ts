@@ -37,7 +37,7 @@ export async function buildIonImageGenerationRequest(
 ): Promise<GenerationRequest> {
   const envSource = getEnvironmentSource(source);
   const env = readImageGenEnvironment(envSource);
-  const orchestrator = new IonImageOrchestrator();
+  const orchestrator = new IonImageOrchestrator(envSource);
 
   return orchestrator.processRequest({
     userId: input.userId,

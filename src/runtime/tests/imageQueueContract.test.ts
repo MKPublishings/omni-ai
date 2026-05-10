@@ -136,6 +136,7 @@ test('worker /api/image queue seam preserves submission and status response cont
   assert.deepEqual(sortedKeys(statusBody.metadata.payload as Record<string, unknown>), [
     'artifacts',
     'checkpoint',
+    'executionPlan',
     'gateway',
     'jobId',
     'postProcessing',

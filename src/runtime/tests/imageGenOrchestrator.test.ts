@@ -75,6 +75,9 @@ test('orchestrator constructs a GenerationRequest for the workflow builder seam'
   assert.equal(request.ionMetadata.styleFamily, 'cinematic_niji');
   assert.equal(request.parameters.height, 1536);
   assert.equal(request.ionMetadata.reasoningChain.includes('workflow_build'), true);
+  assert.equal(request.ionMetadata.reasoningChain.includes('entity_allocate'), true);
+  assert.equal((request.ionMetadata.executionPlan?.entities.length || 0) > 0, true);
+  assert.equal(request.ionMetadata.executionPlan?.capabilities.includes('render'), true);
 
   const reasoning = await orchestrator.getReasoningChain(request.requestId);
   assert.equal(reasoning.includes('submit'), true);

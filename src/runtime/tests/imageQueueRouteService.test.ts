@@ -89,6 +89,7 @@ test('image queue route service returns typed submission and status payloads for
   assert.equal(status.body.artifacts.length, 2);
   assert.equal(status.body.metadata?.payload.styleFamily, 'lofi_aesthetic');
   assert.equal(status.body.metadata?.payload.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal((status.body.metadata?.payload.executionPlan?.entities.length || 0) > 0, true);
   assert.equal(status.body.response?.modelInfo.checkpoint, 'noobai-xl-vpred-v1.0');
   assert.equal(status.body.response?.images[0]?.format, 'png');
 });

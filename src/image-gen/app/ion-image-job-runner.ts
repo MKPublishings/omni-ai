@@ -64,6 +64,7 @@ function buildMetadataPayload(
     checkpoint: pipelineResult.request.model.checkpoint,
     styleFamily: pipelineResult.request.ionMetadata.styleFamily,
     reasoningChain: pipelineResult.request.ionMetadata.reasoningChain,
+    executionPlan: pipelineResult.request.ionMetadata.executionPlan,
     postProcessing,
     promptAnalytics,
     artifacts: artifacts.map((artifact) => ({

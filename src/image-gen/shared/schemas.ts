@@ -6,6 +6,7 @@ import {
   IMAGE_PREDICTION_TYPES,
   IMAGE_SAMPLERS,
   IMAGE_SCHEDULERS,
+  ION_IMAGE_EXECUTION_CAPABILITIES,
   REASONING_STEP_IDS,
   STYLE_FAMILY_IDS,
 } from './types';
@@ -102,6 +103,27 @@ export const generationRequestSchema = z.object({
     styleFamily: z.enum(STYLE_FAMILY_IDS),
     inferredMood: z.string().min(1),
     confidence: z.number().min(0).max(1),
+    executionPlan: z
+      .object({
+        ticketId: z.string().min(1),
+        planner: z.string().min(1),
+        priority: z.string().min(1),
+        departments: z.array(z.string().min(1)).min(1),
+        capabilities: z.array(z.enum(ION_IMAGE_EXECUTION_CAPABILITIES)).min(1),
+        estimatedParallelism: z.number().int().min(1),
+        simulationSupportEnabled: z.boolean(),
+        entities: z.array(
+          z.object({
+            agentId: z.string().min(1),
+            role: z.string().min(1),
+            department: z.string().min(1),
+            capability: z.enum(ION_IMAGE_EXECUTION_CAPABILITIES),
+            shardId: z.string().min(1),
+            rationale: z.string().min(1),
+          }),
+        ),
+      })
+      .optional(),
   }),
 });
 

@@ -56,6 +56,10 @@ test('image job runner executes queued requests and persists artifacts plus meta
   assert.equal(metadata?.jobId, queued.jobId);
   assert.equal((metadata?.payload as { checkpoint?: string })?.checkpoint, 'noobai-xl-vpred-v1.0');
   assert.equal((metadata?.payload as { styleFamily?: string })?.styleFamily, 'lofi_aesthetic');
+  assert.equal(
+    (((metadata?.payload as { executionPlan?: { entities?: unknown[] } })?.executionPlan?.entities?.length) || 0) > 0,
+    true,
+  );
   assert.equal(Array.isArray((metadata?.payload as { artifacts?: unknown[] })?.artifacts), true);
   assert.deepEqual(
     (metadata?.payload as { postProcessing?: unknown }).postProcessing,
