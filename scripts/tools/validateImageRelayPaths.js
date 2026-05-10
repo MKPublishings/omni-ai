@@ -70,7 +70,7 @@ async function run() {
   const promptPayload = {
     prompt: {
       "1": {
-        inputs: { ckpt_name: "ComfyUI-Ion-RTX-v1.0.safetensors" },
+        inputs: { ckpt_name: "noobai-xl-vpred-v1.0" },
         class_type: "CheckpointLoaderSimple",
       },
     },

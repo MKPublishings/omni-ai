@@ -12,7 +12,7 @@ COMFYUI_HOST=https://worker-comfy.ionirix.com
 COMFYUI_FETCH_HOST=https://worker-comfy.ionirix.com
 COMFYUI_WS=wss://img.ionirix.com/ws
 COMFYUI_MOCK=false
-DEFAULT_CHECKPOINT=ComfyUI-Ion-RTX-v1.0.safetensors
+DEFAULT_CHECKPOINT=noobai-xl-vpred-v1.0
 ```
 
 The committed Vercel config in [apps/dashboard/vercel.json](c:/Users/Slizz/OneDrive/Documents/GitHub/website/ion-ai/apps/dashboard/vercel.json) now includes these non-secret runtime values.
