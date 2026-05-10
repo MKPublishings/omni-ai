@@ -8,8 +8,8 @@ The new `safe.tensor` governance kernel operates **independently** from model ch
 
 | Component | Old ComfyUI RTX File | New safe.tensor |
 |-----------|---------------------|-----------------|
-| **model_config.ts** | Referenced checkpoint: `ComfyUI-Ion-RTX-v1.0.safetensors` | ✓ Removed — uses `noobai-xl-vpred-v1.0` |
-| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ComfyUI-Ion-RTX-v1.0.safetensors"` | ✓ Updated to `noobai-xl-vpred-v1.0` |
+| **model_config.ts** | Referenced checkpoint: `ComfyUI-Ion-RTX-v1.0.safetensors` | ✓ Removed — uses `ion-citizen-xl-vpred-v2.0` |
+| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ComfyUI-Ion-RTX-v1.0.safetensors"` | ✓ Updated to `ion-citizen-xl-vpred-v2.0` |
 | **safe.tensor core** | — | ✓ Zero references to checkpoint files |
 | **safe.tensor validation** | — | ✓ Pure governance logic (no model dependencies) |
 | **safe.tensor API** | — | ✓ Independent entity slicing and verdict system |

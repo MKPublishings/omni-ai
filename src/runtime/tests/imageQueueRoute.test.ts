@@ -49,7 +49,7 @@ test('worker /api/image queue seam submits jobs and exposes status without repla
     },
     ION_IMAGE_QUEUE_V1: '1',
     COMFYUI_MOCK: 'true',
-    DEFAULT_CHECKPOINT: 'noobai-xl-vpred-v1.0',
+    DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
     IMAGE_STORAGE_PATH: './tmp/images',
     THUMBNAIL_STORAGE_PATH: './tmp/thumbs',
     METADATA_DB_URL: 'memory://image-meta',
@@ -92,7 +92,7 @@ test('worker /api/image queue seam submits jobs and exposes status without repla
   assert.equal(statusBody.jobId, submitBody.jobId);
   assert.equal(statusBody.status, 'completed');
   assert.equal(statusBody.promptId.startsWith('mock-'), true);
-  assert.equal(statusBody.response?.modelInfo?.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(statusBody.response?.modelInfo?.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(Array.isArray(statusBody.artifacts), true);
   assert.equal(statusBody.artifacts.length, 2);
   assert.equal(statusBody.metadata?.payload?.styleFamily, 'lofi_aesthetic');

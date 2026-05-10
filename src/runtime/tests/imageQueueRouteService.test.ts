@@ -24,7 +24,7 @@ class MemoryNamespace {
 
 const queueEnv = {
   COMFYUI_MOCK: 'true',
-  DEFAULT_CHECKPOINT: 'noobai-xl-vpred-v1.0',
+  DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   IMAGE_STORAGE_PATH: './tmp/images',
   THUMBNAIL_STORAGE_PATH: './tmp/thumbs',
   METADATA_DB_URL: 'memory://image-meta',
@@ -88,9 +88,9 @@ test('image queue route service returns typed submission and status payloads for
   assert.equal(status.body.error, null);
   assert.equal(status.body.artifacts.length, 2);
   assert.equal(status.body.metadata?.payload.styleFamily, 'lofi_aesthetic');
-  assert.equal(status.body.metadata?.payload.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(status.body.metadata?.payload.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal((status.body.metadata?.payload.executionPlan?.entities.length || 0) > 0, true);
-  assert.equal(status.body.response?.modelInfo.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(status.body.response?.modelInfo.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(status.body.response?.images[0]?.format, 'png');
 });
 
@@ -131,7 +131,7 @@ test('image queue route service persists job state across runtime reset when KV-
 
   assert.equal(status.body.jobId, submitted.response.body.jobId);
   assert.equal(status.body.status, 'completed');
-  assert.equal(status.body.metadata?.payload.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(status.body.metadata?.payload.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(status.body.response?.images[0]?.format, 'png');
 });
 

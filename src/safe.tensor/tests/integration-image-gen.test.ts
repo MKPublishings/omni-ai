@@ -20,7 +20,7 @@ test("safe.tensor governs image generation independently of checkpoint files", a
       source: "user",
     } as any,
     model: {
-      checkpoint: "noobai-xl-vpred-v1.0",
+      checkpoint: "ion-citizen-xl-vpred-v2.0",
       predictionType: "v_prediction",
       vae: "sdxl-vae-fp16-fix",
     } as any,
@@ -70,7 +70,7 @@ test("safe.tensor enforces strictness independent of model checkpoint", async ()
       source: "user",
     } as any,
     model: {
-      checkpoint: "noobai-xl-vpred-v1.0",
+      checkpoint: "ion-citizen-xl-vpred-v2.0",
       predictionType: "v_prediction",
       vae: "sdxl-vae-fp16-fix",
     } as any,

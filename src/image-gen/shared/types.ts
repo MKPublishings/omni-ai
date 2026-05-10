@@ -143,6 +143,7 @@ export interface StylePreset {
 export interface CheckpointConfig {
   id: string;
   displayName: string;
+  runtimeCheckpoint?: string;
   baseModelFamily: string;
   predictionType: ImagePredictionType;
   vae: string;

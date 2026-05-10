@@ -25,7 +25,7 @@ function makeGenerationRequest(): GenerationRequest {
       styleTags: ['anime', 'cinematic lighting'],
     },
     model: {
-      checkpoint: 'noobai-xl-vpred-v1.0',
+      checkpoint: 'ion-citizen-xl-vpred-v2.0',
       predictionType: 'v_prediction',
       vae: 'sdxl-vae-fp16-fix',
       loras: [],
@@ -73,7 +73,7 @@ test('style presets conform to the shared schema', () => {
 test('generation request schema accepts the scaffolded request shape', () => {
   const parsed = generationRequestSchema.parse(makeGenerationRequest());
 
-  assert.equal(parsed.model.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(parsed.model.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(parsed.parameters.height, 1536);
   assert.equal(parsed.ionMetadata.styleFamily, 'cinematic_niji');
 });
@@ -81,7 +81,7 @@ test('generation request schema accepts the scaffolded request shape', () => {
 test('environment readers apply defaults and overrides deterministically', () => {
   const defaults = readImageGenEnvironment({});
   assert.equal(defaults.comfyuiMock, true);
-  assert.equal(defaults.defaultCheckpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(defaults.defaultCheckpoint, 'ion-citizen-xl-vpred-v2.0');
 
   const overridden = readImageGenEnvironment({
     COMFYUI_HOST: 'http://127.0.0.1:9000',
@@ -113,15 +113,15 @@ test('comfyui config normalizes connection endpoints', () => {
   assert.equal(config.mock, true);
 });
 
-test('checkpoint registry exposes the planned NoobAI defaults', () => {
-  const noobai = getCheckpointConfig('noobai-xl-vpred-v1.0');
+test('checkpoint registry exposes the ION citizen defaults', () => {
+  const citizen = getCheckpointConfig('ion-citizen-xl-vpred-v2.0');
 
-  assert.equal(noobai.predictionType, 'v_prediction');
-  assert.deepEqual(noobai.qualityTags, ['masterpiece', 'best quality', 'absurdres']);
+  assert.equal(citizen.predictionType, 'v_prediction');
+  assert.deepEqual(citizen.qualityTags, ['masterpiece', 'best quality', 'absurdres']);
   assert.equal(CHECKPOINT_REGISTRY['pony-diffusion-v6-xl']?.sourceTag, 'source_anime');
 });
 
-test('workflow builder produces a minimal v-pred NoobAI graph', () => {
+test('workflow builder produces a minimal v-pred citizen graph', () => {
   const workflow = buildComfyUIWorkflow(makeGenerationRequest());
 
   assert.equal((workflow['1'] as Record<string, any>).class_type, 'CheckpointLoaderSimple');
@@ -141,7 +141,7 @@ test('error catalog preserves retry semantics for gateway outages', () => {
 test('mock gateway produces deterministic progress and image output', async () => {
   const gateway = new MockComfyUIClient();
   const submission = await gateway.submitWorkflow({
-    checkpoint: 'noobai-xl-vpred-v1.0',
+    checkpoint: 'ion-citizen-xl-vpred-v2.0',
     steps: 28,
   });
 

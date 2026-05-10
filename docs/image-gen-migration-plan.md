@@ -6,7 +6,7 @@ This plan translates the requirements in `Ionirix Image Generation Architecture 
 
 ## Target Outcome
 
-- Replace the current split image backends with one primary pipeline: Illustrious XL ecosystem, defaulting to NoobAI-XL v-pred.
+- Replace the current split image backends with one primary pipeline: Illustrious XL ecosystem, defaulting to ION Citizen-XL v-pred.
 - Move generation behind a ComfyUI headless gateway instead of direct provider-specific calls.
 - Promote Ion from prompt passthrough into a multi-step image orchestrator that performs intent parsing, tag expansion, style routing, prompt assembly, parameter optimization, safety checks, and workflow assembly.
 - Preserve the existing `/api/image` contract while changing the internals behind it.
@@ -79,7 +79,7 @@ Goal: make ComfyUI integration a swappable module before changing orchestration 
 Tasks:
 
 - Implement `comfyui-client.ts` for `/prompt`, `/history/{id}`, `/view`, `/queue`, and `/ws`.
-- Implement `workflow-builder.ts` that can build a minimal NoobAI workflow with explicit `v_prediction`, `rescale_betas_zero_snr`, VAE decode, and image save nodes.
+- Implement `workflow-builder.ts` that can build a minimal ION Citizen workflow with explicit `v_prediction`, `rescale_betas_zero_snr`, VAE decode, and image save nodes.
 - Implement `checkpoint-manager.ts` and `lora-manager.ts` against configured model directories.
 - Implement `health.ts` to report reachability, loaded checkpoint, and queue depth.
 - Implement `MockComfyUIClient` for local development and CI when GPU inference is unavailable.
@@ -110,7 +110,7 @@ Tasks:
   - `ion-image-orchestrator.ts`
 - Encode the 7 style families from the PDF as data in `style-presets.ts`.
 - Add checkpoint-aware quality tag mapping:
-  - NoobAI / Illustrious: `masterpiece, best quality, absurdres`
+  - ION Citizen / Illustrious: `masterpiece, best quality, absurdres`
   - AnimagineXL: `masterpiece, high score, great score, absurdres`
   - Pony: `score_9, score_8_up, score_7_up` plus `source_anime`
 - Add the shared base negative prompt and style-specific negative additions.

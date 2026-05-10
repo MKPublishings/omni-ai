@@ -70,7 +70,7 @@ async function run() {
   const promptPayload = {
     prompt: {
       "1": {
-        inputs: { ckpt_name: "noobai-xl-vpred-v1.0" },
+        inputs: { ckpt_name: "ion-citizen-xl-vpred-v2.0" },
         class_type: "CheckpointLoaderSimple",
       },
     },

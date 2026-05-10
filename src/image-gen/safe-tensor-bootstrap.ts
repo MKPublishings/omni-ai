@@ -1,6 +1,26 @@
 import { bootstrapSlice } from "@/safe.tensor/api/index.ts";
 
 export function bootstrapSafeTensorGovernance() {
+  // Initialize ION Citizen v2 as an ION-governed dialogue citizen
+  bootstrapSlice({
+    entityId: "ion_citizen_comic",
+    riskClass: "medium",
+    constraints: {
+      maxConcurrentJobs: 6,
+      allowedModalities: ["text", "dialogue"],
+      narrativeStrictness: 0.5,
+      physicsStrictness: 0.3,
+      varianceBoost: 0.7,
+      escalationPolicyId: "ion-citizen-comic-contract"
+    },
+    adaptation: {
+      enabled: true,
+      learningRate: 0.12,
+      minStrictness: 0.2,
+      maxStrictness: 0.9
+    }
+  });
+
   // Initialize image generation governance slice
   bootstrapSlice({
     entityId: "image_generation",

@@ -638,7 +638,7 @@ test("worker /api/ION image route streams v2 image payloads for chat clients", a
     },
     MODEL_ION: "primary-model",
     COMFYUI_MOCK: "true",
-    DEFAULT_CHECKPOINT: "noobai-xl-vpred-v1.0"
+    DEFAULT_CHECKPOINT: "ion-citizen-xl-vpred-v2.0"
   } as any;
 
   const request = new Request("https://example.test/api/ION", {

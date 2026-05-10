@@ -2,9 +2,10 @@ import type { CheckpointConfig } from '../shared/types';
 import { readImageGenEnvironment } from './env';
 
 export const CHECKPOINT_REGISTRY: Record<string, CheckpointConfig> = {
-  'noobai-xl-vpred-v1.0': {
-    id: 'noobai-xl-vpred-v1.0',
-    displayName: 'NoobAI-XL v-pred 1.0',
+  'ion-citizen-xl-vpred-v2.0': {
+    id: 'ion-citizen-xl-vpred-v2.0',
+    displayName: 'ION Citizen XL v-pred 2.0',
+    runtimeCheckpoint: 'ion-citizen-xl-vpred-v2.0',
     baseModelFamily: 'illustrious-xl',
     predictionType: 'v_prediction',
     vae: 'sdxl-vae-fp16-fix',

@@ -57,7 +57,7 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
   delete process.env.NEXT_PUBLIC_ION_API_URL
   process.env.DASHBOARD_IMAGE_DIRECT_RELAY = 'true'
   process.env.COMFYUI_MOCK = 'true'
-  process.env.DEFAULT_CHECKPOINT = 'noobai-xl-vpred-v1.0'
+  process.env.DEFAULT_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0'
 
   try {
     const response = await POST(new Request('http://localhost/api/image', {

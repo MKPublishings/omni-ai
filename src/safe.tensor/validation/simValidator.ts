@@ -1,4 +1,5 @@
 import { TensorSlice } from "../core/tensorSlice.ts";
+import { evaluateBehavioralContract } from "./behavioralContractRules.ts";
 import { evaluateCoherence } from "./coherenceEngine.ts";
 import { evaluateNarrativeRules } from "./narrativeRules.ts";
 import { evaluatePhysicsRules, RuleViolation } from "./physicsRules.ts";
@@ -35,7 +36,14 @@ export class SimValidator {
       riskClass: input.slice.riskClass
     });
 
-    const violations = [...physicsViolations, ...narrativeViolations, ...coherenceViolations];
+    const contractViolations = evaluateBehavioralContract({
+      entityId: input.slice.entityId,
+      output: input.output,
+      simState: input.simState,
+      strictness: input.slice.constraints.narrativeStrictness
+    });
+
+    const violations = [...physicsViolations, ...narrativeViolations, ...coherenceViolations, ...contractViolations];
 
     return {
       violations,

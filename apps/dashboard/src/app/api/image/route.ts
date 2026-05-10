@@ -159,8 +159,8 @@ function buildMockImageResponse(prompt: string) {
         exportLocation: 'chat-download',
       },
       model: {
-        checkpoint: 'noobai-xl-vpred-v1.0',
-        outputModel: 'noobai-xl-vpred-v1.0',
+        checkpoint: 'ion-citizen-xl-vpred-v2.0',
+        outputModel: 'ion-citizen-xl-vpred-v2.0',
         predictionType: 'v_prediction',
         vae: 'sdxl-vae-fp16-fix',
         clipSkip: 2,

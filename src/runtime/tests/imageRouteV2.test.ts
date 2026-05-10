@@ -51,7 +51,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
     },
     ION_IMAGE_PIPELINE_V2: '1',
     COMFYUI_MOCK: 'true',
-    DEFAULT_CHECKPOINT: 'noobai-xl-vpred-v1.0',
+    DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   } as any;
 
   const request = new Request('https://example.test/api/image?pipeline=v2', {
@@ -75,7 +75,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Content-Type'), 'application/json');
-  assert.equal(response.headers.get('X-ION-Image-Model'), 'noobai-xl-vpred-v1.0');
+  assert.equal(response.headers.get('X-ION-Image-Model'), 'ion-citizen-xl-vpred-v2.0');
   assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v2');
   assert.match(String(body.imageDataUrl || ''), /^data:image\/png;base64,/);
   assert.match(String(body.filename || ''), /^ionirix_lofi_aesthetic_/);
@@ -88,7 +88,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
   assert.equal(body.metadata?.request?.styleSource, 'session-or-request');
   assert.equal(body.metadata?.image?.resolution, '1536x1024');
   assert.equal(body.metadata?.image?.format, 'png');
-  assert.equal(body.metadata?.model?.outputModel, 'noobai-xl-vpred-v1.0');
+  assert.equal(body.metadata?.model?.outputModel, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(body.metadata?.model?.seed, 42);
   assert.equal(body.metadata?.postProcessing?.outputFormat, 'png');
   assert.equal(body.metadata?.postProcessing?.metadataEmbedded, true);

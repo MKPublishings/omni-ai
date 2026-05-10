@@ -35,7 +35,7 @@ test('image job runner executes queued requests and persists artifacts plus meta
   const queued = await queue.enqueue(request);
   const completed = await runNextIonImageJob(queue, storage, {
     COMFYUI_MOCK: 'true',
-    DEFAULT_CHECKPOINT: 'noobai-xl-vpred-v1.0',
+    DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   });
 
   assert.ok(completed);
@@ -43,7 +43,7 @@ test('image job runner executes queued requests and persists artifacts plus meta
   assert.equal(completed?.status, 'completed');
   assert.equal(completed?.promptId?.startsWith('mock-'), true);
   assert.equal(completed?.response?.images.length, 1);
-  assert.equal(completed?.response?.modelInfo.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(completed?.response?.modelInfo.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal((completed?.response?.timing.postProcessingMs || 0) >= 0, true);
   assert.equal((completed?.response?.timing.totalMs || 0) >= (completed?.response?.timing.postProcessingMs || 0), true);
 
@@ -54,7 +54,7 @@ test('image job runner executes queued requests and persists artifacts plus meta
 
   const metadata = await storage.getMetadata(queued.jobId);
   assert.equal(metadata?.jobId, queued.jobId);
-  assert.equal((metadata?.payload as { checkpoint?: string })?.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal((metadata?.payload as { checkpoint?: string })?.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal((metadata?.payload as { styleFamily?: string })?.styleFamily, 'lofi_aesthetic');
   assert.equal(
     (((metadata?.payload as { executionPlan?: { entities?: unknown[] } })?.executionPlan?.entities?.length) || 0) > 0,

@@ -51,7 +51,7 @@ test('worker /api/image queue seam preserves submission and status response cont
     },
     ION_IMAGE_QUEUE_V1: '1',
     COMFYUI_MOCK: 'true',
-    DEFAULT_CHECKPOINT: 'noobai-xl-vpred-v1.0',
+    DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
     IMAGE_STORAGE_PATH: './tmp/images',
     THUMBNAIL_STORAGE_PATH: './tmp/thumbs',
     METADATA_DB_URL: 'memory://image-meta',

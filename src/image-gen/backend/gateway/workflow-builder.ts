@@ -13,6 +13,7 @@ function buildPositiveText(request: GenerationRequest): string {
 
 export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
   const checkpoint = getCheckpointConfig(request.model.checkpoint);
+  const runtimeCheckpoint = checkpoint.runtimeCheckpoint || checkpoint.id;
   const positiveText = buildPositiveText(request);
   const negativeText = request.prompt.negative;
 
@@ -20,7 +21,7 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
     '1': {
       class_type: 'CheckpointLoaderSimple',
       inputs: {
-        ckpt_name: checkpoint.id,
+        ckpt_name: runtimeCheckpoint,
       },
     },
     '2': {
@@ -77,6 +78,7 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
     metadata: {
       request_id: request.requestId,
       checkpoint: checkpoint.id,
+      runtime_checkpoint: runtimeCheckpoint,
       prediction_type: checkpoint.predictionType,
       cfg_rescale: request.parameters.cfgRescale,
       clip_skip: request.model.clipSkip,

@@ -23,7 +23,7 @@ function createPipelineResult(): IonImagePipelineResult {
         styleTags: ['lo-fi', 'warm lighting'],
       },
       model: {
-        checkpoint: 'noobai-xl-vpred-v1.0',
+        checkpoint: 'ion-citizen-xl-vpred-v2.0',
         predictionType: 'v_prediction',
         vae: 'sdxl-vae-fp16-fix',
         loras: [],
@@ -62,12 +62,12 @@ function createPipelineResult(): IonImagePipelineResult {
     workflow: {
       metadata: {
         style_family: 'lofi_aesthetic',
-        checkpoint: 'noobai-xl-vpred-v1.0',
+        checkpoint: 'ion-citizen-xl-vpred-v2.0',
       },
     },
     promptId: 'mock-prompt-123',
     imageBytes: new Uint8Array([137, 80, 78, 71]),
-    outputModel: 'noobai-xl-vpred-v1.0',
+    outputModel: 'ion-citizen-xl-vpred-v2.0',
     gatewayKind: 'mock',
   };
 }
@@ -112,7 +112,7 @@ test('image route formatter builds the intentional v2 response contract', () => 
   assert.equal(response.metadata.request.feedbackApplied, true);
   assert.equal(response.metadata.image.mimeType, 'image/png');
   assert.equal(response.metadata.image.resolution, '1536x1024');
-  assert.equal(response.metadata.model.outputModel, 'noobai-xl-vpred-v1.0');
+  assert.equal(response.metadata.model.outputModel, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(response.metadata.prompt.negative, 'lowres, bad anatomy');
   assert.deepEqual(response.metadata.postProcessing, buildIonImagePostProcessingSummary(createPipelineResult().request));
   assert.deepEqual(response.metadata.promptAnalytics, buildIonImagePromptAnalytics(createPipelineResult().request));
@@ -176,6 +176,6 @@ test('image route formatter includes debug payload only when requested', () => {
   assert.equal(response.debug?.v2_pipeline.promptId, 'mock-prompt-123');
   assert.deepEqual(response.debug?.v2_pipeline.workflowMetadata, {
     style_family: 'lofi_aesthetic',
-    checkpoint: 'noobai-xl-vpred-v1.0',
+    checkpoint: 'ion-citizen-xl-vpred-v2.0',
   });
 });

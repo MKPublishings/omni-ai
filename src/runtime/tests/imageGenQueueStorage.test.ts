@@ -19,7 +19,7 @@ function createGenerationRequest(requestId: string): GenerationRequest {
       styleTags: ['lo-fi'],
     },
     model: {
-      checkpoint: 'noobai-xl-vpred-v1.0',
+      checkpoint: 'ion-citizen-xl-vpred-v2.0',
       predictionType: 'v_prediction',
       vae: 'sdxl-vae-fp16-fix',
       loras: [],
@@ -80,7 +80,7 @@ function createGenerationResponse(requestId: string): GenerationResponse {
       totalMs: 10,
     },
     modelInfo: {
-      checkpoint: 'noobai-xl-vpred-v1.0',
+      checkpoint: 'ion-citizen-xl-vpred-v2.0',
       predictionType: 'v_prediction',
       lorasApplied: [],
       actualSteps: 28,
@@ -132,7 +132,7 @@ test('in-memory artifact storage persists image artifacts and metadata records',
   });
 
   const metadata = await storage.putMetadata('job_storage_1', {
-    checkpoint: 'noobai-xl-vpred-v1.0',
+    checkpoint: 'ion-citizen-xl-vpred-v2.0',
     styleFamily: 'lofi_aesthetic',
   });
 
@@ -148,7 +148,7 @@ test('in-memory artifact storage persists image artifacts and metadata records',
   const storedMetadata = await storage.getMetadata('job_storage_1');
   assert.equal(storedMetadata?.path, 'memory://image-meta#job_storage_1');
   assert.deepEqual(storedMetadata?.payload, {
-    checkpoint: 'noobai-xl-vpred-v1.0',
+    checkpoint: 'ion-citizen-xl-vpred-v2.0',
     styleFamily: 'lofi_aesthetic',
   });
   assert.equal(metadata.jobId, 'job_storage_1');

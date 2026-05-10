@@ -1,12 +1,13 @@
 export type TensorRiskClass = "low" | "medium" | "high" | "critical";
 
-export type TensorModality = "text" | "image" | "video" | "audio" | "tool";
+export type TensorModality = "text" | "dialogue" | "image" | "video" | "audio" | "tool";
 
 export interface TensorConstraints {
   maxConcurrentJobs: number;
   allowedModalities: TensorModality[];
   narrativeStrictness: number;
   physicsStrictness: number;
+  varianceBoost?: number;
   escalationPolicyId: string;
 }
 
@@ -47,6 +48,7 @@ export function normalizeStrictness(value: number): number {
 
 export function createTensorSlice(input: TensorSliceInput): TensorSlice {
   const now = new Date().toISOString();
+  const varianceBoost = normalizeStrictness(input.constraints.varianceBoost ?? 0.5);
 
   return {
     entityId: input.entityId,
@@ -55,7 +57,8 @@ export function createTensorSlice(input: TensorSliceInput): TensorSlice {
       ...input.constraints,
       maxConcurrentJobs: Math.max(1, Math.floor(input.constraints.maxConcurrentJobs)),
       narrativeStrictness: normalizeStrictness(input.constraints.narrativeStrictness),
-      physicsStrictness: normalizeStrictness(input.constraints.physicsStrictness)
+      physicsStrictness: normalizeStrictness(input.constraints.physicsStrictness),
+      varianceBoost,
     },
     version: 1,
     createdAt: now,

@@ -21,7 +21,7 @@ function createGenerationRequest(): GenerationRequest {
       styleTags: ['lo-fi', 'warm evening light'],
     },
     model: {
-      checkpoint: 'noobai-xl-vpred-v1.0',
+      checkpoint: 'ion-citizen-xl-vpred-v2.0',
       predictionType: 'v_prediction',
       vae: 'sdxl-vae-fp16-fix',
       loras: [],

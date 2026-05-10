@@ -76,7 +76,7 @@ export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEn
     comfyuiWs: readText(source, 'COMFYUI_WS', 'ws://localhost:8188/ws'),
     comfyuiMock: readBoolean(source, 'COMFYUI_MOCK', true),
     comfyuiRequestTimeoutMs: readNumber(source, 'COMFYUI_REQUEST_TIMEOUT_MS', 120000),
-    defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'noobai-xl-vpred-v1.0'),
+    defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'ion-citizen-xl-vpred-v2.0'),
     defaultPredictionType: readText(source, 'DEFAULT_PREDICTION_TYPE', 'v_prediction') as ImagePredictionType,
     defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl-vae-fp16-fix'),
     defaultSampler: readText(source, 'DEFAULT_SAMPLER', 'euler') as ImageSampler,

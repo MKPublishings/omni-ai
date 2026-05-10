@@ -30,12 +30,12 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
       '1': {
         class_type: 'CheckpointLoaderSimple',
         inputs: {
-          ckpt_name: 'noobai-xl-vpred-v1.0',
+          ckpt_name: 'ion-citizen-xl-vpred-v2.0',
         },
       },
     });
 
-    assert.equal(await client.getLoadedModel(), 'noobai-xl-vpred-v1.0');
+    assert.equal(await client.getLoadedModel(), 'ion-citizen-xl-vpred-v2.0');
   } finally {
     globalThis.fetch = originalFetch;
   }

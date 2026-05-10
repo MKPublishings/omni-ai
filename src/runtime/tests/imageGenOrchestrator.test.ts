@@ -29,16 +29,16 @@ test('prompt assembler adapts quality conventions by checkpoint family', () => {
   const intent = parseIntent('Draw a warrior girl standing on a cliff at sunset.');
   const expanded = expandTags(intent);
 
-  const noobai = assemblePrompt('noobai-xl-vpred-v1.0', 'cinematic_niji', intent, expanded);
+    const citizenPrompt = assemblePrompt('ion-citizen-xl-vpred-v2.0', 'cinematic_niji', intent, expanded);
   const pony = assemblePrompt('pony-diffusion-v6-xl', 'cinematic_niji', intent, expanded);
 
-  assert.match(noobai.positive, /masterpiece, best quality, absurdres/);
+    assert.match(citizenPrompt.positive, /masterpiece, best quality, absurdres/);
   assert.match(pony.positive, /score_9, score_8_up, score_7_up/);
   assert.match(pony.positive, /source_anime/);
 });
 
 test('parameter optimizer applies SDXL bucket defaults and overrides', () => {
-  const parameters = optimizeParameters('cinematic_niji', 'noobai-xl-vpred-v1.0', {
+  const parameters = optimizeParameters('cinematic_niji', 'ion-citizen-xl-vpred-v2.0', {
     userId: 'usr_test',
     sessionId: 'sess_test',
     prompt: 'Draw a warrior girl at sunset.',
@@ -70,7 +70,7 @@ test('orchestrator constructs a GenerationRequest for the workflow builder seam'
   });
 
   assert.equal(request.userId, 'usr_test');
-  assert.equal(request.model.checkpoint, 'noobai-xl-vpred-v1.0');
+  assert.equal(request.model.checkpoint, 'ion-citizen-xl-vpred-v2.0');
   assert.equal(request.prompt.qualityTags[0], 'masterpiece');
   assert.equal(request.ionMetadata.styleFamily, 'cinematic_niji');
   assert.equal(request.parameters.height, 1536);

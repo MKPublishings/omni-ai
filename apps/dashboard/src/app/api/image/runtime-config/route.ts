@@ -26,7 +26,7 @@ export async function POST() {
       wsUrl: readText('COMFYUI_WS', 'ws://localhost:8188/ws'),
       mock: readBoolean('COMFYUI_MOCK', true),
       requestTimeoutMs: readNumber('COMFYUI_REQUEST_TIMEOUT_MS', 120000),
-      defaultCheckpoint: readText('DEFAULT_CHECKPOINT', 'noobai-xl-vpred-v1.0'),
+      defaultCheckpoint: readText('DEFAULT_CHECKPOINT', 'ion-citizen-xl-vpred-v2.0'),
     },
     queue: {
       runtime: readText('IMAGE_QUEUE_RUNTIME', 'memory') === 'kv' ? 'kv' : 'memory',

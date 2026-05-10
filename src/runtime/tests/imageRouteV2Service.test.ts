@@ -19,7 +19,7 @@ function createPipelineResult(): IonImagePipelineResult {
         styleTags: ['lo-fi', 'warm lighting'],
       },
       model: {
-        checkpoint: 'noobai-xl-vpred-v1.0',
+        checkpoint: 'ion-citizen-xl-vpred-v2.0',
         predictionType: 'v_prediction',
         vae: 'sdxl-vae-fp16-fix',
         loras: [],
@@ -58,12 +58,12 @@ function createPipelineResult(): IonImagePipelineResult {
     workflow: {
       metadata: {
         style_family: 'lofi_aesthetic',
-        checkpoint: 'noobai-xl-vpred-v1.0',
+        checkpoint: 'ion-citizen-xl-vpred-v2.0',
       },
     },
     promptId: 'mock-prompt-123',
     imageBytes: new Uint8Array([137, 80, 78, 71]),
-    outputModel: 'noobai-xl-vpred-v1.0',
+    outputModel: 'ion-citizen-xl-vpred-v2.0',
     gatewayKind: 'mock',
   };
 }
@@ -105,7 +105,7 @@ test('image route v2 service builds transport payload, headers, and telemetry wi
     });
 
     assert.equal(result.headers['Content-Type'], 'application/json');
-    assert.equal(result.headers['X-ION-Image-Model'], 'noobai-xl-vpred-v1.0');
+    assert.equal(result.headers['X-ION-Image-Model'], 'ion-citizen-xl-vpred-v2.0');
     assert.equal(result.headers['Access-Control-Expose-Headers'], 'X-ION-Image-Model');
     assert.match(result.body.imageDataUrl, /^data:image\/png;base64,/);
     assert.match(result.body.filename, /^ionirix_lofi_aesthetic_/);

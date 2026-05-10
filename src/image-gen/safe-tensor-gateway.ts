@@ -33,7 +33,7 @@ export async function validateImageGenRequest(input: SafeTensorGatewayInput): Pr
     allowed: verdict.decision === "allow",
     verdict: verdict.decision,
     reasons: verdict.reasons,
-    repairedRequest: verdict.repairedOutput ? (verdict.repairedOutput as ImageGenRequest) : undefined
+    repairedRequest: verdict.repairedOutput ? (verdict.repairedOutput as GenerationRequest) : undefined
   };
 }
 
