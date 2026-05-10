@@ -11,7 +11,7 @@ import type {
   ImageQueueJobRecord,
   StoredImageArtifact,
 } from '../shared/types';
-import { executeIonImagePipelineRequest } from './ion-image-pipeline';
+import { routeImageJob } from '../integration/routerHook';
 import {
   buildIonImagePostProcessingSummary,
   buildIonImagePromptAnalytics,
@@ -22,6 +22,12 @@ import {
 } from '../logging/ion-image-telemetry';
 
 type EnvironmentSource = Record<string, unknown>;
+
+interface ImagePipelineLikeResult {
+  request: ImageQueueJobRecord['request'];
+  promptId: string;
+  gatewayKind: 'mock' | 'comfyui';
+}
 
 function toImageError(error: unknown): ImageGenerationError {
   const name = String((error as Error)?.name || '').trim().toUpperCase();
@@ -51,7 +57,7 @@ function toGeneratedImageRecord(image: StoredImageArtifact, thumbnail: StoredIma
 
 function buildMetadataPayload(
   job: ImageQueueJobRecord,
-  pipelineResult: Awaited<ReturnType<typeof executeIonImagePipelineRequest>>,
+  pipelineResult: ImagePipelineLikeResult,
   artifacts: StoredImageArtifact[],
   postProcessing: IonImagePostProcessingSummary,
   promptAnalytics: IonImagePromptAnalytics,
@@ -88,7 +94,32 @@ export async function runNextIonImageJob(
   }
 
   try {
-    const pipelineResult = await executeIonImagePipelineRequest(job.request, source);
+    const routed = await routeImageJob(
+      {
+        requestId: job.requestId,
+        entityId: 'image_generation',
+        prompt: job.request.prompt.positive,
+        styleHints: job.request.prompt.styleTags,
+        simStateRef: `image_generation:${job.request.userId}`,
+        generationRequest: job.request,
+      },
+      source,
+    );
+
+    if (routed.blocked || !routed.output) {
+      const error = new Error(routed.reasons.join('; ') || 'safe.tensor blocked image job during governed routing.');
+      error.name = 'E_SAFETY_BLOCK';
+      throw error;
+    }
+
+    const pipelineResult = {
+      request: job.request,
+      promptId: routed.output.promptId,
+      imageBytes: routed.output.imageBytes,
+      outputModel: routed.output.outputModel,
+      gatewayKind: routed.output.gatewayKind,
+    };
+
     const processing = await queue.markProcessing(job.jobId, pipelineResult.promptId);
     const postProcessingStartedAt = Date.now();
     const postProcessing = buildIonImagePostProcessingSummary(pipelineResult.request);

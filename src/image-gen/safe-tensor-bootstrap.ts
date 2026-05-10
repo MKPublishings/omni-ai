@@ -40,6 +40,46 @@ export function bootstrapSafeTensorGovernance() {
     }
   });
 
+  // R&D visual renders: surreal tolerance, but still tied to canon and physics.
+  bootstrapSlice({
+    entityId: "image_generation_visual_renders",
+    riskClass: "medium",
+    constraints: {
+      maxConcurrentJobs: 10,
+      allowedModalities: ["image"],
+      narrativeStrictness: 0.3,
+      physicsStrictness: 0.6,
+      varianceBoost: 0.35,
+      escalationPolicyId: "image-generation-visual-renders-rd"
+    },
+    adaptation: {
+      enabled: true,
+      learningRate: 0.08,
+      minStrictness: 0.2,
+      maxStrictness: 0.88
+    }
+  });
+
+  // Brand assets: narrow style lane with strict narrative and physics continuity.
+  bootstrapSlice({
+    entityId: "image_generation_brand_assets",
+    riskClass: "high",
+    constraints: {
+      maxConcurrentJobs: 6,
+      allowedModalities: ["image"],
+      narrativeStrictness: 0.8,
+      physicsStrictness: 0.9,
+      varianceBoost: 0.05,
+      escalationPolicyId: "image-generation-brand-assets"
+    },
+    adaptation: {
+      enabled: true,
+      learningRate: 0.06,
+      minStrictness: 0.5,
+      maxStrictness: 0.98
+    }
+  });
+
   // Initialize video generation governance slice
   bootstrapSlice({
     entityId: "video_generation",
