@@ -1,0 +1,65 @@
+{
+  "suiteId": "kimono_spring_v1",
+  "description": "Versioned baseline scenarios for kimono/hanfu spring style quality and anatomy checks.",
+  "defaults": {
+    "stylePack": "anime cinematic",
+    "variationMode": "balanced",
+    "anatomyStrictMode": true,
+    "styleProfile": "soft_spring",
+    "compositionPreset": "full_body",
+    "width": 896,
+    "height": 1536
+  },
+  "scenarios": [
+    {
+      "id": "kimono_front_temple_day",
+      "prompt": "Adult woman in formal kimono standing in a temple courtyard under cherry blossoms, front view, visible hands, elegant hand pose, cinematic anime style",
+      "styleProfile": "soft_spring"
+    },
+    {
+      "id": "kimono_profile_riverside",
+      "prompt": "Adult woman in floral kimono by a riverside under sakura petals, profile view, full body, detailed fingers, depth of field",
+      "styleProfile": "soft_spring"
+    },
+    {
+      "id": "kimono_over_shoulder_shrine",
+      "prompt": "Adult woman in traditional kimono near a red shrine gate, back view with over-shoulder glance, accurate obi placement, realistic fabric folds",
+      "styleProfile": "soft_spring"
+    },
+    {
+      "id": "kimono_dynamic_walk_petals",
+      "prompt": "Adult woman in ornate kimono in a dynamic walking pose through falling cherry blossoms, full body framing, natural shoulders, correct proportions",
+      "styleProfile": "soft_spring"
+    },
+    {
+      "id": "kimono_twilight_lanterns",
+      "prompt": "Adult woman in festival kimono on a lantern-lit shrine path at twilight, visible hands, clear light direction, soft rim light",
+      "styleProfile": "twilight_festival"
+    },
+    {
+      "id": "kimono_night_festival_bridge",
+      "prompt": "Adult woman in elegant kimono crossing a bridge during a night festival with paper lanterns, full body, detailed fingers, volumetric light",
+      "styleProfile": "twilight_festival"
+    },
+    {
+      "id": "kimono_snowy_temple_gate",
+      "prompt": "Adult woman in winter kimono near a snow-dusted temple gate, full body, visible hands, realistic draped fabric pattern",
+      "styleProfile": "snowy_temple"
+    },
+    {
+      "id": "kimono_snow_garden_moonlight",
+      "prompt": "Adult woman in refined kimono in a snowy garden at moonlight, profile pose, accurate anatomy, elegant hand pose",
+      "styleProfile": "snowy_temple"
+    },
+    {
+      "id": "hanfu_sakura_courtyard",
+      "prompt": "Adult woman in hanfu inspired formal attire in a sakura temple courtyard, full body, visible hands, cinematic lighting and depth",
+      "styleProfile": "soft_spring"
+    },
+    {
+      "id": "kimono_golden_hour_steps",
+      "prompt": "Adult woman in embroidered kimono standing on temple steps at golden hour, full body, natural shoulders, pattern following fabric folds",
+      "styleProfile": "soft_spring"
+    }
+  ]
+}

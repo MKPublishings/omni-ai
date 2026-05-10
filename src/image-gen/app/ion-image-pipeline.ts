@@ -6,9 +6,12 @@ import { getImageGenerationError } from '../shared/error-codes';
 import type {
   ComfyUIWorkflow,
   GenerationRequest,
+  ImageCompositionPreset,
+  ImageVariationMode,
   IModelGateway,
   ImageJobStatus,
   IonImagePipelineResult,
+  KimonoStyleProfileId,
   StyleFamilyId,
 } from '../shared/types';
 import { IonImageOrchestrator } from '../orchestration/ion-image-orchestrator';
@@ -22,6 +25,10 @@ export interface IonImagePipelineInput {
   width?: number;
   height?: number;
   seed?: number;
+  variationMode?: ImageVariationMode;
+  anatomyStrictMode?: boolean;
+  styleProfile?: KimonoStyleProfileId;
+  compositionPreset?: ImageCompositionPreset;
 }
 
 export async function buildIonImageGenerationRequest(
@@ -38,6 +45,10 @@ export async function buildIonImageGenerationRequest(
     prompt: input.prompt,
     styleFamily: resolveStyleFamily(input.stylePack),
     checkpoint: env.defaultCheckpoint,
+    variationMode: input.variationMode,
+    anatomyStrictMode: input.anatomyStrictMode,
+    styleProfile: input.styleProfile,
+    compositionPreset: input.compositionPreset,
     parameterOverrides: {
       width: input.width,
       height: input.height,

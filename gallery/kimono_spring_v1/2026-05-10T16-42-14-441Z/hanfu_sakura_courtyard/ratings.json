@@ -1,0 +1,11 @@
+{
+  "suiteId": "kimono_spring_v1",
+  "scenarioId": "hanfu_sakura_courtyard",
+  "criteria": {
+    "hands": null,
+    "shoulders_neck": null,
+    "kimono_wrap_correctness": null
+  },
+  "notes": "",
+  "scale": "0-2"
+}

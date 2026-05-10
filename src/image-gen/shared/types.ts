@@ -16,6 +16,15 @@ export type ImageOutputFormat = (typeof IMAGE_OUTPUT_FORMATS)[number];
 export const IMAGE_PREDICTION_TYPES = ['v_prediction', 'epsilon'] as const;
 export type ImagePredictionType = (typeof IMAGE_PREDICTION_TYPES)[number];
 
+export const IMAGE_VARIATION_MODES = ['off', 'balanced', 'high'] as const;
+export type ImageVariationMode = (typeof IMAGE_VARIATION_MODES)[number];
+
+export const IMAGE_COMPOSITION_PRESETS = ['portrait', 'full_body', 'cinematic'] as const;
+export type ImageCompositionPreset = (typeof IMAGE_COMPOSITION_PRESETS)[number];
+
+export const KIMONO_STYLE_PROFILE_IDS = ['soft_spring', 'twilight_festival', 'snowy_temple'] as const;
+export type KimonoStyleProfileId = (typeof KIMONO_STYLE_PROFILE_IDS)[number];
+
 export const STYLE_FAMILY_IDS = [
   'cinematic_niji',
   'soft_pastel_shoujo',
@@ -57,6 +66,10 @@ export interface UserInput {
   prompt: string;
   styleFamily?: StyleFamilyId | null;
   checkpoint?: string | null;
+  variationMode?: ImageVariationMode | null;
+  anatomyStrictMode?: boolean;
+  styleProfile?: KimonoStyleProfileId | null;
+  compositionPreset?: ImageCompositionPreset | null;
   loras?: LoraConfig[];
   priority?: ImageGenerationPriority;
   parameterOverrides?: Partial<GenerationParameters>;
@@ -83,6 +96,9 @@ export interface PromptAssemblyResult {
   negative: string;
   qualityTags: string[];
   styleTags: string[];
+  styleProfileId?: KimonoStyleProfileId;
+  compositionPreset?: ImageCompositionPreset;
+  kimonoMode?: boolean;
 }
 
 export interface SafetyDecision {
@@ -179,6 +195,10 @@ export interface IonGenerationMetadata {
   styleFamily: StyleFamilyId;
   inferredMood: string;
   confidence: number;
+  styleProfileId?: KimonoStyleProfileId;
+  compositionPreset?: ImageCompositionPreset;
+  anatomyStrictMode?: boolean;
+  kimonoMode?: boolean;
 }
 
 export type InferenceSource = 'prompt' | 'session-or-request' | 'auto' | 'none';

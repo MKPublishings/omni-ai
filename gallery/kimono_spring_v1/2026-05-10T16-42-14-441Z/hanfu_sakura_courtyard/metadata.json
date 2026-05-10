@@ -1,0 +1,102 @@
+{
+  "suiteId": "kimono_spring_v1",
+  "scenarioId": "hanfu_sakura_courtyard",
+  "generatedAt": "2026-05-10T16:42:14.441Z",
+  "promptConfig": {
+    "stylePack": "anime cinematic",
+    "variationMode": "balanced",
+    "anatomyStrictMode": true,
+    "styleProfile": "soft_spring",
+    "compositionPreset": "full_body",
+    "width": 896,
+    "height": 1536,
+    "id": "hanfu_sakura_courtyard",
+    "prompt": "Adult woman in hanfu inspired formal attire in a sakura temple courtyard, full body, visible hands, cinematic lighting and depth"
+  },
+  "request": {
+    "requestId": "a6f08589-f003-43de-be23-6a2f8768424f",
+    "userId": "suite-kimono_spring_v1",
+    "sessionId": "img-613aab71-fa0b-46f7-8fbb-ffe87833a57d",
+    "priority": "interactive",
+    "timestamp": "2026-05-10T16:42:14.466Z",
+    "prompt": {
+      "positive": "masterpiece, best quality, absurdres, anime, detailed, cinematic lighting, dramatic angle, vivid colors, sharp focus, depth of field, bloom, 1girl, full_body, correct kimono wrap, realistic fabric folds, pattern following fabric, accurate obi placement, traditional kimono etiquette, clear light direction, soft rim light, volumetric light through blossoms, foreground petals, full body, visible hands, accurate anatomy, natural shoulders, correct proportions, detailed fingers, elegant hand pose, Soft Spring Noon, soft spring daylight with filtered blossom shadows, rose pink, peach, coral red, warm ivory, temple courtyard under cherry blossoms, front view, coherent cherry blossom atmosphere",
+      "negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, username, blurry, deformed, disfigured, mutation, mutated, extra limbs, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, flat colors, simple background, starry_sky, extra fingers, deformed hands, broken limbs, distorted face, asymmetrical eyes, melted fabric, random text, logo, incorrect kimono wrap, random armor, sci-fi elements, modern clothing, floating fabric, melted clothing, random patterns, flat lighting, overexposed, muddy shadows, random blur, broken anatomy, twisted neck, dislocated shoulders",
+      "qualityTags": [
+        "masterpiece",
+        "best quality",
+        "absurdres"
+      ],
+      "styleTags": [
+        "anime",
+        "detailed",
+        "cinematic lighting",
+        "dramatic angle",
+        "vivid colors",
+        "sharp focus",
+        "depth of field",
+        "bloom",
+        "Soft Spring Noon",
+        "soft spring daylight with filtered blossom shadows",
+        "rose pink, peach, coral red, warm ivory",
+        "temple courtyard under cherry blossoms",
+        "front view",
+        "coherent cherry blossom atmosphere"
+      ],
+      "styleProfileId": "soft_spring",
+      "compositionPreset": "full_body",
+      "kimonoMode": true
+    },
+    "model": {
+      "checkpoint": "noobai-xl-vpred-v1.0",
+      "predictionType": "v_prediction",
+      "vae": "sdxl-vae-fp16-fix",
+      "loras": [],
+      "clipSkip": 2
+    },
+    "parameters": {
+      "width": 896,
+      "height": 1536,
+      "steps": 30,
+      "cfgScale": 5,
+      "cfgRescale": 0.2,
+      "sampler": "euler",
+      "scheduler": "normal",
+      "seed": 9,
+      "batchSize": 1
+    },
+    "postProcessing": {
+      "upscale": {
+        "enabled": false,
+        "model": "4x-UltraSharp",
+        "scale": 2
+      },
+      "format": "png",
+      "quality": 95,
+      "embedMetadata": true,
+      "generateThumbnail": true
+    },
+    "ionMetadata": {
+      "reasoningChain": [
+        "intent_parse",
+        "profile_check",
+        "style_infer",
+        "tag_expand",
+        "quality_inject",
+        "negative_assemble",
+        "param_optimize",
+        "safety_gate",
+        "workflow_build",
+        "submit"
+      ],
+      "originalUserPrompt": "Adult woman in hanfu inspired formal attire in a sakura temple courtyard, full body, visible hands, cinematic lighting and depth",
+      "styleFamily": "cinematic_niji",
+      "inferredMood": "dramatic",
+      "confidence": 0.9,
+      "styleProfileId": "soft_spring",
+      "compositionPreset": "full_body",
+      "anatomyStrictMode": true,
+      "kimonoMode": true
+    }
+  }
+}

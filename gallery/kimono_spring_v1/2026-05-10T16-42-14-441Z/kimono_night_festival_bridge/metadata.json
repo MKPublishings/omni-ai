@@ -1,0 +1,102 @@
+{
+  "suiteId": "kimono_spring_v1",
+  "scenarioId": "kimono_night_festival_bridge",
+  "generatedAt": "2026-05-10T16:42:14.441Z",
+  "promptConfig": {
+    "stylePack": "anime cinematic",
+    "variationMode": "balanced",
+    "anatomyStrictMode": true,
+    "styleProfile": "twilight_festival",
+    "compositionPreset": "full_body",
+    "width": 896,
+    "height": 1536,
+    "id": "kimono_night_festival_bridge",
+    "prompt": "Adult woman in elegant kimono crossing a bridge during a night festival with paper lanterns, full body, detailed fingers, volumetric light"
+  },
+  "request": {
+    "requestId": "0a733d2d-8e2e-4d60-aed8-ca136bdc3c07",
+    "userId": "suite-kimono_spring_v1",
+    "sessionId": "img-8fcbe211-2bb7-4bd2-8e5a-7b1b313aa4d2",
+    "priority": "interactive",
+    "timestamp": "2026-05-10T16:42:14.460Z",
+    "prompt": {
+      "positive": "masterpiece, best quality, absurdres, anime, detailed, cinematic lighting, dramatic angle, vivid colors, sharp focus, depth of field, bloom, 1girl, full_body, night, correct kimono wrap, realistic fabric folds, pattern following fabric, accurate obi placement, traditional kimono etiquette, clear light direction, soft rim light, volumetric light through blossoms, foreground petals, full body, visible hands, accurate anatomy, natural shoulders, correct proportions, detailed fingers, elegant hand pose, Twilight Festival, lantern-lit dusk with warm rim lighting, crimson, amber lantern light, deep rose, indigo twilight, night festival path with shrine gate and paper lanterns, front view, coherent cherry blossom atmosphere",
+      "negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, username, blurry, deformed, disfigured, mutation, mutated, extra limbs, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, flat colors, simple background, extra fingers, deformed hands, broken limbs, distorted face, asymmetrical eyes, melted fabric, random text, logo, incorrect kimono wrap, random armor, sci-fi elements, modern clothing, floating fabric, melted clothing, random patterns, flat lighting, overexposed, muddy shadows, random blur, broken anatomy, twisted neck, dislocated shoulders",
+      "qualityTags": [
+        "masterpiece",
+        "best quality",
+        "absurdres"
+      ],
+      "styleTags": [
+        "anime",
+        "detailed",
+        "cinematic lighting",
+        "dramatic angle",
+        "vivid colors",
+        "sharp focus",
+        "depth of field",
+        "bloom",
+        "Twilight Festival",
+        "lantern-lit dusk with warm rim lighting",
+        "crimson, amber lantern light, deep rose, indigo twilight",
+        "night festival path with shrine gate and paper lanterns",
+        "front view",
+        "coherent cherry blossom atmosphere"
+      ],
+      "styleProfileId": "twilight_festival",
+      "compositionPreset": "full_body",
+      "kimonoMode": true
+    },
+    "model": {
+      "checkpoint": "noobai-xl-vpred-v1.0",
+      "predictionType": "v_prediction",
+      "vae": "sdxl-vae-fp16-fix",
+      "loras": [],
+      "clipSkip": 2
+    },
+    "parameters": {
+      "width": 896,
+      "height": 1536,
+      "steps": 30,
+      "cfgScale": 5,
+      "cfgRescale": 0.2,
+      "sampler": "euler",
+      "scheduler": "normal",
+      "seed": 6,
+      "batchSize": 1
+    },
+    "postProcessing": {
+      "upscale": {
+        "enabled": false,
+        "model": "4x-UltraSharp",
+        "scale": 2
+      },
+      "format": "png",
+      "quality": 95,
+      "embedMetadata": true,
+      "generateThumbnail": true
+    },
+    "ionMetadata": {
+      "reasoningChain": [
+        "intent_parse",
+        "profile_check",
+        "style_infer",
+        "tag_expand",
+        "quality_inject",
+        "negative_assemble",
+        "param_optimize",
+        "safety_gate",
+        "workflow_build",
+        "submit"
+      ],
+      "originalUserPrompt": "Adult woman in elegant kimono crossing a bridge during a night festival with paper lanterns, full body, detailed fingers, volumetric light",
+      "styleFamily": "cinematic_niji",
+      "inferredMood": "neutral",
+      "confidence": 0.9,
+      "styleProfileId": "twilight_festival",
+      "compositionPreset": "full_body",
+      "anatomyStrictMode": true,
+      "kimonoMode": true
+    }
+  }
+}

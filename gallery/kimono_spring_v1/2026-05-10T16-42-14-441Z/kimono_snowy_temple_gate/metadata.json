@@ -1,0 +1,102 @@
+{
+  "suiteId": "kimono_spring_v1",
+  "scenarioId": "kimono_snowy_temple_gate",
+  "generatedAt": "2026-05-10T16:42:14.441Z",
+  "promptConfig": {
+    "stylePack": "anime cinematic",
+    "variationMode": "balanced",
+    "anatomyStrictMode": true,
+    "styleProfile": "snowy_temple",
+    "compositionPreset": "full_body",
+    "width": 896,
+    "height": 1536,
+    "id": "kimono_snowy_temple_gate",
+    "prompt": "Adult woman in winter kimono near a snow-dusted temple gate, full body, visible hands, realistic draped fabric pattern"
+  },
+  "request": {
+    "requestId": "2c533842-3946-470a-8bfa-252fbee9bb55",
+    "userId": "suite-kimono_spring_v1",
+    "sessionId": "img-b1da24d8-2a37-4f13-b601-db30bc8c5303",
+    "priority": "interactive",
+    "timestamp": "2026-05-10T16:42:14.462Z",
+    "prompt": {
+      "positive": "masterpiece, best quality, absurdres, anime, detailed, cinematic lighting, dramatic angle, vivid colors, sharp focus, depth of field, bloom, 1girl, full_body, correct kimono wrap, realistic fabric folds, pattern following fabric, accurate obi placement, traditional kimono etiquette, clear light direction, soft rim light, volumetric light through blossoms, foreground petals, full body, visible hands, accurate anatomy, natural shoulders, correct proportions, detailed fingers, elegant hand pose, Snowy Temple, cold moonlit ambience with gentle warm key light, frost white, sakura pink accents, muted red, silver blue, snow-dusted temple garden with distant pagoda, profile view, coherent cherry blossom atmosphere",
+      "negative": "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, jpeg artifacts, signature, watermark, username, blurry, deformed, disfigured, mutation, mutated, extra limbs, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, flat colors, simple background, starry_sky, extra fingers, deformed hands, broken limbs, distorted face, asymmetrical eyes, melted fabric, random text, logo, incorrect kimono wrap, random armor, sci-fi elements, modern clothing, floating fabric, melted clothing, random patterns, flat lighting, overexposed, muddy shadows, random blur, broken anatomy, twisted neck, dislocated shoulders",
+      "qualityTags": [
+        "masterpiece",
+        "best quality",
+        "absurdres"
+      ],
+      "styleTags": [
+        "anime",
+        "detailed",
+        "cinematic lighting",
+        "dramatic angle",
+        "vivid colors",
+        "sharp focus",
+        "depth of field",
+        "bloom",
+        "Snowy Temple",
+        "cold moonlit ambience with gentle warm key light",
+        "frost white, sakura pink accents, muted red, silver blue",
+        "snow-dusted temple garden with distant pagoda",
+        "profile view",
+        "coherent cherry blossom atmosphere"
+      ],
+      "styleProfileId": "snowy_temple",
+      "compositionPreset": "full_body",
+      "kimonoMode": true
+    },
+    "model": {
+      "checkpoint": "noobai-xl-vpred-v1.0",
+      "predictionType": "v_prediction",
+      "vae": "sdxl-vae-fp16-fix",
+      "loras": [],
+      "clipSkip": 2
+    },
+    "parameters": {
+      "width": 896,
+      "height": 1536,
+      "steps": 30,
+      "cfgScale": 5,
+      "cfgRescale": 0.2,
+      "sampler": "euler",
+      "scheduler": "normal",
+      "seed": 7,
+      "batchSize": 1
+    },
+    "postProcessing": {
+      "upscale": {
+        "enabled": false,
+        "model": "4x-UltraSharp",
+        "scale": 2
+      },
+      "format": "png",
+      "quality": 95,
+      "embedMetadata": true,
+      "generateThumbnail": true
+    },
+    "ionMetadata": {
+      "reasoningChain": [
+        "intent_parse",
+        "profile_check",
+        "style_infer",
+        "tag_expand",
+        "quality_inject",
+        "negative_assemble",
+        "param_optimize",
+        "safety_gate",
+        "workflow_build",
+        "submit"
+      ],
+      "originalUserPrompt": "Adult woman in winter kimono near a snow-dusted temple gate, full body, visible hands, realistic draped fabric pattern",
+      "styleFamily": "cinematic_niji",
+      "inferredMood": "neutral",
+      "confidence": 0.9,
+      "styleProfileId": "snowy_temple",
+      "compositionPreset": "full_body",
+      "anatomyStrictMode": true,
+      "kimonoMode": true
+    }
+  }
+}

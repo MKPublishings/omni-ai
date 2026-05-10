@@ -30,6 +30,7 @@
     "test:dashboard:e2e": "npm run build --workspace @ionirix/dashboard && playwright test -c apps/dashboard/playwright.config.ts",
     "test:image-contract": "tsx --test src/runtime/tests/imageRouteFormat.test.ts src/runtime/tests/imageRouteV2.test.ts",
     "test:image-queue-contract": "tsx --test src/runtime/tests/imageQueueContract.test.ts src/runtime/tests/imageQueueRoute.test.ts src/runtime/tests/imageQueueRouteService.test.ts src/runtime/tests/imageGenJobRunner.test.ts src/runtime/tests/imageGenQueueStorage.test.ts",
+    "test:images": "tsx src/scripts/run-image-scenarios.ts",
     "test:runtime": "tsx --test src/runtime/tests/simulationEngine.test.ts src/runtime/tests/simulationWorker.test.ts src/runtime/tests/router.test.ts src/runtime/tests/modeRouting.test.ts src/runtime/tests/runtimeLoop.test.ts src/runtime/tests/workerRoute.test.ts src/runtime/tests/worldBridge.test.ts src/runtime/tests/worldWorker.test.ts src/runtime/tests/ionGateway.test.ts src/runtime/tests/premiumContracts.test.ts src/runtime/tests/stripeBilling.test.ts src/runtime/tests/comfyUIClient.test.ts src/runtime/tests/ionImageTelemetry.test.ts",
     "test:cosmic": "tsx --test src/modes/cosmic/__tests__/gravitational.test.ts src/modes/cosmic/__tests__/dynamics.test.ts src/modes/cosmic/__tests__/stellar.test.ts src/modes/cosmic/__tests__/ism.test.ts src/modes/cosmic/__tests__/integration.test.ts",
     "test:multiverse": "tsx --test src/modes/multiverse/__tests__/multiverse_seed.test.ts",

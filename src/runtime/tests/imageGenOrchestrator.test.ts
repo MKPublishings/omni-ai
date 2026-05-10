@@ -79,3 +79,24 @@ test('orchestrator constructs a GenerationRequest for the workflow builder seam'
   const reasoning = await orchestrator.getReasoningChain(request.requestId);
   assert.equal(reasoning.includes('submit'), true);
 });
+
+test('kimono strict mode injects anatomy guidance and composition defaults', async () => {
+  const orchestrator = new IonImageOrchestrator();
+  const request = await orchestrator.processRequest({
+    userId: 'usr_test',
+    sessionId: 'sess_test',
+    prompt: 'Adult woman in traditional kimono under cherry blossoms with visible hands and detailed fingers.',
+    anatomyStrictMode: true,
+    variationMode: 'high',
+    styleProfile: 'twilight_festival',
+  });
+
+  assert.equal(request.ionMetadata.kimonoMode, true);
+  assert.equal(request.ionMetadata.styleProfileId, 'twilight_festival');
+  assert.equal(request.ionMetadata.compositionPreset, 'full_body');
+  assert.equal(request.parameters.width, 896);
+  assert.equal(request.parameters.height, 1536);
+  assert.equal(request.parameters.steps >= 30, true);
+  assert.match(request.prompt.positive, /correct kimono wrap/i);
+  assert.match(request.prompt.negative, /incorrect kimono wrap/i);
+});

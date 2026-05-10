@@ -35,7 +35,11 @@ export class IonImageOrchestrator implements IOrchestrator {
     const styleFamily = resolveStyleFamily(userInput.styleFamily, intent);
     const checkpointId = userInput.checkpoint || this.env.defaultCheckpoint;
     const expanded = expandTags(intent);
-    const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded);
+    const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded, {
+      variationMode: userInput.variationMode,
+      anatomyStrictMode: userInput.anatomyStrictMode,
+      styleProfile: userInput.styleProfile,
+    });
     const safety = evaluateImagePromptSafety(prompt.positive, prompt.negative);
 
     if (!safety.allowed) {
@@ -47,7 +51,10 @@ export class IonImageOrchestrator implements IOrchestrator {
 
     const requestId = crypto.randomUUID();
     const model = optimizeModelConfig(checkpointId, userInput);
-    const parameters = optimizeParameters(styleFamily, checkpointId, userInput);
+    const parameters = optimizeParameters(styleFamily, checkpointId, {
+      ...userInput,
+      compositionPreset: userInput.compositionPreset || prompt.compositionPreset,
+    });
 
     this.reasoningChains.set(requestId, [...DEFAULT_REASONING_CHAIN]);
 
@@ -77,6 +84,10 @@ export class IonImageOrchestrator implements IOrchestrator {
         styleFamily,
         inferredMood: expanded.inferredMood,
         confidence: 0.9,
+        styleProfileId: prompt.styleProfileId,
+        compositionPreset: userInput.compositionPreset || prompt.compositionPreset || undefined,
+        anatomyStrictMode: Boolean(userInput.anatomyStrictMode),
+        kimonoMode: prompt.kimonoMode,
       },
     };
   }
