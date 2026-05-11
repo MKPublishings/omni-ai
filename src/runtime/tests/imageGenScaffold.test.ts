@@ -81,7 +81,7 @@ test('generation request schema accepts the scaffolded request shape', () => {
 test('environment readers apply defaults and overrides deterministically', () => {
   const defaults = readImageGenEnvironment({});
   assert.equal(defaults.comfyuiMock, true);
-  assert.equal(defaults.defaultCheckpoint, 'ion-citizen-xl-vpred-v2.0');
+  assert.equal(defaults.defaultCheckpoint, 'grok-imagine-image-beta');
 
   const overridden = readImageGenEnvironment({
     COMFYUI_HOST: 'http://127.0.0.1:9000',

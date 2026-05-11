@@ -15,12 +15,21 @@ const WARMUP_NEGATIVE = String(process.env.ION_COMFY_WARMUP_NEGATIVE || "blurry,
 const WARMUP_WIDTH = Number(process.env.ION_COMFY_WARMUP_WIDTH || 768);
 const WARMUP_HEIGHT = Number(process.env.ION_COMFY_WARMUP_HEIGHT || 768);
 const WARMUP_WORKFLOW_PATH = process.env.ION_COMFY_WARMUP_WORKFLOW || "";
+const WARMUP_GROK_MODEL = String(process.env.ION_COMFY_WARMUP_MODEL || "grok-imagine-image-beta");
+const WARMUP_GROK_RESOLUTION = String(process.env.ION_COMFY_WARMUP_RESOLUTION || "1K").toUpperCase() === "2K" ? "2K" : "1K";
 
-const DEFAULT_CKPT_CANDIDATES = [
-  String(process.env.ION_COMFY_WARMUP_CKPT || "omnigen2_t2i.safetensors"),
-  "flux2-klein-4b-fp8.safetensors",
-  "v1-5-pruned-emaonly-fp16.safetensors",
-];
+function resolveWarmupAspectRatio(width, height) {
+  if (!(Number.isFinite(width) && Number.isFinite(height)) || width <= 0 || height <= 0) {
+    return "1:1";
+  }
+
+  const ratio = width / height;
+  if (ratio >= 1.7) return "16:9";
+  if (ratio >= 1.25) return "4:3";
+  if (ratio <= 0.56) return "9:16";
+  if (ratio <= 0.75) return "3:4";
+  return "1:1";
+}
 
 function log(line) {
   process.stdout.write(`${line}\n`);
@@ -92,98 +101,31 @@ async function waitForServer(host) {
 }
 
 function buildMinimalWarmupPayload() {
-  const ckptName = String(process.env.ION_COMFY_WARMUP_CKPT_SELECTED || DEFAULT_CKPT_CANDIDATES[0]);
+  const aspectRatio = resolveWarmupAspectRatio(WARMUP_WIDTH, WARMUP_HEIGHT);
+  const warmupPrompt = `${WARMUP_TEXT}, ${WARMUP_NEGATIVE}`;
+
   return {
     prompt: {
       "1": {
-        class_type: "CheckpointLoaderSimple",
+        class_type: "GrokImageNode",
         inputs: {
-          ckpt_name: ckptName,
+          model: WARMUP_GROK_MODEL,
+          prompt: warmupPrompt,
+          aspect_ratio: aspectRatio,
+          number_of_images: 1,
+          seed: Math.floor(Date.now() % 2_147_483_647),
+          resolution: WARMUP_GROK_RESOLUTION,
         },
       },
       "2": {
-        class_type: "CLIPTextEncode",
-        inputs: {
-          text: WARMUP_TEXT,
-          clip: ["1", 1],
-        },
-      },
-      "3": {
-        class_type: "CLIPTextEncode",
-        inputs: {
-          text: WARMUP_NEGATIVE,
-          clip: ["1", 1],
-        },
-      },
-      "4": {
-        class_type: "EmptyLatentImage",
-        inputs: {
-          width: WARMUP_WIDTH,
-          height: WARMUP_HEIGHT,
-          batch_size: 1,
-        },
-      },
-      "5": {
-        class_type: "KSampler",
-        inputs: {
-          seed: Math.floor(Date.now() % 2_147_483_647),
-          steps: Number(process.env.ION_COMFY_WARMUP_STEPS || 6),
-          cfg: Number(process.env.ION_COMFY_WARMUP_CFG || 1.0),
-          sampler_name: String(process.env.ION_COMFY_WARMUP_SAMPLER || "euler"),
-          scheduler: String(process.env.ION_COMFY_WARMUP_SCHEDULER || "simple"),
-          denoise: Number(process.env.ION_COMFY_WARMUP_DENOISE || 0.9),
-          model: ["1", 0],
-          positive: ["2", 0],
-          negative: ["3", 0],
-          latent_image: ["4", 0],
-        },
-      },
-      "6": {
-        class_type: "VAEDecode",
-        inputs: {
-          samples: ["5", 0],
-          vae: ["1", 2],
-        },
-      },
-      "7": {
         class_type: "SaveImage",
         inputs: {
           filename_prefix: String(process.env.ION_COMFY_WARMUP_PREFIX || "ion-warmup"),
-          images: ["6", 0],
+          images: ["1", 0],
         },
       },
     },
   };
-}
-
-function extractCheckpointList(objectInfoData) {
-  const required = objectInfoData?.CheckpointLoaderSimple?.input?.required;
-  const ckptInput = required?.ckpt_name;
-  const maybeList = Array.isArray(ckptInput) ? ckptInput[0] : null;
-  if (!Array.isArray(maybeList)) {
-    return [];
-  }
-  return maybeList.map((name) => String(name));
-}
-
-async function chooseCheckpoint(host) {
-  try {
-    const objectInfo = await requestJson(`${host}/object_info/CheckpointLoaderSimple`, { method: "GET" });
-    if (objectInfo.status !== 200 || !objectInfo.data) {
-      return DEFAULT_CKPT_CANDIDATES[0];
-    }
-
-    const available = extractCheckpointList(objectInfo.data);
-    if (!available.length) {
-      return DEFAULT_CKPT_CANDIDATES[0];
-    }
-
-    const selected = DEFAULT_CKPT_CANDIDATES.find((name) => available.includes(name)) || available[0];
-    log(`• warmup checkpoint: ${selected}`);
-    return selected;
-  } catch {
-    return DEFAULT_CKPT_CANDIDATES[0];
-  }
 }
 
 function loadWarmupPayload() {
@@ -211,8 +153,6 @@ function loadWarmupPayload() {
 }
 
 async function enqueueWarmup(host) {
-  const selectedCkpt = await chooseCheckpoint(host);
-  process.env.ION_COMFY_WARMUP_CKPT_SELECTED = selectedCkpt;
   const payload = loadWarmupPayload();
   const result = await requestJson(`${host}/prompt`, {
     method: "POST",

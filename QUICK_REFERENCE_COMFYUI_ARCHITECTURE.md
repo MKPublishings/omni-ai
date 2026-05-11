@@ -27,7 +27,7 @@ if (!result.valid) {
 import { buildUniversalBaseGraph, NODE_IDS } from './templates/universal-base-graph';
 
 const workflow = buildUniversalBaseGraph({
-  checkpointName: 'model.safetensors',
+  checkpointName: 'grok-imagine-image-beta',
   positivePrompt: 'a beautiful landscape',
   negativePrompt: 'ugly, distorted',
   width: 512,
@@ -80,7 +80,7 @@ print(result["billing"]["charged"])  # Actual cost
 {
   "1": {
     "class_type": "CheckpointLoaderSimple",
-    "inputs": { "ckpt_name": "model.safetensors" }
+    "inputs": { "ckpt_name": "grok-imagine-image-beta" }
   },
   "2": {
     "class_type": "CLIPTextEncode",

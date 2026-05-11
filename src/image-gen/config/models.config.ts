@@ -2,6 +2,21 @@ import type { CheckpointConfig } from '../shared/types';
 import { readImageGenEnvironment } from './env';
 
 export const CHECKPOINT_REGISTRY: Record<string, CheckpointConfig> = {
+  'grok-imagine-image-beta': {
+    id: 'grok-imagine-image-beta',
+    displayName: 'Grok Imagine Image Beta',
+    runtimeCheckpoint: 'grok-imagine-image-beta',
+    baseModelFamily: 'grok-image-api',
+    predictionType: 'epsilon',
+    vae: 'grok-image-api',
+    qualityTags: ['cinematic', 'high detail'],
+    recommendedSampler: 'euler',
+    recommendedScheduler: 'normal',
+    recommendedCfgScale: 5,
+    recommendedSteps: 20,
+    clipSkip: 1,
+    defaultResolution: { width: 1024, height: 1536 },
+  },
   'ion-citizen-xl-vpred-v2.0': {
     id: 'ion-citizen-xl-vpred-v2.0',
     displayName: 'ION Citizen XL v-pred 2.0',

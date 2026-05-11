@@ -30,7 +30,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
       '1': {
         class_type: 'CheckpointLoaderSimple',
         inputs: {
-          ckpt_name: 'v1-5-pruned-emaonly-fp16.safetensors',
+          ckpt_name: 'grok-imagine-image-beta',
         },
       },
       '2': {
@@ -86,7 +86,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
       },
     });
 
-    assert.equal(await client.getLoadedModel(), 'v1-5-pruned-emaonly-fp16.safetensors');
+    assert.equal(await client.getLoadedModel(), 'grok-imagine-image-beta');
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -218,7 +218,7 @@ test('ComfyUI client auto-reconciles unsupported checkpoint names to available o
         CheckpointLoaderSimple: {
           input: {
             required: {
-              ckpt_name: [['v1-5-pruned-emaonly-fp16.safetensors']],
+              ckpt_name: [['grok-imagine-image-beta']],
             },
           },
         },
@@ -242,7 +242,7 @@ test('ComfyUI client auto-reconciles unsupported checkpoint names to available o
       '1': {
         class_type: 'CheckpointLoaderSimple',
         inputs: {
-          ckpt_name: 'ion-citizen-xl-vpred-v2.0.safetensors',
+          ckpt_name: 'ion-citizen-xl-vpred-v2.0',
         },
       },
       '2': {
@@ -298,7 +298,7 @@ test('ComfyUI client auto-reconciles unsupported checkpoint names to available o
       },
     });
 
-    assert.equal(submittedCheckpoint, 'v1-5-pruned-emaonly-fp16.safetensors');
+    assert.equal(submittedCheckpoint, 'grok-imagine-image-beta');
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -323,11 +323,11 @@ test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt vali
               {
                 type: 'value_not_in_list',
                 message: 'Value not in list',
-                details: "ckpt_name: 'ion-citizen-xl-vpred-v2.0.safetensors' not in []",
+                details: "ckpt_name: 'ion-citizen-xl-vpred-v2.0' not in []",
                 extra_info: {
                   input_name: 'ckpt_name',
                   input_config: [[], { tooltip: 'The name of the checkpoint (model) to load.' }],
-                  received_value: 'ion-citizen-xl-vpred-v2.0.safetensors',
+                  received_value: 'ion-citizen-xl-vpred-v2.0',
                 },
               },
             ],
@@ -349,7 +349,7 @@ test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt vali
         '1': {
           class_type: 'CheckpointLoaderSimple',
           inputs: {
-            ckpt_name: 'ion-citizen-xl-vpred-v2.0.safetensors',
+            ckpt_name: 'ion-citizen-xl-vpred-v2.0',
           },
         },
         '2': {

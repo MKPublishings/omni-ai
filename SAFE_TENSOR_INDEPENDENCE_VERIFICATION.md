@@ -8,8 +8,8 @@ The new `safe.tensor` governance kernel operates **independently** from model ch
 
 | Component | Old ComfyUI RTX File | New safe.tensor |
 |-----------|---------------------|-----------------|
-| **model_config.ts** | Referenced checkpoint: `ComfyUI-Ion-RTX-v1.0.safetensors` | ✓ Removed — uses `ion-citizen-xl-vpred-v2.0` |
-| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ComfyUI-Ion-RTX-v1.0.safetensors"` | ✓ Updated to `ion-citizen-xl-vpred-v2.0` |
+| **model_config.ts** | Referenced checkpoint: `ComfyUI-Ion-RTX-v1.0` | ✓ Removed — uses `grok-imagine-image-beta` |
+| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ComfyUI-Ion-RTX-v1.0"` | ✓ Updated to `grok-imagine-image-beta` |
 | **safe.tensor core** | — | ✓ Zero references to checkpoint files |
 | **safe.tensor validation** | — | ✓ Pure governance logic (no model dependencies) |
 | **safe.tensor API** | — | ✓ Independent entity slicing and verdict system |
@@ -52,7 +52,7 @@ src/safe.tensor/
     └── integration-image-gen.test.ts
 ```
 
-**Search Result**: Zero matches for `safetensor`, `checkpoint`, `ComfyUI`, `model file`, or external resource references.
+**Search Result**: Zero matches for legacy checkpoint artifact extensions, direct ComfyUI model file bindings, or external model file references.
 
 ## Constitutional Governance Model
 
