@@ -330,8 +330,37 @@ function normalizeImageSource(value: unknown) {
     return ''
   }
 
+  const fixMismatchedDataUrlMime = (input: string) => {
+    const match = input.match(/^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=\s]+)$/i)
+    if (!match) {
+      return input
+    }
+
+    const declaredMime = String(match[1] || '').toLowerCase()
+    const payload = String(match[2] || '').replace(/\s+/g, '')
+    if (!payload) {
+      return input
+    }
+
+    if (!/(^image\/png$|^image\/jpeg$|^image\/jpg$|^image\/webp$)/.test(declaredMime)) {
+      return input
+    }
+
+    try {
+      const decoded = typeof atob === 'function' ? atob(payload.slice(0, 1024)) : ''
+      const probe = decoded.replace(/^\uFEFF/, '').trim().toLowerCase()
+      if (probe.startsWith('<svg') || probe.includes('<svg')) {
+        return `data:image/svg+xml;base64,${payload}`
+      }
+    } catch {
+      return input
+    }
+
+    return input
+  }
+
   if (/^data:image\//i.test(normalized)) {
-    return normalized
+    return fixMismatchedDataUrlMime(normalized)
   }
 
   if (/^(https?:|blob:|\/)/i.test(normalized)) {
