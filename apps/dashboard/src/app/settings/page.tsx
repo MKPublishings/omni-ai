@@ -321,7 +321,9 @@ export default function SettingsPage() {
       preferences: preferencesDraft,
     }
 
-    const nextWorkspaceErrors = validateStep(nextState, 'workspace').errors
+    const nextWorkspaceErrors = validateStep(nextState, 'workspace').errors.filter(
+      (error) => !error.startsWith('Workspace intent should explain the operating context in at least 24 characters.'),
+    )
     const nextPreferencesErrors = validateStep(nextState, 'preferences').errors
 
     setWorkspaceErrors(nextWorkspaceErrors)
