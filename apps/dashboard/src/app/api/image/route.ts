@@ -24,6 +24,14 @@ function mapV2Failure(error: unknown): { status: number; code: string; message: 
   const message = String((error as { message?: string } | null)?.message || 'Image generation failed')
   const name = String((error as { name?: string } | null)?.name || '').trim()
 
+  if (name === 'E_SAFETY_BLOCK') {
+    return {
+      status: 403,
+      code: 'safety-blocked',
+      message: 'Image generation adjusted for safety context.',
+    }
+  }
+
   if (name === 'E_COMFYUI_DOWN') {
     return {
       status: 503,

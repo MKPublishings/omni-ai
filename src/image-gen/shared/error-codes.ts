@@ -27,7 +27,7 @@ export const IMAGE_GENERATION_ERROR_CODES = {
   },
   E_SAFETY_BLOCK: {
     code: 'E_SAFETY_BLOCK',
-    message: 'Prompt violated content policy.',
+    message: 'Prompt requires safety-context adjustment before generation.',
     retriable: false,
     suggestedAction: 'modify_prompt',
   },

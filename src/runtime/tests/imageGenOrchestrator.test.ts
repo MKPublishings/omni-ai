@@ -61,6 +61,12 @@ test('safety filter blocks configured banned terms', () => {
   assert.equal(decision.reason, 'blocked-term');
 });
 
+test('safety filter contextually allows benign anime prompts', () => {
+  const decision = evaluateImagePromptSafety('anime character design, cinematic lighting, detailed background', '');
+  assert.equal(decision.allowed, true);
+  assert.equal(decision.reason, 'contextual-anime-safe');
+});
+
 test('orchestrator constructs a GenerationRequest for the workflow builder seam', async () => {
   const orchestrator = new IonImageOrchestrator();
   const request = await orchestrator.processRequest({

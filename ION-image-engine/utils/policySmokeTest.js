@@ -28,6 +28,12 @@ function run() {
     expectBlocked(ILLEGAL_PROMPTS[0].label, ILLEGAL_PROMPTS[0].prompt, "illegal-content", { userAge: 30 });
     expectBlocked("adult content blocked for minor", EXPLICIT_PROMPT, "minor-adult-content", { userAge: 16 });
 
+    const animeContextResult = evaluateContentPolicy("Anime character design in dramatic sunset lighting", { userAge: 25 });
+    if (animeContextResult.reason !== "contextual-anime-safe") {
+        throw new Error(`expected contextual-anime-safe, got ${animeContextResult.reason}`);
+    }
+    console.log("✓ anime contextual moderation: safe");
+
     console.log("Image policy smoke test passed.");
 }
 

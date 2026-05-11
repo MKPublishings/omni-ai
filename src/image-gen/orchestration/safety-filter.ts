@@ -5,6 +5,9 @@ interface EntitySafetySlice {
   blockedTerms: string[];
 }
 
+const ANIME_CONTEXT_PATTERN = /\b(anime|manga|cel\s*shade(?:d|ing)?|illustration|stylized\s*character)\b/i;
+const EXPLICIT_CONTENT_PATTERN = /\b(nude|nudity|explicit\s*nudity|erotic|porn|sex\s*scene|adult\s*content|fetish)\b/i;
+
 const ENTITY_SAFETY_SLICES: Record<string, EntitySafetySlice> = {
   image_generation: {
     blockedTerms: [
@@ -36,6 +39,15 @@ export function evaluateImagePromptSafety(
         blockedTerm: term,
       };
     }
+  }
+
+  const animeContext = ANIME_CONTEXT_PATTERN.test(combined);
+  const explicitContext = EXPLICIT_CONTENT_PATTERN.test(combined);
+  if (animeContext && !explicitContext) {
+    return {
+      allowed: true,
+      reason: 'contextual-anime-safe',
+    };
   }
 
   return { allowed: true };
