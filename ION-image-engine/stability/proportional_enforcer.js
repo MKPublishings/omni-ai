@@ -2,18 +2,34 @@
  * Proportional Enforcer
  * Ensures character anatomy maintains stable, realistic proportions throughout generation.
  * Prevents stretching, elongation, and distorted limb lengths.
+ * 
+ * Supports stylized anime mode for non-realistic proportions (large eyes, etc.)
  */
 
 class ProportionalEnforcer {
   constructor(config = {}) {
+    // Detect anime/stylized mode
+    const isStylized = config.stylizedMode === true || config.animeMode === true;
+    
     this.config = {
+      // Mode flags
+      animeMode: isStylized || config.animeMode === true,
+      stylizedMode: isStylized || config.stylizedMode === true,
+      enableStrictMode: !isStylized && config.enableStrictMode !== false,
+      
+      // Realistic proportions (standard mode)
       headToBodyRatio: config.headToBodyRatio || 1 / 7.5, // Realistic human ratio
       shoulderWidth: config.shoulderWidth || 0.25, // Normalized to body height
       limbLength: config.limbLength || 0.43, // Arms and legs proportional
       faceHeightRatio: config.faceHeightRatio || 0.12, // Face as % of body
       torsoRatio: config.torsoRatio || 0.28, // Torso length ratio
-      enableStrictMode: config.enableStrictMode !== false,
-      toleranceMargin: config.toleranceMargin || 0.05, // 5% tolerance
+      toleranceMargin: !isStylized ? (config.toleranceMargin || 0.05) : 0.15, // 5% strict, 15% stylized
+      
+      // Anime-specific proportions (stylized mode)
+      animeEyeSize: config.animeEyeSize || 0.15, // Larger eyes in anime
+      animeHeadRatio: config.animeHeadRatio || 1 / 6, // Slightly larger head in anime
+      animeToleranceMargin: config.animeToleranceMargin || 0.20, // More lenient for anime
+      
       ...config
     };
 
@@ -23,34 +39,44 @@ class ProportionalEnforcer {
 
   /**
    * Analyze character dimensions and enforce proportions
+   * In anime mode, allows for stylized proportions (large eyes, etc.)
    */
   enforceProportions(characterDimensions) {
     const analysis = {
       isValid: true,
       violations: [],
       corrections: [],
-      originalDimensions: { ...characterDimensions }
+      originalDimensions: { ...characterDimensions },
+      mode: this.config.animeMode ? 'anime' : 'standard'
     };
 
+    // In anime mode, skip strict proportion enforcement
+    if (this.config.animeMode) {
+      return analysis; // Anime allows for stylized proportions
+    }
+
     const corrected = { ...characterDimensions };
+    const tolerance = this.config.animeMode ? this.config.animeToleranceMargin : this.config.toleranceMargin;
 
     // Validate head-to-body ratio
     const headBodyRatio = characterDimensions.headHeight / characterDimensions.bodyHeight;
-    if (Math.abs(headBodyRatio - this.config.headToBodyRatio) > this.config.toleranceMargin) {
+    const expectedHeadRatio = this.config.animeMode ? this.config.animeHeadRatio : this.config.headToBodyRatio;
+    
+    if (Math.abs(headBodyRatio - expectedHeadRatio) > tolerance) {
       analysis.violations.push({
         type: 'HEAD_BODY_RATIO',
         detected: headBodyRatio,
-        expected: this.config.headToBodyRatio,
+        expected: expectedHeadRatio,
         severity: 'HIGH'
       });
-      corrected.headHeight = characterDimensions.bodyHeight * this.config.headToBodyRatio;
+      corrected.headHeight = characterDimensions.bodyHeight * expectedHeadRatio;
       analysis.corrections.push('head_to_body_ratio_adjusted');
       analysis.isValid = false;
     }
 
-    // Validate shoulder width
+    // Validate shoulder width (relaxed in anime mode)
     const shoulderRatio = characterDimensions.shoulderWidth / characterDimensions.bodyHeight;
-    if (Math.abs(shoulderRatio - this.config.shoulderWidth) > this.config.toleranceMargin) {
+    if (Math.abs(shoulderRatio - this.config.shoulderWidth) > tolerance) {
       analysis.violations.push({
         type: 'SHOULDER_WIDTH',
         detected: shoulderRatio,
@@ -62,10 +88,10 @@ class ProportionalEnforcer {
       analysis.isValid = false;
     }
 
-    // Validate arm length
+    // Validate arm length (relaxed in anime mode)
     if (characterDimensions.armLength) {
       const armRatio = characterDimensions.armLength / characterDimensions.bodyHeight;
-      if (Math.abs(armRatio - this.config.limbLength) > this.config.toleranceMargin) {
+      if (Math.abs(armRatio - this.config.limbLength) > tolerance) {
         analysis.violations.push({
           type: 'ARM_LENGTH',
           detected: armRatio,
@@ -78,10 +104,10 @@ class ProportionalEnforcer {
       }
     }
 
-    // Validate leg length
+    // Validate leg length (relaxed in anime mode)
     if (characterDimensions.legLength) {
       const legRatio = characterDimensions.legLength / characterDimensions.bodyHeight;
-      if (Math.abs(legRatio - this.config.limbLength) > this.config.toleranceMargin) {
+      if (Math.abs(legRatio - this.config.limbLength) > tolerance) {
         analysis.violations.push({
           type: 'LEG_LENGTH',
           detected: legRatio,
@@ -94,17 +120,19 @@ class ProportionalEnforcer {
       }
     }
 
-    // Validate face height
+    // Validate face height (allow larger eyes in anime mode)
     if (characterDimensions.faceHeight) {
       const faceRatio = characterDimensions.faceHeight / characterDimensions.bodyHeight;
-      if (Math.abs(faceRatio - this.config.faceHeightRatio) > this.config.toleranceMargin) {
+      const expectedFaceRatio = this.config.animeMode ? this.config.animeEyeSize : this.config.faceHeightRatio;
+      
+      if (Math.abs(faceRatio - expectedFaceRatio) > tolerance) {
         analysis.violations.push({
           type: 'FACE_HEIGHT',
           detected: faceRatio,
-          expected: this.config.faceHeightRatio,
+          expected: expectedFaceRatio,
           severity: 'HIGH'
         });
-        corrected.faceHeight = characterDimensions.bodyHeight * this.config.faceHeightRatio;
+        corrected.faceHeight = characterDimensions.bodyHeight * expectedFaceRatio;
         analysis.corrections.push('face_height_adjusted');
         analysis.isValid = false;
       }
@@ -121,6 +149,10 @@ class ProportionalEnforcer {
    * Generate anti-stretching prompts
    */
   generateAntiStretchingTags() {
+    if (this.config.animeMode) {
+      return this.generateAnimeProportionTags();
+    }
+    
     return [
       'realistic proportions',
       'natural anatomy',
@@ -130,6 +162,23 @@ class ProportionalEnforcer {
       'anatomically correct',
       'balanced proportions',
       'consistent dimensions'
+    ];
+  }
+
+  /**
+   * Generate anime-specific proportion tags
+   * Allows for stylized large eyes, smaller noses, exaggerated expressions
+   */
+  generateAnimeProportionTags() {
+    return [
+      'stylized proportions',
+      'anime anatomy',
+      'expressive features',
+      'stylized eyes',
+      'anime-appropriate proportions',
+      'consistent stylization',
+      'no realistic features mixing',
+      'cohesive character design'
     ];
   }
 

@@ -93,5 +93,110 @@
     "low quality",
     "watermark",
     "signature"
+  ],
+
+  "anime_specific_artifacts": [
+    "no mismatched eyes",
+    "no asymmetrical eyes",
+    "symmetric eye expressions",
+    "matching pupils",
+    "no wandering eyes",
+    "no eye drift",
+    "coherent eye contact",
+    "no broken eye whites",
+    "no disconnected eye highlights",
+    "consistent eye style"
+  ],
+
+  "anime_linework": [
+    "no broken linework",
+    "continuous outline strokes",
+    "no fragmented edges",
+    "clean line continuity",
+    "no line interruption",
+    "smooth ink lines",
+    "no segmented boundaries",
+    "connected silhouettes",
+    "crisp manga lines",
+    "no wispy line dissolution"
+  ],
+
+  "anime_color_issues": [
+    "no color banding",
+    "no harsh color transitions",
+    "smooth color gradients within blocks",
+    "no color bleeding across boundaries",
+    "flat color blocks well-defined",
+    "no dithering artifacts",
+    "clean color separation",
+    "saturated anime colors",
+    "no color mud",
+    "vibrant color palette"
+  ],
+
+  "anime_hand_issues": [
+    "no stubby fingers",
+    "no fused fingers",
+    "distinct finger gaps",
+    "no extra fingers",
+    "no missing fingers",
+    "proper hand anatomy for anime style",
+    "expressive hand gestures",
+    "anime-proportioned hands",
+    "no fingerless stumps",
+    "clear finger articulation"
+  ],
+
+  "anime_hair": [
+    "no clumpy hair",
+    "no hair merge with face",
+    "distinct hair strands",
+    "clean hair outline",
+    "no matted hair",
+    "volumetric hair",
+    "styled hair consistency",
+    "no hair bleeding into background",
+    "defined hair layers",
+    "anime hair texture"
+  ],
+
+  "anime_body": [
+    "no disproportionate limbs for anime style",
+    "no overly realistic body in stylized context",
+    "consistent stylization level",
+    "no anatomy uncanny valley",
+    "coherent chibi proportions if chibi",
+    "no jarring realism breaks",
+    "consistent stylization",
+    "no photorealistic skin in cartoon context",
+    "unified character style",
+    "harmonious body proportions"
+  ],
+
+  "anime_background": [
+    "no photo-realistic background with stylized character",
+    "consistent background style",
+    "background matches character aesthetic",
+    "no conflicting artstyles in scene",
+    "appropriate background detail level",
+    "no photobashing artifacts",
+    "unified rendering style",
+    "coherent scene composition",
+    "background continuity",
+    "no style mismatch"
+  ],
+
+  "watermark_and_text": [
+    "no watermarks",
+    "no text watermarks",
+    "no artist signatures",
+    "no logos",
+    "no printed text",
+    "no timestamps",
+    "clean canvas",
+    "no burn-in text",
+    "no overlay text",
+    "no filter text"
   ]
 }
+

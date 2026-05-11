@@ -2,31 +2,40 @@
  * Depth Scaler
  * Manages depth-of-field, lighting, and background coherence.
  * Prevents warped backgrounds, inconsistent lighting, and depth misalignment.
+ * 
+ * Supports stylized anime mode for relaxed constraints.
  */
 
 class DepthScaler {
   constructor(config = {}) {
+    // Detect anime/stylized mode
+    const isStylized = config.stylizedMode === true || config.animeMode === true;
+    
     this.config = {
+      // Mode flags
+      animeMode: isStylized || config.animeMode === true,
+      stylizedMode: isStylized || config.stylizedMode === true,
+      enableStrictMode: !isStylized && config.enableStrictMode !== false,
+      
       // Depth layers
       foregroundDepth: config.foregroundDepth || 0.8,
       characterDepth: config.characterDepth || 0.5,
       backgroundDepth: config.backgroundDepth || 0.1,
       
       // Lighting consistency
-      lightingConsistency: config.lightingConsistency || 0.8, // 0-1, higher = more consistent
+      lightingConsistency: isStylized ? 0.5 : (config.lightingConsistency || 0.8), // 0-1, higher = more consistent
       mainLightAngle: config.mainLightAngle || 45, // degrees
       fillLightRatio: config.fillLightRatio || 0.3, // fill light as % of main
       
       // Focus/blur management
-      depthOfFieldStrength: config.depthOfFieldStrength || 0.4,
+      depthOfFieldStrength: isStylized ? 0.2 : (config.depthOfFieldStrength || 0.4),
       focusDistance: config.focusDistance || 0.5, // Character should be in focus
       blurFalloff: config.blurFalloff || 'quadratic',
       
       // Background coherence
-      backgroundSimplicity: config.backgroundSimplicity || 0.7, // 0-1, higher = simpler
-      backgroundVariance: config.backgroundVariance || 0.2, // Allowed variation
+      backgroundSimplicity: isStylized ? 0.5 : (config.backgroundSimplicity || 0.7), // 0-1, higher = simpler
+      backgroundVariance: isStylized ? 0.5 : (config.backgroundVariance || 0.2), // Allowed variation
       
-      enableStrictMode: config.enableStrictMode !== false,
       ...config
     };
 
@@ -37,16 +46,23 @@ class DepthScaler {
 
   /**
    * Analyze and correct depth-related issues
+   * In anime mode, thresholds are relaxed for stylization
    */
   analyzeDepthIssues(renderData) {
     const analysis = {
       isValid: true,
       issues: [],
       corrections: [],
-      originalData: { ...renderData }
+      originalData: { ...renderData },
+      mode: this.config.animeMode ? 'anime' : 'standard'
     };
 
-    // Check depth separation
+    // In anime mode, skip strict depth analysis
+    if (this.config.animeMode) {
+      return analysis; // Anime allows for stylized depth handling
+    }
+
+    // Check depth separation (standard mode only)
     if (renderData.characterDepth && renderData.backgroundDepth) {
       const depthSeparation = Math.abs(renderData.characterDepth - renderData.backgroundDepth);
       if (depthSeparation < 0.2) {
@@ -62,14 +78,16 @@ class DepthScaler {
       }
     }
 
-    // Check lighting consistency
+    // Check lighting consistency (relaxed in stylized mode)
     if (renderData.lightingMap) {
       const consistency = this.measureLightingConsistency(renderData.lightingMap);
-      if (consistency < this.config.lightingConsistency) {
+      const threshold = this.config.stylizedMode ? 0.3 : this.config.lightingConsistency;
+      
+      if (consistency < threshold) {
         analysis.issues.push({
           type: 'LIGHTING_INCONSISTENCY',
           detected: consistency,
-          expected: this.config.lightingConsistency,
+          expected: threshold,
           severity: 'HIGH',
           impact: 'Overexposure, harsh shadows, or spotty lighting'
         });
@@ -78,8 +96,8 @@ class DepthScaler {
       }
     }
 
-    // Check focus coherence
-    if (renderData.focusPoint) {
+    // Check focus coherence (relaxed in anime mode)
+    if (renderData.focusPoint && !this.config.animeMode) {
       const focusDrift = Math.abs(renderData.focusPoint - this.config.focusDistance);
       if (focusDrift > 0.15) {
         analysis.issues.push({
@@ -94,13 +112,15 @@ class DepthScaler {
       }
     }
 
-    // Check background coherence
+    // Check background coherence (relaxed in anime mode)
     if (renderData.backgroundVariance !== undefined) {
-      if (renderData.backgroundVariance > this.config.backgroundVariance) {
+      const maxVariance = this.config.animeMode ? 0.6 : this.config.backgroundVariance;
+      
+      if (renderData.backgroundVariance > maxVariance) {
         analysis.issues.push({
           type: 'BACKGROUND_INCOHERENCE',
           detected: renderData.backgroundVariance,
-          max: this.config.backgroundVariance,
+          max: maxVariance,
           severity: 'MEDIUM',
           impact: 'Chaotic, distorted, or misaligned background'
         });
@@ -135,6 +155,10 @@ class DepthScaler {
    * Generate depth-stabilizing prompt tags
    */
   generateDepthTags() {
+    if (this.config.animeMode) {
+      return this.generateAnimeDepthTags();
+    }
+    
     return [
       'clear depth separation',
       'soft, consistent lighting',
@@ -146,6 +170,23 @@ class DepthScaler {
       'no depth distortion',
       'character in focus',
       'blurred background'
+    ];
+  }
+
+  /**
+   * Generate anime-specific depth and lighting tags
+   * Relaxed constraints for stylized rendering
+   */
+  generateAnimeDepthTags() {
+    return [
+      'stylized depth handling',
+      'soft directional lighting',
+      'ambient background',
+      'mood lighting allowed',
+      'character forward focus',
+      'soft background blur optional',
+      'theatrical lighting acceptable',
+      'stylized shadow placement'
     ];
   }
 

@@ -11,7 +11,125 @@
       "defaultWidth": 2160,
       "defaultHeight": 3840,
       "defaultSteps": 28,
-      "defaultCfgScale": 5
+      "defaultCfgScale": 5,
+      "optimizedFor": ["general", "photorealistic"]
+    },
+    "ION_anime_optimized": {
+      "name": "ION Anime Optimizer",
+      "type": "image",
+      "provider": "ion-worker",
+      "endpoint": "https://ionirix.com/api/image",
+      "defaultWidth": 2160,
+      "defaultHeight": 3840,
+      "defaultSteps": 32,
+      "defaultCfgScale": 7,
+      "optimizedFor": ["anime", "manga", "cel-shading"],
+      "samplerPreset": "anime-optimized",
+      "denoisingStrength": 0.65,
+      "upscalerType": "line-preserve",
+      "colorBleedClamp": true,
+      "lineworkPreservation": true,
+      "description": "Optimized for anime art with emphasis on line clarity and color separation"
+    }
+  },
+  "samplerPresets": {
+    "anime-optimized": {
+      "name": "Anime Optimized",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "karras",
+      "denoisingStrength": 0.65,
+      "guidance": 7.0,
+      "steps": 32,
+      "notes": "Tuned for anime: slightly higher guidance, lower denoising to preserve linework"
+    },
+    "anime-cel-shading": {
+      "name": "Cel Shading",
+      "sampler": "Euler A",
+      "scheduler": "normal",
+      "denoisingStrength": 0.70,
+      "guidance": 8.0,
+      "steps": 28,
+      "colorClamp": true,
+      "notes": "For crisp cel-shading with flat color blocks"
+    },
+    "anime-soft-glow": {
+      "name": "Soft Glow",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "karras",
+      "denoisingStrength": 0.55,
+      "guidance": 6.0,
+      "steps": 30,
+      "diffusionBoost": true,
+      "notes": "Soft, dreamy aesthetic with light diffusion"
+    }
+  },
+  "upscalers": {
+    "default": {
+      "name": "Default ESRGAN",
+      "type": "general",
+      "preservesLines": false
+    },
+    "line-preserve": {
+      "name": "Line-Preserve Upscaler",
+      "type": "anime",
+      "preservesLines": true,
+      "edgeSharpening": true,
+      "description": "Upscaler that maintains crisp linework and edge definition for anime"
+    },
+    "soft-blend": {
+      "name": "Soft Blend Upscaler",
+      "type": "anime-soft",
+      "preservesLines": false,
+      "colorSmoothing": true,
+      "description": "For soft-glow and watercolor anime styles"
+    }
+  },
+  "styleToModelRouting": {
+    "anime_cel_shading": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-cel-shading",
+      "upscaler": "line-preserve"
+    },
+    "anime_soft_glow": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-soft-glow",
+      "upscaler": "soft-blend"
+    },
+    "anime_90s_retro": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-optimized",
+      "upscaler": "line-preserve"
+    },
+    "anime_manga_ink": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-optimized",
+      "upscaler": "line-preserve"
+    },
+    "anime_chibi": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-cel-shading",
+      "upscaler": "line-preserve"
+    },
+    "anime_shoujo": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-soft-glow",
+      "upscaler": "soft-blend"
+    },
+    "anime_shounen": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-cel-shading",
+      "upscaler": "line-preserve"
+    },
+    "anime_mecha": {
+      "model": "ION_worker",
+      "sampler": "anime-optimized",
+      "upscaler": "line-preserve"
+    },
+    "anime_isekai": {
+      "model": "ION_anime_optimized",
+      "sampler": "anime-optimized",
+      "upscaler": "default"
     }
   }
 }
+

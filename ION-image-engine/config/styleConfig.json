@@ -170,6 +170,206 @@
         "single color",
         "flat poster"
       ]
+    },
+    "anime_cel_shading": {
+      "name": "Anime Cel Shading",
+      "tags": [
+        "cel-shading",
+        "comic style",
+        "bold outlines",
+        "flat color blocks",
+        "thick linework",
+        "high contrast shadows",
+        "vibrant palette"
+      ],
+      "keywords": [
+        "cel-shading",
+        "cel shading",
+        "comic book",
+        "comic",
+        "cartoon",
+        "bold linework"
+      ]
+    },
+    "anime_soft_glow": {
+      "name": "Anime Soft Glow",
+      "tags": [
+        "soft-glow",
+        "pastel colors",
+        "light diffusion",
+        "dreamy atmosphere",
+        "watercolor-like blending",
+        "soft edges",
+        "ethereal quality"
+      ],
+      "keywords": [
+        "soft-glow",
+        "soft glow",
+        "pastel",
+        "dreamy",
+        "ethereal",
+        "glowing"
+      ]
+    },
+    "anime_90s_retro": {
+      "name": "Anime 90s Retro",
+      "tags": [
+        "90s anime",
+        "classic cel animation",
+        "film grain texture",
+        "warm color grading",
+        "nostalgic mood",
+        "hand-drawn quality",
+        "VHS aesthetic"
+      ],
+      "keywords": [
+        "90s anime",
+        "retro anime",
+        "90s",
+        "classic anime",
+        "vintage",
+        "nostalgic"
+      ]
+    },
+    "anime_manga_ink": {
+      "name": "Anime Manga Ink",
+      "tags": [
+        "manga-ink",
+        "pen and ink",
+        "halftone shading",
+        "screentone effects",
+        "crosshatching",
+        "monochrome with spot color",
+        "comic panel composition"
+      ],
+      "keywords": [
+        "manga",
+        "manga-ink",
+        "manga ink",
+        "ink drawing",
+        "pen art",
+        "comic panel"
+      ]
+    },
+    "anime_watercolor": {
+      "name": "Anime Watercolor",
+      "tags": [
+        "watercolor anime",
+        "ink wash",
+        "soft color bleeding",
+        "paper texture",
+        "wet media look",
+        "fluid transitions",
+        "artistic imperfection"
+      ],
+      "keywords": [
+        "watercolor",
+        "watercolour",
+        "ink wash",
+        "painted",
+        "wet media",
+        "artistic"
+      ]
+    },
+    "anime_chibi": {
+      "name": "Anime Chibi Style",
+      "tags": [
+        "chibi",
+        "oversized head",
+        "cute proportions",
+        "exaggerated features",
+        "simplified anatomy",
+        "playful expression",
+        "rounded forms"
+      ],
+      "keywords": [
+        "chibi",
+        "super deformed",
+        "sd",
+        "cute",
+        "kawaii",
+        "mini"
+      ]
+    },
+    "anime_shoujo": {
+      "name": "Anime Shoujo",
+      "tags": [
+        "shoujo",
+        "large expressive eyes",
+        "soft rounded features",
+        "delicate linework",
+        "romantic atmosphere",
+        "dreamy backgrounds",
+        "pastel palette"
+      ],
+      "keywords": [
+        "shoujo",
+        "shojo",
+        "girls",
+        "romantic",
+        "cute",
+        "magical girl"
+      ]
+    },
+    "anime_shounen": {
+      "name": "Anime Shounen",
+      "tags": [
+        "shounen",
+        "dynamic action",
+        "bold expressions",
+        "energetic linework",
+        "dramatic poses",
+        "speed lines",
+        "high contrast lighting"
+      ],
+      "keywords": [
+        "shounen",
+        "shonen",
+        "action anime",
+        "battle",
+        "dynamic",
+        "fighting"
+      ]
+    },
+    "anime_mecha": {
+      "name": "Anime Mecha",
+      "tags": [
+        "mecha",
+        "mechanical details",
+        "metallic sheen",
+        "geometric forms",
+        "technical accuracy",
+        "cockpit interior",
+        "sci-fi aesthetic"
+      ],
+      "keywords": [
+        "mecha",
+        "robot",
+        "mechanical",
+        "gundam",
+        "sci-fi",
+        "future"
+      ]
+    },
+    "anime_isekai": {
+      "name": "Anime Isekai",
+      "tags": [
+        "isekai",
+        "fantasy world",
+        "magical elements",
+        "otherworldly landscape",
+        "vibrant fantasy colors",
+        "mysterious atmosphere",
+        "dimensional portal effects"
+      ],
+      "keywords": [
+        "isekai",
+        "fantasy",
+        "magic",
+        "another world",
+        "portal",
+        "dimensional"
+      ]
     }
   }
 }
