@@ -13,8 +13,9 @@ function buildPositiveText(request: GenerationRequest): string {
 }
 
 export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
-  const checkpoint = getCheckpointConfig(request.model.checkpoint);
-  const runtimeCheckpoint = checkpoint.runtimeCheckpoint || checkpoint.id;
+  // Use the provided checkpoint if available, otherwise default to the known working checkpoint
+  const checkpoint = getCheckpointConfig(request.model.checkpoint || 'v1-5-pruned-emaonly-fp16');
+  const runtimeCheckpoint = checkpoint.runtimeCheckpoint || checkpoint.id || 'v1-5-pruned-emaonly-fp16';
   const positiveText = buildPositiveText(request);
   const negativeText = request.prompt.negative;
 
@@ -35,7 +36,7 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
     filenamePrefix: `ion-${request.requestId}`,
     metadata: {
       request_id: request.requestId,
-      checkpoint: checkpoint.id,
+      checkpoint: checkpoint.id || 'v1-5-pruned-emaonly-fp16',
       runtime_checkpoint: runtimeCheckpoint,
       prediction_type: checkpoint.predictionType,
       cfg_rescale: request.parameters.cfgRescale,
