@@ -9,6 +9,36 @@ import { trackEvent } from '@/lib/analytics'
 import { ASSISTANT_CHAT_CLEARED_EVENT, getAssistantChatCacheKey } from '@/lib/assistant-chat'
 import { fetchChatHistory } from '@/lib/dashboard'
 
+type ImageMetadata = {
+  src: string
+  filename?: string
+  gateway?: string
+  quality?: string
+  mode?: string
+  styleFamily?: string
+  resolution?: string
+  ratio?: string
+  mimeType?: string
+  model?: {
+    checkpoint?: string
+    outputModel?: string
+    sampler?: string
+    scheduler?: string
+    steps?: number
+    cfgScale?: number
+    seed?: number
+  }
+  prompt?: {
+    positive?: string
+    negative?: string
+  }
+  pipeline?: {
+    requestId?: string
+    promptId?: string
+    reasoningChain?: string[]
+  }
+}
+
 type ConversationMessage = {
   id: string
   type: 'user' | 'ai'
@@ -19,14 +49,7 @@ type ConversationMessage = {
     url: string
     source: string
   }>
-  image?: {
-    src: string
-    filename?: string
-    model?: string
-    checkpoint?: string
-    resolution?: string
-    gateway?: string
-  }
+  image?: ImageMetadata
 }
 
 const starterMessages: ConversationMessage[] = [
@@ -74,14 +97,7 @@ function readCachedMessages(): ConversationMessage[] {
         url: string
         source: string
       }>
-      image?: {
-        src: string
-        filename?: string
-        model?: string
-        checkpoint?: string
-        resolution?: string
-        gateway?: string
-      }
+      image?: ImageMetadata
     }>
 
     if (!Array.isArray(parsed) || parsed.length === 0) {
@@ -337,17 +353,11 @@ type ImageRouteJsonPayload = {
     gateway?: string
   }
   metadata?: {
-    image?: {
-      filename?: string
-      resolution?: string
-    }
-    model?: {
-      outputModel?: string
-      checkpoint?: string
-    }
-    pipeline?: {
-      gateway?: string
-    }
+    image?: Record<string, unknown>
+    model?: Record<string, unknown>
+    pipeline?: Record<string, unknown>
+    request?: Record<string, unknown>
+    prompt?: Record<string, unknown>
   }
   sources?: Array<{
     title?: string
@@ -481,11 +491,50 @@ async function parseAssistantResponse(response: Response) {
       imageCheckpoint: payload.imageCheckpoint,
       imageResolution: payload.imageResolution,
       imageGateway: payload.imageGateway,
+      imageMetadata: {
+        src: payload.imageDataUrl,
+        filename: payload.imageFilename,
+        gateway: payload.imageGateway,
+        model: {
+          checkpoint: payload.imageCheckpoint,
+          outputModel: payload.imageModel,
+        },
+      },
       sources: payload.sources,
     }
   }
 
   const payload = await response.json().catch(() => ({})) as ImageRouteJsonPayload
+  const imageMetadata: ImageMetadata | undefined = payload.metadata ? {
+    src: payload.imageDataUrl || '',
+    filename: payload.image?.filename || payload.metadata?.image?.filename || payload.filename || '',
+    gateway: payload.image?.gateway || payload.metadata?.pipeline?.gateway || '',
+    quality: payload.metadata?.request?.quality || '',
+    mode: payload.metadata?.request?.mode || '',
+    styleFamily: payload.metadata?.request?.styleFamily || '',
+    resolution: payload.image?.resolution || payload.metadata?.image?.resolution || '',
+    ratio: (payload.metadata?.image as any)?.ratio || '',
+    mimeType: (payload.metadata?.image as any)?.mimeType || '',
+    model: {
+      checkpoint: payload.image?.checkpoint || payload.metadata?.model?.checkpoint || '',
+      outputModel: payload.image?.model || payload.metadata?.model?.outputModel || '',
+      sampler: (payload.metadata?.model as any)?.sampler || '',
+      scheduler: (payload.metadata?.model as any)?.scheduler || '',
+      steps: (payload.metadata?.model as any)?.steps,
+      cfgScale: (payload.metadata?.model as any)?.cfgScale,
+      seed: (payload.metadata?.model as any)?.seed,
+    },
+    prompt: {
+      positive: (payload.metadata?.prompt as any)?.positive || '',
+      negative: (payload.metadata?.prompt as any)?.negative || '',
+    },
+    pipeline: {
+      requestId: (payload.metadata?.pipeline as any)?.requestId || '',
+      promptId: (payload.metadata?.pipeline as any)?.promptId || '',
+      reasoningChain: (payload.metadata?.pipeline as any)?.reasoningChain,
+    },
+  } : undefined
+
   return {
     ok: response.ok,
     content: response.ok
@@ -497,6 +546,7 @@ async function parseAssistantResponse(response: Response) {
     imageCheckpoint: payload.image?.checkpoint || payload.metadata?.model?.checkpoint || '',
     imageResolution: payload.image?.resolution || payload.metadata?.image?.resolution || '',
     imageGateway: payload.image?.gateway || payload.metadata?.pipeline?.gateway || '',
+    imageMetadata,
     sources: normalizeSources(payload.sources),
   }
 }
@@ -697,16 +747,13 @@ function AssistantPageContent() {
             content: nextContent,
             timestamp: new Date(),
             sources: streamPayload.sources,
-            image: streamPayload.imageDataUrl
+            image: streamPayload.imageMetadata || (streamPayload.imageDataUrl
               ? {
                   src: streamPayload.imageDataUrl,
                   filename: streamPayload.imageFilename,
-                  model: streamPayload.imageModel,
-                  checkpoint: streamPayload.imageCheckpoint,
-                  resolution: streamPayload.imageResolution,
                   gateway: streamPayload.imageGateway,
                 }
-              : undefined,
+              : undefined),
           })
         })
 
@@ -720,16 +767,13 @@ function AssistantPageContent() {
           content: finalContent,
           timestamp: new Date(),
           sources: streamed.sources,
-          image: streamed.imageDataUrl
+          image: streamed.imageMetadata || (streamed.imageDataUrl
             ? {
                 src: streamed.imageDataUrl,
                 filename: streamed.imageFilename,
-                model: streamed.imageModel,
-                checkpoint: streamed.imageCheckpoint,
-                resolution: streamed.imageResolution,
                 gateway: streamed.imageGateway,
               }
-            : undefined,
+            : undefined),
         })
 
         return
@@ -750,16 +794,13 @@ function AssistantPageContent() {
           content,
           timestamp: new Date(),
           sources: payload.sources,
-          image: payload.imageDataUrl
+          image: payload.imageMetadata || (payload.imageDataUrl
             ? {
                 src: payload.imageDataUrl,
                 filename: payload.imageFilename,
-                model: payload.imageModel,
-                checkpoint: payload.imageCheckpoint,
-                resolution: payload.imageResolution,
                 gateway: payload.imageGateway,
               }
-            : undefined,
+            : undefined),
         },
       ])
     } catch {

@@ -17,10 +17,31 @@ interface Message {
   image?: {
     src: string
     filename?: string
-    model?: string
-    checkpoint?: string
-    resolution?: string
     gateway?: string
+    quality?: string
+    mode?: string
+    styleFamily?: string
+    resolution?: string
+    ratio?: string
+    mimeType?: string
+    model?: {
+      checkpoint?: string
+      outputModel?: string
+      sampler?: string
+      scheduler?: string
+      steps?: number
+      cfgScale?: number
+      seed?: number
+    }
+    prompt?: {
+      positive?: string
+      negative?: string
+    }
+    pipeline?: {
+      requestId?: string
+      promptId?: string
+      reasoningChain?: string[]
+    }
   }
 }
 
@@ -189,12 +210,8 @@ const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.type === 'user'
   const renderedSegments = message.content ? renderMessageText(message.content) : []
   const sources = Array.isArray(message.sources) ? message.sources : []
-  const imageFilename = toDisplayText(message.image?.filename)
-  const imageModel = toDisplayText(message.image?.model)
-  const imageCheckpoint = toDisplayText(message.image?.checkpoint)
-  const imageResolution = toDisplayText(message.image?.resolution)
-  const imageGateway = toDisplayText(message.image?.gateway)
   const imageSrc = toDisplayText(message.image?.src)
+  const [showImageDetails, setShowImageDetails] = useState(false)
 
   return (
     <div className={clsx(
@@ -212,22 +229,70 @@ const MessageBubble = ({ message }: { message: Message }) => {
           <div className={clsx(message.content ? 'mt-3' : '')}>
             <img
               src={imageSrc}
-              alt={imageFilename || 'Generated image'}
+              alt={toDisplayText(message.image?.filename) || 'Generated image'}
               className="max-h-[28rem] w-full rounded-2xl border border-quantum-white/10 object-cover"
             />
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs opacity-70">
-              {imageFilename ? <span>{imageFilename}</span> : null}
-              {imageModel ? <span>{imageModel}</span> : null}
-              {imageCheckpoint && imageCheckpoint !== imageModel ? <span>{imageCheckpoint}</span> : null}
-              {imageResolution ? <span>{imageResolution}</span> : null}
-              {imageGateway ? <span>{imageGateway}</span> : null}
-              <a
-                href={imageSrc}
-                download={imageFilename || 'ion-image.png'}
-                className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-quantum-white transition hover:bg-quantum-white/8"
-              >
-                Download image
-              </a>
+            <div className="mt-3 space-y-2">
+              {/* Quick metadata chips */}
+              <div className="flex flex-wrap items-center gap-2 text-xs opacity-75">
+                {message.image.filename ? <span className="px-2 py-1 rounded bg-quantum-white/10">{message.image.filename}</span> : null}
+                {message.image.gateway ? <span className="px-2 py-1 rounded bg-quantum-white/10">🔌 {message.image.gateway}</span> : null}
+                {message.image.resolution ? <span className="px-2 py-1 rounded bg-quantum-white/10">{message.image.resolution}</span> : null}
+                {message.image.quality ? <span className="px-2 py-1 rounded bg-quantum-white/10">✨ {message.image.quality}</span> : null}
+              </div>
+              
+              {/* Details toggle and download */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  onClick={() => setShowImageDetails(!showImageDetails)}
+                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-[11px] uppercase tracking-wide text-quantum-white transition hover:bg-quantum-white/8"
+                >
+                  {showImageDetails ? '−' : '+'} Details
+                </button>
+                <a
+                  href={imageSrc}
+                  download={toDisplayText(message.image?.filename) || 'ion-image.png'}
+                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-[11px] uppercase tracking-wide text-quantum-white transition hover:bg-quantum-white/8"
+                >
+                  Download
+                </a>
+              </div>
+
+              {/* Expandable details section */}
+              {showImageDetails && (
+                <div className="mt-2 border-t border-quantum-white/10 pt-2 text-[11px] space-y-1.5">
+                  {/* Model & Sampling */}
+                  {(message.image.model?.checkpoint || message.image.model?.sampler || message.image.model?.steps) && (
+                    <div className="space-y-1">
+                      <div className="text-quantum-white/60 uppercase tracking-wider">Model</div>
+                      {message.image.model?.checkpoint && <div className="text-quantum-white/75 ml-2">Checkpoint: {message.image.model.checkpoint}</div>}
+                      {message.image.model?.sampler && <div className="text-quantum-white/75 ml-2">Sampler: {message.image.model.sampler}</div>}
+                      {message.image.model?.scheduler && <div className="text-quantum-white/75 ml-2">Scheduler: {message.image.model.scheduler}</div>}
+                      {message.image.model?.steps && <div className="text-quantum-white/75 ml-2">Steps: {message.image.model.steps}</div>}
+                      {message.image.model?.cfgScale && <div className="text-quantum-white/75 ml-2">CFG: {message.image.model.cfgScale}</div>}
+                      {message.image.model?.seed && <div className="text-quantum-white/75 ml-2">Seed: {message.image.model.seed}</div>}
+                    </div>
+                  )}
+                  
+                  {/* Request Info */}
+                  {(message.image.mode || message.image.styleFamily) && (
+                    <div className="space-y-1">
+                      <div className="text-quantum-white/60 uppercase tracking-wider">Request</div>
+                      {message.image.mode && <div className="text-quantum-white/75 ml-2">Mode: {message.image.mode}</div>}
+                      {message.image.styleFamily && <div className="text-quantum-white/75 ml-2">Style: {message.image.styleFamily}</div>}
+                    </div>
+                  )}
+
+                  {/* Pipeline Info */}
+                  {(message.image.pipeline?.promptId || message.image.pipeline?.requestId) && (
+                    <div className="space-y-1">
+                      <div className="text-quantum-white/60 uppercase tracking-wider">Pipeline</div>
+                      {message.image.pipeline?.promptId && <div className="text-quantum-white/75 ml-2 font-mono break-all">Prompt ID: {message.image.pipeline.promptId}</div>}
+                      {message.image.pipeline?.requestId && <div className="text-quantum-white/75 ml-2 font-mono break-all">Request ID: {message.image.pipeline.requestId}</div>}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : null}
