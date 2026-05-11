@@ -284,21 +284,12 @@ function isImagePrompt(message: string) {
 }
 
 function buildImageSuccessCopy(message: string, filename?: string) {
-  const prompt = String(message || '').replace(/^\s*\/image\s*/i, '').trim()
   const normalizedFilename = String(filename || '').trim()
-  if (!prompt && !normalizedFilename) {
+  if (!normalizedFilename) {
     return 'Image generated and attached below.'
   }
 
-  if (!prompt) {
-    return `Image generated: ${normalizedFilename}`
-  }
-
-  if (!normalizedFilename) {
-    return `Image ready for: ${prompt}`
-  }
-
-  return `Image ready for: ${prompt}\n${normalizedFilename}`
+  return `Image generated and attached below.\n${normalizedFilename}`
 }
 
 function normalizeImageFilename(filename: string) {
