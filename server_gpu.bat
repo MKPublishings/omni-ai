@@ -4,22 +4,37 @@ setlocal
 if defined COMFYUI_DIR (
 	set "TARGET_DIR=%COMFYUI_DIR%"
 ) else (
-	set "TARGET_DIR=%~dp0ComfyUI"
+	set "TARGET_DIR=C:\ComfyUI"
 )
 
-if not exist "%TARGET_DIR%\main.py" (
-	echo [ERROR] Could not find ComfyUI main.py at "%TARGET_DIR%\main.py"
-	echo [HINT] Set COMFYUI_DIR in .env to your ComfyUI folder, for example:
-	echo        COMFYUI_DIR=C:\path\to\ComfyUI
+if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
+	set "LAUNCHER=%TARGET_DIR%\run_nvidia_gpu.bat"
+	set "LAUNCHER_DIR=%TARGET_DIR%"
+) else if exist "%TARGET_DIR%\main.py" (
+	set "LAUNCHER=python main.py --listen --port 8188 --enable-cors"
+	set "LAUNCHER_DIR=%TARGET_DIR%"
+) else if exist "%TARGET_DIR%\ComfyUI\main.py" (
+	set "LAUNCHER=python main.py --listen --port 8188 --enable-cors"
+	set "LAUNCHER_DIR=%TARGET_DIR%\ComfyUI"
+) else (
+	echo [ERROR] Could not find ComfyUI launcher under "%TARGET_DIR%"
+	echo [HINT] Expected one of:
+	echo        %TARGET_DIR%\run_nvidia_gpu.bat
+	echo        %TARGET_DIR%\main.py
+	echo        %TARGET_DIR%\ComfyUI\main.py
 	exit /b 1
 )
 
-pushd "%TARGET_DIR%"
+pushd "%LAUNCHER_DIR%"
 set COMFYUI_HOST=%COMFYUI_HOST%
 set COMFYUI_WS=%COMFYUI_WS%
 set COMFYUI_MOCK=%COMFYUI_MOCK%
 
-python main.py --listen --port 8188 --enable-cors
+if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
+	call "%TARGET_DIR%\run_nvidia_gpu.bat"
+) else (
+	%LAUNCHER%
+)
 set "EXIT_CODE=%ERRORLEVEL%"
 popd
 exit /b %EXIT_CODE%
