@@ -101,6 +101,23 @@ describe("promptOrchestrator - Precedence Layers", () => {
             assert(result.finalPrompt);
             assert(!result.styleRouting.isAnimePrompt);
         });
+
+        test("should add photogrammetry blueprint for realistic portrait prompts", () => {
+            const result = promptOrchestrator("photorealistic portrait of a person in natural light");
+
+            assert.strictEqual(result.photogrammetry.enabled, true);
+            assert(result.technicalTags.includes("photogrammetry-grade scene reconstruction"));
+            assert(result.negativeTags.includes("no overlapping anatomy"));
+            assert(result.finalPrompt.includes("single clearly isolated subject"));
+        });
+
+        test("should add crowd separation controls for multi-subject prompts", () => {
+            const result = promptOrchestrator("editorial photo of a couple walking through a city street");
+
+            assert.strictEqual(result.photogrammetry.captureMode, "portrait");
+            assert(result.photogrammetry.positiveTags.includes("distinct subject spacing"));
+            assert(result.negativeTags.includes("no overlapping silhouettes"));
+        });
     });
 
     describe("Integration Tests", () => {

@@ -137,9 +137,11 @@ describe("Anime Prompt Pipeline - Integration Tests", () => {
             
             const orchestrated = promptOrchestrator(userPrompt);
             assert(!orchestrated.styleRouting.isAnimePrompt);
+            assert.strictEqual(orchestrated.photogrammetry.enabled, true);
             
             const refined = multiPassRefiner(orchestrated);
             assert(refined.data.finalPrompt);
+            assert(refined.data.negativeTags.includes("no overlapping anatomy"));
         });
 
         test("should handle surreal dreamscape pipeline", () => {

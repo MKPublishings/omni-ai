@@ -1,6 +1,7 @@
 const stylePacks = require("./stylePacks");
 const visualIntelligence = require("./visualIntelligence");
 const { buildLawPromptDirectives, applyLawsToVisualInfluence } = require("./imageLawBridge");
+const { buildPhotogrammetryBlueprint } = require("./photogrammetryBlueprint");
 const { normalizePromptLanguage, extractAnimeTokens } = require("./promptNormalizer");
 const tokenizer = require("../utils/tokenizer");
 const logger = require("../utils/logger");
@@ -174,6 +175,13 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
             motion: [],
             symbols: []
         },
+        photogrammetry: {
+            enabled: false,
+            captureMode: "disabled",
+            requestedSubjects: 0,
+            positiveTags: [],
+            negativeTags: []
+        },
         negativeTags: [],
         precedenceLayers: {},
         finalPrompt: ""
@@ -189,6 +197,11 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
         maxPacks: Number.isFinite(options.maxAutoStyles) ? options.maxAutoStyles : 2
     });
     const contextTags = inferContextTags(normalizedPrompt);
+    const photogrammetry = buildPhotogrammetryBlueprint(normalizedPrompt, {
+        isAnimePrompt,
+        stylePackName,
+        inferredStylePacks: inferredStyle.packIds || []
+    });
 
     // Build precedence layers
     const precedenceLayers = {
@@ -210,7 +223,12 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
 
     // Add quality/technical tags
     precedenceLayers[PRECEDENCE_LAYERS.QUALITY].push(...contextTags);
+    precedenceLayers[PRECEDENCE_LAYERS.QUALITY].push(...photogrammetry.positiveTags);
     precedenceLayers[PRECEDENCE_LAYERS.QUALITY].push(strictDirective);
+
+    if (photogrammetry.negativeTags.length > 0) {
+        precedenceLayers[PRECEDENCE_LAYERS.NEGATIVE].push(...photogrammetry.negativeTags);
+    }
 
     // Add law tags (highest priority)
     const lawTags = buildLawPromptDirectives(options.laws);
@@ -261,7 +279,8 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
         },
         lawTags,
         lawInfluence,
-        negativeTags: options.negatives || [],
+        photogrammetry,
+        negativeTags: [...photogrammetry.negativeTags, ...(options.negatives || [])],
         finalPrompt
     };
 
@@ -274,6 +293,7 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
             negative: precedenceLayers[PRECEDENCE_LAYERS.NEGATIVE].length
         },
         isAnime: isAnimePrompt,
+        photogrammetryEnabled: photogrammetry.enabled,
         finalPromptLength: finalPrompt.length
     });
     
