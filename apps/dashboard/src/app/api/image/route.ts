@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { executeIonImagePipeline } from '../../../../../../src/image-gen/app/ion-image-pipeline'
 import { buildIonImageV2RouteResult } from '../../../../../../src/image-gen/app/ion-image-v2-route-service'
+import {
+  IMAGE_SAMPLERS,
+  IMAGE_SCHEDULERS,
+  type ImageSampler,
+  type ImageScheduler,
+} from '../../../../../../src/image-gen/shared/types'
 
 export const runtime = 'nodejs'
 
@@ -18,6 +24,36 @@ function isDirectRelayEnabled(): boolean {
 
 function normalizeAgeTier(value: unknown): 'adult' | 'minor' {
   return String(value || '').trim().toLowerCase() === 'minor' ? 'minor' : 'adult'
+}
+
+function parseSampler(value: unknown): ImageSampler | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) {
+    return undefined
+  }
+
+  return (IMAGE_SAMPLERS as readonly string[]).includes(normalized)
+    ? (normalized as ImageSampler)
+    : undefined
+}
+
+function parseScheduler(value: unknown): ImageScheduler | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) {
+    return undefined
+  }
+
+  return (IMAGE_SCHEDULERS as readonly string[]).includes(normalized)
+    ? (normalized as ImageScheduler)
+    : undefined
 }
 
 function mapV2Failure(error: unknown): { status: number; code: string; message: string } {
@@ -81,8 +117,8 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
         cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
         cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
         denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
-        sampler: typeof body.sampler === 'string' ? body.sampler.trim().toLowerCase() || undefined : undefined,
-        scheduler: typeof body.scheduler === 'string' ? body.scheduler.trim().toLowerCase() || undefined : undefined,
+        sampler: parseSampler(body.sampler),
+        scheduler: parseScheduler(body.scheduler),
         batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
       },
       process.env as Record<string, unknown>,
