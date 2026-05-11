@@ -103,6 +103,7 @@ export interface Env {
   ION_NATIVE_STREAMING?: string;
   ION_IMAGE_PIPELINE_V2?: string;
   ION_IMAGE_QUEUE_V1?: string;
+  ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -1351,7 +1352,7 @@ function parseBlackwellProfilesFromConfig(): AgentProfile[] {
 }
 
 function normalizeSafetyProfile(raw: IONRequestBody["safetyProfile"] | ImageRequestBody["safetyProfile"]): SafetyProfile {
-  const tier = String(raw?.ageTier || "minor").trim().toLowerCase() === "adult" ? "adult" : "minor";
+  const tier = String(raw?.ageTier || "adult").trim().toLowerCase() === "adult" ? "adult" : "minor";
   const humanVerified = Boolean(raw?.humanVerified);
   const adultAccess = Boolean(raw?.adultAccess) && tier === "adult";
   const legalAttestation = raw?.legalAttestation;
@@ -1373,6 +1374,10 @@ function normalizeSafetyProfile(raw: IONRequestBody["safetyProfile"] | ImageRequ
       acceptedAt: Number(legalAttestation?.acceptedAt || 0)
     }
   };
+}
+
+function shouldUseDirectFallbackOnPrompt403(env: Env): boolean {
+  return isEnabledFlag(env.ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403);
 }
 
 function getRequestCountryCode(request: Request): string {
@@ -3925,10 +3930,19 @@ export default {
                 errorName,
                 errorMessage,
                 isComfyPromptDenied: isComfyPromptAccessDeniedError(pipelineErr),
-                willFallback: isComfyPromptAccessDeniedError(pipelineErr) && env.AI && typeof (env.AI as { run?: unknown }).run === "function"
+                willFallback:
+                  isComfyPromptAccessDeniedError(pipelineErr) &&
+                  shouldUseDirectFallbackOnPrompt403(env) &&
+                  env.AI &&
+                  typeof (env.AI as { run?: unknown }).run === "function"
               });
               
-              if (isComfyPromptAccessDeniedError(pipelineErr) && env.AI && typeof (env.AI as { run?: unknown }).run === "function") {
+              if (
+                isComfyPromptAccessDeniedError(pipelineErr) &&
+                shouldUseDirectFallbackOnPrompt403(env) &&
+                env.AI &&
+                typeof (env.AI as { run?: unknown }).run === "function"
+              ) {
                 logger.log("ion_image_pipeline_fallback_triggered", {
                   userId,
                   reason: "ComfyUI access denied - using SDXL fallback"

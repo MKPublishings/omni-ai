@@ -237,7 +237,7 @@ test('worker /api/image ignores deprecated legacy fallback flags and still retur
   }
 });
 
-test('worker /api/image falls back to direct AI generation when ComfyUI prompt endpoint returns 403', async () => {
+test('worker /api/image returns provider failure when ComfyUI prompt endpoint returns 403', async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
   const originalFetch = globalThis.fetch;
@@ -297,14 +297,12 @@ test('worker /api/image falls back to direct AI generation when ComfyUI prompt e
     const response = await worker.fetch(request, env, createExecutionContext() as any);
     const body = await response.json() as Record<string, any>;
 
-    assert.equal(response.status, 200);
-    assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v2');
-    assert.equal(response.headers.get('X-ION-Image-Model'), '@cf/black-forest-labs/flux-1-schnell');
-    assert.equal(typeof body.imageDataUrl, 'string');
-    assert.match(String(body.imageDataUrl || ''), /^data:image\/png;base64,/);
-    assert.equal(body.metadata?.pipeline?.gateway, 'ai-direct-fallback');
-    assert.equal(body.metadata?.request?.originalPrompt?.length > 0, true);
-    assert.equal(body.metadata?.prompt?.positive?.length > 0, true);
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('X-ION-Image-Route'), null);
+    assert.equal(response.headers.get('X-ION-Image-Model'), null);
+    assert.equal(body.imageDataUrl, undefined);
+    assert.equal(String(body.code || ''), 'provider-unavailable');
+    assert.equal(typeof body.error, 'string');
   } finally {
     globalThis.fetch = originalFetch;
   }

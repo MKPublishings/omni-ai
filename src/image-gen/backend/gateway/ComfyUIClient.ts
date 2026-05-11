@@ -109,9 +109,13 @@ function isBypassableOptionalReadFailure(message: string, path: string): boolean
 }
 
 export class ComfyUIClient implements IModelGateway {
-  private readonly config = resolveComfyUIConfig();
+  private readonly config;
   private lastSubmittedCheckpoint: string | null = null;
   private lastHealthFailure: string | null = null;
+
+  constructor(source?: Record<string, unknown>) {
+    this.config = resolveComfyUIConfig(source);
+  }
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
     const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {

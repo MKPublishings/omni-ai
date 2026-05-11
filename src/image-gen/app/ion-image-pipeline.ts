@@ -92,7 +92,7 @@ function createGateway(source: EnvironmentSource): { gateway: IModelGateway; gat
   }
 
   return {
-    gateway: new ComfyUIClient(),
+    gateway: new ComfyUIClient(source),
     gatewayKind: 'comfyui',
   };
 }
