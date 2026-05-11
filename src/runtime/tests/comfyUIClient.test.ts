@@ -30,7 +30,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
       '1': {
         class_type: 'CheckpointLoaderSimple',
         inputs: {
-          ckpt_name: 'ion-citizen-xl-vpred-v2.0',
+          ckpt_name: 'v1-5-pruned-emaonly-fp16.safetensors',
         },
       },
       '2': {
@@ -86,7 +86,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
       },
     });
 
-    assert.equal(await client.getLoadedModel(), 'ion-citizen-xl-vpred-v2.0');
+    assert.equal(await client.getLoadedModel(), 'v1-5-pruned-emaonly-fp16.safetensors');
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -202,6 +202,103 @@ test('ComfyUI client distinguishes running versus pending queue positions', asyn
     assert.equal(pending.status, 'processing');
     assert.equal(pending.step, 0);
     assert.equal(pending.queuePosition, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('ComfyUI client auto-reconciles unsupported checkpoint names to available object_info values', async () => {
+  const originalFetch = globalThis.fetch;
+  let submittedCheckpoint = '';
+
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url.endsWith('/object_info')) {
+      return createJsonResponse({
+        CheckpointLoaderSimple: {
+          input: {
+            required: {
+              ckpt_name: [['v1-5-pruned-emaonly-fp16.safetensors']],
+            },
+          },
+        },
+      });
+    }
+
+    if (url.endsWith('/prompt') && init?.method === 'POST') {
+      const body = JSON.parse(String(init.body || '{}')) as {
+        prompt?: Record<string, { inputs?: { ckpt_name?: string } }>;
+      };
+      submittedCheckpoint = String(body.prompt?.['1']?.inputs?.ckpt_name || '');
+      return createJsonResponse({ prompt_id: 'prompt-1' });
+    }
+
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const client = new ComfyUIClient();
+    await client.submitWorkflow({
+      '1': {
+        class_type: 'CheckpointLoaderSimple',
+        inputs: {
+          ckpt_name: 'ion-citizen-xl-vpred-v2.0.safetensors',
+        },
+      },
+      '2': {
+        class_type: 'CLIPTextEncode',
+        inputs: {
+          text: 'positive prompt',
+          clip: ['1', 1],
+        },
+      },
+      '3': {
+        class_type: 'CLIPTextEncode',
+        inputs: {
+          text: 'negative prompt',
+          clip: ['1', 1],
+        },
+      },
+      '4': {
+        class_type: 'EmptyLatentImage',
+        inputs: {
+          width: 512,
+          height: 512,
+          batch_size: 1,
+        },
+      },
+      '5': {
+        class_type: 'KSampler',
+        inputs: {
+          seed: 1,
+          steps: 20,
+          cfg: 7,
+          sampler_name: 'euler',
+          scheduler: 'normal',
+          denoise: 1,
+          model: ['1', 0],
+          positive: ['2', 0],
+          negative: ['3', 0],
+          latent_image: ['4', 0],
+        },
+      },
+      '6': {
+        class_type: 'VAEDecode',
+        inputs: {
+          samples: ['5', 0],
+          vae: ['1', 2],
+        },
+      },
+      '7': {
+        class_type: 'SaveImage',
+        inputs: {
+          filename_prefix: 'test',
+          images: ['6', 0],
+        },
+      },
+    });
+
+    assert.equal(submittedCheckpoint, 'v1-5-pruned-emaonly-fp16.safetensors');
   } finally {
     globalThis.fetch = originalFetch;
   }

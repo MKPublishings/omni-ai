@@ -228,6 +228,31 @@ function extractCheckpointFromWorkflow(workflow: Record<string, unknown>): strin
   return null;
 }
 
+function findCheckpointLoaderNode(workflow: Record<string, unknown>): Record<string, unknown> | null {
+  for (const node of Object.values(workflow)) {
+    if (!node || typeof node !== 'object' || Array.isArray(node)) {
+      continue;
+    }
+
+    const nodeRecord = node as Record<string, unknown>;
+    const classType = String(nodeRecord.class_type ?? '').trim();
+    if (classType !== 'CheckpointLoaderSimple') {
+      continue;
+    }
+
+    const inputs = nodeRecord.inputs;
+    if (inputs && typeof inputs === 'object' && !Array.isArray(inputs)) {
+      return inputs as Record<string, unknown>;
+    }
+
+    const newInputs: Record<string, unknown> = {};
+    nodeRecord.inputs = newInputs;
+    return newInputs;
+  }
+
+  return null;
+}
+
 function normalizeStatus(value: string | undefined): JobStatus['status'] {
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized.includes('error') || normalized.includes('fail')) {
@@ -265,6 +290,7 @@ export class ComfyUIClient implements IModelGateway {
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
     const promptWorkflow = sanitizeWorkflowForPrompt(workflow);
+    await this.reconcileCheckpointWithServer(promptWorkflow);
 
     // ===== VALIDATION LAYER =====
     const validationResult = validateComfyUIWorkflow(promptWorkflow);
@@ -434,6 +460,54 @@ export class ComfyUIClient implements IModelGateway {
 
   getLastHealthFailure(): string | null {
     return this.lastHealthFailure;
+  }
+
+  private async reconcileCheckpointWithServer(workflow: Record<string, unknown>): Promise<void> {
+    const requestedCheckpoint = extractCheckpointFromWorkflow(workflow);
+    if (!requestedCheckpoint) {
+      return;
+    }
+
+    const availableCheckpoints = await this.getAvailableCheckpointsSafe();
+    if (!availableCheckpoints || availableCheckpoints.length === 0) {
+      return;
+    }
+
+    if (availableCheckpoints.includes(requestedCheckpoint)) {
+      return;
+    }
+
+    const replacement = availableCheckpoints[0];
+    const checkpointInputs = findCheckpointLoaderNode(workflow);
+    if (!checkpointInputs) {
+      return;
+    }
+
+    checkpointInputs.ckpt_name = replacement;
+
+    if (process.env.COMFYUI_DEBUG === '1') {
+      console.warn(
+        `[ComfyUIClient] Replaced unsupported ckpt_name '${requestedCheckpoint}' with '${replacement}' from ComfyUI object_info.`,
+      );
+    }
+  }
+
+  private async getAvailableCheckpointsSafe(): Promise<string[] | null> {
+    try {
+      const objectInfo = await this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
+      const values = objectInfo.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0];
+      if (!Array.isArray(values)) {
+        return null;
+      }
+
+      const checkpoints = values
+        .map((entry) => String(entry ?? '').trim())
+        .filter(Boolean);
+
+      return checkpoints.length > 0 ? checkpoints : [];
+    } catch {
+      return null;
+    }
   }
 
   async isHealthy(): Promise<boolean> {
