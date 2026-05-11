@@ -1,4 +1,4 @@
-import { buildUserScopedStorageKey } from '@/lib/auth'
+import { buildUserScopedStorageKey, getStoredUser } from '@/lib/auth'
 import type { OnboardingState, PersistedOnboardingState, WorkspaceFormation } from './types'
 
 const DRAFT_KEY = 'ionirix:onboarding:draft'
@@ -7,11 +7,80 @@ const FORMATION_KEY = 'ionirix:onboarding:formation'
 function resolveOnboardingScopeHints(state?: OnboardingState, scopeHint?: string) {
   const hints = [
     scopeHint,
+    getStoredUser()?.id,
+    getStoredUser()?.email,
+    getStoredUser()?.username,
     state?.account.email,
     state?.account.username,
   ]
 
   return Array.from(new Set(hints.map((value) => String(value || '').trim()).filter(Boolean)))
+}
+
+function resolveScopeHintList(scopeHint?: string | string[]): string[] {
+  const baseHints = Array.isArray(scopeHint) ? scopeHint : scopeHint ? [scopeHint] : []
+  const storedUser = getStoredUser()
+
+  return Array.from(new Set([
+    ...baseHints,
+    String(storedUser?.id || '').trim(),
+    String(storedUser?.email || '').trim(),
+    String(storedUser?.username || '').trim(),
+  ].filter(Boolean)))
+}
+
+function readScopedLocalStorage<T>(baseKey: string, scopeHint?: string | string[]): T | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const scopeHints = resolveScopeHintList(scopeHint)
+  if (scopeHints.length === 0) {
+    return safeParse<T>(window.localStorage.getItem(buildUserScopedStorageKey(baseKey)))
+  }
+
+  for (const hint of scopeHints) {
+    const parsed = safeParse<T>(window.localStorage.getItem(buildUserScopedStorageKey(baseKey, hint)))
+    if (parsed) {
+      return parsed
+    }
+  }
+
+  return safeParse<T>(window.localStorage.getItem(buildUserScopedStorageKey(baseKey)))
+}
+
+function writeScopedLocalStorage(baseKey: string, value: string, scopeHint?: string | string[]): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const scopeHints = resolveScopeHintList(scopeHint)
+  if (scopeHints.length === 0) {
+    window.localStorage.setItem(buildUserScopedStorageKey(baseKey), value)
+    return
+  }
+
+  scopeHints.forEach((hint) => {
+    window.localStorage.setItem(buildUserScopedStorageKey(baseKey, hint), value)
+  })
+}
+
+function removeScopedLocalStorage(baseKey: string, scopeHint?: string | string[]): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const scopeHints = resolveScopeHintList(scopeHint)
+  if (scopeHints.length === 0) {
+    window.localStorage.removeItem(buildUserScopedStorageKey(baseKey))
+    return
+  }
+
+  scopeHints.forEach((hint) => {
+    window.localStorage.removeItem(buildUserScopedStorageKey(baseKey, hint))
+  })
+
+  window.localStorage.removeItem(buildUserScopedStorageKey(baseKey))
 }
 
 function safeParse<T>(value: string | null): T | null {
@@ -42,11 +111,7 @@ export function toPersistedState(state: OnboardingState): PersistedOnboardingSta
 }
 
 export function loadPersistedOnboardingState(scopeHint?: string): PersistedOnboardingState | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  return safeParse<PersistedOnboardingState>(window.localStorage.getItem(buildUserScopedStorageKey(DRAFT_KEY, scopeHint)))
+  return readScopedLocalStorage<PersistedOnboardingState>(DRAFT_KEY, scopeHint)
 }
 
 export function savePersistedOnboardingState(state: OnboardingState, scopeHint?: string): void {
@@ -57,60 +122,21 @@ export function savePersistedOnboardingState(state: OnboardingState, scopeHint?:
   const payload = JSON.stringify(toPersistedState(state))
   const scopeHints = resolveOnboardingScopeHints(state, scopeHint)
 
-  if (scopeHints.length === 0) {
-    window.localStorage.setItem(buildUserScopedStorageKey(DRAFT_KEY), payload)
-    return
-  }
-
-  scopeHints.forEach((hint) => {
-    window.localStorage.setItem(buildUserScopedStorageKey(DRAFT_KEY, hint), payload)
-  })
+  writeScopedLocalStorage(DRAFT_KEY, payload, scopeHints)
 }
 
 export function clearPersistedOnboardingState(scopeHint?: string | string[]): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  const scopeHints = Array.isArray(scopeHint) ? scopeHint : scopeHint ? [scopeHint] : []
-  if (scopeHints.length === 0) {
-    window.localStorage.removeItem(buildUserScopedStorageKey(DRAFT_KEY))
-    return
-  }
-
-  scopeHints.forEach((hint) => {
-    window.localStorage.removeItem(buildUserScopedStorageKey(DRAFT_KEY, hint))
-  })
+  removeScopedLocalStorage(DRAFT_KEY, scopeHint)
 }
 
 export function saveWorkspaceFormation(formation: WorkspaceFormation, scopeHint?: string): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(buildUserScopedStorageKey(FORMATION_KEY, scopeHint), JSON.stringify(formation))
+  writeScopedLocalStorage(FORMATION_KEY, JSON.stringify(formation), scopeHint)
 }
 
 export function loadWorkspaceFormation(scopeHint?: string): WorkspaceFormation | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  return safeParse<WorkspaceFormation>(window.localStorage.getItem(buildUserScopedStorageKey(FORMATION_KEY, scopeHint)))
+  return readScopedLocalStorage<WorkspaceFormation>(FORMATION_KEY, scopeHint)
 }
 
 export function clearWorkspaceFormation(scopeHint?: string | string[]): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  const scopeHints = Array.isArray(scopeHint) ? scopeHint : scopeHint ? [scopeHint] : []
-  if (scopeHints.length === 0) {
-    window.localStorage.removeItem(buildUserScopedStorageKey(FORMATION_KEY))
-    return
-  }
-
-  scopeHints.forEach((hint) => {
-    window.localStorage.removeItem(buildUserScopedStorageKey(FORMATION_KEY, hint))
-  })
+  removeScopedLocalStorage(FORMATION_KEY, scopeHint)
 }
