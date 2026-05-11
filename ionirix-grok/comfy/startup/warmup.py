@@ -1,1 +1,0 @@
-print("Warming up Grok...")
