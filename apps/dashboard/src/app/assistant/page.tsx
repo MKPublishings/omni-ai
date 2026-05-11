@@ -233,12 +233,19 @@ function extractAssistantContent(rawText: string) {
         response?: string
         error?: string
         imageDataUrl?: string
+        imageBase64?: string
+        b64_json?: string
         image?: {
           filename?: string
           model?: string
           checkpoint?: string
           resolution?: string
           gateway?: string
+          src?: string
+          url?: string
+          data?: string
+          base64?: string
+          b64_json?: string
         }
         sources?: Array<{
           title?: string
@@ -253,8 +260,20 @@ function extractAssistantContent(rawText: string) {
       if (!sources.length) {
         sources = normalizeSources(parsed.sources)
       }
-      if (!imageDataUrl && parsed.imageDataUrl) {
-        imageDataUrl = parsed.imageDataUrl
+
+      const streamImageCandidate =
+        parsed.imageDataUrl ||
+        parsed.imageBase64 ||
+        parsed.b64_json ||
+        parsed.image?.src ||
+        parsed.image?.url ||
+        parsed.image?.data ||
+        parsed.image?.base64 ||
+        parsed.image?.b64_json
+
+      const normalizedStreamImage = normalizeImageSource(streamImageCandidate)
+      if (!imageDataUrl && normalizedStreamImage) {
+        imageDataUrl = normalizedStreamImage
         imageFilename = parsed.image?.filename || ''
         imageModel = parsed.image?.model || ''
         imageCheckpoint = parsed.image?.checkpoint || ''
@@ -305,19 +324,69 @@ function normalizeImageFilename(filename: string) {
   return `ion-${normalized}`
 }
 
+function normalizeImageSource(value: unknown) {
+  const normalized = String(value || '').trim()
+  if (!normalized) {
+    return ''
+  }
+
+  if (/^data:image\//i.test(normalized)) {
+    return normalized
+  }
+
+  if (/^(https?:|blob:|\/)/i.test(normalized)) {
+    return normalized
+  }
+
+  if (/^\/\//.test(normalized)) {
+    return `https:${normalized}`
+  }
+
+  if (/^image\/[a-z0-9.+-]+;base64,/i.test(normalized)) {
+    return `data:${normalized}`
+  }
+
+  if (/^base64,/i.test(normalized)) {
+    return `data:image/png;base64,${normalized.slice(7)}`
+  }
+
+  if (/^[A-Za-z0-9+/=\s]+$/.test(normalized) && normalized.replace(/\s+/g, '').length > 80) {
+    return `data:image/png;base64,${normalized.replace(/\s+/g, '')}`
+  }
+
+  return ''
+}
+
 function resolveImageDataUrl(payload: ImageRouteJsonPayload) {
-  const fromTopLevel = String(payload.imageDataUrl || '').trim()
-  if (fromTopLevel) {
-    return fromTopLevel
+  const imageNode = payload.image as Record<string, unknown> | undefined
+  const metaImageNode = payload.metadata?.image as Record<string, unknown> | undefined
+  const firstDataNode = Array.isArray(payload.data) ? payload.data[0] : undefined
+
+  const candidates = [
+    payload.imageDataUrl,
+    payload.imageBase64,
+    payload.b64_json,
+    imageNode?.src,
+    imageNode?.url,
+    imageNode?.data,
+    imageNode?.base64,
+    imageNode?.b64_json,
+    metaImageNode?.src,
+    metaImageNode?.url,
+    metaImageNode?.data,
+    metaImageNode?.base64,
+    metaImageNode?.b64_json,
+    (firstDataNode as Record<string, unknown> | undefined)?.b64_json,
+  ]
+
+  for (const candidate of candidates) {
+    const normalized = normalizeImageSource(candidate)
+    if (normalized) {
+      return normalized
+    }
   }
 
-  const fromNestedImage = String((payload.image as Record<string, unknown> | undefined)?.src || '').trim()
-  if (fromNestedImage) {
-    return fromNestedImage
-  }
-
-  const fromMeta = String((payload.metadata?.image as Record<string, unknown> | undefined)?.src || '').trim()
-  return fromMeta
+  return ''
 }
 
 type AssistantPayload = {
@@ -347,12 +416,19 @@ type StreamingPayload = {
     source?: string
   }>
   imageDataUrl?: string
+  imageBase64?: string
+  b64_json?: string
   image?: {
     filename?: string
     model?: string
     checkpoint?: string
     resolution?: string
     gateway?: string
+    src?: string
+    url?: string
+    data?: string
+    base64?: string
+    b64_json?: string
   }
 }
 
@@ -364,13 +440,21 @@ type ImageRouteJsonPayload = {
   message?: string
   details?: string
   imageDataUrl?: string
+  imageBase64?: string
+  b64_json?: string
   filename?: string
+  data?: Array<Record<string, unknown>>
   image?: {
     filename?: string
     model?: string
     checkpoint?: string
     resolution?: string
     gateway?: string
+    src?: string
+    url?: string
+    data?: string
+    base64?: string
+    b64_json?: string
   }
   metadata?: {
     image?: Record<string, unknown>
