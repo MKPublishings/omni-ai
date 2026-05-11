@@ -2,6 +2,31 @@ import { getCheckpointConfig } from '../../config/models.config';
 import { buildUniversalBaseGraph } from '../templates/universal-base-graph';
 import type { ComfyUIWorkflow, GenerationRequest } from '../../shared/types';
 
+const MAX_CLIP_TEXT_CHARS = 1400;
+
+function sanitizeClipText(input: string): string {
+  const normalized = String(input || '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) {
+    return '';
+  }
+
+  if (normalized.length <= MAX_CLIP_TEXT_CHARS) {
+    return normalized;
+  }
+
+  const clipped = normalized.slice(0, MAX_CLIP_TEXT_CHARS);
+  const lastComma = clipped.lastIndexOf(',');
+  if (lastComma > 200) {
+    return clipped.slice(0, lastComma).trim();
+  }
+
+  return clipped.trim();
+}
+
 function normalizeRuntimeCheckpointName(input: string): string {
   const raw = String(input || '').trim();
   if (!raw) {
@@ -19,13 +44,13 @@ function normalizeRuntimeCheckpointName(input: string): string {
 }
 
 function buildPositiveText(request: GenerationRequest): string {
-  return [
+  return sanitizeClipText([
     ...request.prompt.qualityTags,
     ...request.prompt.styleTags,
     request.prompt.positive,
   ]
     .filter(Boolean)
-    .join(', ');
+    .join(', '));
 }
 
 export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
@@ -36,7 +61,7 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
     requestedCheckpoint || checkpoint.runtimeCheckpoint || checkpoint.id || 'v1-5-pruned-emaonly-fp16',
   );
   const positiveText = buildPositiveText(request);
-  const negativeText = request.prompt.negative;
+  const negativeText = sanitizeClipText(request.prompt.negative);
 
   // Build using Universal Base Graph template
   const workflow = buildUniversalBaseGraph({

@@ -11,14 +11,14 @@ import type {
 
 function bucketResolution(width: number, height: number): { width: number; height: number } {
   const portrait = [
-    { width: 1024, height: 1536 },
-    { width: 768, height: 1024 },
+    { width: 896, height: 1344 },
+    { width: 768, height: 1152 },
   ];
   const landscape = [
-    { width: 1536, height: 1024 },
-    { width: 1024, height: 768 },
+    { width: 1344, height: 896 },
+    { width: 1152, height: 768 },
   ];
-  const square = [{ width: 1024, height: 1024 }];
+  const square = [{ width: 1024, height: 1024 }, { width: 896, height: 896 }];
 
   const candidates = width === height ? square : width > height ? landscape : portrait;
   return candidates[0];
@@ -28,15 +28,15 @@ function resolveCompositionResolution(
   compositionPreset: ImageCompositionPreset | null | undefined,
 ): { width: number; height: number } | null {
   if (compositionPreset === 'portrait') {
-    return { width: 1024, height: 1536 };
+    return { width: 896, height: 1344 };
   }
 
   if (compositionPreset === 'full_body') {
-    return { width: 896, height: 1536 };
+    return { width: 832, height: 1344 };
   }
 
   if (compositionPreset === 'cinematic') {
-    return { width: 1536, height: 1024 };
+    return { width: 1344, height: 896 };
   }
 
   return null;
@@ -87,15 +87,17 @@ export function optimizeParameters(
     || checkpoint.recommendedCfgScale
     || env.defaultCfg;
 
-  const tunedSteps = input.anatomyStrictMode ? Math.max(baseSteps, 30) : baseSteps;
+  const tunedSteps = input.anatomyStrictMode ? Math.max(baseSteps, 22) : baseSteps;
   const tunedCfgScale = input.anatomyStrictMode
     ? Math.max(5, Math.min(baseCfgScale, 6.5))
     : baseCfgScale;
 
+  const clampedSteps = Math.max(12, Math.min(tunedSteps, 24));
+
   return {
     width: Number(input.parameterOverrides?.width) || baseResolution.width,
     height: Number(input.parameterOverrides?.height) || baseResolution.height,
-    steps: tunedSteps,
+    steps: clampedSteps,
     cfgScale: tunedCfgScale,
     cfgRescale: Number(input.parameterOverrides?.cfgRescale) || checkpoint.recommendedCfgRescale || env.defaultCfgRescale,
     sampler: input.parameterOverrides?.sampler || stylePreset.sampler || checkpoint.recommendedSampler || env.defaultSampler,

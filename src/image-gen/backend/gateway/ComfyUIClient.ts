@@ -431,7 +431,7 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async *getProgress(promptId: string): AsyncIterable<ProgressEvent> {
-    const maxAttempts = 1200; // 5 minutes at 250ms intervals (120 * 250ms = 30s was too short)
+    const maxAttempts = 1100; // 275s at 250ms intervals to stay below a strict 300s ceiling.
     const pollIntervalMs = 250;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {

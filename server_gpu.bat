@@ -7,7 +7,10 @@ if defined COMFYUI_DIR (
 	set "TARGET_DIR=C:\ComfyUI"
 )
 
-if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
+if exist "%TARGET_DIR%\ComfyUI\start-ion.bat" (
+	set "LAUNCHER=%TARGET_DIR%\ComfyUI\start-ion.bat"
+	set "LAUNCHER_DIR=%TARGET_DIR%\ComfyUI"
+) else if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
 	set "LAUNCHER=%TARGET_DIR%\run_nvidia_gpu.bat"
 	set "LAUNCHER_DIR=%TARGET_DIR%"
 ) else if exist "%TARGET_DIR%\main.py" (
@@ -19,6 +22,7 @@ if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
 ) else (
 	echo [ERROR] Could not find ComfyUI launcher under "%TARGET_DIR%"
 	echo [HINT] Expected one of:
+	echo        %TARGET_DIR%\ComfyUI\start-ion.bat
 	echo        %TARGET_DIR%\run_nvidia_gpu.bat
 	echo        %TARGET_DIR%\main.py
 	echo        %TARGET_DIR%\ComfyUI\main.py
@@ -30,7 +34,9 @@ set COMFYUI_HOST=%COMFYUI_HOST%
 set COMFYUI_WS=%COMFYUI_WS%
 set COMFYUI_MOCK=%COMFYUI_MOCK%
 
-if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
+if exist "%TARGET_DIR%\ComfyUI\start-ion.bat" (
+	call "%TARGET_DIR%\ComfyUI\start-ion.bat"
+) else if exist "%TARGET_DIR%\run_nvidia_gpu.bat" (
 	call "%TARGET_DIR%\run_nvidia_gpu.bat"
 ) else (
 	%LAUNCHER%
