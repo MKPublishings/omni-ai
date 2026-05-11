@@ -23,6 +23,13 @@ interface ImageRequest {
   width?: number;
   height?: number;
   seed?: number;
+  steps?: number;
+  cfgScale?: number;
+  cfgRescale?: number;
+  denoise?: number;
+  sampler?: string;
+  scheduler?: string;
+  batchSize?: number;
   stylePack?: string;
   quality?: string;
   ratio?: string;
@@ -136,6 +143,13 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         width: body.width,
         height: body.height,
         seed: body.seed,
+        steps: Number.isFinite(Number(body.steps)) ? Number(body.steps) : undefined,
+        cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
+        cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
+        denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
+        sampler: String(body.sampler || "").trim().toLowerCase() || undefined,
+        scheduler: String(body.scheduler || "").trim().toLowerCase() || undefined,
+        batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
       },
       env as unknown as Record<string, unknown>,
     );

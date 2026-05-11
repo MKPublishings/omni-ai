@@ -3,6 +3,10 @@ import type {
   ImageSampler,
   ImageScheduler,
 } from '../shared/types';
+import {
+  IMAGE_SAMPLERS,
+  IMAGE_SCHEDULERS,
+} from '../shared/types';
 
 type EnvironmentSource = Record<string, unknown>;
 
@@ -20,6 +24,7 @@ export interface ImageGenEnvironment {
   defaultSteps: number;
   defaultCfg: number;
   defaultCfgRescale: number;
+  defaultDenoise: number;
   defaultWidth: number;
   defaultHeight: number;
   defaultClipSkip: number;
@@ -67,6 +72,24 @@ function readBoolean(source: EnvironmentSource, key: string, fallback: boolean):
   return ['1', 'true', 'yes', 'on'].includes(value);
 }
 
+function readSampler(source: EnvironmentSource, key: string, fallback: ImageSampler): ImageSampler {
+  const value = String(source[key] ?? '').trim().toLowerCase();
+  if (!value) {
+    return fallback;
+  }
+
+  return (IMAGE_SAMPLERS as readonly string[]).includes(value) ? (value as ImageSampler) : fallback;
+}
+
+function readScheduler(source: EnvironmentSource, key: string, fallback: ImageScheduler): ImageScheduler {
+  const value = String(source[key] ?? '').trim().toLowerCase();
+  if (!value) {
+    return fallback;
+  }
+
+  return (IMAGE_SCHEDULERS as readonly string[]).includes(value) ? (value as ImageScheduler) : fallback;
+}
+
 export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEnvironmentSource()): ImageGenEnvironment {
   const comfyuiHost = readText(source, 'COMFYUI_HOST', 'http://localhost:8188');
 
@@ -76,14 +99,15 @@ export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEn
     comfyuiWs: readText(source, 'COMFYUI_WS', 'ws://localhost:8188/ws'),
     comfyuiMock: readBoolean(source, 'COMFYUI_MOCK', true),
     comfyuiRequestTimeoutMs: readNumber(source, 'COMFYUI_REQUEST_TIMEOUT_MS', 120000),
-    defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'grok-imagine-image-beta'),
+    defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
     defaultPredictionType: readText(source, 'DEFAULT_PREDICTION_TYPE', 'epsilon') as ImagePredictionType,
-    defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl-vae-fp16-fix'),
-    defaultSampler: readText(source, 'DEFAULT_SAMPLER', 'euler') as ImageSampler,
-    defaultScheduler: readText(source, 'DEFAULT_SCHEDULER', 'simple') as ImageScheduler,
-    defaultSteps: readNumber(source, 'DEFAULT_STEPS', 18),
-    defaultCfg: readNumber(source, 'DEFAULT_CFG', 5),
+    defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl_vae.safetensors'),
+    defaultSampler: readSampler(source, 'DEFAULT_SAMPLER', 'dpmpp_2m_sde_heun'),
+    defaultScheduler: readScheduler(source, 'DEFAULT_SCHEDULER', 'karras'),
+    defaultSteps: readNumber(source, 'DEFAULT_STEPS', 23),
+    defaultCfg: readNumber(source, 'DEFAULT_CFG', 7.5),
     defaultCfgRescale: readNumber(source, 'DEFAULT_CFG_RESCALE', 0.2),
+    defaultDenoise: readNumber(source, 'DEFAULT_DENOISE', 0.88),
     defaultWidth: readNumber(source, 'DEFAULT_WIDTH', 896),
     defaultHeight: readNumber(source, 'DEFAULT_HEIGHT', 1344),
     defaultClipSkip: readNumber(source, 'DEFAULT_CLIP_SKIP', 2),

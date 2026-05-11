@@ -80,7 +80,6 @@ export function validateComfyUIWorkflow(workflow: unknown): WorkflowValidationRe
   let hasModelLoader = false;
   let hasSampler = false;
   let hasSaveImage = false;
-  let hasGrokImage = false;
 
   for (const nodeId of nodeIds) {
     const node = workflowObj[nodeId];
@@ -138,8 +137,6 @@ export function validateComfyUIWorkflow(workflow: unknown): WorkflowValidationRe
     } else if (classType === 'KSampler') {
       hasSampler = true;
       validateKSamplerInputs(nodeObj, nodeId, errors);
-    } else if (classType === 'GrokImageNode') {
-      hasGrokImage = true;
     } else if (classType === 'SaveImage') {
       hasSaveImage = true;
     }
@@ -152,18 +149,18 @@ export function validateComfyUIWorkflow(workflow: unknown): WorkflowValidationRe
   // GRAPH STRUCTURE VALIDATION
   // =========================================================
 
-  if (!hasModelLoader && !hasGrokImage) {
+  if (!hasModelLoader) {
     errors.push({
       field: 'graph',
-      message: 'Workflow must include a CheckpointLoaderSimple or GrokImageNode',
+      message: 'Workflow must include a CheckpointLoaderSimple node',
       severity: 'error',
     });
   }
 
-  if (!hasSampler && !hasGrokImage) {
+  if (!hasSampler) {
     errors.push({
       field: 'graph',
-      message: 'Workflow must include at least one KSampler node when GrokImageNode is not used',
+      message: 'Workflow must include at least one KSampler node',
       severity: 'error',
     });
   }
@@ -391,61 +388,6 @@ function validateNodeConstraints(
           nodeId,
         });
       }
-      break;
-    }
-
-    case 'GrokImageNode': {
-      const model = String(inputs.model ?? '').trim();
-      const prompt = String(inputs.prompt ?? '').trim();
-      const aspectRatio = String(inputs.aspect_ratio ?? '').trim();
-      const numberOfImages = Number(inputs.number_of_images);
-      const seed = Number(inputs.seed);
-
-      if (!model) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.model`,
-          message: 'GrokImageNode requires model input',
-          severity: 'error',
-          nodeId,
-        });
-      }
-
-      if (!prompt) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.prompt`,
-          message: 'GrokImageNode requires a non-empty prompt',
-          severity: 'error',
-          nodeId,
-        });
-      }
-
-      if (!aspectRatio) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.aspect_ratio`,
-          message: 'GrokImageNode requires aspect_ratio',
-          severity: 'error',
-          nodeId,
-        });
-      }
-
-      if (!Number.isInteger(numberOfImages) || numberOfImages < 1) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.number_of_images`,
-          message: 'GrokImageNode number_of_images must be an integer >= 1',
-          severity: 'error',
-          nodeId,
-        });
-      }
-
-      if (!Number.isInteger(seed) || seed < 0) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.seed`,
-          message: 'GrokImageNode seed must be a non-negative integer',
-          severity: 'error',
-          nodeId,
-        });
-      }
-
       break;
     }
 

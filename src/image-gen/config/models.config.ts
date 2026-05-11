@@ -2,19 +2,19 @@ import type { CheckpointConfig } from '../shared/types';
 import { readImageGenEnvironment } from './env';
 
 export const CHECKPOINT_REGISTRY: Record<string, CheckpointConfig> = {
-  'grok-imagine-image-beta': {
-    id: 'grok-imagine-image-beta',
-    displayName: 'Grok Imagine Image Beta',
-    runtimeCheckpoint: 'grok-imagine-image-beta',
-    baseModelFamily: 'grok-image-api',
+  'sd_xl_turbo_1.0_fp16.safetensors': {
+    id: 'sd_xl_turbo_1.0_fp16.safetensors',
+    displayName: 'SDXL Turbo 1.0 FP16',
+    runtimeCheckpoint: 'sd_xl_turbo_1.0_fp16.safetensors',
+    baseModelFamily: 'sdxl',
     predictionType: 'epsilon',
-    vae: 'grok-image-api',
-    qualityTags: ['cinematic', 'high detail'],
-    recommendedSampler: 'euler',
-    recommendedScheduler: 'normal',
-    recommendedCfgScale: 5,
-    recommendedSteps: 20,
-    clipSkip: 1,
+    vae: 'sdxl_vae.safetensors',
+    qualityTags: ['high detail', 'sharp focus'],
+    recommendedSampler: 'dpmpp_2m_sde_heun',
+    recommendedScheduler: 'karras',
+    recommendedCfgScale: 7.5,
+    recommendedSteps: 23,
+    clipSkip: 2,
     defaultResolution: { width: 1024, height: 1536 },
   },
   'ion-citizen-xl-vpred-v2.0': {
@@ -80,7 +80,12 @@ export const CHECKPOINT_REGISTRY: Record<string, CheckpointConfig> = {
 
 export function getCheckpointConfig(checkpointId: string): CheckpointConfig {
   const env = readImageGenEnvironment();
-  return CHECKPOINT_REGISTRY[checkpointId] || CHECKPOINT_REGISTRY[env.defaultCheckpoint];
+  return (
+    CHECKPOINT_REGISTRY[checkpointId]
+    || CHECKPOINT_REGISTRY[env.defaultCheckpoint]
+    || CHECKPOINT_REGISTRY['sd_xl_turbo_1.0_fp16.safetensors']
+    || Object.values(CHECKPOINT_REGISTRY)[0]
+  );
 }
 
 export function listCheckpointConfigs(): CheckpointConfig[] {

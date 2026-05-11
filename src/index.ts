@@ -198,6 +198,13 @@ type ImageRequestBody = {
   quality?: string;
   mode?: string;
   seed?: number;
+  steps?: number;
+  cfgScale?: number;
+  cfgRescale?: number;
+  denoise?: number;
+  sampler?: string;
+  scheduler?: string;
+  batchSize?: number;
   debug?: boolean;
   ratio?: string;
   resolution?: string;
@@ -3748,6 +3755,13 @@ export default {
           const effectiveWidth = Number.isFinite(requestedWidth) ? requestedWidth : ION_IMAGE_DEFAULT_WIDTH;
           const effectiveHeight = Number.isFinite(requestedHeight) ? requestedHeight : ION_IMAGE_DEFAULT_HEIGHT;
           const parsedSeed = Number(body?.seed);
+          const parsedSteps = Number(body?.steps);
+          const parsedCfgScale = Number(body?.cfgScale);
+          const parsedCfgRescale = Number(body?.cfgRescale);
+          const parsedDenoise = Number(body?.denoise);
+          const parsedBatchSize = Number(body?.batchSize);
+          const parsedSampler = sanitizePromptText(String(body?.sampler || '')).toLowerCase();
+          const parsedScheduler = sanitizePromptText(String(body?.scheduler || '')).toLowerCase();
           const imageQueueV1Requested = String(url.searchParams.get("queue") || "").toLowerCase() === "v1";
           const imageQueueV1Enabled = isEnabledFlag(env.ION_IMAGE_QUEUE_V1) || imageQueueV1Requested;
           const imagePipelineV2Requested = String(url.searchParams.get("pipeline") || "").toLowerCase() === "v2";
@@ -3822,7 +3836,14 @@ export default {
                 stylePack: effectiveStylePack || requestedStylePack,
                 width: effectiveWidth,
                 height: effectiveHeight,
-                seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined
+                seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
+                steps: Number.isFinite(parsedSteps) ? parsedSteps : undefined,
+                cfgScale: Number.isFinite(parsedCfgScale) ? parsedCfgScale : undefined,
+                cfgRescale: Number.isFinite(parsedCfgRescale) ? parsedCfgRescale : undefined,
+                denoise: Number.isFinite(parsedDenoise) ? parsedDenoise : undefined,
+                sampler: parsedSampler || undefined,
+                scheduler: parsedScheduler || undefined,
+                batchSize: Number.isFinite(parsedBatchSize) ? parsedBatchSize : undefined
               },
               env as unknown as Record<string, unknown>
             );
@@ -3857,7 +3878,14 @@ export default {
                   stylePack: effectiveStylePack || requestedStylePack,
                   width: effectiveWidth,
                   height: effectiveHeight,
-                  seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined
+                  seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
+                  steps: Number.isFinite(parsedSteps) ? parsedSteps : undefined,
+                  cfgScale: Number.isFinite(parsedCfgScale) ? parsedCfgScale : undefined,
+                  cfgRescale: Number.isFinite(parsedCfgRescale) ? parsedCfgRescale : undefined,
+                  denoise: Number.isFinite(parsedDenoise) ? parsedDenoise : undefined,
+                  sampler: parsedSampler || undefined,
+                  scheduler: parsedScheduler || undefined,
+                  batchSize: Number.isFinite(parsedBatchSize) ? parsedBatchSize : undefined
                 },
                 env as unknown as Record<string, unknown>
               );

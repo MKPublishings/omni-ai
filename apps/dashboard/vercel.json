@@ -10,7 +10,13 @@
     "COMFYUI_FETCH_HOST": "https://worker-comfy.ionirix.com",
     "COMFYUI_WS": "wss://img.ionirix.com/ws",
     "COMFYUI_MOCK": "false",
-    "DEFAULT_CHECKPOINT": "ion-citizen-xl-vpred-v2.0"
+    "DEFAULT_CHECKPOINT": "sd_xl_turbo_1.0_fp16.safetensors",
+    "DEFAULT_VAE": "sdxl_vae.safetensors",
+    "DEFAULT_SAMPLER": "dpmpp_2m_sde_heun",
+    "DEFAULT_SCHEDULER": "karras",
+    "DEFAULT_STEPS": "23",
+    "DEFAULT_CFG": "7.5",
+    "DEFAULT_DENOISE": "0.88"
   },
   "functions": {
     "src/app/api/**/*.ts": {

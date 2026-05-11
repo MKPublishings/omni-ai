@@ -4,10 +4,22 @@ export type ImageGenerationPriority = (typeof IMAGE_GENERATION_PRIORITIES)[numbe
 export const IMAGE_JOB_STATUSES = ['queued', 'processing', 'post-processing', 'completed', 'failed'] as const;
 export type ImageJobStatus = (typeof IMAGE_JOB_STATUSES)[number];
 
-export const IMAGE_SAMPLERS = ['euler', 'ddim'] as const;
+export const IMAGE_SAMPLERS = [
+  'euler',
+  'euler_ancestral',
+  'ddim',
+  'dpmpp_2m',
+  'dpmpp_2m_sde',
+  'dpmpp_2m_sde_heun',
+  'dpmpp_2m_karras',
+  'dpmpp_sde',
+  'dpmpp_3m_sde',
+  'heun',
+  'uni_pc',
+] as const;
 export type ImageSampler = (typeof IMAGE_SAMPLERS)[number];
 
-export const IMAGE_SCHEDULERS = ['normal', 'karras'] as const;
+export const IMAGE_SCHEDULERS = ['normal', 'karras', 'simple', 'exponential', 'sgm_uniform'] as const;
 export type ImageScheduler = (typeof IMAGE_SCHEDULERS)[number];
 
 export const IMAGE_OUTPUT_FORMATS = ['png', 'webp', 'jpeg'] as const;
@@ -182,6 +194,7 @@ export interface GenerationParameters {
   steps: number;
   cfgScale: number;
   cfgRescale: number;
+  denoise?: number;
   sampler: ImageSampler;
   scheduler: ImageScheduler;
   seed: number;

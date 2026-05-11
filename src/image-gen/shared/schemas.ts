@@ -60,6 +60,7 @@ export const generationParametersSchema = z.object({
   steps: z.number().int().min(1).max(100),
   cfgScale: z.number().min(1).max(20),
   cfgRescale: z.number().min(0).max(1),
+  denoise: z.number().min(0).max(1).optional(),
   sampler: z.enum(IMAGE_SAMPLERS),
   scheduler: z.enum(IMAGE_SCHEDULERS),
   seed: z.number().int(),

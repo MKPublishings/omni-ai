@@ -125,14 +125,22 @@ const MOCK_IMAGE_BYTES = createMockImagePng();
 
 export class MockComfyUIClient implements IModelGateway {
   private readonly jobs = new Map<string, MockJobRecord>();
+  private lastSubmittedCheckpoint: string | null = null;
 
-  async submitWorkflow(_workflow: ComfyUIWorkflow): Promise<{ promptId: string }> {
+  async submitWorkflow(workflow: ComfyUIWorkflow): Promise<{ promptId: string }> {
     const promptId = `mock-${crypto.randomUUID()}`;
+    const checkpoint = String((workflow as Record<string, any>)?.['1']?.inputs?.ckpt_name || '').trim();
+    const requestedSteps = Number((workflow as Record<string, any>)?.['5']?.inputs?.steps);
+    const totalSteps = Number.isFinite(requestedSteps) && requestedSteps > 0
+      ? Math.floor(requestedSteps)
+      : readImageGenEnvironment().defaultSteps;
+
+    this.lastSubmittedCheckpoint = checkpoint || null;
 
     this.jobs.set(promptId, {
       promptId,
       createdAt: Date.now(),
-      totalSteps: readImageGenEnvironment().defaultSteps,
+      totalSteps,
     });
 
     return { promptId };
@@ -187,6 +195,10 @@ export class MockComfyUIClient implements IModelGateway {
   }
 
   async getLoadedModel(): Promise<string | null> {
+    if (this.lastSubmittedCheckpoint) {
+      return this.lastSubmittedCheckpoint;
+    }
+
     return readImageGenEnvironment().defaultCheckpoint;
   }
 

@@ -77,6 +77,13 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
         width: Number.isFinite(Number(body.width)) ? Number(body.width) : undefined,
         height: Number.isFinite(Number(body.height)) ? Number(body.height) : undefined,
         seed: Number.isFinite(Number(body.seed)) ? Number(body.seed) : undefined,
+        steps: Number.isFinite(Number(body.steps)) ? Number(body.steps) : undefined,
+        cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
+        cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
+        denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
+        sampler: typeof body.sampler === 'string' ? body.sampler.trim().toLowerCase() || undefined : undefined,
+        scheduler: typeof body.scheduler === 'string' ? body.scheduler.trim().toLowerCase() || undefined : undefined,
+        batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
       },
       process.env as Record<string, unknown>,
     )

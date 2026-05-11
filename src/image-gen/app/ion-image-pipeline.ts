@@ -8,6 +8,8 @@ import type {
   GenerationRequest,
   ImageCompositionPreset,
   ImageVariationMode,
+  ImageSampler,
+  ImageScheduler,
   IModelGateway,
   ImageJobStatus,
   IonImagePipelineResult,
@@ -25,6 +27,13 @@ export interface IonImagePipelineInput {
   width?: number;
   height?: number;
   seed?: number;
+  steps?: number;
+  cfgScale?: number;
+  cfgRescale?: number;
+  denoise?: number;
+  sampler?: ImageSampler;
+  scheduler?: ImageScheduler;
+  batchSize?: number;
   variationMode?: ImageVariationMode;
   anatomyStrictMode?: boolean;
   styleProfile?: KimonoStyleProfileId;
@@ -53,6 +62,13 @@ export async function buildIonImageGenerationRequest(
       width: input.width,
       height: input.height,
       seed: input.seed,
+      steps: input.steps,
+      cfgScale: input.cfgScale,
+      cfgRescale: input.cfgRescale,
+      denoise: input.denoise,
+      sampler: input.sampler,
+      scheduler: input.scheduler,
+      batchSize: input.batchSize,
     },
   });
 }
@@ -144,11 +160,35 @@ export async function executeIonImagePipelineRequest(
   const { promptId } = await gateway.submitWorkflow(workflow);
 
   let lastStatus: ImageJobStatus = 'queued';
-  for await (const progress of gateway.getProgress(promptId)) {
-    lastStatus = progress.status;
-    if (isTerminalStatus(progress.status)) {
-      break;
+  let progressStreamError: unknown = null;
+
+  if (gateway instanceof ComfyUIClient && typeof WebSocket === 'function') {
+    try {
+      for await (const progress of gateway.getProgressWebSocket(promptId)) {
+        lastStatus = progress.status;
+        if (isTerminalStatus(progress.status)) {
+          break;
+        }
+      }
+    } catch (error) {
+      progressStreamError = error;
     }
+  }
+
+  if (!isTerminalStatus(lastStatus)) {
+    for await (const progress of gateway.getProgress(promptId)) {
+      lastStatus = progress.status;
+      if (isTerminalStatus(progress.status)) {
+        break;
+      }
+    }
+  }
+
+  if (lastStatus !== 'completed' && progressStreamError instanceof Error) {
+    // Surface WebSocket context if polling fallback did not complete either.
+    const fallbackErr = new Error(progressStreamError.message);
+    fallbackErr.name = progressStreamError.name;
+    throw fallbackErr;
   }
 
   if (lastStatus !== 'completed') {

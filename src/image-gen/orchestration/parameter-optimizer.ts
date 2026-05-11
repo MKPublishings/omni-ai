@@ -81,11 +81,12 @@ export function optimizeParameters(
       stylePreset.defaultResolution.height || checkpoint.defaultResolution.height,
     );
 
-  const baseSteps = Number(input.parameterOverrides?.steps) || stylePreset.steps || checkpoint.recommendedSteps || env.defaultSteps;
+  const baseSteps = Number(input.parameterOverrides?.steps) || env.defaultSteps || stylePreset.steps || checkpoint.recommendedSteps;
   const baseCfgScale = Number(input.parameterOverrides?.cfgScale)
+    || env.defaultCfg
     || stylePreset.cfgScale
     || checkpoint.recommendedCfgScale
-    || env.defaultCfg;
+    ;
 
   const tunedSteps = input.anatomyStrictMode ? Math.max(baseSteps, 22) : baseSteps;
   const tunedCfgScale = input.anatomyStrictMode
@@ -100,8 +101,11 @@ export function optimizeParameters(
     steps: clampedSteps,
     cfgScale: tunedCfgScale,
     cfgRescale: Number(input.parameterOverrides?.cfgRescale) || checkpoint.recommendedCfgRescale || env.defaultCfgRescale,
-    sampler: input.parameterOverrides?.sampler || stylePreset.sampler || checkpoint.recommendedSampler || env.defaultSampler,
-    scheduler: input.parameterOverrides?.scheduler || checkpoint.recommendedScheduler || env.defaultScheduler,
+    denoise: Number.isFinite(Number(input.parameterOverrides?.denoise))
+      ? Number(input.parameterOverrides?.denoise)
+      : env.defaultDenoise,
+    sampler: input.parameterOverrides?.sampler || env.defaultSampler || stylePreset.sampler || checkpoint.recommendedSampler,
+    scheduler: input.parameterOverrides?.scheduler || env.defaultScheduler || checkpoint.recommendedScheduler,
     seed: seeded,
     batchSize: Number(input.parameterOverrides?.batchSize) || 1,
   };
