@@ -93,6 +93,37 @@ export interface DashboardImageRuntimeConfig {
   }
 }
 
+const DEFAULT_IMAGE_RUNTIME_CONFIG: DashboardImageRuntimeConfig = {
+  gateway: {
+    host: 'http://localhost:8188',
+    wsUrl: 'ws://localhost:8188/ws',
+    mock: true,
+    requestTimeoutMs: 120000,
+    defaultCheckpoint: 'sd_xl_turbo_1.0_fp16.safetensors',
+  },
+  queue: {
+    runtime: 'memory',
+    stateBinding: 'ION_IMAGE_STATE_KV',
+    stateNamespace: 'ion:image:queue',
+    maxQueueSize: 100,
+    maxConcurrentJobs: 2,
+  },
+  storage: {
+    imageStoragePath: './storage/images',
+    thumbnailStoragePath: './storage/thumbs',
+    metadataDbUrl: 'sqlite:./storage/metadata.db',
+  },
+  safety: {
+    enabled: true,
+    nsfwThreshold: 0.7,
+    rateLimitPerHour: 30,
+  },
+  logging: {
+    level: 'info',
+    format: 'json',
+  },
+}
+
 export interface DashboardSimulationRun {
   id: string
   session_id: string
@@ -502,6 +533,10 @@ export async function fetchImageRuntimeConfig(): Promise<DashboardImageRuntimeCo
   })
 
   if (!response.ok) {
+    if (response.status === 404 || response.status === 405) {
+      return DEFAULT_IMAGE_RUNTIME_CONFIG
+    }
+
     throw new Error(`Request failed for /api/image/runtime-config: ${response.status}`)
   }
 

@@ -65,6 +65,76 @@ interface WorkerEnv {
   STRIPE_ENTERPRISE_YEARLY_PRICE_ID?: string;
   STRIPE_CHECKOUT_SUCCESS_URL?: string;
   STRIPE_CHECKOUT_CANCEL_URL?: string;
+  ION_HOST?: string;
+  ION_WS?: string;
+  ION_MOCK?: string;
+  ION_REQUEST_TIMEOUT_MS?: string;
+  DEFAULT_CHECKPOINT?: string;
+  IMAGE_QUEUE_RUNTIME?: string;
+  IMAGE_QUEUE_STATE_BINDING?: string;
+  IMAGE_QUEUE_STATE_NAMESPACE?: string;
+  MAX_QUEUE_SIZE?: string;
+  MAX_CONCURRENT_JOBS?: string;
+  IMAGE_STORAGE_PATH?: string;
+  THUMBNAIL_STORAGE_PATH?: string;
+  METADATA_DB_URL?: string;
+  SAFETY_ENABLED?: string;
+  SAFETY_NSFW_THRESHOLD?: string;
+  RATE_LIMIT_PER_HOUR?: string;
+  LOG_LEVEL?: string;
+  LOG_FORMAT?: string;
+}
+
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (!normalized) {
+    return fallback;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(normalized);
+}
+
+function readNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function readText(value: unknown, fallback: string): string {
+  const parsed = String(value ?? '').trim();
+  return parsed || fallback;
+}
+
+function buildImageRuntimeConfig(env: WorkerEnv): Record<string, unknown> {
+  return {
+    gateway: {
+      host: readText(env.ION_HOST, 'http://localhost:8188'),
+      wsUrl: readText(env.ION_WS, 'ws://localhost:8188/ws'),
+      mock: readBoolean(env.ION_MOCK, true),
+      requestTimeoutMs: readNumber(env.ION_REQUEST_TIMEOUT_MS, 120000),
+      defaultCheckpoint: readText(env.DEFAULT_CHECKPOINT, 'sd_xl_turbo_1.0_fp16.safetensors'),
+    },
+    queue: {
+      runtime: readText(env.IMAGE_QUEUE_RUNTIME, 'memory') === 'kv' ? 'kv' : 'memory',
+      stateBinding: readText(env.IMAGE_QUEUE_STATE_BINDING, 'ION_IMAGE_STATE_KV'),
+      stateNamespace: readText(env.IMAGE_QUEUE_STATE_NAMESPACE, 'ion:image:queue'),
+      maxQueueSize: readNumber(env.MAX_QUEUE_SIZE, 100),
+      maxConcurrentJobs: readNumber(env.MAX_CONCURRENT_JOBS, 2),
+    },
+    storage: {
+      imageStoragePath: readText(env.IMAGE_STORAGE_PATH, './storage/images'),
+      thumbnailStoragePath: readText(env.THUMBNAIL_STORAGE_PATH, './storage/thumbs'),
+      metadataDbUrl: readText(env.METADATA_DB_URL, 'sqlite:./storage/metadata.db'),
+    },
+    safety: {
+      enabled: readBoolean(env.SAFETY_ENABLED, true),
+      nsfwThreshold: readNumber(env.SAFETY_NSFW_THRESHOLD, 0.7),
+      rateLimitPerHour: readNumber(env.RATE_LIMIT_PER_HOUR, 30),
+    },
+    logging: {
+      level: readText(env.LOG_LEVEL, 'info'),
+      format: readText(env.LOG_FORMAT, 'json') === 'pretty' ? 'pretty' : 'json',
+    },
+  };
 }
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -459,6 +529,22 @@ async function handleRequest(request: Request, env: WorkerEnv, ctx: ExecutionCon
   });
 
   // ========== LEGACY ION IMAGE ROUTE (compatibility)
+  router.add('GET', '/api/image/runtime-config', async (_req: Request, e: any) => {
+    return Response.json(buildImageRuntimeConfig(e as WorkerEnv), {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+  });
+  router.add('POST', '/api/image/runtime-config', async (_req: Request, e: any) => {
+    return Response.json(buildImageRuntimeConfig(e as WorkerEnv), {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+  });
   router.add('POST', '/api/image', async (req: Request, e: any, c: ExecutionContext) => {
     return IONWorker.fetch(req, ionWorkerEnv as any, c as any);
   });
