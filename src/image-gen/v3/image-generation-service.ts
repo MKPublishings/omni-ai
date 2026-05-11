@@ -25,6 +25,7 @@ export interface IonImageV3RouteResult {
   body: IonImageV2RouteResponse;
   headers: Record<string, string>;
 }
+const CLOUDFLARE_MAX_STEPS = 20;
 
 function isComfyDownError(error: unknown): boolean {
   const name = String((error as { name?: string } | null)?.name || '').trim().toUpperCase();
@@ -99,7 +100,7 @@ function resolveCloudflareSteps(prompt: string, requestSteps: number): number {
       ? 20
       : 18;
 
-  return Math.min(36, Math.max(1, preferred));
+  return Math.min(CLOUDFLARE_MAX_STEPS, Math.max(1, preferred));
 }
 
 function resolveCloudflareModel(source: EnvironmentSource): string {

@@ -220,7 +220,7 @@ test('worker /api/image sends photogrammetry-enhanced prompts through cloudflare
   assert.match(String(cfRequest.prompt || ''), /single clearly isolated subject/i);
   assert.match(String(cfRequest.negative_prompt || ''), /no overlapping anatomy/i);
   assert.match(String(cfRequest.negative_prompt || ''), /no hidden eyes/i);
-  assert.equal(cfRequest.num_steps, 32);
+  assert.equal(cfRequest.num_steps, 20);
   assert.equal(cfRequest.guidance, 7);
   assert.match(String(body.metadata?.prompt?.positive || ''), /photogrammetry-grade scene reconstruction/i);
 });

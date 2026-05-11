@@ -59,6 +59,7 @@ const MAX_EXPORT_BYTES = 12 * 1024 * 1024;
 const MAX_GENERATION_ATTEMPTS = 10;
 const MAX_PROMPT_CHARS = 10000;
 const MODEL_PROMPT_MAX_CHARS = 2048;
+const CLOUDFLARE_MAX_STEPS = 20;
 
 type NormalizedDimensions = { width: number; height: number; source: string };
 
@@ -299,13 +300,13 @@ function resolveLegacyRenderParameters(prompt: string): { numSteps: number; guid
   const tuning = resolvePhotogrammetryRenderTuning(prompt);
   if (!tuning) {
     return {
-      numSteps: 20,
+      numSteps: CLOUDFLARE_MAX_STEPS,
       guidance: 9,
     };
   }
 
   return {
-    numSteps: tuning.targetSteps,
+    numSteps: Math.min(CLOUDFLARE_MAX_STEPS, tuning.targetSteps),
     guidance: tuning.targetGuidance,
   };
 }
