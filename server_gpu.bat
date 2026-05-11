@@ -4,7 +4,7 @@ setlocal
 if defined COMFYUI_DIR (
 	set "TARGET_DIR=%COMFYUI_DIR%"
 ) else (
-	set "TARGET_DIR=C:\ComfyUI"
+	set "TARGET_DIR=C:\ComfyUI\ComfyUI"
 )
 
 if exist "%TARGET_DIR%\ComfyUI\start-ion.bat" (
