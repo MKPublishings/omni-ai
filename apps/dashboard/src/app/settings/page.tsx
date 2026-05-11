@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/Button'
 import { DashboardShell } from '@/components/DashboardShell'
 import { GlassCard } from '@/components/GlassCard'
@@ -170,6 +170,17 @@ export default function SettingsPage() {
   const [workspaceDraftInitialized, setWorkspaceDraftInitialized] = useState(false)
   const [workspaceErrors, setWorkspaceErrors] = useState<string[]>([])
   const [preferencesErrors, setPreferencesErrors] = useState<string[]>([])
+  const workspaceSettingsDirtyRef = useRef(workspaceSettingsDirty)
+  const workspaceDraftInitializedRef = useRef(workspaceDraftInitialized)
+  const settingsLoadSequenceRef = useRef(0)
+
+  useEffect(() => {
+    workspaceSettingsDirtyRef.current = workspaceSettingsDirty
+  }, [workspaceSettingsDirty])
+
+  useEffect(() => {
+    workspaceDraftInitializedRef.current = workspaceDraftInitialized
+  }, [workspaceDraftInitialized])
 
   const previewFormation = useMemo(() => {
     const baseState = createInitialOnboardingState()
@@ -194,6 +205,9 @@ export default function SettingsPage() {
   const displayedCapabilityScore = workspaceSettingsDirty ? previewFormation.capabilityScore : (onboardingWorkspace?.capabilityScore ?? previewFormation.capabilityScore)
 
   const loadSettings = () => {
+    const loadSequence = settingsLoadSequenceRef.current + 1
+    settingsLoadSequenceRef.current = loadSequence
+
     setError('')
     setCachedMessageCount(getCachedAssistantMessageCount())
     Promise.all([
@@ -204,13 +218,17 @@ export default function SettingsPage() {
       fetchOnboardingWorkspace().catch(() => null),
     ])
       .then(([userPayload, nextStatus, chatSettingsPayload, chatHistoryPayload, onboardingWorkspacePayload]) => {
+        if (settingsLoadSequenceRef.current !== loadSequence) {
+          return
+        }
+
         setUser(userPayload.user)
         setStatus(nextStatus)
         setChatPreferences(chatSettingsPayload.preferences)
         setChatTurns(Array.isArray(chatHistoryPayload.turns) ? chatHistoryPayload.turns : [])
         setOnboardingWorkspace(onboardingWorkspacePayload)
 
-        if (!workspaceSettingsDirty || !workspaceDraftInitialized) {
+        if (!workspaceSettingsDirtyRef.current || !workspaceDraftInitializedRef.current) {
           setWorkspaceDraft(buildWorkspaceDraftFromSources(onboardingWorkspacePayload))
           setPreferencesDraft(buildPreferencesDraftFromSources(onboardingWorkspacePayload))
           setWorkspaceErrors([])
@@ -228,7 +246,7 @@ export default function SettingsPage() {
     return () => {
       window.clearInterval(interval)
     }
-  }, [workspaceDraftInitialized, workspaceSettingsDirty])
+  }, [])
 
   const handleToggle = async (key: 'persistHistory' | 'contextCarryover') => {
     if (!chatPreferences) {
