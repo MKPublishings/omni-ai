@@ -3,18 +3,19 @@ const logger = require("../utils/logger");
 
 module.exports = function sceneEnforcer(promptData) {
     const envKeywords = extractEnvironment(promptData.userPrompt);
+    const normalizedKeywords = Array.isArray(envKeywords) ? envKeywords : [];
 
-    if (!envKeywords.length) {
+    if (!normalizedKeywords.length) {
         logger.info("No explicit environment found; allowing model freedom.");
         return promptData;
     }
 
-    const envString = `environment: ${envKeywords.join(", ")}`;
+    const envString = `environment: ${normalizedKeywords.join(", ")}`;
     promptData.semanticExpansion = [
         promptData.semanticExpansion,
         envString
     ].filter(Boolean).join(", ");
 
-    logger.info("Scene enforced with environment:", envKeywords);
+    logger.info("Scene enforced with environment:", normalizedKeywords);
     return promptData;
 };

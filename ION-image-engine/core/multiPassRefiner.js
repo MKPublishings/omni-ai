@@ -99,7 +99,7 @@ function colorBlockPass(data) {
 function detailTexturePass(data, qualityLevel) {
     const level = qualityLevel || "default";
     const tags = qualityConfig[level] || qualityConfig["default"] || [];
-    data.technicalTags = [...(data.technicalTags || []), ...tags];
+    data.technicalTags = [...(Array.isArray(data.technicalTags) ? data.technicalTags : []), ...tags];
     return data;
 }
 
@@ -129,12 +129,18 @@ function semanticExpansionPass(data) {
 function technicalEnhancementPass(data, qualityLevel) {
     const level = qualityLevel || "default";
     const tags = qualityConfig[level] || qualityConfig["default"] || [];
-    data.technicalTags = [...data.technicalTags, ...tags];
+    data.technicalTags = [...(Array.isArray(data.technicalTags) ? data.technicalTags : []), ...tags];
     return data;
 }
 
 module.exports = function multiPassRefiner(promptData, options = {}) {
-    let data = { ...promptData };
+    let data = {
+        ...(promptData || {}),
+        styleTags: Array.isArray(promptData?.styleTags) ? promptData.styleTags : [],
+        technicalTags: Array.isArray(promptData?.technicalTags) ? promptData.technicalTags : [],
+        lawTags: Array.isArray(promptData?.lawTags) ? promptData.lawTags : [],
+        negativeTags: Array.isArray(promptData?.negativeTags) ? promptData.negativeTags : []
+    };
     
     // Detect anime styling
     const { isAnime, hasLinework, isMinimalistic } = detectAnimeStyle(data);
@@ -195,11 +201,11 @@ module.exports = function multiPassRefiner(promptData, options = {}) {
     let finalPrompt = [
         data.semanticExpansion,
         (data.lawTags || []).join(", "),
-        data.styleTags.join(", "),
-        data.technicalTags.join(", ")
+        (Array.isArray(data.styleTags) ? data.styleTags : []).join(", "),
+        (Array.isArray(data.technicalTags) ? data.technicalTags : []).join(", ")
     ].filter(Boolean).join(", ");
 
-    if (data.negativeTags.length) {
+    if (Array.isArray(data.negativeTags) && data.negativeTags.length) {
         finalPrompt = `${finalPrompt}, negative: ${data.negativeTags.join(", ")}`;
     }
 

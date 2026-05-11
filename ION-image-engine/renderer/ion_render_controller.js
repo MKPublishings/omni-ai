@@ -39,6 +39,31 @@ class IonRenderController {
     this.renderMetadata = [];
   }
 
+  toArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  toText(value, fallback = '') {
+    const text = String(value ?? '').trim();
+    return text || fallback;
+  }
+
+  ensureLogsDirectory() {
+    if (!fs.existsSync(this.config.logsPath)) {
+      fs.mkdirSync(this.config.logsPath, { recursive: true });
+    }
+  }
+
+  appendJsonLog(logPath, entry) {
+    this.ensureLogsDirectory();
+    const logs = fs.existsSync(logPath)
+      ? JSON.parse(fs.readFileSync(logPath, 'utf8'))
+      : [];
+    const safeLogs = Array.isArray(logs) ? logs : [];
+    safeLogs.push(entry);
+    fs.writeFileSync(logPath, JSON.stringify(safeLogs, null, 2));
+  }
+
   /**
    * Load prompt templates from JSON
    */
@@ -81,7 +106,7 @@ class IonRenderController {
   /**
    * Main orchestration method: Build complete render configuration
    */
-  orchestrateRender(renderRequest) {
+  orchestrateRender(renderRequest = {}) {
     const orchestration = {
       timestamp: new Date().toISOString(),
       requestId: renderRequest.id || this.generateRequestId(),
@@ -120,6 +145,8 @@ class IonRenderController {
    * Build complete prompt configuration
    */
   buildPromptConfig(renderRequest) {
+    renderRequest = renderRequest || {};
+
     const config = {
       basePrompt: '',
       compositionPrompt: '',
@@ -133,25 +160,25 @@ class IonRenderController {
 
     // Select or build base prompt
     const templateKey = renderRequest.promptTemplate || 'anime_woman_portrait';
-    const template = this.promptTemplates[templateKey];
+    const template = this.promptTemplates?.[templateKey];
 
     if (template) {
       config.basePrompt = this.buildFromTemplate(template);
     } else {
-      config.basePrompt = renderRequest.customPrompt || 'A beautiful anime woman';
+      config.basePrompt = this.toText(renderRequest.customPrompt, 'A beautiful anime woman');
     }
 
     // Add composition instructions
     const compositionKey = renderRequest.composition || 'portrait_9_16';
-    const compositionTemplate = this.compositionTemplates[compositionKey];
+    const compositionTemplate = this.compositionTemplates?.[compositionKey];
     if (compositionTemplate) {
       config.compositionPrompt = this.buildCompositionPrompt(compositionTemplate);
     }
 
     // Build negative tags
-    config.antiStretchingTags = this.proportionalEnforcer.generateAntiStretchingTags();
-    config.compositionTags = this.compositionLock.generateCompositionTags();
-    config.depthTags = this.depthScaler.generateDepthTags();
+    config.antiStretchingTags = this.toArray(this.proportionalEnforcer.generateAntiStretchingTags());
+    config.compositionTags = this.toArray(this.compositionLock.generateCompositionTags());
+    config.depthTags = this.toArray(this.depthScaler.generateDepthTags());
 
     // Compile all positive tags
     config.tags = [
@@ -160,13 +187,16 @@ class IonRenderController {
       ...config.antiStretchingTags,
       ...config.compositionTags,
       ...config.depthTags
-    ].filter(Boolean).map(t => t.trim());
+    ]
+      .filter(Boolean)
+      .map(t => String(t).trim())
+      .filter(Boolean);
 
     // Build comprehensive negative prompt
     config.negativePrompt = this.buildNegativePrompt();
 
     // Assemble final prompt
-    config.finalPrompt = `${config.basePrompt}. ${config.compositionPrompt}`;
+    config.finalPrompt = [config.basePrompt, config.compositionPrompt].filter(Boolean).join('. ');
 
     return config;
   }
@@ -175,6 +205,8 @@ class IonRenderController {
    * Build stability configuration
    */
   buildStabilityConfig(renderRequest) {
+    renderRequest = renderRequest || {};
+
     const config = {
       proportionalEnforcement: {},
       compositionLocking: {},
@@ -184,31 +216,31 @@ class IonRenderController {
     // Proportional enforcement
     config.proportionalEnforcement = {
       enabled: true,
-      headToBodyRatio: this.proportionalEnforcer.config.headToBodyRatio,
-      shoulderWidth: this.proportionalEnforcer.config.shoulderWidth,
-      limbLength: this.proportionalEnforcer.config.limbLength,
-      faceHeightRatio: this.proportionalEnforcer.config.faceHeightRatio,
-      antiStretchingTags: this.proportionalEnforcer.generateAntiStretchingTags()
+      headToBodyRatio: this.proportionalEnforcer?.config?.headToBodyRatio,
+      shoulderWidth: this.proportionalEnforcer?.config?.shoulderWidth,
+      limbLength: this.proportionalEnforcer?.config?.limbLength,
+      faceHeightRatio: this.proportionalEnforcer?.config?.faceHeightRatio,
+      antiStretchingTags: this.toArray(this.proportionalEnforcer.generateAntiStretchingTags())
     };
 
     // Composition locking
     const compositionKey = renderRequest.composition || 'portrait_9_16';
-    const compositionTemplate = this.compositionTemplates[compositionKey];
+    const compositionTemplate = this.compositionTemplates?.[compositionKey];
     if (compositionTemplate) {
       config.compositionLocking = {
         enabled: true,
         template: compositionKey,
-        safeZone: compositionTemplate.safeZone,
-        constraints: compositionTemplate.constraints,
-        cameraInstructions: this.compositionLock.generateCameraInstructions()
+        safeZone: compositionTemplate.safeZone || {},
+        constraints: this.toArray(compositionTemplate.constraints),
+        cameraInstructions: this.toArray(this.compositionLock.generateCameraInstructions())
       };
     }
 
     // Depth scaling
     config.depthScaling = {
       enabled: true,
-      depthConfiguration: this.depthScaler.generateDepthConfiguration(),
-      depthTags: this.depthScaler.generateDepthTags()
+      depthConfiguration: this.depthScaler.generateDepthConfiguration() || {},
+      depthTags: this.toArray(this.depthScaler.generateDepthTags())
     };
 
     return config;
@@ -218,31 +250,42 @@ class IonRenderController {
    * Build template-based prompt
    */
   buildFromTemplate(template) {
-    return `${template.base}. ${template.composition}. ${template.lighting}. ${template.focus}`;
+    const sections = [template?.base, template?.composition, template?.lighting, template?.focus]
+      .map((part) => this.toText(part))
+      .filter(Boolean);
+    return sections.join('. ');
   }
 
   /**
    * Build composition-specific prompt additions
    */
   buildCompositionPrompt(compositionTemplate) {
-    return `${compositionTemplate.description}. Camera distance: ${compositionTemplate.camera.distance}. Focus: ${compositionTemplate.camera.focus}`;
+    const description = this.toText(compositionTemplate?.description);
+    const cameraDistance = this.toText(compositionTemplate?.camera?.distance);
+    const cameraFocus = this.toText(compositionTemplate?.camera?.focus);
+    const cameraPrompt = [
+      cameraDistance ? `Camera distance: ${cameraDistance}` : '',
+      cameraFocus ? `Focus: ${cameraFocus}` : ''
+    ].filter(Boolean).join('. ');
+
+    return [description, cameraPrompt].filter(Boolean).join('. ');
   }
 
   /**
    * Build comprehensive negative prompt
    */
   buildNegativePrompt() {
-    const negTags = this.negativeTags;
+    const negTags = this.negativeTags || {};
     const all = [
-      ...negTags.anatomical_errors,
-      ...negTags.face_errors,
-      ...negTags.composition_errors,
-      ...negTags.lighting_errors,
-      ...negTags.depth_errors,
-      ...negTags.quality_errors,
-      ...negTags.aspect_ratio_errors,
-      ...negTags.mandatory_exclusions
-    ];
+      ...this.toArray(negTags.anatomical_errors),
+      ...this.toArray(negTags.face_errors),
+      ...this.toArray(negTags.composition_errors),
+      ...this.toArray(negTags.lighting_errors),
+      ...this.toArray(negTags.depth_errors),
+      ...this.toArray(negTags.quality_errors),
+      ...this.toArray(negTags.aspect_ratio_errors),
+      ...this.toArray(negTags.mandatory_exclusions)
+    ].map((tag) => this.toText(tag)).filter(Boolean);
 
     return all.join(', ');
   }
@@ -295,12 +338,12 @@ class IonRenderController {
     };
 
     if (this.config.enableDiagnostics) {
-      result.diagnostics = this.diagnosticsEngine.diagnose(renderOutput);
+      result.diagnostics = this.diagnosticsEngine.diagnose(renderOutput) || {};
       result.passed = result.diagnostics.overall === 'PASS';
 
       if (!result.passed && this.config.enableAutoCorrect) {
-        result.corrections = result.diagnostics.correctionsSuggested;
-        result.recommendations = result.diagnostics.recommendations;
+        result.corrections = this.toArray(result.diagnostics.correctionsSuggested);
+        result.recommendations = this.toArray(result.diagnostics.recommendations);
       }
     }
 
@@ -321,11 +364,7 @@ class IonRenderController {
     };
 
     try {
-      const logs = fs.existsSync(logPath)
-        ? JSON.parse(fs.readFileSync(logPath, 'utf8'))
-        : [];
-      logs.push(entry);
-      fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
+      this.appendJsonLog(logPath, entry);
     } catch (err) {
       console.error(`Failed to log metadata: ${err.message}`);
     }
@@ -337,17 +376,13 @@ class IonRenderController {
   logRenderOutput(result) {
     const logPath = path.join(this.config.logsPath, 'error_reports.log');
     
-    if (!result.passed || result.diagnostics?.detections.length > 0) {
+    if (!result.passed || (result.diagnostics?.detections?.length || 0) > 0) {
       try {
-        const logs = fs.existsSync(logPath)
-          ? JSON.parse(fs.readFileSync(logPath, 'utf8'))
-          : [];
-        logs.push({
+        this.appendJsonLog(logPath, {
           timestamp: new Date().toISOString(),
           status: result.passed ? 'PASS' : 'FAIL',
           diagnostics: result.diagnostics
         });
-        fs.writeFileSync(logPath, JSON.stringify(logs, null, 2));
       } catch (err) {
         console.error(`Failed to log errors: ${err.message}`);
       }
@@ -358,7 +393,7 @@ class IonRenderController {
    * Generate unique request ID
    */
   generateRequestId() {
-    return `ION-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `ION-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   /**
@@ -371,11 +406,11 @@ class IonRenderController {
       diagnosticsSummary: this.diagnosticsEngine.getSummary(),
       proportionalEnforcerStatus: this.proportionalEnforcer.getViolationReport(),
       compositionStatus: {
-        driftDetections: this.compositionLock.driftDetections.length,
+        driftDetections: this.toArray(this.compositionLock?.driftDetections).length,
         pattern: this.compositionLock.detectDriftPattern()
       },
       depthStatus: {
-        analysisCount: this.depthScaler.depthAnalysis.length,
+        analysisCount: this.toArray(this.depthScaler?.depthAnalysis).length,
         patterns: this.depthScaler.detectDepthPatterns()
       }
     };

@@ -149,6 +149,12 @@ function inferContextTags(prompt) {
 }
 
 module.exports = function promptOrchestrator(userPrompt, options = {}) {
+    const optionNegatives = Array.isArray(options.negatives)
+        ? options.negatives
+        : (typeof options.negatives === "string" && options.negatives.trim())
+            ? [options.negatives.trim()]
+            : [];
+
     const promptNormalization = normalizePromptLanguage(userPrompt);
     const normalizedPrompt = promptNormalization.cleanedPrompt || String(userPrompt || "");
     const tokens = tokenizer(normalizedPrompt);
@@ -218,7 +224,10 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
     }
 
     // Add style tags (prefer explicit pack, then inferred)
-    const styleTags = [...new Set([...(stylePack.tags || []), ...(inferredStyle.tags || [])])];
+    const styleTags = [...new Set([
+        ...(Array.isArray(stylePack.tags) ? stylePack.tags : []),
+        ...(Array.isArray(inferredStyle.tags) ? inferredStyle.tags : [])
+    ])];
     precedenceLayers[PRECEDENCE_LAYERS.STYLE].push(...styleTags);
 
     // Add quality/technical tags
@@ -254,8 +263,8 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
     let finalPrompt = finalTags.filter(Boolean).join(", ");
 
     // Inject negative prompt with explicit directive for sampler (moved earlier for model awareness)
-    const negativeDirective = options.negatives && options.negatives.length > 0 
-        ? `negative: ${options.negatives.join(", ")}`
+    const negativeDirective = optionNegatives.length > 0
+        ? `negative: ${optionNegatives.join(", ")}`
         : "";
 
     if (negativeDirective) {
@@ -280,7 +289,7 @@ module.exports = function promptOrchestrator(userPrompt, options = {}) {
         lawTags,
         lawInfluence,
         photogrammetry,
-        negativeTags: [...photogrammetry.negativeTags, ...(options.negatives || [])],
+        negativeTags: [...photogrammetry.negativeTags, ...optionNegatives],
         finalPrompt
     };
 
