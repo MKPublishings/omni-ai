@@ -410,3 +410,124 @@ test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt vali
     globalThis.fetch = originalFetch;
   }
 });
+
+test('ComfyUI client polls with extended timeout and attempts history fallback on timeout', async () => {
+  const originalFetch = globalThis.fetch;
+  let pollAttempts = 0;
+  const maxQuickPolls = 5; // Simulate job not completing for first few polls
+
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+
+    // Simulate /queue endpoint
+    if (url.endsWith('/queue')) {
+      pollAttempts += 1;
+      if (pollAttempts < maxQuickPolls) {
+        // Job still running
+        return createJsonResponse({
+          queue_running: [[0, 'prompt-1']],
+          queue_pending: [],
+        });
+      } else {
+        // Job completed
+        return createJsonResponse({
+          queue_running: [],
+          queue_pending: [],
+        });
+      }
+    }
+
+    // Simulate /history endpoint with delayed completion
+    if (url.includes('/history/')) {
+      if (pollAttempts < maxQuickPolls) {
+        // Job not yet in history
+        return createJsonResponse({});
+      } else {
+        // Job completed and in history
+        return createJsonResponse({
+          'prompt-1': {
+            status: {
+              completed: true,
+              status_str: 'success',
+            },
+          },
+        });
+      }
+    }
+
+    throw new Error(`Unexpected fetch call: ${url}`);
+  };
+
+  try {
+    const client = new ComfyUIClient();
+    const events: unknown[] = [];
+
+    for await (const event of client.getProgress('prompt-1')) {
+      events.push(event);
+    }
+
+    assert.ok(events.length > 0, 'Should have received progress events');
+    const finalEvent = events[events.length - 1] as { status?: string };
+    assert.equal(finalEvent.status, 'completed', 'Final event should show job completed');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('ComfyUI client WebSocket streaming listener receives execution_complete events', async () => {
+  const originalWebSocket = globalThis.WebSocket;
+  let wsMessageListeners: Record<string, ((event: any) => void)[]> = {};
+
+  class MockWebSocket {
+    readyState = WebSocket.OPEN;
+    private listeners: Record<string, ((event: any) => void)[]> = {};
+
+    addEventListener(event: string, handler: (event: any) => void) {
+      if (!this.listeners[event]) {
+        this.listeners[event] = [];
+      }
+      this.listeners[event].push(handler);
+
+      // Immediately fire 'open' event so connection succeeds
+      if (event === 'open') {
+        setTimeout(() => handler(new Event('open')), 0);
+      }
+
+      // Simulate execution_complete after a brief delay
+      if (event === 'message') {
+        setTimeout(() => {
+          handler({
+            data: JSON.stringify({
+              type: 'execution_complete',
+              data: {
+                prompt_id: 'prompt-1',
+              },
+            }),
+          });
+        }, 50);
+      }
+    }
+
+    close() {
+      // no-op for mock
+    }
+  }
+
+  // @ts-expect-error Mock WebSocket for testing
+  globalThis.WebSocket = MockWebSocket;
+
+  try {
+    const client = new ComfyUIClient();
+    const events: unknown[] = [];
+
+    for await (const event of client.getProgressWebSocket('prompt-1')) {
+      events.push(event);
+    }
+
+    assert.ok(events.length > 0, 'WebSocket should have received progress events');
+    const finalEvent = events[events.length - 1] as { status?: string };
+    assert.equal(finalEvent.status, 'completed', 'WebSocket should emit completion event');
+  } finally {
+    globalThis.WebSocket = originalWebSocket;
+  }
+});

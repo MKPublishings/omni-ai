@@ -62,6 +62,20 @@ interface ComfyUIErrorBody {
   }>;
 }
 
+interface ComfyUIWebSocketMessage {
+  type?: string;
+  data?: {
+    prompt_id?: string;
+    node?: string | number;
+    value?: unknown;
+    status?: {
+      queue_running?: number;
+      queue_pending?: number;
+    };
+    execution_error?: string;
+  };
+}
+
 function extractResponseBodyFromErrorMessage(message: string): string {
   const marker = ' Body: ';
   const index = message.indexOf(marker);
@@ -417,7 +431,10 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async *getProgress(promptId: string): AsyncIterable<ProgressEvent> {
-    for (let attempt = 0; attempt < 120; attempt += 1) {
+    const maxAttempts = 1200; // 5 minutes at 250ms intervals (120 * 250ms = 30s was too short)
+    const pollIntervalMs = 250;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const status = await this.getJobStatus(promptId);
       yield {
         promptId,
@@ -431,10 +448,159 @@ export class ComfyUIClient implements IModelGateway {
         return;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
     }
 
-    throw new Error(`Timed out while polling ComfyUI progress for ${promptId}.`);
+    // Before failing, try one last query to /history to see if the job actually completed.
+    // This handles the case where ComfyUI finished but event notification was delayed.
+    if (process.env.COMFYUI_DEBUG === '1') {
+      console.warn(
+        `[ComfyUIClient] Polling timeout for ${promptId}. Attempting fallback history query...`
+      );
+    }
+
+    try {
+      const fallbackStatus = await this.getJobStatus(promptId);
+      if (fallbackStatus.status === 'completed' || fallbackStatus.status === 'failed') {
+        yield {
+          promptId,
+          status: fallbackStatus.status,
+          step: fallbackStatus.step,
+          totalSteps: fallbackStatus.totalSteps,
+          queuePosition: fallbackStatus.queuePosition,
+        };
+        return;
+      }
+    } catch {
+      // Fallback query also failed; timeout is real.
+    }
+
+    throw new Error(
+      `Timed out while polling ComfyUI progress for ${promptId} ` +
+      `(checked ${maxAttempts} times over ~${(maxAttempts * pollIntervalMs) / 1000}s). ` +
+      `If the image actually finished rendering, increase COMFYUI_REQUEST_TIMEOUT_MS or use WebSocket streaming.`
+    );
+  }
+
+  /**
+   * Streams progress events via WebSocket instead of polling.
+   * WebSocket is more reliable than polling and never times out unless the connection drops.
+   * Use this if polling is too slow or if you need real-time progress updates.
+   */
+  async *getProgressWebSocket(promptId: string): AsyncIterable<ProgressEvent> {
+    const wsUrl = `${this.config.wsUrl}?clientId=ion-client`;
+    let ws: WebSocket | null = null;
+    let completed = false;
+    const errors: Error[] = [];
+
+    try {
+      // Open WebSocket connection
+      ws = new WebSocket(wsUrl);
+
+      // Create a promise-based interface for WebSocket events
+      const eventQueue: ComfyUIWebSocketMessage[] = [];
+      let resolveNext: (() => void) | null = null;
+
+      ws.addEventListener('message', (event) => {
+        try {
+          const message = JSON.parse(String(event.data)) as ComfyUIWebSocketMessage;
+          eventQueue.push(message);
+          if (resolveNext) {
+            resolveNext();
+            resolveNext = null;
+          }
+        } catch {
+          // Ignore parse errors; skip malformed messages
+        }
+      });
+
+      ws.addEventListener('error', (event) => {
+        errors.push(new Error(`WebSocket connection error: ${String(event)}`));
+      });
+
+      ws.addEventListener('close', () => {
+        completed = true;
+        if (resolveNext) {
+          resolveNext();
+          resolveNext = null;
+        }
+      });
+
+      // Wait for connection to open
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
+        ws!.addEventListener('open', () => {
+          clearTimeout(timeout);
+          resolve();
+        }, { once: true });
+      });
+
+      // Listen for execution_complete event for this promptId
+      while (!completed && errors.length === 0) {
+        // Drain existing messages from queue
+        while (eventQueue.length > 0) {
+          const message = eventQueue.shift();
+          if (!message) continue;
+
+          // Check for execution completion
+          if (message.type === 'execution_complete' && message.data?.prompt_id === promptId) {
+            yield {
+              promptId,
+              status: 'completed',
+              step: 1,
+              totalSteps: 1,
+              queuePosition: -1,
+            };
+            return;
+          }
+
+          // Check for execution errors
+          if (message.type === 'execution_error' && message.data?.prompt_id === promptId) {
+            errors.push(new Error(`Execution error: ${message.data.execution_error || 'unknown'}`));
+            break;
+          }
+
+          // Yield execution progress events
+          if (message.type === 'execution_progress' && message.data?.prompt_id === promptId) {
+            const node = String(message.data.node || '');
+            const value = message.data.value;
+            if (typeof value === 'object' && value !== null && 'max' in value && 'value' in value) {
+              yield {
+                promptId,
+                status: 'processing',
+                step: Number(value.value as number) || 0,
+                totalSteps: Number(value.max as number) || 1,
+                queuePosition: 0,
+              };
+            }
+          }
+        }
+
+        // Wait for next message or connection close
+        if (!completed && errors.length === 0) {
+          await new Promise<void>((resolve) => {
+            resolveNext = resolve;
+            // Safety timeout: if no messages for 60s, assume stuck
+            const timeout = setTimeout(resolve, 60000);
+            ws!.addEventListener('message', () => {
+              clearTimeout(timeout);
+            }, { once: true });
+            ws!.addEventListener('close', () => {
+              clearTimeout(timeout);
+              resolve();
+            }, { once: true });
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        throw errors[0];
+      }
+    } finally {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    }
   }
 
   async getLoadedModel(): Promise<string | null> {
