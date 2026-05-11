@@ -120,7 +120,6 @@ export class ComfyUIClient implements IModelGateway {
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
     // ===== VALIDATION LAYER =====
-    // Catch malformed workflows before submission
     const validationResult = validateComfyUIWorkflow(workflow);
     if (!validationResult.valid) {
       const errorMessage = formatValidationErrors(validationResult);
@@ -128,12 +127,17 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     // ===== PAYLOAD PREPARATION =====
-    // Ensure workflow is properly serialized
     let payload: string;
     try {
-      payload = JSON.stringify({ prompt: workflow });
+      payload = JSON.stringify({ prompt: workflow }, null, 2);
     } catch (e) {
       throw new Error(`Failed to serialize workflow to JSON: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    // ===== DEBUG LOGGING =====
+    if (process.env.COMFYUI_DEBUG === '1') {
+      // eslint-disable-next-line no-console
+      console.log('[ComfyUIClient] Submitting workflow payload:', payload);
     }
 
     // ===== SUBMISSION =====
@@ -155,7 +159,6 @@ export class ComfyUIClient implements IModelGateway {
 
       return { promptId };
     } catch (error) {
-      // Enhanced error handling for 400 errors
       if (error instanceof Error) {
         if (error.message.includes('(400)')) {
           throw new Error(
