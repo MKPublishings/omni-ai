@@ -418,7 +418,11 @@ export default {
       }
     }
 
-    if (url.pathname.startsWith("/api/image")) {
+    if (url.pathname === "/api/image/runtime-config" && ["GET", "POST"].includes(request.method.toUpperCase())) {
+      return forward(request, env.IMAGES_SERVICE, env.IMAGES_URL, "/runtime-config");
+    }
+
+    if (url.pathname === "/api/image") {
       return forward(request, env.IMAGES_SERVICE, env.IMAGES_URL, "/generate");
     }
 

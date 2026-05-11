@@ -18,6 +18,58 @@ interface Env {
   DEFAULT_CHECKPOINT?: string;
 }
 
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) {
+    return fallback;
+  }
+
+  return ["1", "true", "yes", "on"].includes(normalized);
+}
+
+function readNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function readText(value: unknown, fallback: string): string {
+  const parsed = String(value ?? "").trim();
+  return parsed || fallback;
+}
+
+function buildRuntimeConfig(env: Env): Record<string, unknown> {
+  return {
+    gateway: {
+      host: readText(env.ION_HOST, "http://localhost:8188"),
+      wsUrl: readText(env.ION_WS, "ws://localhost:8188/ws"),
+      mock: readBoolean(env.ION_MOCK, true),
+      requestTimeoutMs: readNumber(env.ION_REQUEST_TIMEOUT_MS, 120000),
+      defaultCheckpoint: readText(env.DEFAULT_CHECKPOINT, "sd_xl_turbo_1.0_fp16.safetensors"),
+    },
+    queue: {
+      runtime: "memory",
+      stateBinding: "ION_IMAGE_STATE_KV",
+      stateNamespace: "ion:image:queue",
+      maxQueueSize: 100,
+      maxConcurrentJobs: 2,
+    },
+    storage: {
+      imageStoragePath: "./storage/images",
+      thumbnailStoragePath: "./storage/thumbs",
+      metadataDbUrl: "sqlite:./storage/metadata.db",
+    },
+    safety: {
+      enabled: true,
+      nsfwThreshold: 0.7,
+      rateLimitPerHour: 30,
+    },
+    logging: {
+      level: "info",
+      format: "json",
+    },
+  };
+}
+
 interface ImageRequest {
   userId?: string;
   prompt: string;
@@ -607,6 +659,15 @@ async function toImageBytes(value: unknown, depth = 0): Promise<Uint8Array | Arr
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/runtime-config" && ["GET", "POST"].includes(request.method.toUpperCase())) {
+      return Response.json(buildRuntimeConfig(env), {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      });
+    }
 
     if (url.pathname === "/generate" && request.method === "POST") {
       if (isEnabled(env.ION_IMAGE_PIPELINE_V2)) {
