@@ -202,6 +202,16 @@ function validateInputConnections(
   errors: WorkflowValidationError[],
 ) {
   for (const [inputName, value] of Object.entries(inputs)) {
+    if (value === null || value === undefined) {
+      errors.push({
+        field: `nodes.${nodeId}.inputs.${inputName}`,
+        message: 'Input value cannot be null or undefined',
+        severity: 'error',
+        nodeId,
+      });
+      continue;
+    }
+
     // String/number/boolean inputs are fine
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
       continue;
@@ -298,12 +308,24 @@ function validateNodeConstraints(
 
   switch (classType) {
     case 'CheckpointLoaderSimple': {
-  const ckptName = inputs.ckpt_name || 'v1-5-pruned-emaonly-fp16.safetensors';
-  if (!ckptName) {
-    throw new Error('Checkpoint name missing or invalid.');
-  }
-  break;
-}
+      const ckptName = String(inputs.ckpt_name ?? '').trim();
+      if (!ckptName) {
+        errors.push({
+          field: `nodes.${nodeId}.inputs.ckpt_name`,
+          message: 'CheckpointLoaderSimple requires a non-empty ckpt_name',
+          severity: 'error',
+          nodeId,
+        });
+      } else if (ckptName.includes('/') || ckptName.includes('\\')) {
+        errors.push({
+          field: `nodes.${nodeId}.inputs.ckpt_name`,
+          message: 'ckpt_name must be a filename only, not a path',
+          severity: 'error',
+          nodeId,
+        });
+      }
+      break;
+    }
 
 
     case 'EmptyLatentImage': {
@@ -347,6 +369,13 @@ function validateNodeConstraints(
         errors.push({
           field: `nodes.${nodeId}.inputs.text`,
           message: 'CLIPTextEncode requires text input',
+          severity: 'error',
+          nodeId,
+        });
+      } else if (typeof inputs.text !== 'string') {
+        errors.push({
+          field: `nodes.${nodeId}.inputs.text`,
+          message: 'CLIPTextEncode text must be a string',
           severity: 'error',
           nodeId,
         });

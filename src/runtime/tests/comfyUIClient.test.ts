@@ -33,6 +33,57 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
           ckpt_name: 'ion-citizen-xl-vpred-v2.0',
         },
       },
+      '2': {
+        class_type: 'CLIPTextEncode',
+        inputs: {
+          text: 'positive prompt',
+          clip: ['1', 1],
+        },
+      },
+      '3': {
+        class_type: 'CLIPTextEncode',
+        inputs: {
+          text: 'negative prompt',
+          clip: ['1', 1],
+        },
+      },
+      '4': {
+        class_type: 'EmptyLatentImage',
+        inputs: {
+          width: 512,
+          height: 512,
+          batch_size: 1,
+        },
+      },
+      '5': {
+        class_type: 'KSampler',
+        inputs: {
+          seed: 1,
+          steps: 20,
+          cfg: 7,
+          sampler_name: 'euler',
+          scheduler: 'normal',
+          denoise: 1,
+          model: ['1', 0],
+          positive: ['2', 0],
+          negative: ['3', 0],
+          latent_image: ['4', 0],
+        },
+      },
+      '6': {
+        class_type: 'VAEDecode',
+        inputs: {
+          samples: ['5', 0],
+          vae: ['1', 2],
+        },
+      },
+      '7': {
+        class_type: 'SaveImage',
+        inputs: {
+          filename_prefix: 'test',
+          images: ['6', 0],
+        },
+      },
     });
 
     assert.equal(await client.getLoadedModel(), 'ion-citizen-xl-vpred-v2.0');

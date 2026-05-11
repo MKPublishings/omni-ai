@@ -2,6 +2,22 @@ import { getCheckpointConfig } from '../../config/models.config';
 import { buildUniversalBaseGraph } from '../templates/universal-base-graph';
 import type { ComfyUIWorkflow, GenerationRequest } from '../../shared/types';
 
+function normalizeRuntimeCheckpointName(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) {
+    return 'v1-5-pruned-emaonly-fp16.safetensors';
+  }
+
+  const sanitizedPath = raw.replace(/\\/g, '/');
+  const filename = sanitizedPath.split('/').pop()?.trim() || raw;
+
+  if (/\.(safetensors|ckpt|pt|pth)$/i.test(filename)) {
+    return filename;
+  }
+
+  return `${filename}.safetensors`;
+}
+
 function buildPositiveText(request: GenerationRequest): string {
   return [
     ...request.prompt.qualityTags,
@@ -13,9 +29,12 @@ function buildPositiveText(request: GenerationRequest): string {
 }
 
 export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
-  // Use the provided checkpoint if available, otherwise default to the known working checkpoint
-  const checkpoint = getCheckpointConfig(request.model.checkpoint || 'v1-5-pruned-emaonly-fp16');
-  const runtimeCheckpoint = checkpoint.runtimeCheckpoint || checkpoint.id || 'v1-5-pruned-emaonly-fp16';
+  // Prefer explicit request checkpoint names to avoid accidental fallback remaps.
+  const requestedCheckpoint = String(request.model.checkpoint || '').trim();
+  const checkpoint = getCheckpointConfig(requestedCheckpoint || 'v1-5-pruned-emaonly-fp16');
+  const runtimeCheckpoint = normalizeRuntimeCheckpointName(
+    requestedCheckpoint || checkpoint.runtimeCheckpoint || checkpoint.id || 'v1-5-pruned-emaonly-fp16',
+  );
   const positiveText = buildPositiveText(request);
   const negativeText = request.prompt.negative;
 

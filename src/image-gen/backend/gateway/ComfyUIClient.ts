@@ -41,6 +41,61 @@ interface ComfyUIObjectInfoResponse {
   };
 }
 
+function isComfyNodeId(key: string): boolean {
+  return /^\d+$/.test(String(key).trim());
+}
+
+function sanitizeInputValue(value: unknown): unknown {
+  if (value === undefined || typeof value === 'function' || typeof value === 'symbol') {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeInputValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    const sanitizedObject: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+      const sanitizedEntry = sanitizeInputValue(entry);
+      if (sanitizedEntry !== undefined) {
+        sanitizedObject[key] = sanitizedEntry;
+      }
+    }
+    return sanitizedObject;
+  }
+
+  return value;
+}
+
+function sanitizeWorkflowForPrompt(workflow: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [nodeId, nodeValue] of Object.entries(workflow)) {
+    if (!isComfyNodeId(nodeId) || !nodeValue || typeof nodeValue !== 'object' || Array.isArray(nodeValue)) {
+      continue;
+    }
+
+    const nodeRecord = nodeValue as Record<string, unknown>;
+    const classType = String(nodeRecord.class_type ?? '').trim();
+    if (!classType) {
+      continue;
+    }
+
+    const rawInputs = nodeRecord.inputs;
+    const inputs = rawInputs && typeof rawInputs === 'object' && !Array.isArray(rawInputs)
+      ? sanitizeInputValue(rawInputs)
+      : {};
+
+    sanitized[nodeId] = {
+      class_type: classType,
+      inputs,
+    };
+  }
+
+  return sanitized;
+}
+
 function getPromptIdFromQueueEntry(entry: unknown): string {
   if (Array.isArray(entry)) {
     return String(entry[1] ?? '').trim();
@@ -119,8 +174,10 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
+    const promptWorkflow = sanitizeWorkflowForPrompt(workflow);
+
     // ===== VALIDATION LAYER =====
-    const validationResult = validateComfyUIWorkflow(workflow);
+    const validationResult = validateComfyUIWorkflow(promptWorkflow);
     if (!validationResult.valid) {
       const errorMessage = formatValidationErrors(validationResult);
       throw new Error(`ComfyUI workflow validation failed:\n${errorMessage}`);
@@ -129,14 +186,13 @@ export class ComfyUIClient implements IModelGateway {
     // ===== PAYLOAD PREPARATION =====
     let payload: string;
     try {
-      payload = JSON.stringify({ prompt: workflow }, null, 2);
+      payload = JSON.stringify({ prompt: promptWorkflow }, null, 2);
     } catch (e) {
       throw new Error(`Failed to serialize workflow to JSON: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     // ===== DEBUG LOGGING =====
     if (process.env.COMFYUI_DEBUG === '1') {
-      // eslint-disable-next-line no-console
       console.log('[ComfyUIClient] Submitting workflow payload:', payload);
     }
 
@@ -155,7 +211,7 @@ export class ComfyUIClient implements IModelGateway {
         throw new Error('ComfyUI did not return a prompt_id.');
       }
 
-      this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(workflow);
+      this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(promptWorkflow);
 
       return { promptId };
     } catch (error) {
@@ -331,7 +387,15 @@ export class ComfyUIClient implements IModelGateway {
   private async fetchJson<T>(path: string, init: RequestInit): Promise<T> {
     const response = await this.fetchWithTimeout(path, init);
     if (!response.ok) {
-      throw new Error(`ComfyUI request failed (${response.status}) for ${path}.`);
+      let responseBody = '';
+      try {
+        responseBody = (await response.text()).trim();
+      } catch {
+        responseBody = '';
+      }
+
+      const bodySuffix = responseBody ? ` Body: ${responseBody.slice(0, 1000)}` : '';
+      throw new Error(`ComfyUI request failed (${response.status}) for ${path}.${bodySuffix}`);
     }
 
     return response.json() as Promise<T>;
