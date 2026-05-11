@@ -298,17 +298,13 @@ function validateNodeConstraints(
 
   switch (classType) {
     case 'CheckpointLoaderSimple': {
-      const ckptName = inputs.ckpt_name;
-      if (!ckptName) {
-        errors.push({
-          field: `nodes.${nodeId}.inputs.ckpt_name`,
-          message: 'CheckpointLoaderSimple requires ckpt_name input',
-          severity: 'error',
-          nodeId,
-        });
-      }
-      break;
-    }
+  const ckptName = inputs.ckpt_name || 'v1-5-pruned-emaonly-fp16.safetensors';
+  if (!ckptName) {
+    throw new Error('Checkpoint name missing or invalid.');
+  }
+  break;
+}
+
 
     case 'EmptyLatentImage': {
       const width = inputs.width;
