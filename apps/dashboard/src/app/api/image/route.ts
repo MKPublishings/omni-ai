@@ -24,21 +24,6 @@ function isDirectRelayEnabled(): boolean {
 }
 
 function isV3RelayEnabled(): boolean {
-  const dashboardDisableToggle = String(process.env.DASHBOARD_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
-  if (['0', 'false', 'no', 'off'].includes(dashboardDisableToggle)) {
-    return false
-  }
-
-  const dashboardToggle = String(process.env.DASHBOARD_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
-  if (['1', 'true', 'yes', 'on'].includes(dashboardToggle)) {
-    return true
-  }
-
-  const globalToggle = String(process.env.ION_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
-  if (['0', 'false', 'no', 'off'].includes(globalToggle)) {
-    return false
-  }
-
   return true
 }
 
@@ -145,7 +130,11 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
         quality: typeof body.quality === 'string' ? body.quality : undefined,
         ratio: typeof body.ratio === 'string' ? body.ratio : undefined,
         feedbackApplied: Boolean(String(body.feedback || '').trim()),
-      }, process.env as Record<string, unknown>)
+      }, {
+        ...(process.env as Record<string, unknown>),
+        ION_IMAGE_PROVIDER_PRIMARY: 'cloudflare-ai',
+        ION_IMAGE_PROVIDER_FALLBACK: 'ion-native',
+      })
 
       return NextResponse.json(responsePayload.body, {
         status: 200,

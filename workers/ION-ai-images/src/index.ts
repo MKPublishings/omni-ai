@@ -76,11 +76,6 @@ function isEnabled(value: unknown): boolean {
 }
 
 function isV3Enabled(env: Env): boolean {
-  const value = String(env.ION_IMAGE_PIPELINE_V3 || "").trim().toLowerCase();
-  if (["0", "false", "no", "off"].includes(value)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -166,7 +161,11 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
           ratio: body.ratio,
           feedbackApplied: Boolean(String(body.feedback || "").trim()),
         },
-        env as unknown as Record<string, unknown>,
+        {
+          ...(env as unknown as Record<string, unknown>),
+          ION_IMAGE_PROVIDER_PRIMARY: "cloudflare-ai",
+          ION_IMAGE_PROVIDER_FALLBACK: "ion-native",
+        },
       );
 
       return new Response(JSON.stringify(responsePayload.body), {
