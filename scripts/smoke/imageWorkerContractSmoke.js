@@ -3,7 +3,64 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
+// Load tsconfig.json to resolve path aliases
+function getTsConfigPaths() {
+  try {
+    const tsconfigPath = path.join(__dirname, "..", "..", "tsconfig.json");
+    const tsconfigContent = fs.readFileSync(tsconfigPath, "utf8");
+    const tsconfig = JSON.parse(tsconfigContent);
+    return tsconfig.compilerOptions?.paths || {};
+  } catch (e) {
+    console.warn("Failed to load tsconfig.json paths:", e.message);
+    return {};
+  }
+}
+
+function resolvePathAlias(request, baseDir) {
+  const paths = getTsConfigPaths();
+  
+  for (const [alias, targetPaths] of Object.entries(paths)) {
+    // Convert glob pattern like "@/*" to regex pattern
+    const aliasPattern = alias.replace(/\*/g, "(.*)");
+    const aliasRegex = new RegExp("^" + aliasPattern + "$");
+    const match = request.match(aliasRegex);
+    
+    if (match) {
+      // Get the target path (first entry if multiple)
+      const targetPattern = targetPaths[0];
+      // Replace * with the matched group
+      const targetPath = targetPattern.replace("*", match[1] || "");
+      return path.resolve(baseDir, targetPath);
+    }
+  }
+  
+  return null;
+}
+
 function resolveLocalModule(fromFile, request) {
+  const baseDir = path.resolve(__dirname, "..", "..");
+  
+  // Try path alias resolution first
+  if (request.startsWith("@/")) {
+    const aliasResolved = resolvePathAlias(request, baseDir);
+    if (aliasResolved) {
+      const candidates = [
+        aliasResolved,
+        `${aliasResolved}.ts`,
+        `${aliasResolved}.js`,
+        path.join(aliasResolved, "index.ts"),
+        path.join(aliasResolved, "index.js"),
+      ];
+      
+      for (const candidate of candidates) {
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          return candidate;
+        }
+      }
+    }
+  }
+  
+  // Fall back to relative resolution
   const basePath = path.resolve(path.dirname(fromFile), request);
   const candidates = [
     basePath,
@@ -45,7 +102,8 @@ function loadTypeScriptModule(filePath, cache = new Map()) {
   cache.set(normalizedPath, moduleRef);
 
   const localRequire = (request) => {
-    if (!request.startsWith(".") && !path.isAbsolute(request)) {
+    // Only try node_modules for non-relative, non-absolute, non-alias imports
+    if (!request.startsWith(".") && !path.isAbsolute(request) && !request.startsWith("@/")) {
       return require(request);
     }
 
