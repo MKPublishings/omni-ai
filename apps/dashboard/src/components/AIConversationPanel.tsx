@@ -219,118 +219,18 @@ function sanitizeImageFilename(value: string) {
   return `ion-${normalized}`
 }
 
-const MessageBubble = ({ message }: { message: Message }) => {
+const MessageBubble = ({ message }: { message: Message }): React.ReactElement => {
   const isUser = message.type === 'user'
-  const renderedSegments = message.content ? renderMessageText(message.content) : []
-  const sources = Array.isArray(message.sources) ? message.sources : []
-  const imageSrc = toDisplayText(message.image?.src)
-  const [showImageModal, setShowImageModal] = useState(false)
-  const imageFilename = sanitizeImageFilename(toDisplayText(message.image?.filename) || 'image.png')
-
-  useEffect(() => {
-    if (!showImageModal || typeof document === 'undefined') {
-      return
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setShowImageModal(false)
-      }
-    }
-
-    document.addEventListener('keydown', onEscape)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', onEscape)
-    }
-  }, [showImageModal])
-
+  
   return (
-    <div className={clsx(
-      'flex mb-4',
-      isUser ? 'justify-end' : 'justify-start'
-    )}>
+    <div className={clsx('flex mb-4', isUser ? 'justify-end' : 'justify-start')}>
       <div className={clsx(
         'chat-message-bubble chat-copy-surface chat-selectable max-w-[94%] break-words rounded-2xl px-3.5 py-2.5 sm:max-w-[85%] sm:px-4 sm:py-3 lg:max-w-[44rem]',
         isUser
           ? 'chat-message-user bg-ion-blue-600 text-quantum-white'
           : 'chat-message-assistant ix-glass-sovereign text-quantum-white'
       )}>
-        {renderedSegments.length > 0 ? <div className="space-y-3">{renderedSegments}</div> : null}
-        {message.image && imageSrc ? (
-          <div className={clsx(message.content ? 'mt-3' : '')}>
-            <div className="rounded-2xl border border-quantum-white/10 bg-pine-black-900/28 p-3 sm:p-3.5">
-              <img
-                src={imageSrc}
-                alt={toDisplayText(message.image?.filename) || 'Generated image'}
-                className="max-h-[18rem] w-full rounded-xl border border-quantum-white/10 object-cover sm:max-h-[20rem]"
-              />
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowImageModal(true)}
-                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-quantum-white transition hover:bg-quantum-white/8"
-                >
-                  View
-                </button>
-                <a
-                  href={imageSrc}
-                  download={imageFilename}
-                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-quantum-white transition hover:bg-quantum-white/8"
-                >
-                  Download
-                </a>
-              </div>
-            </div>
-            {showImageModal ? (
-              <div
-                className="fixed inset-0 z-[120] flex items-center justify-center bg-pine-black-900/72 px-4 py-6 backdrop-blur-[2px]"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Image preview"
-                onClick={() => setShowImageModal(false)}
-              >
-                <div
-                  className="w-full max-w-[78rem] rounded-2xl border border-quantum-white/14 bg-pine-black-900/88 p-2 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:p-3"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <img
-                    src={imageSrc}
-                    alt={toDisplayText(message.image?.filename) || 'Generated image preview'}
-                    className="max-h-[82vh] w-full rounded-xl object-contain"
-                  />
-                </div>
-              </div>
-            ) : null}
-            {!showImageModal ? null : (
-              <button
-                type="button"
-                onClick={() => setShowImageModal(false)}
-                className="fixed right-6 top-6 z-[121] inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/25 bg-pine-black-900/62 text-lg text-quantum-white transition hover:bg-pine-black-900/82"
-                aria-label="Close image preview"
-              >
-                ×
-              </button>
-            )}
-            </div>
-          </div>
-        ) : null}
-        {!isUser && sources.length > 0 ? (
-          <div className={clsx(message.content || message.image ? 'mt-3' : '')}>
-            <div className="chat-sources-heading mb-2 text-[11px] uppercase tracking-[0.2em] text-quantum-white/48">
-              Sources
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {sources.map((source) => (
-                <SourceChip key={`${source.url}-${source.title}`} source={source} />
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <div className="space-y-3">{message.content}</div>
         <span className="chat-message-timestamp mt-2 block select-none text-xs opacity-60">
           {toSafeTimeLabel(message.timestamp)}
         </span>
