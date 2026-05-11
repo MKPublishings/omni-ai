@@ -85,7 +85,8 @@ function resolveCloudflareGuidance(prompt: string): number {
 }
 
 function resolveCloudflareSteps(prompt: string): number {
-  return isAnimeLikePrompt(prompt) ? 32 : 28;
+  const preferred = isAnimeLikePrompt(prompt) ? 20 : 18;
+  return Math.min(20, Math.max(1, preferred));
 }
 
 function resolveCloudflareModel(source: EnvironmentSource): string {
