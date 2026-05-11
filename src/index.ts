@@ -104,6 +104,7 @@ export interface Env {
   ION_IMAGE_PIPELINE_V2?: string;
   ION_IMAGE_QUEUE_V1?: string;
   ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403?: string;
+  ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -245,6 +246,11 @@ function isComfyPromptAccessDeniedError(error: unknown): boolean {
     return true;
   }
   return message.includes("(403)") && message.includes("/prompt");
+}
+
+function isComfyGatewayDownError(error: unknown): boolean {
+  const name = String((error as { name?: string } | null)?.name || "").toUpperCase();
+  return name === "E_COMFYUI_DOWN";
 }
 
 const DIRECT_FALLBACK_DEFAULT_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
@@ -1378,6 +1384,10 @@ function normalizeSafetyProfile(raw: IONRequestBody["safetyProfile"] | ImageRequ
 
 function shouldUseDirectFallbackOnPrompt403(env: Env): boolean {
   return isEnabledFlag(env.ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403);
+}
+
+function shouldFallbackOnComfyDown(env: Env): boolean {
+  return isEnabledFlag(env.ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN);
 }
 
 function getRequestCountryCode(request: Request): string {
@@ -3925,24 +3935,23 @@ export default {
               const errorMessage = String((pipelineErr as any)?.message || pipelineErr || "Unknown error");
               const errorName = String((pipelineErr as any)?.name || "Error");
               
+              const comfyDown = isComfyGatewayDownError(pipelineErr);
+              const comfyDenied = isComfyPromptAccessDeniedError(pipelineErr);
+              const aiAvailable = env.AI && typeof (env.AI as { run?: unknown }).run === "function";
+              const shouldFallback =
+                (comfyDown && shouldFallbackOnComfyDown(env) && aiAvailable) ||
+                (comfyDenied && shouldUseDirectFallbackOnPrompt403(env) && aiAvailable);
+
               logger.log("ion_image_pipeline_error", {
                 userId,
                 errorName,
                 errorMessage,
-                isComfyPromptDenied: isComfyPromptAccessDeniedError(pipelineErr),
-                willFallback:
-                  isComfyPromptAccessDeniedError(pipelineErr) &&
-                  shouldUseDirectFallbackOnPrompt403(env) &&
-                  env.AI &&
-                  typeof (env.AI as { run?: unknown }).run === "function"
+                comfyDown,
+                isComfyPromptDenied: comfyDenied,
+                willFallback: shouldFallback,
               });
               
-              if (
-                isComfyPromptAccessDeniedError(pipelineErr) &&
-                shouldUseDirectFallbackOnPrompt403(env) &&
-                env.AI &&
-                typeof (env.AI as { run?: unknown }).run === "function"
-              ) {
+              if (shouldFallback) {
                 logger.log("ion_image_pipeline_fallback_triggered", {
                   userId,
                   reason: "ComfyUI access denied - using SDXL fallback"

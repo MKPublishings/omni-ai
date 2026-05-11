@@ -25,6 +25,7 @@ binding = "AI"
 [vars]
 ION_ENV = "production"
 ION_IMAGE_PIPELINE_V2 = "1"
+ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN = "1"
 COMFYUI_HOST = "https://img.ionirix.com"
 COMFYUI_FETCH_HOST = "https://img.ionirix.com"
 COMFYUI_WS = "wss://img.ionirix.com/ws"
