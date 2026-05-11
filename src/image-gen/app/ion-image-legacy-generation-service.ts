@@ -79,17 +79,62 @@ export function inferMaterialsFromPrompt(prompt: string): string[] {
   return Array.from(new Set(inferred));
 }
 
-export function normalizeImageGenerationError(err: any): { status: number; code: string; message: string; details?: string } {
+type NormalizedImageGenerationError = { status: number; code: string; message: string; details?: string };
+
+const IMAGE_ERROR_PRESETS = {
+  safetyBlocked: { status: 403, code: "safety-blocked", message: "Prompt requires a safety-context adjustment." },
+  providerUnavailable: { status: 503, code: "provider-unavailable", message: "Image provider is temporarily unavailable. Retry shortly." },
+  providerTimeout: { status: 504, code: "provider-timeout", message: "Image generation timed out. Please retry." },
+  providerPolicyBlocked: { status: 422, code: "provider-policy-blocked", message: "Image provider requested a safety-context adjustment for this prompt." },
+  promptTooLong: { status: 400, code: "prompt-too-long", message: "Prompt is too long for the image provider. Shorten the prompt and retry." },
+  genericFailure: { status: 500, code: "image-generation-failed", message: "Image generation failed." },
+} as const;
+
+function withDetails(
+  preset: { status: number; code: string; message: string },
+  rawMessage: string,
+): NormalizedImageGenerationError {
+  return {
+    ...preset,
+    details: rawMessage || undefined,
+  };
+}
+
+function includesAny(haystack: string, needles: string[]): boolean {
+  return needles.some((needle) => haystack.includes(needle));
+}
+
+export function normalizeImageGenerationError(err: any): NormalizedImageGenerationError {
   const rawCode = String(err?.name || err?.code || "").trim().toUpperCase();
   const rawMessage = String(err?.message || err?.error || "").trim();
   const value = rawMessage.toLowerCase();
-  if (rawCode === "E_SAFETY_BLOCK") return { status: 403, code: "safety-blocked", message: "Prompt requires a safety-context adjustment.", details: rawMessage || undefined };
-  if (rawCode === "E_COMFYUI_DOWN") return { status: 503, code: "provider-unavailable", message: "Image provider is temporarily unavailable. Retry shortly.", details: rawMessage || undefined };
-  if (rawCode === "E_TIMEOUT") return { status: 504, code: "provider-timeout", message: "Image generation timed out. Please retry.", details: rawMessage || undefined };
-  if (/request failed \(4\d\d\) for \/prompt/i.test(rawMessage)) return { status: 503, code: "provider-unavailable", message: "Image provider is temporarily unavailable. Retry shortly.", details: rawMessage || undefined };
-  if (value.includes("moderat") || value.includes("safety") || value.includes("policy") || value.includes("nsfw") || value.includes("unsafe") || value.includes("content blocked")) return { status: 422, code: "provider-policy-blocked", message: "Image provider requested a safety-context adjustment for this prompt.", details: rawMessage || undefined };
-  if (value.includes("too long") || value.includes("context length") || value.includes("max tokens") || value.includes("input is too large") || value.includes("length of '/prompt'") || (/must be\s*<=\s*\d+/.test(value) && value.includes("prompt"))) return { status: 400, code: "prompt-too-long", message: "Prompt is too long for the image provider. Shorten the prompt and retry.", details: rawMessage || undefined };
-  if (value.includes("timeout") || value.includes("timed out") || value.includes("deadline")) return { status: 504, code: "provider-timeout", message: "Image generation timed out. Please retry.", details: rawMessage || undefined };
-  if (value.includes("unavailable") || value.includes("overloaded") || value.includes("rate limit")) return { status: 503, code: "provider-unavailable", message: "Image provider is temporarily unavailable. Retry shortly.", details: rawMessage || undefined };
-  return { status: 500, code: "image-generation-failed", message: "Image generation failed.", details: rawMessage || undefined };
+
+  if (rawCode === "E_SAFETY_BLOCK") return withDetails(IMAGE_ERROR_PRESETS.safetyBlocked, rawMessage);
+  if (rawCode === "E_COMFYUI_DOWN") return withDetails(IMAGE_ERROR_PRESETS.providerUnavailable, rawMessage);
+  if (rawCode === "E_TIMEOUT") return withDetails(IMAGE_ERROR_PRESETS.providerTimeout, rawMessage);
+
+  if (/request failed \(4\d\d\) for \/prompt/i.test(rawMessage)) {
+    return withDetails(IMAGE_ERROR_PRESETS.providerUnavailable, rawMessage);
+  }
+
+  if (includesAny(value, ["moderat", "safety", "policy", "nsfw", "unsafe", "content blocked"])) {
+    return withDetails(IMAGE_ERROR_PRESETS.providerPolicyBlocked, rawMessage);
+  }
+
+  const isPromptTooLong =
+    includesAny(value, ["too long", "context length", "max tokens", "input is too large", "length of '/prompt'"]) ||
+    (/must be\s*<=\s*\d+/.test(value) && value.includes("prompt"));
+  if (isPromptTooLong) {
+    return withDetails(IMAGE_ERROR_PRESETS.promptTooLong, rawMessage);
+  }
+
+  if (includesAny(value, ["timeout", "timed out", "deadline"])) {
+    return withDetails(IMAGE_ERROR_PRESETS.providerTimeout, rawMessage);
+  }
+
+  if (includesAny(value, ["unavailable", "overloaded", "rate limit"])) {
+    return withDetails(IMAGE_ERROR_PRESETS.providerUnavailable, rawMessage);
+  }
+
+  return withDetails(IMAGE_ERROR_PRESETS.genericFailure, rawMessage);
 }
