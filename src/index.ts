@@ -69,6 +69,7 @@ import {
 import { buildIonImageV2RouteResponse } from "./image-gen/app/ion-image-route-format";
 import { getIonImageQueueStatusRouteResult, submitIonImageQueueRouteResult } from "./image-gen/app/ion-image-queue-route-service";
 import { buildIonImageV2RouteResult } from "./image-gen/app/ion-image-v2-route-service";
+import { generateIonImageV3RouteResult } from "./image-gen/v3/image-generation-service";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
 import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
 export { IONSession } from "./memory/session";
@@ -3764,6 +3765,10 @@ export default {
           const parsedScheduler = sanitizePromptText(String(body?.scheduler || '')).toLowerCase();
           const imageQueueV1Requested = String(url.searchParams.get("queue") || "").toLowerCase() === "v1";
           const imageQueueV1Enabled = isEnabledFlag(env.ION_IMAGE_QUEUE_V1) || imageQueueV1Requested;
+          const imagePipelineV3Requested = String(url.searchParams.get("pipeline") || "").toLowerCase() === "v3";
+          const imagePipelineV3RawFlag = String(env.ION_IMAGE_PIPELINE_V3 || "").trim().toLowerCase();
+          const imagePipelineV3Disabled = ["0", "false", "no", "off"].includes(imagePipelineV3RawFlag);
+          const imagePipelineV3Enabled = imagePipelineV3Requested || !imagePipelineV3Disabled;
           const imagePipelineV2Requested = String(url.searchParams.get("pipeline") || "").toLowerCase() === "v2";
           const imagePipelineV2FlagEnabled = isEnabledFlag(env.ION_IMAGE_PIPELINE_V2);
           const imagePipelineV2Enabled = imagePipelineV2FlagEnabled || imagePipelineV2Requested;
@@ -3855,6 +3860,43 @@ export default {
               headers: {
                 ...CORS_HEADERS,
                 "Content-Type": "application/json"
+              }
+            });
+          }
+
+          if (imagePipelineV3Enabled) {
+            const imagePipelineStartedAt = Date.now();
+            const v3RouteResult = await generateIonImageV3RouteResult(
+              {
+                userId,
+                prompt: promptText,
+                stylePack: effectiveStylePack || requestedStylePack,
+                width: effectiveWidth,
+                height: effectiveHeight,
+                seed: Number.isFinite(parsedSeed) ? parsedSeed : undefined,
+                steps: Number.isFinite(parsedSteps) ? parsedSteps : undefined,
+                cfgScale: Number.isFinite(parsedCfgScale) ? parsedCfgScale : undefined,
+                cfgRescale: Number.isFinite(parsedCfgRescale) ? parsedCfgRescale : undefined,
+                denoise: Number.isFinite(parsedDenoise) ? parsedDenoise : undefined,
+                batchSize: Number.isFinite(parsedBatchSize) ? parsedBatchSize : undefined,
+                mode: requestedMode,
+                quality: effectiveQuality,
+                ratio: effectiveRatio,
+                feedbackApplied: Boolean(feedback),
+              },
+              env as unknown as Record<string, unknown>
+            );
+
+            logger.log("ion_image_pipeline_v3_success", {
+              userId,
+              totalMs: Date.now() - imagePipelineStartedAt,
+              provider: v3RouteResult.headers["X-ION-Image-Provider"] || "ion-native",
+            });
+
+            return new Response(JSON.stringify(v3RouteResult.body), {
+              headers: {
+                ...CORS_HEADERS,
+                ...v3RouteResult.headers,
               }
             });
           }
@@ -4017,8 +4059,8 @@ export default {
           if (!imagePipelineV2Enabled) {
             return new Response(
               JSON.stringify({
-                error: "ION image pipeline v2 is required.",
-                code: "image-gen-v2-required"
+                error: "ION image pipeline v3 or explicit v2 compatibility mode is required.",
+                code: "image-gen-pipeline-required"
               }),
               {
                 status: 503,

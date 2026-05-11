@@ -206,12 +206,48 @@ function renderMessageText(content: string) {
   })
 }
 
+function sanitizeImageFilename(value: string) {
+  const normalized = String(value || '').trim().replace(/[\\/:*?"<>|]+/g, '_')
+  if (!normalized) {
+    return 'ion-image.png'
+  }
+
+  if (/^ion[-_]/i.test(normalized)) {
+    return normalized
+  }
+
+  return `ion-${normalized}`
+}
+
 const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.type === 'user'
   const renderedSegments = message.content ? renderMessageText(message.content) : []
   const sources = Array.isArray(message.sources) ? message.sources : []
   const imageSrc = toDisplayText(message.image?.src)
-  const [showImageDetails, setShowImageDetails] = useState(false)
+  const [showImageModal, setShowImageModal] = useState(false)
+  const imageFilename = sanitizeImageFilename(toDisplayText(message.image?.filename) || 'image.png')
+
+  useEffect(() => {
+    if (!showImageModal || typeof document === 'undefined') {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowImageModal(false)
+      }
+    }
+
+    document.addEventListener('keydown', onEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onEscape)
+    }
+  }, [showImageModal])
 
   return (
     <div className={clsx(
@@ -227,72 +263,59 @@ const MessageBubble = ({ message }: { message: Message }) => {
         {renderedSegments.length > 0 ? <div className="space-y-3">{renderedSegments}</div> : null}
         {message.image && imageSrc ? (
           <div className={clsx(message.content ? 'mt-3' : '')}>
-            <img
-              src={imageSrc}
-              alt={toDisplayText(message.image?.filename) || 'Generated image'}
-              className="max-h-[28rem] w-full rounded-2xl border border-quantum-white/10 object-cover"
-            />
-            <div className="mt-3 space-y-2">
-              {/* Quick metadata chips */}
-              <div className="flex flex-wrap items-center gap-2 text-xs opacity-75">
-                {message.image.filename ? <span className="px-2 py-1 rounded bg-quantum-white/10">{message.image.filename}</span> : null}
-                {message.image.gateway ? <span className="px-2 py-1 rounded bg-quantum-white/10">🔌 {message.image.gateway}</span> : null}
-                {message.image.resolution ? <span className="px-2 py-1 rounded bg-quantum-white/10">{message.image.resolution}</span> : null}
-                {message.image.quality ? <span className="px-2 py-1 rounded bg-quantum-white/10">✨ {message.image.quality}</span> : null}
-              </div>
-              
-              {/* Details toggle and download */}
-              <div className="flex flex-wrap gap-2 pt-1">
+            <div className="rounded-2xl border border-quantum-white/10 bg-pine-black-900/28 p-3 sm:p-3.5">
+              <img
+                src={imageSrc}
+                alt={toDisplayText(message.image?.filename) || 'Generated image'}
+                className="max-h-[18rem] w-full rounded-xl border border-quantum-white/10 object-cover sm:max-h-[20rem]"
+              />
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setShowImageDetails(!showImageDetails)}
-                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-[11px] uppercase tracking-wide text-quantum-white transition hover:bg-quantum-white/8"
+                  type="button"
+                  onClick={() => setShowImageModal(true)}
+                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-quantum-white transition hover:bg-quantum-white/8"
                 >
-                  {showImageDetails ? '−' : '+'} Details
+                  View
                 </button>
                 <a
                   href={imageSrc}
-                  download={toDisplayText(message.image?.filename) || 'ion-image.png'}
-                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-3 py-1.5 text-[11px] uppercase tracking-wide text-quantum-white transition hover:bg-quantum-white/8"
+                  download={imageFilename}
+                  className="chat-inline-action inline-flex items-center justify-center rounded-full border border-quantum-white/14 px-4 py-2 text-[11px] uppercase tracking-[0.16em] text-quantum-white transition hover:bg-quantum-white/8"
                 >
                   Download
                 </a>
               </div>
-
-              {/* Expandable details section */}
-              {showImageDetails && (
-                <div className="mt-2 border-t border-quantum-white/10 pt-2 text-[11px] space-y-1.5">
-                  {/* Model & Sampling */}
-                  {(message.image.model?.checkpoint || message.image.model?.sampler || message.image.model?.steps) && (
-                    <div className="space-y-1">
-                      <div className="text-quantum-white/60 uppercase tracking-wider">Model</div>
-                      {message.image.model?.checkpoint && <div className="text-quantum-white/75 ml-2">Checkpoint: {message.image.model.checkpoint}</div>}
-                      {message.image.model?.sampler && <div className="text-quantum-white/75 ml-2">Sampler: {message.image.model.sampler}</div>}
-                      {message.image.model?.scheduler && <div className="text-quantum-white/75 ml-2">Scheduler: {message.image.model.scheduler}</div>}
-                      {message.image.model?.steps && <div className="text-quantum-white/75 ml-2">Steps: {message.image.model.steps}</div>}
-                      {message.image.model?.cfgScale && <div className="text-quantum-white/75 ml-2">CFG: {message.image.model.cfgScale}</div>}
-                      {message.image.model?.seed && <div className="text-quantum-white/75 ml-2">Seed: {message.image.model.seed}</div>}
-                    </div>
-                  )}
-                  
-                  {/* Request Info */}
-                  {(message.image.mode || message.image.styleFamily) && (
-                    <div className="space-y-1">
-                      <div className="text-quantum-white/60 uppercase tracking-wider">Request</div>
-                      {message.image.mode && <div className="text-quantum-white/75 ml-2">Mode: {message.image.mode}</div>}
-                      {message.image.styleFamily && <div className="text-quantum-white/75 ml-2">Style: {message.image.styleFamily}</div>}
-                    </div>
-                  )}
-
-                  {/* Pipeline Info */}
-                  {(message.image.pipeline?.promptId || message.image.pipeline?.requestId) && (
-                    <div className="space-y-1">
-                      <div className="text-quantum-white/60 uppercase tracking-wider">Pipeline</div>
-                      {message.image.pipeline?.promptId && <div className="text-quantum-white/75 ml-2 font-mono break-all">Prompt ID: {message.image.pipeline.promptId}</div>}
-                      {message.image.pipeline?.requestId && <div className="text-quantum-white/75 ml-2 font-mono break-all">Request ID: {message.image.pipeline.requestId}</div>}
-                    </div>
-                  )}
+            </div>
+            {showImageModal ? (
+              <div
+                className="fixed inset-0 z-[120] flex items-center justify-center bg-pine-black-900/72 px-4 py-6 backdrop-blur-[2px]"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Image preview"
+                onClick={() => setShowImageModal(false)}
+              >
+                <div
+                  className="w-full max-w-[78rem] rounded-2xl border border-quantum-white/14 bg-pine-black-900/88 p-2 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:p-3"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <img
+                    src={imageSrc}
+                    alt={toDisplayText(message.image?.filename) || 'Generated image preview'}
+                    className="max-h-[82vh] w-full rounded-xl object-contain"
+                  />
                 </div>
-              )}
+              </div>
+            ) : null}
+            {!showImageModal ? null : (
+              <button
+                type="button"
+                onClick={() => setShowImageModal(false)}
+                className="fixed right-6 top-6 z-[121] inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/25 bg-pine-black-900/62 text-lg text-quantum-white transition hover:bg-pine-black-900/82"
+                aria-label="Close image preview"
+              >
+                ×
+              </button>
+            )}
             </div>
           </div>
         ) : null}

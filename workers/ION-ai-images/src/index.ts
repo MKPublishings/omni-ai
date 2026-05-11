@@ -5,6 +5,7 @@ import {
 import { bootstrapSafeTensorGovernance } from "../../../src/image-gen/safe-tensor-bootstrap";
 import { executeIonImagePipeline } from "../../../src/image-gen/app/ion-image-pipeline";
 import { buildIonImageV2RouteResult } from "../../../src/image-gen/app/ion-image-v2-route-service";
+import { generateIonImageV3RouteResult } from "../../../src/image-gen/v3/image-generation-service";
 
 interface Env {
   AI?: Ai;
@@ -74,6 +75,15 @@ function isEnabled(value: unknown): boolean {
   return ["1", "true", "yes", "on"].includes(String(value ?? "").trim().toLowerCase());
 }
 
+function isV3Enabled(env: Env): boolean {
+  const value = String(env.ION_IMAGE_PIPELINE_V3 || "").trim().toLowerCase();
+  if (["0", "false", "no", "off"].includes(value)) {
+    return false;
+  }
+
+  return true;
+}
+
 function mapV2Failure(error: unknown): { status: number; code: string; message: string } {
   const message = String((error as { message?: string } | null)?.message || "Image generation failed");
   const name = String((error as { name?: string } | null)?.name || "").trim();
@@ -133,6 +143,36 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
       bootstrapSafeTensorGovernance();
     } catch {
       // Continue even if bootstrap has issues; pipeline will use fallback if needed
+    }
+
+    if (isV3Enabled(env)) {
+      const responsePayload = await generateIonImageV3RouteResult(
+        {
+          userId: String(body.userId || "anonymous").trim() || "anonymous",
+          prompt: normalizedPrompt,
+          stylePack: body.stylePack,
+          width: body.width,
+          height: body.height,
+          seed: body.seed,
+          steps: Number.isFinite(Number(body.steps)) ? Number(body.steps) : undefined,
+          cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
+          cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
+          denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
+          sampler: String(body.sampler || "").trim().toLowerCase() || undefined,
+          scheduler: String(body.scheduler || "").trim().toLowerCase() || undefined,
+          batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
+          mode: String(body.mode || "simple").trim() || "simple",
+          quality: body.quality,
+          ratio: body.ratio,
+          feedbackApplied: Boolean(String(body.feedback || "").trim()),
+        },
+        env as unknown as Record<string, unknown>,
+      );
+
+      return new Response(JSON.stringify(responsePayload.body), {
+        status: 200,
+        headers: responsePayload.headers,
+      });
     }
     
     const pipelineResult = await executeIonImagePipeline(

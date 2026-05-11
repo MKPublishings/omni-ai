@@ -52,12 +52,18 @@ test('dashboard /api/image route forwards body to the upstream worker when direc
 test('dashboard /api/image route executes the direct relay pipeline with the mock gateway', async () => {
   const previousApiUrl = process.env.NEXT_PUBLIC_ION_API_URL
   const previousDirectRelay = process.env.DASHBOARD_IMAGE_DIRECT_RELAY
+  const previousV3Relay = process.env.DASHBOARD_IMAGE_PIPELINE_V3
   const previousMock = process.env.COMFYUI_MOCK
   const previousCheckpoint = process.env.DEFAULT_CHECKPOINT
+  const previousPrimaryProvider = process.env.ION_IMAGE_PROVIDER_PRIMARY
+  const previousFallbackProvider = process.env.ION_IMAGE_PROVIDER_FALLBACK
   delete process.env.NEXT_PUBLIC_ION_API_URL
   process.env.DASHBOARD_IMAGE_DIRECT_RELAY = 'true'
+  process.env.DASHBOARD_IMAGE_PIPELINE_V3 = 'true'
   process.env.COMFYUI_MOCK = 'true'
   process.env.DEFAULT_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0'
+  process.env.ION_IMAGE_PROVIDER_PRIMARY = 'ion-native'
+  process.env.ION_IMAGE_PROVIDER_FALLBACK = 'none'
 
   try {
     const response = await POST(new Request('http://localhost/api/image', {
@@ -74,7 +80,8 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
     }) as never)
 
     assert.equal(response.status, 200)
-    assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v2')
+    assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v3')
+    assert.equal(response.headers.get('X-ION-Image-Provider'), 'ion-native')
     const payload = await response.json()
     assert.equal(payload.user_id, 'dashboard-test')
     assert.equal(payload.metadata?.pipeline?.gateway, 'mock')
@@ -91,6 +98,11 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
     } else {
       delete process.env.DASHBOARD_IMAGE_DIRECT_RELAY
     }
+    if (typeof previousV3Relay === 'string') {
+      process.env.DASHBOARD_IMAGE_PIPELINE_V3 = previousV3Relay
+    } else {
+      delete process.env.DASHBOARD_IMAGE_PIPELINE_V3
+    }
     if (typeof previousMock === 'string') {
       process.env.COMFYUI_MOCK = previousMock
     } else {
@@ -100,6 +112,16 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
       process.env.DEFAULT_CHECKPOINT = previousCheckpoint
     } else {
       delete process.env.DEFAULT_CHECKPOINT
+    }
+    if (typeof previousPrimaryProvider === 'string') {
+      process.env.ION_IMAGE_PROVIDER_PRIMARY = previousPrimaryProvider
+    } else {
+      delete process.env.ION_IMAGE_PROVIDER_PRIMARY
+    }
+    if (typeof previousFallbackProvider === 'string') {
+      process.env.ION_IMAGE_PROVIDER_FALLBACK = previousFallbackProvider
+    } else {
+      delete process.env.ION_IMAGE_PROVIDER_FALLBACK
     }
   }
 })

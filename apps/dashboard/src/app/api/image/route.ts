@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { executeIonImagePipeline } from '../../../../../../src/image-gen/app/ion-image-pipeline'
 import { buildIonImageV2RouteResult } from '../../../../../../src/image-gen/app/ion-image-v2-route-service'
+import { generateIonImageV3RouteResult } from '../../../../../../src/image-gen/v3/image-generation-service'
 import {
   IMAGE_SAMPLERS,
   IMAGE_SCHEDULERS,
@@ -20,6 +21,25 @@ function getConfiguredApiBaseUrl(): string | null {
 
 function isDirectRelayEnabled(): boolean {
   return ['1', 'true', 'yes', 'on'].includes(String(process.env.DASHBOARD_IMAGE_DIRECT_RELAY || '').trim().toLowerCase())
+}
+
+function isV3RelayEnabled(): boolean {
+  const dashboardDisableToggle = String(process.env.DASHBOARD_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
+  if (['0', 'false', 'no', 'off'].includes(dashboardDisableToggle)) {
+    return false
+  }
+
+  const dashboardToggle = String(process.env.DASHBOARD_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(dashboardToggle)) {
+    return true
+  }
+
+  const globalToggle = String(process.env.ION_IMAGE_PIPELINE_V3 || '').trim().toLowerCase()
+  if (['0', 'false', 'no', 'off'].includes(globalToggle)) {
+    return false
+  }
+
+  return true
 }
 
 function normalizeAgeTier(value: unknown): 'adult' | 'minor' {
@@ -105,6 +125,37 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
   try {
     const startedAt = Date.now()
     const userId = String(body.userId || 'dashboard-relay').trim() || 'dashboard-relay'
+
+    if (isV3RelayEnabled()) {
+      const responsePayload = await generateIonImageV3RouteResult({
+        userId,
+        prompt,
+        stylePack: typeof body.stylePack === 'string' ? body.stylePack : undefined,
+        width: Number.isFinite(Number(body.width)) ? Number(body.width) : undefined,
+        height: Number.isFinite(Number(body.height)) ? Number(body.height) : undefined,
+        seed: Number.isFinite(Number(body.seed)) ? Number(body.seed) : undefined,
+        steps: Number.isFinite(Number(body.steps)) ? Number(body.steps) : undefined,
+        cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
+        cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
+        denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
+        sampler: parseSampler(body.sampler),
+        scheduler: parseScheduler(body.scheduler),
+        batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
+        mode: String(body.mode || 'simple').trim() || 'simple',
+        quality: typeof body.quality === 'string' ? body.quality : undefined,
+        ratio: typeof body.ratio === 'string' ? body.ratio : undefined,
+        feedbackApplied: Boolean(String(body.feedback || '').trim()),
+      }, process.env as Record<string, unknown>)
+
+      return NextResponse.json(responsePayload.body, {
+        status: 200,
+        headers: {
+          ...responsePayload.headers,
+          'Cache-Control': 'no-store',
+        },
+      })
+    }
+
     const pipelineResult = await executeIonImagePipeline(
       {
         userId,

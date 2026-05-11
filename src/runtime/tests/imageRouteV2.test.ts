@@ -29,7 +29,7 @@ function createExecutionContext(): { waitUntil: (promise: Promise<unknown>) => v
   };
 }
 
-test('worker /api/image v2 branch preserves image response contract', async () => {
+test('worker /api/image uses ion-native v3 contract by default', async () => {
   const consoleMessages: string[] = [];
   const originalConsoleInfo = console.info;
   console.info = (...args: unknown[]) => {
@@ -54,7 +54,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
     DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   } as any;
 
-  const request = new Request('https://example.test/api/image?pipeline=v2', {
+  const request = new Request('https://example.test/api/image', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -75,20 +75,21 @@ test('worker /api/image v2 branch preserves image response contract', async () =
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Content-Type'), 'application/json');
-  assert.equal(response.headers.get('X-ION-Image-Model'), 'ion-citizen-xl-vpred-v2.0');
-  assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v2');
-  assert.match(String(body.imageDataUrl || ''), /^data:image\/png;base64,/);
+  assert.equal(response.headers.get('X-ION-Image-Model'), 'ion-native-renderer/vector-synth-v1');
+  assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v3');
+  assert.equal(response.headers.get('X-ION-Image-Provider'), 'ion-native');
+  assert.match(String(body.imageDataUrl || ''), /^data:image\//);
   assert.match(String(body.filename || ''), /^ionirix_lofi_aesthetic_/);
   assert.equal(body.user_id, 'usr_test');
   assert.equal(body.metadata?.pipeline?.version, 'v2');
   assert.equal(body.metadata?.pipeline?.gateway, 'mock');
-  assert.equal(body.metadata?.pipeline?.promptId?.startsWith('mock-'), true);
+  assert.equal(body.metadata?.pipeline?.promptId?.startsWith('ion-native-'), true);
   assert.ok(Array.isArray(body.metadata?.pipeline?.reasoningChain));
   assert.equal(body.metadata?.request?.styleFamily, 'lofi_aesthetic');
   assert.equal(body.metadata?.request?.styleSource, 'session-or-request');
   assert.equal(body.metadata?.image?.resolution, '1536x1024');
   assert.equal(body.metadata?.image?.format, 'png');
-  assert.equal(body.metadata?.model?.outputModel, 'ion-citizen-xl-vpred-v2.0');
+  assert.equal(body.metadata?.model?.outputModel, 'ion-native-renderer/vector-synth-v1');
   assert.equal(body.metadata?.model?.seed, 42);
   assert.equal(body.metadata?.postProcessing?.outputFormat, 'png');
   assert.equal(body.metadata?.postProcessing?.metadataEmbedded, true);
@@ -99,7 +100,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
   assert.equal(body.metadata?.scene?.materials?.source, 'none');
   assert.equal(body.metadata?.style_id, undefined);
   assert.equal(body.metadata?.pipeline_version, undefined);
-  assert.equal(body.debug?.v2_pipeline?.gateway, 'mock');
+  assert.equal(body.debug, undefined);
 
   const imageLog = consoleMessages.find((message) => message.startsWith('[ION IMAGE] '));
   assert.ok(imageLog);
@@ -111,7 +112,7 @@ test('worker /api/image v2 branch preserves image response contract', async () =
   }
 });
 
-test('worker /api/image returns provider failure when env-flagged v2 pipeline is unavailable', async () => {
+test('worker /api/image remains available when ComfyUI is unreachable because ion-native is primary', async () => {
   const consoleMessages: string[] = [];
   const originalConsoleInfo = console.info;
   console.info = (...args: unknown[]) => {
@@ -157,15 +158,12 @@ test('worker /api/image returns provider failure when env-flagged v2 pipeline is
   const response = await worker.fetch(request, env, createExecutionContext() as any);
   const body = await response.json() as Record<string, any>;
 
-  assert.ok(response.status === 503 || response.status === 504, `expected provider failure status, got ${response.status}`);
+  assert.equal(response.status, 200);
   assert.equal(response.headers.get('Content-Type'), 'application/json');
-  assert.equal(response.headers.get('X-ION-Image-Model'), null);
-  assert.equal(response.headers.get('X-ION-Image-Route'), null);
-  assert.equal(response.headers.get('X-ION-Image-Fallback'), null);
-  assert.equal(response.headers.get('X-ION-Image-Fallback-Reason'), null);
-  assert.match(String(body.code || ''), /provider-unavailable|provider-timeout|image-generation-failed/);
-  assert.equal(typeof body.error, 'string');
-  assert.equal(body.imageDataUrl, undefined);
+  assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v3');
+  assert.equal(response.headers.get('X-ION-Image-Provider'), 'ion-native');
+  assert.equal(body.metadata?.pipeline?.gateway, 'mock');
+  assert.match(String(body.imageDataUrl || ''), /^data:image\//);
 
   const fallbackLog = consoleMessages.find((message) => message.includes('"event":"ion.image.route.fallback"'));
   assert.equal(fallbackLog, undefined);
@@ -174,7 +172,7 @@ test('worker /api/image returns provider failure when env-flagged v2 pipeline is
   }
 });
 
-test('worker /api/image ignores deprecated legacy fallback flags and still returns provider failure', async () => {
+test('worker /api/image ignores deprecated legacy fallback flags and still serves ion-native output', async () => {
   const consoleMessages: string[] = [];
   const originalConsoleInfo = console.info;
   console.info = (...args: unknown[]) => {
@@ -220,15 +218,12 @@ test('worker /api/image ignores deprecated legacy fallback flags and still retur
   const response = await worker.fetch(request, env, createExecutionContext() as any);
   const body = await response.json() as Record<string, any>;
 
-  assert.ok(response.status === 503 || response.status === 504, `expected provider failure status, got ${response.status}`);
+  assert.equal(response.status, 200);
   assert.equal(response.headers.get('Content-Type'), 'application/json');
-  assert.equal(response.headers.get('X-ION-Image-Model'), null);
-  assert.equal(response.headers.get('X-ION-Image-Route'), null);
-  assert.equal(response.headers.get('X-ION-Image-Fallback'), null);
-  assert.equal(response.headers.get('X-ION-Image-Fallback-Reason'), null);
-  assert.match(String(body.code || ''), /provider-unavailable|provider-timeout|image-generation-failed/);
-  assert.equal(typeof body.error, 'string');
-  assert.equal(body.imageDataUrl, undefined);
+  assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v3');
+  assert.equal(response.headers.get('X-ION-Image-Provider'), 'ion-native');
+  assert.equal(body.metadata?.pipeline?.gateway, 'mock');
+  assert.match(String(body.imageDataUrl || ''), /^data:image\//);
 
   const fallbackLog = consoleMessages.find((message) => message.includes('"event":"ion.image.route.fallback"'));
   assert.equal(fallbackLog, undefined);
@@ -237,7 +232,7 @@ test('worker /api/image ignores deprecated legacy fallback flags and still retur
   }
 });
 
-test('worker /api/image returns provider failure when ComfyUI prompt endpoint returns 403', async () => {
+test('worker /api/image no longer depends on ComfyUI prompt endpoint for default path', async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
   const originalFetch = globalThis.fetch;
@@ -297,12 +292,12 @@ test('worker /api/image returns provider failure when ComfyUI prompt endpoint re
     const response = await worker.fetch(request, env, createExecutionContext() as any);
     const body = await response.json() as Record<string, any>;
 
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('X-ION-Image-Route'), null);
-    assert.equal(response.headers.get('X-ION-Image-Model'), null);
-    assert.equal(body.imageDataUrl, undefined);
-    assert.equal(String(body.code || ''), 'provider-unavailable');
-    assert.equal(typeof body.error, 'string');
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('X-ION-Image-Route'), 'image-gen-v3');
+    assert.equal(response.headers.get('X-ION-Image-Provider'), 'ion-native');
+    assert.equal(response.headers.get('X-ION-Image-Model'), 'ion-native-renderer/vector-synth-v1');
+    assert.match(String(body.imageDataUrl || ''), /^data:image\//);
+    assert.equal(typeof body.metadata, 'object');
   } finally {
     globalThis.fetch = originalFetch;
   }

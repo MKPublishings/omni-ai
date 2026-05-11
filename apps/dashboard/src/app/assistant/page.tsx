@@ -301,6 +301,34 @@ function buildImageSuccessCopy(message: string, filename?: string) {
   return `Image ready for: ${prompt}\n${normalizedFilename}`
 }
 
+function normalizeImageFilename(filename: string) {
+  const normalized = String(filename || '').trim().replace(/[\\/:*?"<>|]+/g, '_')
+  if (!normalized) {
+    return 'ion-image.png'
+  }
+
+  if (/^ion[-_]/i.test(normalized)) {
+    return normalized
+  }
+
+  return `ion-${normalized}`
+}
+
+function resolveImageDataUrl(payload: ImageRouteJsonPayload) {
+  const fromTopLevel = String(payload.imageDataUrl || '').trim()
+  if (fromTopLevel) {
+    return fromTopLevel
+  }
+
+  const fromNestedImage = String((payload.image as Record<string, unknown> | undefined)?.src || '').trim()
+  if (fromNestedImage) {
+    return fromNestedImage
+  }
+
+  const fromMeta = String((payload.metadata?.image as Record<string, unknown> | undefined)?.src || '').trim()
+  return fromMeta
+}
+
 type AssistantPayload = {
   ok: boolean
   content: string
@@ -517,9 +545,12 @@ async function parseAssistantResponse(response: Response) {
   function num(v: unknown): number | undefined { return typeof v === 'number' ? v : undefined }
   function strArr(v: unknown): string[] | undefined { return Array.isArray(v) ? v.map(String) : undefined }
 
-  const imageMetadata: ImageMetadata | undefined = meta ? {
-    src: str(payload.imageDataUrl),
-    filename: str(payload.image?.filename) || str(metaImage?.filename) || str(payload.filename),
+  const resolvedImageDataUrl = resolveImageDataUrl(payload)
+  const resolvedImageFilename = normalizeImageFilename(str(payload.image?.filename) || str(metaImage?.filename) || str(payload.filename))
+
+  const imageMetadata: ImageMetadata | undefined = meta && resolvedImageDataUrl ? {
+    src: resolvedImageDataUrl,
+    filename: resolvedImageFilename,
     gateway: str(payload.image?.gateway) || str(metaPipeline?.gateway),
     quality: str(metaRequest?.quality),
     mode: str(metaRequest?.mode),
@@ -552,8 +583,8 @@ async function parseAssistantResponse(response: Response) {
     content: response.ok
       ? payload.response || payload.content || ''
       : payload.details || payload.message || payload.error || payload.content || '',
-    imageDataUrl: payload.imageDataUrl || '',
-    imageFilename: str(payload.image?.filename) || str(metaImage?.filename) || str(payload.filename),
+    imageDataUrl: resolvedImageDataUrl,
+    imageFilename: resolvedImageFilename,
     imageModel: str(payload.image?.model) || str(metaModel?.outputModel) || str(metaModel?.checkpoint),
     imageCheckpoint: str(payload.image?.checkpoint) || str(metaModel?.checkpoint),
     imageResolution: str(payload.image?.resolution) || str(metaImage?.resolution),
