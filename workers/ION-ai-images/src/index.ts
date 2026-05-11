@@ -2,6 +2,7 @@ import {
   isReadableByteStream,
   normalizeGeneratedImageOutput,
 } from "../../../src/shared/image-output";
+import { bootstrapSafeTensorGovernance } from "../../../src/image-gen/safe-tensor-bootstrap";
 import { executeIonImagePipeline } from "../../../src/image-gen/app/ion-image-pipeline";
 import { buildIonImageV2RouteResult } from "../../../src/image-gen/app/ion-image-v2-route-service";
 
@@ -119,6 +120,14 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
 
   try {
     const startedAt = Date.now();
+    
+    // Bootstrap safe.tensor governance to enable full ION pipeline capabilities
+    try {
+      bootstrapSafeTensorGovernance();
+    } catch {
+      // Continue even if bootstrap has issues; pipeline will use fallback if needed
+    }
+    
     const pipelineResult = await executeIonImagePipeline(
       {
         userId: String(body.userId || "anonymous").trim() || "anonymous",

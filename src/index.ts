@@ -44,7 +44,14 @@ import { canonicalizeIONMode, normalizeConversationHints, resolveEffectiveIONMod
 import { getSessionByToken, touchSession } from "./auth/credentials";
 import { executeTool } from "./tools/execute";
 import { generateTaskShards } from "./tools/auto_tokenizer/taskShardGenerator";
+import { bootstrapSafeTensorGovernance } from "./image-gen/safe-tensor-bootstrap";
 import { executeIonImagePipeline } from "./image-gen/app/ion-image-pipeline";
+import {
+  buildIonEnhancedSdxlPrompt,
+  optimizeSdxlParameters,
+  buildSdxlEnhancementMetadata,
+  type SdxlEnhancementMetadata,
+} from "./image-gen/integration/sdxl-ion-enhancer";
 import { bytesToBase64, isReadableByteStream, normalizeGeneratedImageOutput } from "./shared/image-output";
 import {
   ION_IMAGE_DEFAULT_HEIGHT,
@@ -293,6 +300,35 @@ function buildDirectFallbackNegativePrompt(animeLike: boolean): string {
   return `${baseline}, realistic skin pores, photoreal artifacts, monochrome haze`;
 }
 
+/**
+ * Build ION-enhanced SDXL prompt for better quality fallback
+ * Uses ION's sophisticated prompt assembly when available
+ */
+function buildIonEnhancedDirectFallbackPrompt(
+  promptText: string,
+  animeLike: boolean,
+  styleFamily?: string
+): { positive: string; negative: string } {
+  try {
+    const enhanced = buildIonEnhancedSdxlPrompt(promptText, {
+      animeLike,
+      styleFamily: (styleFamily as any) || undefined,
+      checkpointId: DIRECT_FALLBACK_DEFAULT_MODEL,
+    });
+
+    return {
+      positive: enhanced.positive,
+      negative: enhanced.negative,
+    };
+  } catch {
+    // Fallback to basic prompt if ION enhancement fails
+    return {
+      positive: buildDirectFallbackPrompt(promptText, animeLike),
+      negative: buildDirectFallbackNegativePrompt(animeLike),
+    };
+  }
+}
+
 function resolveDirectFallbackConfig(env: Env, promptText: string) {
   const configuredModel = sanitizePromptText(String(env.MODEL_IMAGE || ""));
   const policyFallbackModel = sanitizePromptText(String(env.MODEL_IMAGE_POLICY_FALLBACK || ""));
@@ -306,14 +342,39 @@ function resolveDirectFallbackConfig(env: Env, promptText: string) {
   }
 
   const isFluxModel = /flux-1-schnell/i.test(modelName);
-  const targetSteps = animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS;
-  const maxSteps = isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_STEPS : DIRECT_FALLBACK_DEFAULT_MAX_STEPS;
+  
+  // Use ION parameter optimization for SDXL models
+  let guidance = DIRECT_FALLBACK_DEFAULT_CFG;
+  let steps = DIRECT_FALLBACK_DEFAULT_STEPS;
+  let maxEdge = DIRECT_FALLBACK_MAX_EDGE;
+
+  if (!isFluxModel) {
+    // Apply ION optimization for SDXL
+    try {
+      const optimized = optimizeSdxlParameters(undefined, animeLike, DIRECT_FALLBACK_DEFAULT_CFG, DIRECT_FALLBACK_DEFAULT_STEPS);
+      guidance = optimized.guidance;
+      steps = optimized.steps;
+    } catch {
+      // Fallback to defaults if optimization fails
+      const targetSteps = animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS;
+      steps = Math.max(1, Math.min(targetSteps, DIRECT_FALLBACK_DEFAULT_MAX_STEPS));
+      guidance = animeLike ? 8 : DIRECT_FALLBACK_DEFAULT_CFG;
+    }
+  } else {
+    // Flux model configuration
+    const targetSteps = animeLike ? 32 : DIRECT_FALLBACK_DEFAULT_STEPS;
+    const maxSteps = isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_STEPS : DIRECT_FALLBACK_DEFAULT_MAX_STEPS;
+    steps = Math.max(1, Math.min(targetSteps, maxSteps));
+    guidance = animeLike ? 8 : DIRECT_FALLBACK_DEFAULT_CFG;
+    maxEdge = isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_EDGE : DIRECT_FALLBACK_MAX_EDGE;
+  }
+
   return {
     animeLike,
     modelName,
-    guidance: animeLike ? 8 : DIRECT_FALLBACK_DEFAULT_CFG,
-    steps: Math.max(1, Math.min(targetSteps, maxSteps)),
-    maxEdge: isFluxModel ? DIRECT_FALLBACK_FLUX_MAX_EDGE : DIRECT_FALLBACK_MAX_EDGE,
+    guidance,
+    steps,
+    maxEdge,
   };
 }
 
@@ -353,8 +414,16 @@ async function buildDirectAiImageFallbackResponse(input: {
   safetyProfile: SafetyProfile;
 }): Promise<Response> {
   const fallbackConfig = resolveDirectFallbackConfig(input.env, input.promptText);
-  const prompt = buildDirectFallbackPrompt(input.promptText, fallbackConfig.animeLike);
-  const negativePrompt = buildDirectFallbackNegativePrompt(fallbackConfig.animeLike);
+  
+  // Use ION-enhanced prompt for better quality SDXL generation
+  const ionPrompts = buildIonEnhancedDirectFallbackPrompt(
+    input.promptText,
+    fallbackConfig.animeLike,
+    input.effectiveStylePack
+  );
+  const prompt = ionPrompts.positive;
+  const negativePrompt = ionPrompts.negative;
+  
   const directDimensions = clampDimensionsToMaxEdge(
     input.effectiveWidth,
     input.effectiveHeight,
@@ -3697,6 +3766,17 @@ export default {
                 }
               }
             );
+          }
+
+          // Bootstrap safe.tensor governance BEFORE using ION pipeline
+          // This enables the full ION image generation capabilities
+          try {
+            bootstrapSafeTensorGovernance();
+          } catch (bootstrapErr) {
+            logger.log("safe_tensor_bootstrap_notice", {
+              message: String((bootstrapErr as any)?.message || "Bootstrap issued notice"),
+              willContinueWithIONPipeline: true
+            });
           }
 
           const safetyDecision = evaluateSexualSafetyPrompt(promptText, safetyProfile);
