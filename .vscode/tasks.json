@@ -84,6 +84,16 @@
       },
       "problemMatcher": [],
       "isBackground": false
+    },
+    {
+      "label": "Start ComfyUI (GPU)",
+      "type": "shell",
+      "command": "${workspaceFolder}/server_gpu.bat",
+      "options": {
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "problemMatcher": [],
+      "isBackground": false
     }
   ]
 }
