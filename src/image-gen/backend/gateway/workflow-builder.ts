@@ -1,5 +1,5 @@
 import { getCheckpointConfig } from '../../config/models.config';
-import { buildUniversalBaseGraph } from './templates/universal-base-graph';
+import { buildUniversalBaseGraph } from '../templates/universal-base-graph';
 import type { ComfyUIWorkflow, GenerationRequest } from '../../shared/types';
 
 function buildPositiveText(request: GenerationRequest): string {
