@@ -74,6 +74,16 @@
       "type": "shell",
       "command": "node ./scripts/tools/runTaskTokenMaintenance.js",
       "problemMatcher": []
+    },
+    {
+      "label": "Start ComfyUI Server",
+      "type": "shell",
+      "command": "${workspaceFolder}/server.bat",
+      "options": {
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "problemMatcher": [],
+      "isBackground": false
     }
   ]
 }

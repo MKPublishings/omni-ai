@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug ComfyUI",
+      "type": "python",
+      "request": "launch",
+      "program": "main.py",
+      "args": [
+        "--listen",
+        "--port", "8188",
+        "--enable-cors"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ]
+}
