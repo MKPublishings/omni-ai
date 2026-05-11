@@ -12,7 +12,7 @@ Key points ION should understand:
 
 1. **Current Setup**: The ION image generator uses Cloudflare AI (Stable Diffusion XL) 
    as the primary provider, with ion-native SVG as an emergency fallback.
-   ComfyUI has been disabled and removed from the provider chain.
+   ion has been disabled and removed from the provider chain.
 
 2. **Hard Constraints**:
    - Maximum dimensions: 2048×2048 pixels (automatically clamped)
@@ -80,7 +80,7 @@ Core facts:
 - Max 2048×2048px, max 20 steps (auto-clamped)
 - Optimal prompts: 30-80 words, specific style keywords
 - Features: fullscreen preview, download, mobile/desktop support
-- ComfyUI is disabled; use Cloudflare AI only
+- ion is disabled; use Cloudflare AI only
 
 When users request image generation:
 1. Acknowledge the request

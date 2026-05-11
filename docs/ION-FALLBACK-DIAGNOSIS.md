@@ -9,15 +9,15 @@ You're seeing **"ai-direct-fallback"** in image responses, which indicates the S
 The fallback is triggered when:
 
 1. **Pipeline Error Occurs** - `executeIonImagePipeline()` throws an error
-2. **Error Matches Fallback Condition** - The error is specifically a 403 on `/prompt` endpoint (ComfyUI access denied)
+2. **Error Matches Fallback Condition** - The error is specifically a 403 on `/prompt` endpoint (ion access denied)
 3. **AI Model Available** - `env.AI` exists and has a `run` function (Cloudflare Workers AI)
 
 ## Configuration Check
 
-✅ **Good News**: Your environment is configured with `COMFYUI_MOCK=true`
+✅ **Good News**: Your environment is configured with `ion_MOCK=true`
 
 This means:
-- Using `MockComfyUIClient` (not real ComfyUI)
+- Using `MockionClient` (not real ion)
 - Should NEVER fail with 403 errors
 - Should NOT trigger fallback
 
@@ -41,12 +41,12 @@ When you make an image request, check the response metadata:
 ```
 
 **Expected with full ION pipeline:**
-- `gateway`: `"mock"` or `"comfyui"`
+- `gateway`: `"mock"` or `"ion"`
 - `reasoningChain`: Should show pipeline stages
 
 **Actual with fallback:**
 - `gateway`: `"ai-direct-fallback"`
-- `reasoningChain`: `["comfyui-forbidden-fallback"]`
+- `reasoningChain`: `["ion-forbidden-fallback"]`
 
 ### 2. Check Logs for Pipeline Errors
 
@@ -87,24 +87,24 @@ This shows:
 ### Issue 1: Gateway Health Check Failing
 
 Even with mock mode, if `gateway.isHealthy()` returns false:
-- `throwImageError('E_COMFYUI_DOWN')` is called
+- `throwImageError('E_ion_DOWN')` is called
 - This triggers the fallback
 
-**Check**: MockComfyUIClient.isHealthy() always returns true, so this shouldn't happen
+**Check**: MockionClient.isHealthy() always returns true, so this shouldn't happen
 
 ### Issue 2: Gateway Submit Workflow Failing
 
 If `gateway.submitWorkflow()` throws 403 error:
-- Caught by `isComfyPromptAccessDeniedError()`
+- Caught by `isIonPromptAccessDeniedError()`
 - Triggers fallback
 
-**Check**: MockComfyUIClient generates mock data, shouldn't throw
+**Check**: MockionClient generates mock data, shouldn't throw
 
 ### Issue 3: Environment Not Properly Passed
 
 If `env` parameter not passed to pipeline:
 - Gateway creation might use default environment
-- Real ComfyUI might be used instead of mock
+- Real ion might be used instead of mock
 
 **Check**: Verify `env` is passed through call chain
 
@@ -121,26 +121,26 @@ If `env` parameter not passed to pipeline:
 
 ✅ **Diagnostic Script**
 - Easy way to check configuration
-- Connectivity testing for real ComfyUI mode
+- Connectivity testing for real ion mode
 - Clear expected behavior documentation
 
 ## How to Ensure No Fallback
 
 ### Option 1: Use Mock Mode (Recommended for Development)
 ```bash
-COMFYUI_MOCK=true node your-app.js
+ion_MOCK=true node your-app.js
 ```
 - Always uses full pipeline
 - No external dependencies
 - Generates mock images
 
-### Option 2: Use Real ComfyUI
+### Option 2: Use Real ion
 ```bash
-COMFYUI_MOCK=false COMFYUI_HOST=http://your-comfyui:8188
+ion_MOCK=false ion_HOST=http://your-ion:8188
 ```
-- Ensure ComfyUI is running
+- Ensure ion is running
 - Ensure `/prompt` endpoint is accessible
-- May trigger fallback if ComfyUI is down
+- May trigger fallback if ion is down
 
 ## Next Steps
 
@@ -179,7 +179,7 @@ COMFYUI_MOCK=false COMFYUI_HOST=http://your-comfyui:8188
 5. ✅ Health check passes
 6. ✅ Workflow submitted successfully
 7. ✅ Image generated
-8. ✅ Response returns with `gateway: "mock"` or `"comfyui"`
+8. ✅ Response returns with `gateway: "mock"` or `"ion"`
 9. ❌ No fallback triggered
 
 ## Verification Command

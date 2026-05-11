@@ -1,5 +1,5 @@
 import type {
-  ComfyUIWorkflow,
+  ionWorkflow,
   IModelGateway,
   JobStatus,
   ProgressEvent,
@@ -123,11 +123,11 @@ function createMockImagePng(width = 96, height = 96): Uint8Array {
 
 const MOCK_IMAGE_BYTES = createMockImagePng();
 
-export class MockComfyUIClient implements IModelGateway {
+export class MockionClient implements IModelGateway {
   private readonly jobs = new Map<string, MockJobRecord>();
   private lastSubmittedCheckpoint: string | null = null;
 
-  async submitWorkflow(workflow: ComfyUIWorkflow): Promise<{ promptId: string }> {
+  async submitWorkflow(workflow: ionWorkflow): Promise<{ promptId: string }> {
     const promptId = `mock-${crypto.randomUUID()}`;
     const checkpoint = String((workflow as Record<string, any>)?.['1']?.inputs?.ckpt_name || '').trim();
     const requestedSteps = Number((workflow as Record<string, any>)?.['5']?.inputs?.steps);

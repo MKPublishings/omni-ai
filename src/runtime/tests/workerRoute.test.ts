@@ -637,7 +637,7 @@ test("worker /api/ION image route streams v2 image payloads for chat clients", a
       fetch: async () => new Response("not-found", { status: 404 })
     },
     MODEL_ION: "primary-model",
-    COMFYUI_MOCK: "true",
+    ion_MOCK: "true",
     DEFAULT_CHECKPOINT: "ion-citizen-xl-vpred-v2.0"
   } as any;
 

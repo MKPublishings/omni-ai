@@ -50,7 +50,7 @@ test('worker /api/image uses ion-native v3 contract by default', async () => {
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    COMFYUI_MOCK: 'true',
+    ion_MOCK: 'true',
     DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   } as any;
 
@@ -112,7 +112,7 @@ test('worker /api/image uses ion-native v3 contract by default', async () => {
   }
 });
 
-test('worker /api/image remains available when ComfyUI is unreachable because ion-native is primary', async () => {
+test('worker /api/image remains available when ion is unreachable because ion-native is primary', async () => {
   const consoleMessages: string[] = [];
   const originalConsoleInfo = console.info;
   console.info = (...args: unknown[]) => {
@@ -133,9 +133,9 @@ test('worker /api/image remains available when ComfyUI is unreachable because io
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    COMFYUI_MOCK: 'false',
-    COMFYUI_HOST: 'http://127.0.0.1:1',
-    COMFYUI_REQUEST_TIMEOUT_MS: '25',
+    ion_MOCK: 'false',
+    ion_HOST: 'http://127.0.0.1:1',
+    ion_REQUEST_TIMEOUT_MS: '25',
     MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
   } as any;
 
@@ -246,9 +246,9 @@ test('worker /api/image ignores deprecated legacy fallback flags and still serve
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    COMFYUI_MOCK: 'false',
-    COMFYUI_HOST: 'http://127.0.0.1:1',
-    COMFYUI_REQUEST_TIMEOUT_MS: '25',
+    ion_MOCK: 'false',
+    ion_HOST: 'http://127.0.0.1:1',
+    ion_REQUEST_TIMEOUT_MS: '25',
     MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
   } as any;
 
@@ -285,7 +285,7 @@ test('worker /api/image ignores deprecated legacy fallback flags and still serve
   }
 });
 
-test('worker /api/image no longer depends on ComfyUI prompt endpoint for default path', async () => {
+test('worker /api/image no longer depends on ion prompt endpoint for default path', async () => {
   const memory = new MemoryNamespace();
   const mind = new MemoryNamespace();
   const originalFetch = globalThis.fetch;
@@ -324,8 +324,8 @@ test('worker /api/image no longer depends on ComfyUI prompt endpoint for default
         fetch: async () => new Response('not-found', { status: 404 }),
       },
       ION_IMAGE_PIPELINE_V2: '1',
-      COMFYUI_MOCK: 'false',
-      COMFYUI_HOST: 'http://localhost:8188',
+      ion_MOCK: 'false',
+      ion_HOST: 'http://localhost:8188',
       MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
     } as any;
 

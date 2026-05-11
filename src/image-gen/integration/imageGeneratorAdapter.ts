@@ -22,7 +22,7 @@ export interface ImageGenOutput {
   imageBytes: Uint8Array;
   promptId: string;
   outputModel: string;
-  gatewayKind: 'mock' | 'comfyui';
+  gatewayKind: 'mock' | 'ion';
 }
 
 export interface ImageGeneratorAdapterDeps {

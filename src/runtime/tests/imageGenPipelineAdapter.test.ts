@@ -14,7 +14,7 @@ test('image pipeline adapter builds and executes the new workflow path with the 
       seed: 42,
     },
     {
-      COMFYUI_MOCK: 'true',
+      ion_MOCK: 'true',
       DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
     },
   );

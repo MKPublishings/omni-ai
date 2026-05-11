@@ -26,7 +26,7 @@
         { "localized_name": "CLIP", "name": "CLIP", "type": "CLIP", "links": [2, 3] },
         { "localized_name": "VAE", "name": "VAE", "type": "VAE", "links": null }
       ],
-      "properties": { "Node name for S&R": "CheckpointLoaderSimple", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "CheckpointLoaderSimple", "cnr_id": "ion-core" },
       "widgets_values": ["sd_xl_turbo_1.0_fp16.safetensors"]
     },
     {
@@ -55,7 +55,7 @@
           "links": [4]
         }
       ],
-      "properties": { "Node name for S&R": "CLIPTextEncode", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "CLIPTextEncode", "cnr_id": "ion-core" },
       "widgets_values": [
         "Ion, treat the following text as a rapid-fire cinematic seed...\\nA cinematic portrait of a woman in neon light, sharp detail, 9:16."
       ]
@@ -86,7 +86,7 @@
           "links": [5]
         }
       ],
-      "properties": { "Node name for S&R": "CLIPTextEncode", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "CLIPTextEncode", "cnr_id": "ion-core" },
       "widgets_values": ["blurry, low quality, noisy, artifacts, distorted anatomy"]
     },
     {
@@ -111,7 +111,7 @@
       "outputs": [
         { "localized_name": "LATENT", "name": "LATENT", "type": "LATENT", "links": [6] }
       ],
-      "properties": { "Node name for S&R": "EmptyLatentImage", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "EmptyLatentImage", "cnr_id": "ion-core" },
       "widgets_values": [576, 1024, 1]
     },
     {
@@ -156,7 +156,7 @@
       "outputs": [
         { "localized_name": "LATENT", "name": "LATENT", "type": "LATENT", "links": [7] }
       ],
-      "properties": { "Node name for S&R": "KSampler", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "KSampler", "cnr_id": "ion-core" },
       "widgets_values": [557001234, "randomize", 2, 1, "euler", "simple", 1]
     },
     {
@@ -173,7 +173,7 @@
       "outputs": [
         { "localized_name": "VAE", "name": "VAE", "type": "VAE", "links": [8] }
       ],
-      "properties": { "Node name for S&R": "VAELoader", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "VAELoader", "cnr_id": "ion-core" },
       "widgets_values": ["sdxl_turbo_vae.safetensors"]
     },
     {
@@ -191,7 +191,7 @@
       "outputs": [
         { "localized_name": "IMAGE", "name": "IMAGE", "type": "IMAGE", "links": [9] }
       ],
-      "properties": { "Node name for S&R": "VAEDecode", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "VAEDecode", "cnr_id": "ion-core" },
       "widgets_values": []
     },
     {
@@ -213,7 +213,7 @@
         }
       ],
       "outputs": [],
-      "properties": { "Node name for S&R": "SaveImage", "cnr_id": "comfy-core" },
+      "properties": { "Node name for S&R": "SaveImage", "cnr_id": "ion-core" },
       "widgets_values": ["Turbo_9x16"]
     }
   ],

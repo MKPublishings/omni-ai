@@ -1,8 +1,8 @@
-# Quick Reference: Ion ComfyUI Architecture
+# Quick Reference: Ion ion Architecture
 
 ## The Problem You Had
 ```
-ComfyUI request failed (400) for /prompt
+ion request failed (400) for /prompt
 ```
 
 ## The Solution: 3-Layer System
@@ -11,9 +11,9 @@ ComfyUI request failed (400) for /prompt
 **File:** `src/image-gen/backend/gateway/workflow-validator.ts`
 
 ```typescript
-import { validateComfyUIWorkflow, formatValidationErrors } from './workflow-validator';
+import { validateionWorkflow, formatValidationErrors } from './workflow-validator';
 
-const result = validateComfyUIWorkflow(workflow);
+const result = validateionWorkflow(workflow);
 if (!result.valid) {
   console.error(formatValidationErrors(result));
   throw new Error('Invalid workflow');
@@ -149,11 +149,11 @@ ledger (
    └─ If balance insufficient → reject immediately
 3. Ion validates workflow
    └─ If invalid → release reservation + error
-4. Ion submits to ComfyUI
-   └─ If ComfyUI error → release reservation + error
+4. Ion submits to ion
+   └─ If ion error → release reservation + error
 5. Ion polls for completion
    └─ Meters GPU time per node
-6. ComfyUI finishes
+6. ion finishes
 7. Ion charges actual cost
    └─ Refunds any unused reservation
 8. Ion returns result + billing info
@@ -169,10 +169,10 @@ ledger (
 import { buildUniversalBaseGraph } from './templates/universal-base-graph';
 ```
 
-### In `ComfyUIClient.ts`:
+### In `ionClient.ts`:
 ```typescript
 // Already integrated! Validates before submission
-const validationResult = validateComfyUIWorkflow(workflow);
+const validationResult = validateionWorkflow(workflow);
 if (!validationResult.valid) {
   throw new Error(`Validation failed:\n${formatValidationErrors(validationResult)}`);
 }
@@ -231,13 +231,13 @@ npm run smoke:image:orchestrator-attestation:image-gen
 ✅ src/image-gen/backend/templates/universal-base-graph.ts
    → Base template for all workflows
 
-✅ src/image-gen/backend/gateway/ComfyUIClient.ts
+✅ src/image-gen/backend/gateway/ionClient.ts
    → Enhanced with validation + better errors
 
 ✅ src/credits/ion_job_runner.py
    → Full job executor with credit accounting
 
-ℹ️  ION_COMFYUI_REFACTORING_COMPLETE.md
+ℹ️  ION_ion_REFACTORING_COMPLETE.md
    → Full documentation with architecture diagrams
 ```
 
@@ -270,4 +270,4 @@ If you want to expose this as an API:
 
 **Status:** ✅ Complete & Ready to Use
 
-For questions or improvements, check `ION_COMFYUI_REFACTORING_COMPLETE.md`
+For questions or improvements, check `ION_ion_REFACTORING_COMPLETE.md`

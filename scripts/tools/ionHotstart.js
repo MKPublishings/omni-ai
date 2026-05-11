@@ -4,19 +4,19 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const DEFAULT_HOST = String(process.env.COMFYUI_HOST || "http://127.0.0.1:8188").replace(/\/+$/, "");
-const DEFAULT_START_BAT = process.env.COMFYUI_START_BAT || "C:/ComfyUI/ComfyUI/start-ion.bat";
-const READY_TIMEOUT_MS = Number(process.env.ION_COMFY_READY_TIMEOUT_MS || 180_000);
-const READY_POLL_MS = Number(process.env.ION_COMFY_READY_POLL_MS || 2_000);
-const OPEN_UI = !["0", "false", "off", "no"].includes(String(process.env.ION_COMFY_OPEN_UI || "1").toLowerCase());
-const WARMUP_ENABLED = !["0", "false", "off", "no"].includes(String(process.env.ION_COMFY_WARMUP_ENABLED || "1").toLowerCase());
-const WARMUP_TEXT = String(process.env.ION_COMFY_WARMUP_TEXT || "warmup");
-const WARMUP_NEGATIVE = String(process.env.ION_COMFY_WARMUP_NEGATIVE || "blurry, lowres, noisy, artifacts");
-const WARMUP_WIDTH = Number(process.env.ION_COMFY_WARMUP_WIDTH || 768);
-const WARMUP_HEIGHT = Number(process.env.ION_COMFY_WARMUP_HEIGHT || 768);
-const WARMUP_WORKFLOW_PATH = process.env.ION_COMFY_WARMUP_WORKFLOW || "";
-const WARMUP_GROK_MODEL = String(process.env.ION_COMFY_WARMUP_MODEL || "grok-imagine-image-beta");
-const WARMUP_GROK_RESOLUTION = String(process.env.ION_COMFY_WARMUP_RESOLUTION || "1K").toUpperCase() === "2K" ? "2K" : "1K";
+const DEFAULT_HOST = String(process.env.ion_HOST || "http://127.0.0.1:8188").replace(/\/+$/, "");
+const DEFAULT_START_BAT = process.env.ion_START_BAT || "C:/ion/ion/start-ion.bat";
+const READY_TIMEOUT_MS = Number(process.env.ION_Ion_READY_TIMEOUT_MS || 180_000);
+const READY_POLL_MS = Number(process.env.ION_Ion_READY_POLL_MS || 2_000);
+const OPEN_UI = !["0", "false", "off", "no"].includes(String(process.env.ION_Ion_OPEN_UI || "1").toLowerCase());
+const WARMUP_ENABLED = !["0", "false", "off", "no"].includes(String(process.env.ION_Ion_WARMUP_ENABLED || "1").toLowerCase());
+const WARMUP_TEXT = String(process.env.ION_Ion_WARMUP_TEXT || "warmup");
+const WARMUP_NEGATIVE = String(process.env.ION_Ion_WARMUP_NEGATIVE || "blurry, lowres, noisy, artifacts");
+const WARMUP_WIDTH = Number(process.env.ION_Ion_WARMUP_WIDTH || 768);
+const WARMUP_HEIGHT = Number(process.env.ION_Ion_WARMUP_HEIGHT || 768);
+const WARMUP_WORKFLOW_PATH = process.env.ION_Ion_WARMUP_WORKFLOW || "";
+const WARMUP_GROK_MODEL = String(process.env.ION_Ion_WARMUP_MODEL || "grok-imagine-image-beta");
+const WARMUP_GROK_RESOLUTION = String(process.env.ION_Ion_WARMUP_RESOLUTION || "1K").toUpperCase() === "2K" ? "2K" : "1K";
 
 function resolveWarmupAspectRatio(width, height) {
   if (!(Number.isFinite(width) && Number.isFinite(height)) || width <= 0 || height <= 0) {
@@ -73,9 +73,9 @@ async function isServerReady(host) {
   }
 }
 
-function startComfyGpu() {
+function startIonGpu() {
   if (!fs.existsSync(DEFAULT_START_BAT)) {
-    throw new Error(`ComfyUI launcher was not found at: ${DEFAULT_START_BAT}`);
+    throw new Error(`ion launcher was not found at: ${DEFAULT_START_BAT}`);
   }
 
   const child = spawn("cmd.exe", ["/c", "start", "", DEFAULT_START_BAT], {
@@ -97,7 +97,7 @@ async function waitForServer(host) {
     // eslint-disable-next-line no-await-in-loop
     await sleep(READY_POLL_MS);
   }
-  throw new Error(`Timed out waiting for ComfyUI at ${host} after ${READY_TIMEOUT_MS}ms`);
+  throw new Error(`Timed out waiting for ion at ${host} after ${READY_TIMEOUT_MS}ms`);
 }
 
 function buildMinimalWarmupPayload() {
@@ -120,7 +120,7 @@ function buildMinimalWarmupPayload() {
       "2": {
         class_type: "SaveImage",
         inputs: {
-          filename_prefix: String(process.env.ION_COMFY_WARMUP_PREFIX || "ion-warmup"),
+          filename_prefix: String(process.env.ION_Ion_WARMUP_PREFIX || "ion-warmup"),
           images: ["1", 0],
         },
       },
@@ -187,21 +187,21 @@ async function main() {
 
   const alreadyReady = await isServerReady(DEFAULT_HOST);
   if (!alreadyReady) {
-    log(`• starting ComfyUI GPU: ${DEFAULT_START_BAT}`);
-    startComfyGpu();
+    log(`• starting ion GPU: ${DEFAULT_START_BAT}`);
+    startIonGpu();
   } else {
-    log("• ComfyUI is already running");
+    log("• ion is already running");
   }
 
-  log("• waiting for ComfyUI readiness...");
+  log("• waiting for ion readiness...");
   await waitForServer(DEFAULT_HOST);
-  log("✓ ComfyUI is ready");
+  log("✓ ion is ready");
 
   if (WARMUP_ENABLED) {
     log("• sending warmup prompt...");
     await enqueueWarmup(DEFAULT_HOST);
   } else {
-    log("• warmup skipped (ION_COMFY_WARMUP_ENABLED=0)");
+    log("• warmup skipped (ION_Ion_WARMUP_ENABLED=0)");
   }
 
   openUi(DEFAULT_HOST);
@@ -210,6 +210,6 @@ async function main() {
 
 main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`✖ comfy hotstart failed: ${message}`);
+  console.error(`✖ ion hotstart failed: ${message}`);
   process.exitCode = 1;
 });

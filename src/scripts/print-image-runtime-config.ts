@@ -4,11 +4,11 @@ const env = readImageGenEnvironment();
 
 const output = {
   gateway: {
-    host: env.comfyuiHost,
-    fetchHost: env.comfyuiFetchHost,
-    wsUrl: env.comfyuiWs,
-    mock: env.comfyuiMock,
-    requestTimeoutMs: env.comfyuiRequestTimeoutMs,
+    host: env.ionHost,
+    fetchHost: env.ionFetchHost,
+    wsUrl: env.ionWs,
+    mock: env.ionMock,
+    requestTimeoutMs: env.ionRequestTimeoutMs,
     defaultCheckpoint: env.defaultCheckpoint,
   },
   queue: {

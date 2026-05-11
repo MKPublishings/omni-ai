@@ -105,7 +105,7 @@ export interface Env {
   ION_IMAGE_PIPELINE_V2?: string;
   ION_IMAGE_QUEUE_V1?: string;
   ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403?: string;
-  ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN?: string;
+  ION_IMAGE_FALLBACK_ON_ion_DOWN?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
 }
@@ -247,18 +247,18 @@ type SafetyProfile = {
   };
 };
 
-function isComfyPromptAccessDeniedError(error: unknown): boolean {
+function isIonPromptAccessDeniedError(error: unknown): boolean {
   const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
   const name = String((error as { name?: string } | null)?.name || "").toUpperCase();
-  if (name === "E_COMFYUI_DOWN" && message.includes("(403)") && message.includes("/prompt")) {
+  if (name === "E_ion_DOWN" && message.includes("(403)") && message.includes("/prompt")) {
     return true;
   }
   return message.includes("(403)") && message.includes("/prompt");
 }
 
-function isComfyGatewayDownError(error: unknown): boolean {
+function isIonGatewayDownError(error: unknown): boolean {
   const name = String((error as { name?: string } | null)?.name || "").toUpperCase();
-  return name === "E_COMFYUI_DOWN";
+  return name === "E_ion_DOWN";
 }
 
 const DIRECT_FALLBACK_DEFAULT_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
@@ -491,7 +491,7 @@ async function buildDirectAiImageFallbackResponse(input: {
         gateway: "ai-direct-fallback",
         requestId: `fallback-${crypto.randomUUID()}`,
         promptId: "direct-ai",
-        reasoningChain: ["comfyui-forbidden-fallback"],
+        reasoningChain: ["ion-forbidden-fallback"],
         totalMs: Date.now() - startedAt,
       },
       request: {
@@ -1394,8 +1394,8 @@ function shouldUseDirectFallbackOnPrompt403(env: Env): boolean {
   return isEnabledFlag(env.ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403);
 }
 
-function shouldFallbackOnComfyDown(env: Env): boolean {
-  return isEnabledFlag(env.ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN);
+function shouldFallbackOnIonDown(env: Env): boolean {
+  return isEnabledFlag(env.ION_IMAGE_FALLBACK_ON_ion_DOWN);
 }
 
 function getRequestCountryCode(request: Request): string {
@@ -4005,26 +4005,26 @@ export default {
               const errorMessage = String((pipelineErr as any)?.message || pipelineErr || "Unknown error");
               const errorName = String((pipelineErr as any)?.name || "Error");
               
-              const comfyDown = isComfyGatewayDownError(pipelineErr);
-              const comfyDenied = isComfyPromptAccessDeniedError(pipelineErr);
+              const IonDown = isIonGatewayDownError(pipelineErr);
+              const IonDenied = isIonPromptAccessDeniedError(pipelineErr);
               const aiAvailable = env.AI && typeof (env.AI as { run?: unknown }).run === "function";
               const shouldFallback =
-                (comfyDown && shouldFallbackOnComfyDown(env) && aiAvailable) ||
-                (comfyDenied && shouldUseDirectFallbackOnPrompt403(env) && aiAvailable);
+                (IonDown && shouldFallbackOnIonDown(env) && aiAvailable) ||
+                (IonDenied && shouldUseDirectFallbackOnPrompt403(env) && aiAvailable);
 
               logger.log("ion_image_pipeline_error", {
                 userId,
                 errorName,
                 errorMessage,
-                comfyDown,
-                isComfyPromptDenied: comfyDenied,
+                IonDown,
+                isIonPromptDenied: IonDenied,
                 willFallback: shouldFallback,
               });
               
               if (shouldFallback) {
                 logger.log("ion_image_pipeline_fallback_triggered", {
                   userId,
-                  reason: "ComfyUI access denied - using SDXL fallback"
+                  reason: "ion access denied - using SDXL fallback"
                 });
                 
                 return buildDirectAiImageFallbackResponse({

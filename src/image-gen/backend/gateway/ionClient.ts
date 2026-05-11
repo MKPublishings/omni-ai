@@ -1,21 +1,21 @@
-import { resolveComfyUIConfig } from '../../config/comfyui.config';
-import { validateComfyUIWorkflow, formatValidationErrors } from './workflow-validator';
+import { resolveionConfig } from '../../config/ion.config';
+import { validateionWorkflow, formatValidationErrors } from './workflow-validator';
 import type {
   IModelGateway,
   JobStatus,
   ProgressEvent,
 } from '../../shared/types';
 
-interface ComfyUIPromptResponse {
+interface ionPromptResponse {
   prompt_id?: string;
 }
 
-interface ComfyUIQueueResponse {
+interface ionQueueResponse {
   queue_running?: unknown[];
   queue_pending?: unknown[];
 }
 
-interface ComfyUIHistoryResponse {
+interface ionHistoryResponse {
   [promptId: string]: {
     status?: {
       completed?: boolean;
@@ -31,7 +31,7 @@ interface ComfyUIHistoryResponse {
   };
 }
 
-interface ComfyUIObjectInfoResponse {
+interface ionObjectInfoResponse {
   CheckpointLoaderSimple?: {
     input?: {
       required?: {
@@ -41,7 +41,7 @@ interface ComfyUIObjectInfoResponse {
   };
 }
 
-interface ComfyUIErrorBody {
+interface ionErrorBody {
   error?: {
     type?: string;
     message?: string;
@@ -62,7 +62,7 @@ interface ComfyUIErrorBody {
   }>;
 }
 
-interface ComfyUIWebSocketMessage {
+interface ionWebSocketMessage {
   type?: string;
   data?: {
     prompt_id?: string;
@@ -85,7 +85,7 @@ function extractResponseBodyFromErrorMessage(message: string): string {
   return message.slice(index + marker.length).trim();
 }
 
-function parseComfyUIErrorBody(message: string): ComfyUIErrorBody | null {
+function parseionErrorBody(message: string): ionErrorBody | null {
   const bodyText = extractResponseBodyFromErrorMessage(message);
   if (!bodyText) {
     return null;
@@ -96,13 +96,13 @@ function parseComfyUIErrorBody(message: string): ComfyUIErrorBody | null {
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return null;
     }
-    return parsed as ComfyUIErrorBody;
+    return parsed as ionErrorBody;
   } catch {
     return null;
   }
 }
 
-function inferCheckpointValidationFailure(errorBody: ComfyUIErrorBody): string | null {
+function inferCheckpointValidationFailure(errorBody: ionErrorBody): string | null {
   const nodeErrors = errorBody.node_errors || {};
   for (const [nodeId, nodeError] of Object.entries(nodeErrors)) {
     const classType = String(nodeError.class_type || '').trim();
@@ -125,18 +125,18 @@ function inferCheckpointValidationFailure(errorBody: ComfyUIErrorBody): string |
       if (allowedValues.length === 0) {
         return [
           `Checkpoint validation failed at node ${nodeId}: ${receivedValue || '(empty ckpt_name)'}.`,
-          'ComfyUI reports zero available checkpoints (ckpt_name options list is empty).',
+          'ion reports zero available checkpoints (ckpt_name options list is empty).',
           'This is a server model-discovery issue, not a workflow JSON shape issue.',
-          'Verify the running ComfyUI instance has models in its active models/checkpoints directory and restart ComfyUI.',
+          'Verify the running ion instance has models in its active models/checkpoints directory and restart ion.',
         ].join(' ');
       }
 
       if (receivedValue && !allowedValues.includes(receivedValue)) {
         const sample = allowedValues.slice(0, 5).map((value) => String(value)).join(', ');
         return [
-          `Checkpoint validation failed at node ${nodeId}: '${receivedValue}' is not in ComfyUI's allowed ckpt_name list.`,
+          `Checkpoint validation failed at node ${nodeId}: '${receivedValue}' is not in ion's allowed ckpt_name list.`,
           sample ? `Available examples: ${sample}.` : '',
-          'Use an exact filename from ComfyUI object info (no path, exact extension).',
+          'Use an exact filename from ion object info (no path, exact extension).',
         ].join(' ').trim();
       }
     }
@@ -145,7 +145,7 @@ function inferCheckpointValidationFailure(errorBody: ComfyUIErrorBody): string |
   return null;
 }
 
-function isComfyNodeId(key: string): boolean {
+function isIonNodeId(key: string): boolean {
   return /^\d+$/.test(String(key).trim());
 }
 
@@ -176,7 +176,7 @@ function sanitizeWorkflowForPrompt(workflow: Record<string, unknown>): Record<st
   const sanitized: Record<string, unknown> = {};
 
   for (const [nodeId, nodeValue] of Object.entries(workflow)) {
-    if (!isComfyNodeId(nodeId) || !nodeValue || typeof nodeValue !== 'object' || Array.isArray(nodeValue)) {
+    if (!isIonNodeId(nodeId) || !nodeValue || typeof nodeValue !== 'object' || Array.isArray(nodeValue)) {
       continue;
     }
 
@@ -293,13 +293,13 @@ function isBypassableOptionalReadFailure(message: string, path: string): boolean
   return normalized.includes('(403)') || normalized.includes('(404)') || normalized.includes('(405)');
 }
 
-export class ComfyUIClient implements IModelGateway {
+export class ionClient implements IModelGateway {
   private readonly config;
   private lastSubmittedCheckpoint: string | null = null;
   private lastHealthFailure: string | null = null;
 
   constructor(source?: Record<string, unknown>) {
-    this.config = resolveComfyUIConfig(source);
+    this.config = resolveionConfig(source);
   }
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
@@ -307,10 +307,10 @@ export class ComfyUIClient implements IModelGateway {
     await this.reconcileCheckpointWithServer(promptWorkflow);
 
     // ===== VALIDATION LAYER =====
-    const validationResult = validateComfyUIWorkflow(promptWorkflow);
+    const validationResult = validateionWorkflow(promptWorkflow);
     if (!validationResult.valid) {
       const errorMessage = formatValidationErrors(validationResult);
-      throw new Error(`ComfyUI workflow validation failed:\n${errorMessage}`);
+      throw new Error(`ion workflow validation failed:\n${errorMessage}`);
     }
 
     // ===== PAYLOAD PREPARATION =====
@@ -322,13 +322,13 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     // ===== DEBUG LOGGING =====
-    if (process.env.COMFYUI_DEBUG === '1') {
-      console.log('[ComfyUIClient] Submitting workflow payload:', payload);
+    if (process.env.ion_DEBUG === '1') {
+      console.log('[ionClient] Submitting workflow payload:', payload);
     }
 
     // ===== SUBMISSION =====
     try {
-      const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {
+      const response = await this.fetchJson<ionPromptResponse>(this.config.promptPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -338,7 +338,7 @@ export class ComfyUIClient implements IModelGateway {
 
       const promptId = String(response.prompt_id || '').trim();
       if (!promptId) {
-        throw new Error('ComfyUI did not return a prompt_id.');
+        throw new Error('ion did not return a prompt_id.');
       }
 
       this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(promptWorkflow);
@@ -347,11 +347,11 @@ export class ComfyUIClient implements IModelGateway {
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('(400)')) {
-          const parsedBody = parseComfyUIErrorBody(error.message);
+          const parsedBody = parseionErrorBody(error.message);
           const checkpointFailure = parsedBody ? inferCheckpointValidationFailure(parsedBody) : null;
           throw new Error(
-            `ComfyUI rejected the workflow (400 Bad Request). ` +
-            `${checkpointFailure || 'Validation passed, but ComfyUI found the payload invalid. Check checkpoint availability and node parameters.'} ` +
+            `ion rejected the workflow (400 Bad Request). ` +
+            `${checkpointFailure || 'Validation passed, but ion found the payload invalid. Check checkpoint availability and node parameters.'} ` +
             `Original error: ${error.message}`
           );
         }
@@ -362,8 +362,8 @@ export class ComfyUIClient implements IModelGateway {
 
   async getJobStatus(promptId: string): Promise<JobStatus> {
     const [queueResult, historyResult] = await Promise.allSettled([
-      this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
-      this.fetchJson<ComfyUIHistoryResponse>(this.config.historyPath(promptId), { method: 'GET' }),
+      this.fetchJson<ionQueueResponse>(this.config.queuePath, { method: 'GET' }),
+      this.fetchJson<ionHistoryResponse>(this.config.historyPath(promptId), { method: 'GET' }),
     ]);
 
     if (historyResult.status === 'rejected') {
@@ -371,7 +371,7 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     const history = historyResult.value;
-    let queue: ComfyUIQueueResponse = {};
+    let queue: ionQueueResponse = {};
     if (queueResult.status === 'fulfilled') {
       queue = queueResult.value;
     } else {
@@ -399,11 +399,11 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async getOutputImage(promptId: string): Promise<Uint8Array> {
-    const history = await this.fetchJson<ComfyUIHistoryResponse>(this.config.historyPath(promptId), { method: 'GET' });
+    const history = await this.fetchJson<ionHistoryResponse>(this.config.historyPath(promptId), { method: 'GET' });
     const historyEntry = history[promptId];
 
     if (!historyEntry?.outputs) {
-      throw new Error(`ComfyUI history for ${promptId} did not include outputs.`);
+      throw new Error(`ion history for ${promptId} did not include outputs.`);
     }
 
     for (const output of Object.values(historyEntry.outputs)) {
@@ -427,7 +427,7 @@ export class ComfyUIClient implements IModelGateway {
       return bytes;
     }
 
-    throw new Error(`ComfyUI history for ${promptId} did not include an image output.`);
+    throw new Error(`ion history for ${promptId} did not include an image output.`);
   }
 
   async *getProgress(promptId: string): AsyncIterable<ProgressEvent> {
@@ -452,10 +452,10 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     // Before failing, try one last query to /history to see if the job actually completed.
-    // This handles the case where ComfyUI finished but event notification was delayed.
-    if (process.env.COMFYUI_DEBUG === '1') {
+    // This handles the case where ion finished but event notification was delayed.
+    if (process.env.ion_DEBUG === '1') {
       console.warn(
-        `[ComfyUIClient] Polling timeout for ${promptId}. Attempting fallback history query...`
+        `[ionClient] Polling timeout for ${promptId}. Attempting fallback history query...`
       );
     }
 
@@ -476,9 +476,9 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     throw new Error(
-      `Timed out while polling ComfyUI progress for ${promptId} ` +
+      `Timed out while polling ion progress for ${promptId} ` +
       `(checked ${maxAttempts} times over ~${(maxAttempts * pollIntervalMs) / 1000}s). ` +
-      `If the image actually finished rendering, increase COMFYUI_REQUEST_TIMEOUT_MS or use WebSocket streaming.`
+      `If the image actually finished rendering, increase ion_REQUEST_TIMEOUT_MS or use WebSocket streaming.`
     );
   }
 
@@ -498,12 +498,12 @@ export class ComfyUIClient implements IModelGateway {
       ws = new WebSocket(wsUrl);
 
       // Create a promise-based interface for WebSocket events
-      const eventQueue: ComfyUIWebSocketMessage[] = [];
+      const eventQueue: ionWebSocketMessage[] = [];
       let resolveNext: (() => void) | null = null;
 
       ws.addEventListener('message', (event) => {
         try {
-          const message = JSON.parse(String(event.data)) as ComfyUIWebSocketMessage;
+          const message = JSON.parse(String(event.data)) as ionWebSocketMessage;
           eventQueue.push(message);
           if (resolveNext) {
             resolveNext();
@@ -609,7 +609,7 @@ export class ComfyUIClient implements IModelGateway {
     }
 
     try {
-      const objectInfo = await this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
+      const objectInfo = await this.fetchJson<ionObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
       const values = objectInfo.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0];
       if (Array.isArray(values) && values.length === 1) {
         const checkpoint = String(values[0] ?? '').trim();
@@ -651,16 +651,16 @@ export class ComfyUIClient implements IModelGateway {
 
     checkpointInputs.ckpt_name = replacement;
 
-    if (process.env.COMFYUI_DEBUG === '1') {
+    if (process.env.ion_DEBUG === '1') {
       console.warn(
-        `[ComfyUIClient] Replaced unsupported ckpt_name '${requestedCheckpoint}' with '${replacement}' from ComfyUI object_info.`,
+        `[ionClient] Replaced unsupported ckpt_name '${requestedCheckpoint}' with '${replacement}' from ion object_info.`,
       );
     }
   }
 
   private async getAvailableCheckpointsSafe(): Promise<string[] | null> {
     try {
-      const objectInfo = await this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
+      const objectInfo = await this.fetchJson<ionObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' });
       const values = objectInfo.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0];
       if (!Array.isArray(values)) {
         return null;
@@ -678,8 +678,8 @@ export class ComfyUIClient implements IModelGateway {
 
   async isHealthy(): Promise<boolean> {
     const results = await Promise.allSettled([
-      this.fetchJson<ComfyUIQueueResponse>(this.config.queuePath, { method: 'GET' }),
-      this.fetchJson<ComfyUIObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' }),
+      this.fetchJson<ionQueueResponse>(this.config.queuePath, { method: 'GET' }),
+      this.fetchJson<ionObjectInfoResponse>(this.config.objectInfoPath, { method: 'GET' }),
     ]);
 
     const failures = results
@@ -726,7 +726,7 @@ export class ComfyUIClient implements IModelGateway {
       }
 
       const bodySuffix = responseBody ? ` Body: ${responseBody.slice(0, 1000)}` : '';
-      throw new Error(`ComfyUI request failed (${response.status}) for ${path}.${bodySuffix}`);
+      throw new Error(`ion request failed (${response.status}) for ${path}.${bodySuffix}`);
     }
 
     return response.json() as Promise<T>;
@@ -735,7 +735,7 @@ export class ComfyUIClient implements IModelGateway {
   private async fetchBytes(path: string, init: RequestInit): Promise<Uint8Array> {
     const response = await this.fetchWithTimeout(path, init);
     if (!response.ok) {
-      throw new Error(`ComfyUI binary request failed (${response.status}) for ${path}.`);
+      throw new Error(`ion binary request failed (${response.status}) for ${path}.`);
     }
 
     return new Uint8Array(await response.arrayBuffer());
@@ -753,11 +753,11 @@ export class ComfyUIClient implements IModelGateway {
       });
     } catch (error) {
       if (controller.signal.aborted) {
-        throw new Error(`ComfyUI request timed out after ${this.config.requestTimeoutMs}ms for ${target}.`);
+        throw new Error(`ion request timed out after ${this.config.requestTimeoutMs}ms for ${target}.`);
       }
 
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`ComfyUI fetch failed for ${target}: ${message}`);
+      throw new Error(`ion fetch failed for ${target}: ${message}`);
     } finally {
       clearTimeout(timeout);
     }

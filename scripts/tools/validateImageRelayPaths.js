@@ -1,10 +1,10 @@
 const DEFAULT_WORKER_URL = "https://ionirix.com";
 const DEFAULT_DASHBOARD_URL = "https://dashboard-ionirix.vercel.app";
-const DEFAULT_COMFYUI_HOST = "https://worker-comfy.ionirix.com";
+const DEFAULT_ion_HOST = "https://worker-ion.ionirix.com";
 
 const WORKER_URL = String(process.env.ION_ORCHESTRATOR_URL || DEFAULT_WORKER_URL).replace(/\/+$/, "");
 const DASHBOARD_URL = String(process.env.ION_DASHBOARD_URL || DEFAULT_DASHBOARD_URL).replace(/\/+$/, "");
-const COMFYUI_HOST = String(process.env.COMFYUI_HOST || DEFAULT_COMFYUI_HOST).replace(/\/+$/, "");
+const ion_HOST = String(process.env.ion_HOST || DEFAULT_ion_HOST).replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = Number(process.env.ION_SMOKE_TIMEOUT_MS || 90_000);
 const REQUIRE_WORKER_SUCCESS = ["1", "true", "yes", "on"].includes(
   String(process.env.ION_VALIDATOR_REQUIRE_WORKER || "").trim().toLowerCase()
@@ -62,10 +62,10 @@ function printResult(label, result, details = "") {
 async function run() {
   console.log(`• worker url: ${WORKER_URL}`);
   console.log(`• dashboard url: ${DASHBOARD_URL}`);
-  console.log(`• comfyui host: ${COMFYUI_HOST}`);
+  console.log(`• ion host: ${ion_HOST}`);
 
-  const queueResult = await request(`${COMFYUI_HOST}/queue`, { method: "GET" });
-  printResult("comfyui queue", queueResult, truncate(queueResult.text));
+  const queueResult = await request(`${ion_HOST}/queue`, { method: "GET" });
+  printResult("ion queue", queueResult, truncate(queueResult.text));
 
   const promptPayload = {
     prompt: {
@@ -75,12 +75,12 @@ async function run() {
       },
     },
   };
-  const promptResult = await request(`${COMFYUI_HOST}/prompt`, {
+  const promptResult = await request(`${ion_HOST}/prompt`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(promptPayload),
   });
-  printResult("comfyui prompt", promptResult, truncate(promptResult.text));
+  printResult("ion prompt", promptResult, truncate(promptResult.text));
 
   const dashboardPayload = {
     userId: "validator-dashboard-relay",
@@ -121,11 +121,11 @@ async function run() {
   let failed = false;
   if (queueResult.status !== 200) {
     failed = true;
-    console.error("✖ ComfyUI GET /queue is not healthy.");
+    console.error("✖ ion GET /queue is not healthy.");
   }
   if (![200, 400].includes(promptResult.status)) {
     failed = true;
-    console.error("✖ ComfyUI POST /prompt did not reach the origin as expected.");
+    console.error("✖ ion POST /prompt did not reach the origin as expected.");
   }
   if (dashboardResult.status !== 200) {
     failed = true;

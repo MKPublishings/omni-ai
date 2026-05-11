@@ -53,14 +53,14 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
   const previousApiUrl = process.env.NEXT_PUBLIC_ION_API_URL
   const previousDirectRelay = process.env.DASHBOARD_IMAGE_DIRECT_RELAY
   const previousV3Relay = process.env.DASHBOARD_IMAGE_PIPELINE_V3
-  const previousMock = process.env.COMFYUI_MOCK
+  const previousMock = process.env.ion_MOCK
   const previousCheckpoint = process.env.DEFAULT_CHECKPOINT
   const previousPrimaryProvider = process.env.ION_IMAGE_PROVIDER_PRIMARY
   const previousFallbackProvider = process.env.ION_IMAGE_PROVIDER_FALLBACK
   delete process.env.NEXT_PUBLIC_ION_API_URL
   process.env.DASHBOARD_IMAGE_DIRECT_RELAY = 'true'
   process.env.DASHBOARD_IMAGE_PIPELINE_V3 = 'true'
-  process.env.COMFYUI_MOCK = 'true'
+  process.env.ion_MOCK = 'true'
   process.env.DEFAULT_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0'
   process.env.ION_IMAGE_PROVIDER_PRIMARY = 'ion-native'
   process.env.ION_IMAGE_PROVIDER_FALLBACK = 'none'
@@ -104,9 +104,9 @@ test('dashboard /api/image route executes the direct relay pipeline with the moc
       delete process.env.DASHBOARD_IMAGE_PIPELINE_V3
     }
     if (typeof previousMock === 'string') {
-      process.env.COMFYUI_MOCK = previousMock
+      process.env.ion_MOCK = previousMock
     } else {
-      delete process.env.COMFYUI_MOCK
+      delete process.env.ion_MOCK
     }
     if (typeof previousCheckpoint === 'string') {
       process.env.DEFAULT_CHECKPOINT = previousCheckpoint

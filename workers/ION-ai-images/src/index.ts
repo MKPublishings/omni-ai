@@ -11,10 +11,10 @@ import { buildPhotogrammetryBlueprint, mergePromptTokens, resolvePhotogrammetryR
 interface Env {
   AI?: Ai;
   ION_IMAGE_PIPELINE_V2?: string;
-  COMFYUI_HOST?: string;
-  COMFYUI_WS?: string;
-  COMFYUI_MOCK?: string;
-  COMFYUI_REQUEST_TIMEOUT_MS?: string;
+  ion_HOST?: string;
+  ion_WS?: string;
+  ion_MOCK?: string;
+  ion_REQUEST_TIMEOUT_MS?: string;
   DEFAULT_CHECKPOINT?: string;
 }
 
@@ -85,7 +85,7 @@ function mapV2Failure(error: unknown): { status: number; code: string; message: 
   const message = String((error as { message?: string } | null)?.message || "Image generation failed");
   const name = String((error as { name?: string } | null)?.name || "").trim();
 
-  if (name === "E_COMFYUI_DOWN") {
+  if (name === "E_ion_DOWN") {
     return {
       status: 503,
       code: "provider-unavailable",

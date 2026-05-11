@@ -251,7 +251,7 @@ export type InferenceSource = 'prompt' | 'session-or-request' | 'auto' | 'none';
 export interface IonImageV2Metadata {
   pipeline: {
     version: 'v2';
-    gateway: 'mock' | 'comfyui';
+    gateway: 'mock' | 'ion';
     requestId: string;
     promptId: string;
     reasoningChain: ReasoningStepId[];
@@ -329,7 +329,7 @@ export interface IonImageV2RouteDebug {
     promptId: string;
     workflowMetadata: JsonValue | undefined;
     reasoningChain: ReasoningStepId[];
-    gateway: 'mock' | 'comfyui';
+    gateway: 'mock' | 'ion';
     requestId: string;
   };
 }
@@ -357,11 +357,11 @@ export interface IonImageV2RouteRequestedDebug {
 
 export interface IonImagePipelineResult {
   request: GenerationRequest;
-  workflow: ComfyUIWorkflow;
+  workflow: ionWorkflow;
   promptId: string;
   imageBytes: Uint8Array;
   outputModel: string;
-  gatewayKind: 'mock' | 'comfyui';
+  gatewayKind: 'mock' | 'ion';
 }
 
 export interface IonImageV2RouteResponse {
@@ -483,7 +483,7 @@ export interface IonImageGenerationLog {
   jobId: string;
   promptId: string | null;
   status: 'completed' | 'failed';
-  gateway: 'mock' | 'comfyui' | null;
+  gateway: 'mock' | 'ion' | null;
   checkpoint: string;
   styleFamily: StyleFamilyId;
   artifactCount: number;
@@ -497,7 +497,7 @@ export interface IonImageQueueMetadataPayload {
   requestId: string;
   jobId: string;
   promptId: string;
-  gateway: 'mock' | 'comfyui';
+  gateway: 'mock' | 'ion';
   checkpoint: string;
   styleFamily: StyleFamilyId;
   reasoningChain: ReasoningStepId[];
@@ -574,10 +574,10 @@ export interface JobStatus {
   totalSteps: number;
 }
 
-export type ComfyUIWorkflow = Record<string, JsonValue>;
+export type ionWorkflow = Record<string, JsonValue>;
 
 export interface IModelGateway {
-  submitWorkflow(workflow: ComfyUIWorkflow): Promise<{ promptId: string }>;
+  submitWorkflow(workflow: ionWorkflow): Promise<{ promptId: string }>;
   getJobStatus(promptId: string): Promise<JobStatus>;
   getOutputImage(promptId: string): Promise<Uint8Array>;
   getProgress(promptId: string): AsyncIterable<ProgressEvent>;

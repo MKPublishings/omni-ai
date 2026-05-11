@@ -22,9 +22,9 @@ async function testPipeline() {
     const env = readImageGenEnvironment(process.env);
     
     console.log('\n📋 Configuration:');
-    console.log(`  Mock Mode: ${env.comfyuiMock ? '✅ YES' : '❌ NO'}`);
-    console.log(`  Host: ${env.comfyuiFetchHost}`);
-    console.log(`  Timeout: ${env.comfyuiRequestTimeoutMs}ms`);
+    console.log(`  Mock Mode: ${env.ionMock ? '✅ YES' : '❌ NO'}`);
+    console.log(`  Host: ${env.ionFetchHost}`);
+    console.log(`  Timeout: ${env.ionRequestTimeoutMs}ms`);
     
     console.log('\n📝 Request:');
     console.log(`  Prompt: "${prompt}"`);
@@ -55,16 +55,16 @@ async function testPipeline() {
     
     console.log('\n🎯 Analysis:');
     if (result.gatewayKind === 'mock') {
-      console.log('  ✅ Using MockComfyUIClient');
+      console.log('  ✅ Using MockionClient');
       console.log('  ✅ Full ION pipeline executed');
       console.log('  ✅ NO fallback was used');
       console.log('  ✅ Response should have gateway: "mock"');
-    } else if (result.gatewayKind === 'comfyui') {
-      console.log('  ✅ Using Real ComfyUIClient');
-      console.log('  ✅ Connected to ComfyUI at: ' + env.comfyuiFetchHost);
+    } else if (result.gatewayKind === 'ion') {
+      console.log('  ✅ Using Real ionClient');
+      console.log('  ✅ Connected to ion at: ' + env.ionFetchHost);
       console.log('  ✅ Full ION pipeline executed');
       console.log('  ✅ NO fallback was used');
-      console.log('  ✅ Response should have gateway: "comfyui"');
+      console.log('  ✅ Response should have gateway: "ion"');
     }
     
     console.log('\n' + '='.repeat(70));
@@ -81,10 +81,10 @@ async function testPipeline() {
     
     if (String(error?.message || '').includes('403')) {
       console.log('\n⚠️  Got 403 error - This would trigger SDXL fallback');
-      console.log('  Likely cause: ComfyUI /prompt endpoint rejected request');
+      console.log('  Likely cause: ion /prompt endpoint rejected request');
     } else if (String(error?.message || '').includes('ECONNREFUSED')) {
-      console.log('\n⚠️  Connection refused - ComfyUI not reachable');
-      console.log(`  Check if ComfyUI is running at: ${process.env.COMFYUI_HOST || 'http://localhost:8188'}`);
+      console.log('\n⚠️  Connection refused - ion not reachable');
+      console.log(`  Check if ion is running at: ${process.env.ion_HOST || 'http://localhost:8188'}`);
     }
     
     console.log('\n' + '='.repeat(70));

@@ -8,10 +8,10 @@ Use these values for the dashboard deployment:
 
 ```text
 DASHBOARD_IMAGE_DIRECT_RELAY=true
-COMFYUI_HOST=https://worker-comfy.ionirix.com
-COMFYUI_FETCH_HOST=https://worker-comfy.ionirix.com
-COMFYUI_WS=wss://img.ionirix.com/ws
-COMFYUI_MOCK=false
+ion_HOST=https://worker-ion.ionirix.com
+ion_FETCH_HOST=https://worker-ion.ionirix.com
+ion_WS=wss://img.ionirix.com/ws
+ion_MOCK=false
 DEFAULT_CHECKPOINT=ion-citizen-xl-vpred-v2.0
 ```
 
@@ -40,8 +40,8 @@ npm run validate:image:relay-paths
 
 This validator checks:
 
-- `GET /queue` on the ComfyUI host
-- `POST /prompt` on the ComfyUI host
+- `GET /queue` on the ion host
+- `POST /prompt` on the ion host
 - dashboard `/api/image`
 - worker `/api/image`
 

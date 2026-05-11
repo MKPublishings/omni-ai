@@ -110,7 +110,7 @@ export function normalizeImageGenerationError(err: any): NormalizedImageGenerati
   const value = rawMessage.toLowerCase();
 
   if (rawCode === "E_SAFETY_BLOCK") return withDetails(IMAGE_ERROR_PRESETS.safetyBlocked, rawMessage);
-  if (rawCode === "E_COMFYUI_DOWN") return withDetails(IMAGE_ERROR_PRESETS.providerUnavailable, rawMessage);
+  if (rawCode === "E_ion_DOWN") return withDetails(IMAGE_ERROR_PRESETS.providerUnavailable, rawMessage);
   if (rawCode === "E_TIMEOUT") return withDetails(IMAGE_ERROR_PRESETS.providerTimeout, rawMessage);
 
   if (/request failed \(4\d\d\) for \/prompt/i.test(rawMessage)) {

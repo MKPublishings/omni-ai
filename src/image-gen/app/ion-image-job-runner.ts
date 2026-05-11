@@ -26,13 +26,13 @@ type EnvironmentSource = Record<string, unknown>;
 interface ImagePipelineLikeResult {
   request: ImageQueueJobRecord['request'];
   promptId: string;
-  gatewayKind: 'mock' | 'comfyui';
+  gatewayKind: 'mock' | 'ion';
 }
 
 function toImageError(error: unknown): ImageGenerationError {
   const name = String((error as Error)?.name || '').trim().toUpperCase();
   if (name === 'E_TIMEOUT') return getImageGenerationError('E_TIMEOUT');
-  if (name === 'E_COMFYUI_DOWN') return getImageGenerationError('E_COMFYUI_DOWN');
+  if (name === 'E_ion_DOWN') return getImageGenerationError('E_ion_DOWN');
   if (name === 'E_SAFETY_BLOCK') return getImageGenerationError('E_SAFETY_BLOCK');
 
   return {

@@ -1,8 +1,8 @@
 // src/image-gen/backend/gateway/workflow-validator.ts
-// Comprehensive ComfyUI Workflow Validator
+// Comprehensive ion Workflow Validator
 // Catches 400-error-causing issues before submission
 
-import type { ComfyUIWorkflow } from '../../shared/types';
+import type { ionWorkflow } from '../../shared/types';
 
 export interface WorkflowValidationError {
   field: string;
@@ -19,9 +19,9 @@ export interface WorkflowValidationResult {
 
 /**
  * Comprehensive workflow validation
- * Detects issues that cause ComfyUI 400 errors
+ * Detects issues that cause ion 400 errors
  */
-export function validateComfyUIWorkflow(workflow: unknown): WorkflowValidationResult {
+export function validateionWorkflow(workflow: unknown): WorkflowValidationResult {
   const errors: WorkflowValidationError[] = [];
   const warnings: WorkflowValidationError[] = [];
 

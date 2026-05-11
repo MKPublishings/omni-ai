@@ -1,8 +1,8 @@
 // src/image-gen/backend/templates/universal-base-graph.ts
-// Universal Base Graph Template for ComfyUI
-// This is the atomic, always-valid ComfyUI graph that Ion expands for any job
+// Universal Base Graph Template for ion
+// This is the atomic, always-valid ion graph that Ion expands for any job
 
-import type { ComfyUIWorkflow } from '../../shared/types';
+import type { ionWorkflow } from '../../shared/types';
 
 export interface UniversalBaseGraphOptions {
   checkpointName: string;
@@ -24,7 +24,7 @@ export interface UniversalBaseGraphOptions {
 /**
  * Universal Base Graph Template
  *
- * This is the minimal, atomic, always-valid ComfyUI graph:
+ * This is the minimal, atomic, always-valid ion graph:
  *
  *   [LoadCheckpoint] → [EncodePositive] ─┐
  *   [LoadCheckpoint] → [EncodeNegative]  ├→ [Sampler] → [Decode] → [Save]
@@ -32,7 +32,7 @@ export interface UniversalBaseGraphOptions {
  *
  * Everything else gets injected by Ion depending on the job.
  */
-export function buildUniversalBaseGraph(options: UniversalBaseGraphOptions): ComfyUIWorkflow {
+export function buildUniversalBaseGraph(options: UniversalBaseGraphOptions): ionWorkflow {
   const {
     checkpointName,
     positivePrompt,
@@ -50,7 +50,7 @@ export function buildUniversalBaseGraph(options: UniversalBaseGraphOptions): Com
     metadata = {},
   } = options;
 
-  const workflow: ComfyUIWorkflow = {
+  const workflow: ionWorkflow = {
     // ---------------------------------------------------------
     // LAYER 1: MODEL LOADING
     // ---------------------------------------------------------
@@ -190,11 +190,11 @@ export const NODE_IDS = {
  */
 
 export function injectControlNet(
-  graph: ComfyUIWorkflow,
+  graph: ionWorkflow,
   controlNetName: string,
   controlImage: string,
   strength: number = 1.0,
-): ComfyUIWorkflow {
+): ionWorkflow {
   const nodeId = String(NODE_IDS.CONTROLNET_ZONE_START + Object.keys(graph).length);
 
   return {
@@ -209,10 +209,10 @@ export function injectControlNet(
 }
 
 export function injectLoRA(
-  graph: ComfyUIWorkflow,
+  graph: ionWorkflow,
   loraName: string,
   strength: number = 1.0,
-): ComfyUIWorkflow {
+): ionWorkflow {
   const nodeId = String(NODE_IDS.LORA_ZONE_START + Object.keys(graph).length);
 
   return {
@@ -231,10 +231,10 @@ export function injectLoRA(
 }
 
 export function injectUpscale(
-  graph: ComfyUIWorkflow,
+  graph: ionWorkflow,
   upscaleModel: string,
   scale: number = 2,
-): ComfyUIWorkflow {
+): ionWorkflow {
   const nodeId = String(NODE_IDS.UPSCALE_ZONE_START + Object.keys(graph).length);
 
   return {

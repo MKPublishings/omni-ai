@@ -2,7 +2,7 @@
  * SDXL Ion Enhancer
  * 
  * Enhances stable-diffusion-xl-base-1.0 with ION's sophisticated prompt processing,
- * quality optimization, and style handling when ComfyUI is unavailable.
+ * quality optimization, and style handling when ion is unavailable.
  * 
  * Features:
  * - ION-style prompt assembly with quality tags

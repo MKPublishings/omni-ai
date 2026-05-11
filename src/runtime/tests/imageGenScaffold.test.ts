@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { resolveComfyUIConfig } from '../../image-gen/config/comfyui.config.ts';
+import { resolveionConfig } from '../../image-gen/config/ion.config.ts';
 import { readImageGenEnvironment } from '../../image-gen/config/env.ts';
-import { buildComfyUIWorkflow } from '../../image-gen/backend/gateway/workflow-builder.ts';
+import { buildionWorkflow } from '../../image-gen/backend/gateway/workflow-builder.ts';
 import { CHECKPOINT_REGISTRY, getCheckpointConfig } from '../../image-gen/config/models.config.ts';
-import { MockComfyUIClient } from '../../image-gen/backend/gateway/MockComfyUIClient.ts';
+import { MockionClient } from '../../image-gen/backend/gateway/MockionClient.ts';
 import { getImageGenerationError } from '../../image-gen/shared/error-codes.ts';
 import { generationRequestSchema, progressEventSchema, stylePresetSchema } from '../../image-gen/shared/schemas.ts';
 import { BASE_NEGATIVE_PROMPT, STYLE_PRESETS } from '../../image-gen/shared/style-presets.ts';
@@ -80,35 +80,35 @@ test('generation request schema accepts the scaffolded request shape', () => {
 
 test('environment readers apply defaults and overrides deterministically', () => {
   const defaults = readImageGenEnvironment({});
-  assert.equal(defaults.comfyuiMock, true);
+  assert.equal(defaults.ionMock, true);
   assert.equal(defaults.defaultCheckpoint, 'grok-imagine-image-beta');
 
   const overridden = readImageGenEnvironment({
-    COMFYUI_HOST: 'http://127.0.0.1:9000',
-    COMFYUI_FETCH_HOST: 'https://internal-comfy.example.com',
-    COMFYUI_WS: 'ws://127.0.0.1:9000/ws',
-    COMFYUI_MOCK: 'false',
+    ion_HOST: 'http://127.0.0.1:9000',
+    ion_FETCH_HOST: 'https://internal-ion.example.com',
+    ion_WS: 'ws://127.0.0.1:9000/ws',
+    ion_MOCK: 'false',
     DEFAULT_STEPS: '32',
     RATE_LIMIT_PER_HOUR: '45',
   });
 
-  assert.equal(overridden.comfyuiHost, 'http://127.0.0.1:9000');
-  assert.equal(overridden.comfyuiFetchHost, 'https://internal-comfy.example.com');
-  assert.equal(overridden.comfyuiWs, 'ws://127.0.0.1:9000/ws');
-  assert.equal(overridden.comfyuiMock, false);
+  assert.equal(overridden.ionHost, 'http://127.0.0.1:9000');
+  assert.equal(overridden.ionFetchHost, 'https://internal-ion.example.com');
+  assert.equal(overridden.ionWs, 'ws://127.0.0.1:9000/ws');
+  assert.equal(overridden.ionMock, false);
   assert.equal(overridden.defaultSteps, 32);
   assert.equal(overridden.rateLimitPerHour, 45);
 });
 
-test('comfyui config normalizes connection endpoints', () => {
-  const config = resolveComfyUIConfig({
-    COMFYUI_HOST: 'http://localhost:8188///',
-    COMFYUI_FETCH_HOST: 'https://internal-comfy.example.com///',
-    COMFYUI_WS: 'ws://localhost:8188/ws',
-    COMFYUI_MOCK: 'true',
+test('ion config normalizes connection endpoints', () => {
+  const config = resolveionConfig({
+    ion_HOST: 'http://localhost:8188///',
+    ion_FETCH_HOST: 'https://internal-ion.example.com///',
+    ion_WS: 'ws://localhost:8188/ws',
+    ion_MOCK: 'true',
   });
 
-  assert.equal(config.host, 'https://internal-comfy.example.com');
+  assert.equal(config.host, 'https://internal-ion.example.com');
   assert.equal(config.historyPath('abc 123'), '/history/abc%20123');
   assert.equal(config.mock, true);
 });
@@ -122,7 +122,7 @@ test('checkpoint registry exposes the ION citizen defaults', () => {
 });
 
 test('workflow builder produces a minimal v-pred citizen graph', () => {
-  const workflow = buildComfyUIWorkflow(makeGenerationRequest());
+  const workflow = buildionWorkflow(makeGenerationRequest());
 
   assert.equal((workflow['1'] as Record<string, any>).class_type, 'CheckpointLoaderSimple');
   assert.equal((workflow['5'] as Record<string, any>).class_type, 'KSampler');
@@ -132,14 +132,14 @@ test('workflow builder produces a minimal v-pred citizen graph', () => {
 });
 
 test('error catalog preserves retry semantics for gateway outages', () => {
-  const error = getImageGenerationError('E_COMFYUI_DOWN');
+  const error = getImageGenerationError('E_ion_DOWN');
 
   assert.equal(error.retriable, true);
   assert.equal(error.suggestedAction, 'check_gateway');
 });
 
 test('mock gateway produces deterministic progress and image output', async () => {
-  const gateway = new MockComfyUIClient();
+  const gateway = new MockionClient();
   const submission = await gateway.submitWorkflow({
     checkpoint: 'ion-citizen-xl-vpred-v2.0',
     steps: 28,

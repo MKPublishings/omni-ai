@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ComfyUIClient } from '../../image-gen/backend/gateway/ComfyUIClient.ts';
+import { ionClient } from '../../image-gen/backend/gateway/ionClient.ts';
 
 function createJsonResponse(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
@@ -12,7 +12,7 @@ function createJsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
-test('ComfyUI client reports the submitted checkpoint as the loaded model', async () => {
+test('ion client reports the submitted checkpoint as the loaded model', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input, init) => {
@@ -25,7 +25,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     await client.submitWorkflow({
       '1': {
         class_type: 'CheckpointLoaderSimple',
@@ -92,7 +92,7 @@ test('ComfyUI client reports the submitted checkpoint as the loaded model', asyn
   }
 });
 
-test('ComfyUI client treats object info endpoint as optional when queue is healthy', async () => {
+test('ion client treats object info endpoint as optional when queue is healthy', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input) => {
@@ -108,7 +108,7 @@ test('ComfyUI client treats object info endpoint as optional when queue is healt
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     assert.equal(await client.isHealthy(), true);
     assert.equal(client.getLastHealthFailure(), null);
   } finally {
@@ -116,7 +116,7 @@ test('ComfyUI client treats object info endpoint as optional when queue is healt
   }
 });
 
-test('ComfyUI client marks the gateway unhealthy when queue endpoint is unavailable', async () => {
+test('ion client marks the gateway unhealthy when queue endpoint is unavailable', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input) => {
@@ -132,15 +132,15 @@ test('ComfyUI client marks the gateway unhealthy when queue endpoint is unavaila
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     assert.equal(await client.isHealthy(), false);
-    assert.match(String(client.getLastHealthFailure() || ''), /ComfyUI request failed \(503\) for \/queue\./);
+    assert.match(String(client.getLastHealthFailure() || ''), /ion request failed \(503\) for \/queue\./);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test('ComfyUI client tolerates 403 on read-only queue probe when history is available', async () => {
+test('ion client tolerates 403 on read-only queue probe when history is available', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input) => {
@@ -163,7 +163,7 @@ test('ComfyUI client tolerates 403 on read-only queue probe when history is avai
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     const status = await client.getJobStatus('prompt-1');
 
     assert.equal(status.status, 'completed');
@@ -173,7 +173,7 @@ test('ComfyUI client tolerates 403 on read-only queue probe when history is avai
   }
 });
 
-test('ComfyUI client distinguishes running versus pending queue positions', async () => {
+test('ion client distinguishes running versus pending queue positions', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input) => {
@@ -192,7 +192,7 @@ test('ComfyUI client distinguishes running versus pending queue positions', asyn
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     const running = await client.getJobStatus('prompt-running');
     const pending = await client.getJobStatus('prompt-pending');
 
@@ -207,7 +207,7 @@ test('ComfyUI client distinguishes running versus pending queue positions', asyn
   }
 });
 
-test('ComfyUI client auto-reconciles unsupported checkpoint names to available object_info values', async () => {
+test('ion client auto-reconciles unsupported checkpoint names to available object_info values', async () => {
   const originalFetch = globalThis.fetch;
   let submittedCheckpoint = '';
 
@@ -237,7 +237,7 @@ test('ComfyUI client auto-reconciles unsupported checkpoint names to available o
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     await client.submitWorkflow({
       '1': {
         class_type: 'CheckpointLoaderSimple',
@@ -304,7 +304,7 @@ test('ComfyUI client auto-reconciles unsupported checkpoint names to available o
   }
 });
 
-test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt validation', async () => {
+test('ion client surfaces empty checkpoint list diagnostics from prompt validation', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async (input, init) => {
@@ -342,7 +342,7 @@ test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt vali
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
 
     await assert.rejects(
       () => client.submitWorkflow({
@@ -411,7 +411,7 @@ test('ComfyUI client surfaces empty checkpoint list diagnostics from prompt vali
   }
 });
 
-test('ComfyUI client polls with extended timeout and attempts history fallback on timeout', async () => {
+test('ion client polls with extended timeout and attempts history fallback on timeout', async () => {
   const originalFetch = globalThis.fetch;
   let pollAttempts = 0;
   const maxQuickPolls = 5; // Simulate job not completing for first few polls
@@ -459,7 +459,7 @@ test('ComfyUI client polls with extended timeout and attempts history fallback o
   };
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     const events: unknown[] = [];
 
     for await (const event of client.getProgress('prompt-1')) {
@@ -474,7 +474,7 @@ test('ComfyUI client polls with extended timeout and attempts history fallback o
   }
 });
 
-test('ComfyUI client WebSocket streaming listener receives execution_complete events', async () => {
+test('ion client WebSocket streaming listener receives execution_complete events', async () => {
   const originalWebSocket = globalThis.WebSocket;
   let wsMessageListeners: Record<string, ((event: any) => void)[]> = {};
 
@@ -517,7 +517,7 @@ test('ComfyUI client WebSocket streaming listener receives execution_complete ev
   globalThis.WebSocket = MockWebSocket;
 
   try {
-    const client = new ComfyUIClient();
+    const client = new ionClient();
     const events: unknown[] = [];
 
     for await (const event of client.getProgressWebSocket('prompt-1')) {

@@ -1,32 +1,32 @@
 ## Overview
 
-This is a paste-ready setup plan for a production ComfyUI server behind Ionirix.
+This is a paste-ready setup plan for a production ion server behind Ionirix.
 
 It assumes:
 
-- Remote GPU server or service running ComfyUI
-- Ionirix talks to it via `COMFYUI_HOST` (HTTP) and `COMFYUI_WS` (WebSocket)
+- Remote GPU server or service running ion
+- Ionirix talks to it via `ion_HOST` (HTTP) and `ion_WS` (WebSocket)
 - Anime-optimized model(s) loaded on the server
 - Nginx (or similar) as reverse proxy with HTTPS and WebSocket support
 
 References:
 
-- https://github.com/angusdowling/ComfyUI-Deployment
-- https://deepwiki.com/ashleykleynhans/comfyui-docker/4.3-nginx-configuration
+- https://github.com/angusdowling/ion-Deployment
+- https://deepwiki.com/ashleykleynhans/ion-docker/4.3-nginx-configuration
 
 ## 1. Target Architecture
 
-Goal: one production ComfyUI backend, reachable from Ionirix as:
+Goal: one production ion backend, reachable from Ionirix as:
 
-- `COMFYUI_HOST=https://img.ionirix.yourdomain.com`
-- `COMFYUI_WS=wss://img.ionirix.yourdomain.com/ws`
-- `COMFYUI_MOCK=false`
+- `ion_HOST=https://img.ionirix.yourdomain.com`
+- `ion_WS=wss://img.ionirix.yourdomain.com/ws`
+- `ion_MOCK=false`
 
 High-level components:
 
-- GPU server: ComfyUI backend, models, custom nodes
+- GPU server: ion backend, models, custom nodes
 - Reverse proxy: Nginx with HTTPS, WebSocket support, CORS, and long timeouts
-- Ionirix backend: image generation route that talks to ComfyUI
+- Ionirix backend: image generation route that talks to ion
 - Ion: orchestrator that builds prompts and selects workflows
 
 ## 2. Server Provisioning
@@ -43,16 +43,16 @@ High-level components:
 - Install Docker and NVIDIA Container Toolkit if containerized
 - Open ports:
   - `80` and `443` for Nginx
-  - `8188` for internal ComfyUI only, not public
+  - `8188` for internal ion only, not public
 
-## 3. ComfyUI Deployment
+## 3. ion Deployment
 
 This example uses Docker because it is easier to reason about and version.
 
 ### 3.1 Folder Layout On Server
 
 ```bash
-/opt/comfyui/
+/opt/ion/
   docker-compose.yml
   data/
     models/
@@ -69,19 +69,19 @@ This example uses Docker because it is easier to reason about and version.
 version: "3.9"
 
 services:
-  comfy-backend:
-    image: ghcr.io/comfyanonymous/comfyui:latest
-    container_name: comfy-backend
+  ion-backend:
+    image: ghcr.io/Ionanonymous/ion:latest
+    container_name: ion-backend
     restart: unless-stopped
     ports:
       - "8188:8188"
     environment:
       - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
     volumes:
-      - ./data/models:/root/comfyui/models
-      - ./data/output:/root/comfyui/output
-      - ./data/custom_nodes:/root/comfyui/custom_nodes
-      - ./data/workflows:/root/comfyui/user/default/workflows
+      - ./data/models:/root/ion/models
+      - ./data/output:/root/ion/output
+      - ./data/custom_nodes:/root/ion/custom_nodes
+      - ./data/workflows:/root/ion/user/default/workflows
     deploy:
       resources:
         reservations:
@@ -90,7 +90,7 @@ services:
 
   nginx:
     image: nginx:stable
-    container_name: comfy-nginx
+    container_name: ion-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -114,8 +114,8 @@ events {
 http {
   client_max_body_size 500M;
 
-  upstream comfy_backend {
-    server comfy-backend:8188;
+  upstream Ion_backend {
+    server ion-backend:8188;
   }
 
   server {
@@ -150,7 +150,7 @@ http {
       proxy_read_timeout 600s;
       proxy_send_timeout 600s;
 
-      proxy_pass http://comfy_backend/ws;
+      proxy_pass http://Ion_backend/ws;
     }
 
     location / {
@@ -163,7 +163,7 @@ http {
       proxy_read_timeout 600s;
       proxy_send_timeout 600s;
 
-      proxy_pass http://comfy_backend;
+      proxy_pass http://Ion_backend;
     }
   }
 }
@@ -176,13 +176,13 @@ http {
 Checkpoints:
 
 ```bash
-/opt/comfyui/data/models/checkpoints/
+/opt/ion/data/models/checkpoints/
 ```
 
 LoRAs:
 
 ```bash
-/opt/comfyui/data/models/loras/
+/opt/ion/data/models/loras/
 ```
 
 Examples to select from:
@@ -197,16 +197,16 @@ Examples to select from:
 ### 5.2 Custom Nodes
 
 ```bash
-/opt/comfyui/data/custom_nodes/
+/opt/ion/data/custom_nodes/
 ```
 
-Restart `comfy-backend` after adding nodes or models.
+Restart `ion-backend` after adding nodes or models.
 
 ## 6. Workflow And API Contract
 
 ### 6.1 Save Workflow In API Format
 
-In the ComfyUI UI:
+In the ion UI:
 
 - Enable Development Mode
 - Build the anime-optimized workflow
@@ -214,10 +214,10 @@ In the ComfyUI UI:
 - Store it in:
 
 ```bash
-/opt/comfyui/data/workflows/anime_v1.json
+/opt/ion/data/workflows/anime_v1.json
 ```
 
-### 6.2 Ionirix Backend To ComfyUI REST
+### 6.2 Ionirix Backend To ion REST
 
 Ionirix backend route:
 
@@ -270,27 +270,27 @@ Expected flow:
 - Subscribe to queue or job ID
 - Stream progress events to Ionirix frontend
 - Receive final image path(s)
-- Download image(s) from ComfyUI `/view` or `/output`
+- Download image(s) from ion `/view` or `/output`
 
 ## 7. Environment Variables On Ionirix Side
 
 Example backend env:
 
 ```env
-COMFYUI_HOST=https://img.ionirix.yourdomain.com
-COMFYUI_WS=wss://img.ionirix.yourdomain.com/ws
-COMFYUI_MOCK=false
-COMFYUI_TIMEOUT_MS=600000
+ion_HOST=https://img.ionirix.yourdomain.com
+ion_WS=wss://img.ionirix.yourdomain.com/ws
+ion_MOCK=false
+ion_TIMEOUT_MS=600000
 ```
 
 Example config module:
 
 ```ts
-export const comfyConfig = {
-  host: process.env.COMFYUI_HOST!,
-  ws: process.env.COMFYUI_WS!,
-  mock: process.env.COMFYUI_MOCK === "true",
-  timeoutMs: Number(process.env.COMFYUI_TIMEOUT_MS ?? 600000)
+export const IonConfig = {
+  host: process.env.ion_HOST!,
+  ws: process.env.ion_WS!,
+  mock: process.env.ion_MOCK === "true",
+  timeoutMs: Number(process.env.ion_TIMEOUT_MS ?? 600000)
 };
 ```
 
@@ -302,17 +302,17 @@ export const comfyConfig = {
 /backend/
   src/
     imageGen/
-      comfy/
-        comfyClient.ts
-        comfyWorkflowBuilder.ts
-        comfyTypes.ts
+      ion/
+        IonClient.ts
+        IonWorkflowBuilder.ts
+        IonTypes.ts
       ionImageService.ts
       routes/
         imageGenRoutes.ts
   .env
 
 /docs/
-  comfyui-production-server.md
+  ion-production-server.md
   image-gen-architecture-v1.md
 
 /frontend/
@@ -331,24 +331,24 @@ Step 1: server infra outside the repo.
 
 - Provision GPU server
 - Install Docker and NVIDIA toolkit
-- Create `/opt/comfyui` structure
+- Create `/opt/ion` structure
 - Add `docker-compose.yml` and `nginx.conf`
 - Run `docker compose up -d`
 - Get TLS certs and reload Nginx
 
-Step 2: ComfyUI workflows.
+Step 2: ion workflows.
 
-- Open ComfyUI UI at `https://img.ionirix.yourdomain.com`
+- Open ion UI at `https://img.ionirix.yourdomain.com`
 - Build `anime_v1` workflow
 - Save API format to `data/workflows/anime_v1.json`
 
 Step 3: backend integration.
 
-- Implement `comfyClient.ts`
+- Implement `IonClient.ts`
   - `submitWorkflow(graph): jobId`
   - `subscribeToJob(jobId): events`
   - `fetchResult(jobId): images`
-- Implement `comfyWorkflowBuilder.ts`
+- Implement `IonWorkflowBuilder.ts`
   - Load `anime_v1.json`
   - Inject prompt and params
 - Implement `ionImageService.ts`
@@ -396,4 +396,4 @@ export const animeStyles = {
 };
 ```
 
-Ion uses these presets when building the final prompt for ComfyUI.
+Ion uses these presets when building the final prompt for ion.

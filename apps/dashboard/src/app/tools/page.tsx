@@ -85,7 +85,7 @@ export default function ToolsPage() {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard title="Gateway Mode" value={imageRuntime?.gateway.mock ? 'Mock' : 'ComfyUI'} trend={{ direction: 'neutral', value: imageRuntime?.gateway.defaultCheckpoint || 'Awaiting runtime' }} />
+            <StatCard title="Gateway Mode" value={imageRuntime?.gateway.mock ? 'Mock' : 'ion'} trend={{ direction: 'neutral', value: imageRuntime?.gateway.defaultCheckpoint || 'Awaiting runtime' }} />
             <StatCard title="Queue Runtime" value={imageRuntime?.queue.runtime || '...'} trend={{ direction: 'neutral', value: imageRuntime?.queue.stateBinding || 'Binding' }} />
             <StatCard title="Queue Capacity" value={imageRuntime?.queue.maxQueueSize ?? '...'} trend={{ direction: 'neutral', value: `${imageRuntime?.queue.maxConcurrentJobs ?? '...'} concurrent` }} />
             <StatCard title="Safety" value={imageRuntime?.safety.enabled ? 'On' : 'Off'} trend={{ direction: 'neutral', value: `${imageRuntime?.safety.rateLimitPerHour ?? '...'} req/hr` }} />

@@ -1,7 +1,7 @@
 import { getCheckpointConfig } from '../../config/models.config';
 import { readImageGenEnvironment } from '../../config/env';
 import { buildUniversalBaseGraph } from '../templates/universal-base-graph';
-import type { ComfyUIWorkflow, GenerationRequest } from '../../shared/types';
+import type { ionWorkflow, GenerationRequest } from '../../shared/types';
 
 const MAX_CLIP_TEXT_CHARS = 1400;
 const DEFAULT_SDXL_MODEL = 'sd_xl_turbo_1.0_fp16.safetensors';
@@ -55,7 +55,7 @@ function buildPositiveText(request: GenerationRequest): string {
     .join(', '));
 }
 
-export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
+export function buildionWorkflow(request: GenerationRequest): ionWorkflow {
   const env = readImageGenEnvironment();
   const requestedCheckpoint = String(request.model.checkpoint || '').trim();
   const positiveText = buildPositiveText(request);

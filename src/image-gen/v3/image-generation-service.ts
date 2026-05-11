@@ -27,9 +27,9 @@ export interface IonImageV3RouteResult {
 }
 const CLOUDFLARE_MAX_STEPS = 20;
 
-function isComfyDownError(error: unknown): boolean {
+function isIonDownError(error: unknown): boolean {
   const name = String((error as { name?: string } | null)?.name || '').trim().toUpperCase();
-  return name === 'E_COMFYUI_DOWN';
+  return name === 'E_ion_DOWN';
 }
 
 function isTimeoutError(error: unknown): boolean {
@@ -39,8 +39,8 @@ function isTimeoutError(error: unknown): boolean {
 
 function shouldFallback(error: unknown, source: EnvironmentSource): boolean {
   const config = readIonImageV3RuntimeConfig(source);
-  if (isComfyDownError(error)) {
-    return config.fallbackOnComfyDown;
+  if (isIonDownError(error)) {
+    return config.fallbackOnIonDown;
   }
 
   if (isTimeoutError(error)) {
@@ -129,7 +129,7 @@ function normalizeCloudflareDimensions(width: number, height: number): { width: 
   };
 }
 
-async function runComfyProvider(
+async function runIonProvider(
   input: IonImageV3GenerationInput,
   source: EnvironmentSource,
 ): Promise<IonImagePipelineResult> {
@@ -226,7 +226,7 @@ async function runProvider(
     return runCloudflareAiProvider(input, source);
   }
 
-  return runComfyProvider(input, source);
+  return runIonProvider(input, source);
 }
 
 function mapStyleSource(input: IonImageV3GenerationInput): 'auto' | 'session-or-request' {
@@ -234,7 +234,7 @@ function mapStyleSource(input: IonImageV3GenerationInput): 'auto' | 'session-or-
 }
 
 function mapProviderHeader(provider: IonImageProviderKind | null): string {
-  if (provider === 'ion-native' || provider === 'comfyui' || provider === 'cloudflare-ai') {
+  if (provider === 'ion-native' || provider === 'ion' || provider === 'cloudflare-ai') {
     return provider;
   }
 

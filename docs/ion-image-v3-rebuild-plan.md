@@ -9,11 +9,11 @@ Restore ION image generation as a production-grade, resilient system with:
 - Clear rollout controls and rollback-safe feature flags.
 
 ## Strategic Decision
-- ComfyUI is no longer part of the default image runtime.
+- ion is no longer part of the default image runtime.
 - ION-native renderer is now the primary provider to keep generation fully in ION control.
 - Cloudflare AI remains optional fallback only when explicitly configured.
 
-## What We Learned From ComfyUI Attempts
+## What We Learned From ion Attempts
 1. Endpoint drift caused outages:
 - Traffic and direct probes often hit different workers/routes.
 - Fix: enforce one canonical routing contract and health identity headers.
@@ -42,7 +42,7 @@ Restore ION image generation as a production-grade, resilient system with:
 
 All surfaces should emit:
 - X-ION-Image-Route (image-gen-v3)
-- X-ION-Image-Provider (comfyui | cloudflare-ai)
+- X-ION-Image-Provider (ion | cloudflare-ai)
 - X-ION-Request-Id
 
 ### 2) V3 Orchestrator Layer
@@ -58,7 +58,7 @@ All surfaces should emit:
 - Cloudflare AI provider (optional fallback):
   - Direct AI.run image generation fallback for rare degraded-runtime states.
   - Prompt quality preservation and model guardrails.
-- ComfyUI provider:
+- ion provider:
   - Kept only as optional compatibility path during migration windows.
 
 ### 4) Data and Queue Layer
@@ -101,9 +101,9 @@ All surfaces should emit:
 
 ## Environment Flags (V3)
 - ION_IMAGE_PIPELINE_V3=true|false
-- ION_IMAGE_PROVIDER_PRIMARY=ion-native|comfyui|cloudflare-ai
-- ION_IMAGE_PROVIDER_FALLBACK=ion-native|comfyui|cloudflare-ai|none
-- ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN=true|false
+- ION_IMAGE_PROVIDER_PRIMARY=ion-native|ion|cloudflare-ai
+- ION_IMAGE_PROVIDER_FALLBACK=ion-native|ion|cloudflare-ai|none
+- ION_IMAGE_FALLBACK_ON_ion_DOWN=true|false
 - ION_IMAGE_FALLBACK_ON_TIMEOUT=true|false
 - ION_IMAGE_FALLBACK_MODEL=@cf/stabilityai/stable-diffusion-xl-base-1.0
 - DASHBOARD_IMAGE_PIPELINE_V3=true|false (dashboard relay override)
@@ -124,7 +124,7 @@ All surfaces should emit:
   - Full repo typecheck currently fails due existing legacy typing issues in src/index.ts unrelated to this v3 wiring.
 
 ## Success Criteria
-- No hard-fail on ComfyUI prompt-path outages when fallback policy allows fallback.
+- No hard-fail on ion prompt-path outages when fallback policy allows fallback.
 - Same response shape and metadata contract across dashboard relay and workers.
 - Provider and route identity visible through response headers and logs.
 - Smoke suite catches relay drift before deploy.

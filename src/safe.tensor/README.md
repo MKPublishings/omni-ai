@@ -49,7 +49,7 @@ The `safe.tensor` module is ION's civilization-grade governance system for all o
 
 safe.tensor has **zero dependencies** on:
 - Model files (`.pt`, `.ckpt`)
-- ComfyUI configuration
+- ion configuration
 - Checkpoint registries
 - Image generation pipelines
 

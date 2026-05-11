@@ -1,4 +1,4 @@
-# Ion AI: ComfyUI Integration with Credit Accounting Architecture
+# Ion AI: ion Integration with Credit Accounting Architecture
 ## Complete Refactoring & 400 Error Fix
 
 **Date:** May 11, 2026  
@@ -11,20 +11,20 @@
 
 This document describes the complete refactoring of Ion's image generation pipeline to use:
 
-1. **Universal Base Graph** - A minimal, atomic ComfyUI workflow template
+1. **Universal Base Graph** - A minimal, atomic ion workflow template
 2. **Credit Accounting System** - Atomic, tamper-proof credit ledger with reservation/metering/charge flow
 3. **Workflow Validation** - Comprehensive validation to prevent 400 errors before submission
-4. **Enhanced Error Handling** - Better diagnostics for ComfyUI failures
+4. **Enhanced Error Handling** - Better diagnostics for ion failures
 
 ---
 
 ## What Was Fixed
 
-### The Problem: ComfyUI 400 Errors
+### The Problem: ion 400 Errors
 
 **Original Error:**
 ```
-ComfyUI request failed (400) for /prompt
+ion request failed (400) for /prompt
 ```
 
 **Root Causes:**
@@ -50,7 +50,7 @@ Created a three-layer validation system:
 
 **File:** `src/image-gen/backend/templates/universal-base-graph.ts`
 
-The minimal, atomic ComfyUI workflow:
+The minimal, atomic ion workflow:
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -101,16 +101,16 @@ Comprehensive validation with detailed error messages:
 
 **Usage:**
 ```typescript
-const result = validateComfyUIWorkflow(workflow);
+const result = validateionWorkflow(workflow);
 if (!result.valid) {
   console.error(formatValidationErrors(result));
   throw new Error('Workflow validation failed');
 }
 ```
 
-### 3. Enhanced ComfyUIClient
+### 3. Enhanced ionClient
 
-**File:** `src/image-gen/backend/gateway/ComfyUIClient.ts`
+**File:** `src/image-gen/backend/gateway/ionClient.ts`
 
 Improvements:
 - ✅ Validates workflow before submission
@@ -120,17 +120,17 @@ Improvements:
 
 **Before:**
 ```
-ComfyUI request failed (400) for /prompt
+ion request failed (400) for /prompt
 ```
 
 **After:**
 ```
-ComfyUI workflow validation failed:
+ion workflow validation failed:
 ❌ Validation Errors:
   - nodes.5.inputs.model [node: 5]: Referenced node "999" does not exist
   - nodes.4.inputs [node: 4]: Width and height must be multiples of 8
 
-ComfyUI rejected the workflow (400 Bad Request).
+ion rejected the workflow (400 Bad Request).
 Check checkpoint availability and node parameters.
 ```
 
@@ -141,7 +141,7 @@ Check checkpoint availability and node parameters.
 Now uses the Universal Base Graph:
 
 ```typescript
-export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflow {
+export function buildionWorkflow(request: GenerationRequest): ionWorkflow {
   // Build using template
   const workflow = buildUniversalBaseGraph({
     checkpointName: runtimeCheckpoint,
@@ -169,7 +169,7 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
 
 1. **`src/credits/ion_credits.py`** - Credit ledger engine
 2. **`src/credits/db.py`** - SQLite persistence layer
-3. **`src/credits/ion_job_runner.py`** - ComfyUI job executor with credit hooks
+3. **`src/credits/ion_job_runner.py`** - ion job executor with credit hooks
 
 ### Credit Flow
 
@@ -190,16 +190,16 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
    ├─ Structure validation
    ├─ Connection validation
    ↓
-4. ION SUBMITS TO COMFYUI
+4. ION SUBMITS TO ion
    ├─ POST to /prompt
    ├─ Get prompt_id
    ↓
 5. ION METERS GPU USAGE
-   ├─ Poll ComfyUI /history
+   ├─ Poll ion /history
    ├─ Record GPU time per node
    ├─ Update meter table
    ↓
-6. COMFYUI COMPLETES
+6. ion COMPLETES
    ↓
 7. ION CHARGES & REFUNDS
    ├─ Calculate actual cost (GPU time × rate)
@@ -269,10 +269,10 @@ history = runner.get_user_history("mirnes", limit=10)
 
 ## Integration Steps
 
-### 1. Import Validation in ComfyUIClient ✅
+### 1. Import Validation in ionClient ✅
 
 ```typescript
-import { validateComfyUIWorkflow, formatValidationErrors } from './workflow-validator';
+import { validateionWorkflow, formatValidationErrors } from './workflow-validator';
 ```
 
 ### 2. Use Universal Base Graph ✅
@@ -302,8 +302,8 @@ const result = await creditRunner.run_job(userId, workflow, estimatedCost);
 ### Test 1: Valid Workflow
 
 ```typescript
-const workflow = buildComfyUIWorkflow(generationRequest);
-const validation = validateComfyUIWorkflow(workflow);
+const workflow = buildionWorkflow(generationRequest);
+const validation = validateionWorkflow(workflow);
 console.assert(validation.valid === true);
 ```
 
@@ -317,7 +317,7 @@ const badWorkflow = {
   }
 };
 
-const validation = validateComfyUIWorkflow(badWorkflow);
+const validation = validateionWorkflow(badWorkflow);
 console.assert(validation.valid === false);
 console.log(formatValidationErrors(validation));
 ```
@@ -401,19 +401,19 @@ src/credits/
 └── ion_job_runner.py       # Job executor with credit hooks
 
 src/image-gen/backend/templates/
-└── universal-base-graph.ts # Minimal ComfyUI workflow template
+└── universal-base-graph.ts # Minimal ion workflow template
 
 src/image-gen/backend/gateway/
 ├── workflow-validator.ts   # Comprehensive workflow validation
 └── workflow-builder.ts     # (REFACTORED - now uses template)
-└── ComfyUIClient.ts        # (ENHANCED - added validation)
+└── ionClient.ts        # (ENHANCED - added validation)
 ```
 
 ### Modified Files
 
 ```
-src/image-gen/backend/gateway/ComfyUIClient.ts
-- Added: validateComfyUIWorkflow() call
+src/image-gen/backend/gateway/ionClient.ts
+- Added: validateionWorkflow() call
 - Added: Better error handling for 400 errors
 - Improved: Payload serialization with error context
 
@@ -427,7 +427,7 @@ src/image-gen/backend/gateway/workflow-builder.ts
 
 ## Troubleshooting
 
-### ComfyUI Still Returns 400
+### ion Still Returns 400
 
 1. Check validation errors:
    ```bash
@@ -446,7 +446,7 @@ src/image-gen/backend/gateway/workflow-builder.ts
 
 4. Enable debug logging:
    ```typescript
-   const validation = validateComfyUIWorkflow(workflow);
+   const validation = validateionWorkflow(workflow);
    console.log(formatValidationErrors(validation));
    ```
 
@@ -476,7 +476,7 @@ src/image-gen/backend/gateway/workflow-builder.ts
 
 This refactoring provides:
 
-✅ **Fixes ComfyUI 400 errors** with comprehensive validation  
+✅ **Fixes ion 400 errors** with comprehensive validation  
 ✅ **Simplifies workflow building** with Universal Base Graph  
 ✅ **Adds credit accountability** with atomic ledger system  
 ✅ **Improves error diagnostics** with detailed messages  

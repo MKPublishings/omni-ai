@@ -2,7 +2,7 @@
 
 ## Overview
 
-This enhancement improves the stability-diffusion-xl-base-1.0 model by integrating ION's sophisticated prompt processing, parameter optimization, and style handling. When ComfyUI is unavailable and the system falls back to direct Cloudflare AI model invocation, SDXL now receives ION-optimized prompts and parameters.
+This enhancement improves the stability-diffusion-xl-base-1.0 model by integrating ION's sophisticated prompt processing, parameter optimization, and style handling. When ion is unavailable and the system falls back to direct Cloudflare AI model invocation, SDXL now receives ION-optimized prompts and parameters.
 
 ## Key Improvements
 
@@ -110,7 +110,7 @@ try {
 ## Integration Points
 
 ### 1. **buildDirectAiImageFallbackResponse** (src/index.ts)
-- Main fallback handler for when ComfyUI is unavailable
+- Main fallback handler for when ion is unavailable
 - Now calls `buildIonEnhancedDirectFallbackPrompt()`
 - Uses `optimizeSdxlParameters()` for configuration
 

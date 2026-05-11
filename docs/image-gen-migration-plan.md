@@ -7,7 +7,7 @@ This plan translates the requirements in `Ionirix Image Generation Architecture 
 ## Target Outcome
 
 - Replace the current split image backends with one primary pipeline: Illustrious XL ecosystem, defaulting to ION Citizen-XL v-pred.
-- Move generation behind a ComfyUI headless gateway instead of direct provider-specific calls.
+- Move generation behind a ion headless gateway instead of direct provider-specific calls.
 - Promote Ion from prompt passthrough into a multi-step image orchestrator that performs intent parsing, tag expansion, style routing, prompt assembly, parameter optimization, safety checks, and workflow assembly.
 - Preserve the existing `/api/image` contract while changing the internals behind it.
 - Keep a fallback path during migration until validation gates pass.
@@ -39,7 +39,7 @@ This plan translates the requirements in `Ionirix Image Generation Architecture 
 The PDF architecture and the current implementation differ in four major ways:
 
 1. Backend fragmentation: the repo still mixes Cloudflare AI, OpenAI Images, and Stability API instead of one model family.
-2. Missing gateway abstraction: there is no ComfyUI client, workflow builder, checkpoint manager, or LoRA manager.
+2. Missing gateway abstraction: there is no ion client, workflow builder, checkpoint manager, or LoRA manager.
 3. Thin orchestration: Ion currently expands prompt text heuristically but does not execute the PDF's 12-step reasoning chain.
 4. Missing asynchronous pipeline layers: queueing, storage, post-processing, metadata persistence, and structured telemetry are partial or absent.
 
@@ -57,8 +57,8 @@ Tasks:
 
 - Create `src/image-gen/` as the new subsystem root.
 - Add shared contracts for request, response, checkpoints, style presets, queue jobs, and errors.
-- Add config modules for ComfyUI connection, model registry, queue settings, and safety rules.
-- Add environment flags for `COMFYUI_HOST`, `COMFYUI_WS`, `COMFYUI_MOCK`, `DEFAULT_CHECKPOINT`, `DEFAULT_PREDICTION_TYPE`, `DEFAULT_CFG_RESCALE`, and storage paths.
+- Add config modules for ion connection, model registry, queue settings, and safety rules.
+- Add environment flags for `ion_HOST`, `ion_WS`, `ion_MOCK`, `DEFAULT_CHECKPOINT`, `DEFAULT_PREDICTION_TYPE`, `DEFAULT_CFG_RESCALE`, and storage paths.
 - Introduce a gateway interface so the worker can switch between mock and real backends without changing the route contract.
 
 Repo touchpoints:
@@ -74,15 +74,15 @@ Validation gate:
 
 ### Phase 1: Model gateway and mock backend
 
-Goal: make ComfyUI integration a swappable module before changing orchestration behavior.
+Goal: make ion integration a swappable module before changing orchestration behavior.
 
 Tasks:
 
-- Implement `comfyui-client.ts` for `/prompt`, `/history/{id}`, `/view`, `/queue`, and `/ws`.
+- Implement `ion-client.ts` for `/prompt`, `/history/{id}`, `/view`, `/queue`, and `/ws`.
 - Implement `workflow-builder.ts` that can build a minimal ION Citizen workflow with explicit `v_prediction`, `rescale_betas_zero_snr`, VAE decode, and image save nodes.
 - Implement `checkpoint-manager.ts` and `lora-manager.ts` against configured model directories.
 - Implement `health.ts` to report reachability, loaded checkpoint, and queue depth.
-- Implement `MockComfyUIClient` for local development and CI when GPU inference is unavailable.
+- Implement `MockionClient` for local development and CI when GPU inference is unavailable.
 
 Repo touchpoints:
 
@@ -92,7 +92,7 @@ Repo touchpoints:
 Validation gate:
 
 - Mock gateway supports deterministic smoke tests.
-- Real gateway can submit and observe a minimal workflow when ComfyUI is available.
+- Real gateway can submit and observe a minimal workflow when ion is available.
 
 ### Phase 2: Ion orchestration rewrite
 
@@ -250,28 +250,28 @@ Validation gate:
 - Job metadata and artifact records remain queryable across separate runtime instances.
 - Image queue contract tests pass against both mock and durable adapters.
 
-### Phase 8: Production ComfyUI integration hardening
+### Phase 8: Production ion integration hardening
 
-Goal: move the gateway from minimal happy-path polling to a production-ready ComfyUI integration with richer health, progress, and model verification.
+Goal: move the gateway from minimal happy-path polling to a production-ready ion integration with richer health, progress, and model verification.
 
 Tasks:
 
-- Extend `ComfyUIClient` to surface loaded checkpoint identity, queue depth, and explicit failure reasons instead of returning `unknown` or generic timeouts only.
+- Extend `ionClient` to surface loaded checkpoint identity, queue depth, and explicit failure reasons instead of returning `unknown` or generic timeouts only.
 - Add WebSocket-based progress handling or a more detailed history parser so progress events are more granular than the current step `0/1` polling flow.
 - Add workflow and checkpoint verification hooks so the deployed gateway proves the requested checkpoint and workflow variant actually ran.
-- Introduce health/readiness probes for ComfyUI connectivity that can be surfaced through an operator route or deployment readiness check.
+- Introduce health/readiness probes for ion connectivity that can be surfaced through an operator route or deployment readiness check.
 
 Repo touchpoints:
 
-- `src/image-gen/backend/gateway/ComfyUIClient.ts`
+- `src/image-gen/backend/gateway/ionClient.ts`
 - `src/image-gen/backend/gateway/workflow-builder.ts`
-- `src/image-gen/config/comfyui.config.ts`
+- `src/image-gen/config/ion.config.ts`
 - `src/image-gen/app/ion-image-pipeline.ts`
 - `src/image-gen/shared/error-codes.ts`
 
 Validation gate:
 
-- Real ComfyUI runs emit non-placeholder checkpoint and queue status metadata.
+- Real ion runs emit non-placeholder checkpoint and queue status metadata.
 - Provider-unavailable and timeout paths map to stable error codes with reproducible tests.
 - Gateway health can distinguish reachable-but-idle, queued, and failed states.
 
@@ -283,7 +283,7 @@ Tasks:
 
 - Add a curated prompt corpus covering style families, attestation states, long prompts, safety cases, and known false-positive regressions.
 - Record expected metadata outputs such as style family, checkpoint, negative prompt shape, and prompt lineage for each scenario.
-- Add side-by-side evaluation hooks for mock versus real ComfyUI outputs and for future checkpoint swaps.
+- Add side-by-side evaluation hooks for mock versus real ion outputs and for future checkpoint swaps.
 - Summarize telemetry into regression-friendly artifacts so image changes can be reviewed before rollout.
 
 Repo touchpoints:
@@ -332,8 +332,8 @@ The smallest safe first slice is:
 2. Add `src/image-gen/shared/schemas.ts`.
 3. Add `src/image-gen/shared/error-codes.ts`.
 4. Add `src/image-gen/shared/style-presets.ts`.
-5. Add `src/image-gen/config/env.ts`, `comfyui.config.ts`, and `models.config.ts`.
-6. Add `src/image-gen/backend/gateway/MockComfyUIClient.ts`.
+5. Add `src/image-gen/config/env.ts`, `ion.config.ts`, and `models.config.ts`.
+6. Add `src/image-gen/backend/gateway/MockionClient.ts`.
 7. Add unit or smoke coverage for the mock gateway and request schemas.
 
 This creates a stable foundation without touching live generation behavior.
@@ -354,11 +354,11 @@ Potentially optional, depending on implementation choices:
 
 ## Risk Controls
 
-- Keep `COMFYUI_MOCK=false` as the default path, while preserving optional `COMFYUI_MOCK=true` support for local/dev fallback when GPU availability is limited.
+- Keep `ion_MOCK=false` as the default path, while preserving optional `ion_MOCK=true` support for local/dev fallback when GPU availability is limited.
 - Preserve the existing `/api/image` response envelope until frontend consumers are updated.
-- Keep attestation and prompt policy checks ahead of the new generation subsystem, not inside ComfyUI-specific code.
-- Do not hard cut from Flux/SD/OpenAI/Stability to ComfyUI until side-by-side prompt evaluation is complete.
-- Pin ComfyUI and checkpoint config in code so v-pred requirements are not left to ad hoc runtime setup.
+- Keep attestation and prompt policy checks ahead of the new generation subsystem, not inside ion-specific code.
+- Do not hard cut from Flux/SD/OpenAI/Stability to ion until side-by-side prompt evaluation is complete.
+- Pin ion and checkpoint config in code so v-pred requirements are not left to ad hoc runtime setup.
 
 ## Validation Matrix
 
@@ -374,6 +374,6 @@ Minimum validation before cutover:
 ## Recommended Next Actions
 
 1. Build the shared contracts and config modules under `src/image-gen/`.
-2. Add the mock gateway and a minimal ComfyUI workflow builder.
+2. Add the mock gateway and a minimal ion workflow builder.
 3. Introduce the new orchestrator behind a feature flag in `src/index.ts` without cutting over the route.
 4. Extend smoke coverage for checkpoint-aware prompt assembly before touching the live model path.

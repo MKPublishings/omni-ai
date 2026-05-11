@@ -73,7 +73,7 @@ function mapV2Failure(error: unknown): { status: number; code: string; message: 
     }
   }
 
-  if (name === 'E_COMFYUI_DOWN') {
+  if (name === 'E_ion_DOWN') {
     return {
       status: 503,
       code: 'provider-unavailable',

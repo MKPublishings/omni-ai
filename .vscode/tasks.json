@@ -76,7 +76,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Start ComfyUI Server",
+      "label": "Start ion Server",
       "type": "shell",
       "command": "${workspaceFolder}/server.bat",
       "options": {
@@ -86,7 +86,7 @@
       "isBackground": false
     },
     {
-      "label": "Start ComfyUI (GPU)",
+      "label": "Start ion (GPU)",
       "type": "shell",
       "command": "${workspaceFolder}/server_gpu.bat",
       "options": {
@@ -96,9 +96,9 @@
       "isBackground": false
     },
     {
-      "label": "Start ComfyUI GPU Server",
+      "label": "Start ion GPU Server",
       "type": "shell",
-      "command": "C:/ComfyUI/ComfyUI/start-ion.bat",
+      "command": "C:/ion/ion/start-ion.bat",
       "problemMatcher": [],
       "group": {
         "kind": "build",
@@ -108,7 +108,7 @@
     {
       "label": "Warmup GPU",
       "type": "shell",
-      "command": "python C:/ComfyUI/ComfyUI/warmup.py",
+      "command": "python C:/ion/ion/warmup.py",
       "problemMatcher": []
     }
   ]

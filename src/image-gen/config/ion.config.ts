@@ -1,6 +1,6 @@
 import { readImageGenEnvironment } from './env';
 
-export interface ComfyUIConnectionConfig {
+export interface ionConnectionConfig {
   host: string;
   wsUrl: string;
   mock: boolean;
@@ -13,14 +13,14 @@ export interface ComfyUIConnectionConfig {
   historyPath: (promptId: string) => string;
 }
 
-export function resolveComfyUIConfig(source?: Record<string, unknown>): ComfyUIConnectionConfig {
+export function resolveionConfig(source?: Record<string, unknown>): ionConnectionConfig {
   const env = readImageGenEnvironment(source);
 
   return {
-    host: env.comfyuiFetchHost.replace(/\/+$/, ''),
-    wsUrl: env.comfyuiWs,
-    mock: env.comfyuiMock,
-    requestTimeoutMs: env.comfyuiRequestTimeoutMs,
+    host: env.ionFetchHost.replace(/\/+$/, ''),
+    wsUrl: env.ionWs,
+    mock: env.ionMock,
+    requestTimeoutMs: env.ionRequestTimeoutMs,
     promptPath: '/prompt',
     viewPath: '/view',
     queuePath: '/queue',

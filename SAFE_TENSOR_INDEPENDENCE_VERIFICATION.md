@@ -2,14 +2,14 @@
 
 ## Zero Checkpoint File Dependencies
 
-The new `safe.tensor` governance kernel operates **independently** from model checkpoint files and the old ComfyUI-Ion-RTX infrastructure.
+The new `safe.tensor` governance kernel operates **independently** from model checkpoint files and the old ion-Ion-RTX infrastructure.
 
 ### Dependency Analysis
 
-| Component | Old ComfyUI RTX File | New safe.tensor |
+| Component | Old ion RTX File | New safe.tensor |
 |-----------|---------------------|-----------------|
-| **model_config.ts** | Referenced checkpoint: `ComfyUI-Ion-RTX-v1.0` | ✓ Removed — uses `grok-imagine-image-beta` |
-| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ComfyUI-Ion-RTX-v1.0"` | ✓ Updated to `grok-imagine-image-beta` |
+| **model_config.ts** | Referenced checkpoint: `ion-Ion-RTX-v1.0` | ✓ Removed — uses `grok-imagine-image-beta` |
+| **wrangler.toml** | `DEFAULT_CHECKPOINT = "ion-Ion-RTX-v1.0"` | ✓ Updated to `grok-imagine-image-beta` |
 | **safe.tensor core** | — | ✓ Zero references to checkpoint files |
 | **safe.tensor validation** | — | ✓ Pure governance logic (no model dependencies) |
 | **safe.tensor API** | — | ✓ Independent entity slicing and verdict system |
@@ -52,7 +52,7 @@ src/safe.tensor/
     └── integration-image-gen.test.ts
 ```
 
-**Search Result**: Zero matches for legacy checkpoint artifact extensions, direct ComfyUI model file bindings, or external model file references.
+**Search Result**: Zero matches for legacy checkpoint artifact extensions, direct ion model file bindings, or external model file references.
 
 ## Constitutional Governance Model
 
@@ -167,4 +167,4 @@ All tests pass without any model file or checkpoint infrastructure:
 ✓ **Deterministic** — Same inputs always produce same verdicts  
 ✓ **Traceable** — Full lineage logging for every decision  
 
-The old ComfyUI-Ion-RTX checkpoint can be removed entirely. ION now governs all outputs through its own tensor technology.
+The old ion-Ion-RTX checkpoint can be removed entirely. ION now governs all outputs through its own tensor technology.

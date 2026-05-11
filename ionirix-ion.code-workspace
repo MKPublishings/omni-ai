@@ -1,9 +1,9 @@
 {
   "folders": [
-    { "path": "C:\\ComfyUI\\ComfyUI" },
-    { "path": "C:\\ComfyUI\\ComfyUI\\models" },
-    { "path": "C:\\ComfyUI\\ComfyUI\\custom_nodes" },
-    { "path": "C:\\ComfyUI\\ComfyUI\\workflows" }
+    { "path": "C:\\ion\\ion" },
+    { "path": "C:\\ion\\ion\\models" },
+    { "path": "C:\\ion\\ion\\custom_nodes" },
+    { "path": "C:\\ion\\ion\\workflows" }
   ],
   "settings": {
     "terminal.integrated.defaultProfile.windows": "Command Prompt",

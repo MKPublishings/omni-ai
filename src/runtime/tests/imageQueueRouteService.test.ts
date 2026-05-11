@@ -23,7 +23,7 @@ class MemoryNamespace {
 }
 
 const queueEnv = {
-  COMFYUI_MOCK: 'true',
+  ion_MOCK: 'true',
   DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   IMAGE_STORAGE_PATH: './tmp/images',
   THUMBNAIL_STORAGE_PATH: './tmp/thumbs',

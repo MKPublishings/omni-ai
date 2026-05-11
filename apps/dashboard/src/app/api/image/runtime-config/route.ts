@@ -22,10 +22,10 @@ function readText(key: string, fallback: string): string {
 export async function POST() {
   return NextResponse.json({
     gateway: {
-      host: readText('COMFYUI_HOST', 'http://localhost:8188'),
-      wsUrl: readText('COMFYUI_WS', 'ws://localhost:8188/ws'),
-      mock: readBoolean('COMFYUI_MOCK', true),
-      requestTimeoutMs: readNumber('COMFYUI_REQUEST_TIMEOUT_MS', 120000),
+      host: readText('ion_HOST', 'http://localhost:8188'),
+      wsUrl: readText('ion_WS', 'ws://localhost:8188/ws'),
+      mock: readBoolean('ion_MOCK', true),
+      requestTimeoutMs: readNumber('ion_REQUEST_TIMEOUT_MS', 120000),
       defaultCheckpoint: readText('DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
     },
     queue: {

@@ -1,10 +1,10 @@
-import { buildComfyUIWorkflow } from '../backend/gateway/workflow-builder';
-import { ComfyUIClient } from '../backend/gateway/ComfyUIClient';
-import { MockComfyUIClient } from '../backend/gateway/MockComfyUIClient';
+import { buildionWorkflow } from '../backend/gateway/workflow-builder';
+import { ionClient } from '../backend/gateway/ionClient';
+import { MockionClient } from '../backend/gateway/MockionClient';
 import { readImageGenEnvironment } from '../config/env';
 import { getImageGenerationError } from '../shared/error-codes';
 import type {
-  ComfyUIWorkflow,
+  ionWorkflow,
   GenerationRequest,
   ImageCompositionPreset,
   ImageVariationMode,
@@ -98,18 +98,18 @@ function resolveStyleFamily(stylePack: string | undefined): StyleFamilyId | unde
   return undefined;
 }
 
-function createGateway(source: EnvironmentSource): { gateway: IModelGateway; gatewayKind: 'mock' | 'comfyui' } {
+function createGateway(source: EnvironmentSource): { gateway: IModelGateway; gatewayKind: 'mock' | 'ion' } {
   const env = readImageGenEnvironment(source);
-  if (env.comfyuiMock) {
+  if (env.ionMock) {
     return {
-      gateway: new MockComfyUIClient(),
+      gateway: new MockionClient(),
       gatewayKind: 'mock',
     };
   }
 
   return {
-    gateway: new ComfyUIClient(source),
-    gatewayKind: 'comfyui',
+    gateway: new ionClient(source),
+    gatewayKind: 'ion',
   };
 }
 
@@ -130,14 +130,14 @@ function isTerminalStatus(status: ImageJobStatus): boolean {
 }
 
 function getGatewayHealthFailure(gateway: IModelGateway): string | null {
-  if (gateway instanceof ComfyUIClient) {
+  if (gateway instanceof ionClient) {
     return gateway.getLastHealthFailure();
   }
 
   return null;
 }
 
-function throwImageError(code: 'E_COMFYUI_DOWN' | 'E_TIMEOUT', details?: string | null): never {
+function throwImageError(code: 'E_ion_DOWN' | 'E_TIMEOUT', details?: string | null): never {
   const imageError = getImageGenerationError(code);
   const error = new Error(details ? `${imageError.message} ${details}` : imageError.message);
   error.name = imageError.code;
@@ -153,16 +153,16 @@ export async function executeIonImagePipelineRequest(
 
   const healthy = await gateway.isHealthy();
   if (!healthy) {
-    throwImageError('E_COMFYUI_DOWN', getGatewayHealthFailure(gateway));
+    throwImageError('E_ion_DOWN', getGatewayHealthFailure(gateway));
   }
 
-  const workflow = buildComfyUIWorkflow(request);
+  const workflow = buildionWorkflow(request);
   const { promptId } = await gateway.submitWorkflow(workflow);
 
   let lastStatus: ImageJobStatus = 'queued';
   let progressStreamError: unknown = null;
 
-  if (gateway instanceof ComfyUIClient && typeof WebSocket === 'function') {
+  if (gateway instanceof ionClient && typeof WebSocket === 'function') {
     try {
       for await (const progress of gateway.getProgressWebSocket(promptId)) {
         lastStatus = progress.status;

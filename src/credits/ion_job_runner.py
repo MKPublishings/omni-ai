@@ -1,5 +1,5 @@
 # ion_job_runner.py
-# Ionirix → ComfyUI Job Runner
+# Ionirix → ion Job Runner
 # Author: Mirnes Kudić
 
 import json
@@ -26,15 +26,15 @@ class IonJobRunner:
 
     def __init__(
         self,
-        comfy_host: str = "http://127.0.0.1:8188",
+        Ion_host: str = "http://127.0.0.1:8188",
         db_path: str = "ion.db"
     ):
-        self.comfy_host = comfy_host
+        self.Ion_host = Ion_host
         self.db = IonDB(db_path)
         self.ledger = CreditLedger(self.db)
-        self.comfy_prompt_path = f"{comfy_host}/prompt"
-        self.comfy_queue_path = f"{comfy_host}/queue"
-        self.comfy_history_path = f"{comfy_host}/history"
+        self.Ion_prompt_path = f"{Ion_host}/prompt"
+        self.Ion_queue_path = f"{Ion_host}/queue"
+        self.Ion_history_path = f"{Ion_host}/history"
 
     # ---------------------------------------------------------
     # MAIN ENTRYPOINT
@@ -46,11 +46,11 @@ class IonJobRunner:
         estimated_cost: float
     ) -> Dict[str, Any]:
         """
-        Run a ComfyUI workflow with full credit accounting.
+        Run a ion workflow with full credit accounting.
         
         Args:
             user_id: User submitting the job
-            workflow: ComfyUI workflow JSON
+            workflow: ion workflow JSON
             estimated_cost: Estimated credit cost
             
         Returns:
@@ -65,7 +65,7 @@ class IonJobRunner:
             # 2. Validate workflow
             self._validate_workflow(workflow)
 
-            # 3. Submit workflow to ComfyUI
+            # 3. Submit workflow to ion
             prompt_id = self._submit_workflow(workflow)
 
             # 4. Poll for completion
@@ -149,11 +149,11 @@ class IonJobRunner:
             raise ValueError("Workflow must include a SaveImage node")
 
     # ---------------------------------------------------------
-    # SUBMIT WORKFLOW TO COMFYUI
+    # SUBMIT WORKFLOW TO ion
     # ---------------------------------------------------------
     def _submit_workflow(self, workflow: Dict[str, Any]) -> str:
         """
-        Submit workflow to ComfyUI /prompt endpoint.
+        Submit workflow to ion /prompt endpoint.
         Returns prompt_id.
         """
         try:
@@ -164,7 +164,7 @@ class IonJobRunner:
 
             # Submit
             response = requests.post(
-                self.comfy_prompt_path,
+                self.Ion_prompt_path,
                 json=payload,
                 timeout=10
             )
@@ -178,26 +178,26 @@ class IonJobRunner:
                 except:
                     pass
                 raise ValueError(
-                    f"ComfyUI returned {response.status_code}: {error_msg}"
+                    f"ion returned {response.status_code}: {error_msg}"
                 )
 
             data = response.json()
             prompt_id = str(data.get("prompt_id") or "").strip()
 
             if not prompt_id:
-                raise ValueError("ComfyUI did not return a prompt_id")
+                raise ValueError("ion did not return a prompt_id")
 
             return prompt_id
 
         except requests.exceptions.RequestException as e:
-            raise ValueError(f"Failed to submit workflow to ComfyUI: {e}")
+            raise ValueError(f"Failed to submit workflow to ion: {e}")
 
     # ---------------------------------------------------------
     # POLL FOR COMPLETION
     # ---------------------------------------------------------
     def _poll_completion(self, job_id: str, prompt_id: str) -> Dict[str, Any]:
         """
-        Poll ComfyUI for job completion.
+        Poll ion for job completion.
         Meters GPU usage along the way.
         """
         max_attempts = 120
@@ -207,7 +207,7 @@ class IonJobRunner:
             try:
                 # Get status
                 response = requests.get(
-                    f"{self.comfy_history_path}/{prompt_id}",
+                    f"{self.Ion_history_path}/{prompt_id}",
                     timeout=10
                 )
 
@@ -226,7 +226,7 @@ class IonJobRunner:
 
                 # Check for errors
                 if "error" in job_data or "errors" in job_data:
-                    raise ValueError(f"ComfyUI job failed: {job_data.get('error', job_data.get('errors'))}")
+                    raise ValueError(f"ion job failed: {job_data.get('error', job_data.get('errors'))}")
 
                 # Check for outputs
                 outputs = job_data.get("outputs", {})
@@ -247,7 +247,7 @@ class IonJobRunner:
                 time.sleep(poll_interval)
                 continue
 
-        raise TimeoutError(f"ComfyUI job {prompt_id} timed out after {max_attempts * poll_interval} seconds")
+        raise TimeoutError(f"ion job {prompt_id} timed out after {max_attempts * poll_interval} seconds")
 
     # ---------------------------------------------------------
     # UTILITY METHODS

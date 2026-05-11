@@ -1,10 +1,10 @@
 @echo off
 setlocal
 
-if defined COMFYUI_DIR (
-	set "TARGET_DIR=%COMFYUI_DIR%"
+if defined ion_DIR (
+	set "TARGET_DIR=%ion_DIR%"
 ) else (
-	set "TARGET_DIR=C:\ComfyUI"
+	set "TARGET_DIR=C:\ion"
 )
 
 if exist "%TARGET_DIR%\run_cpu.bat" (
@@ -13,22 +13,22 @@ if exist "%TARGET_DIR%\run_cpu.bat" (
 ) else if exist "%TARGET_DIR%\main.py" (
 	set "LAUNCHER=python main.py --listen --port 8188 --enable-cors --cpu"
 	set "LAUNCHER_DIR=%TARGET_DIR%"
-) else if exist "%TARGET_DIR%\ComfyUI\main.py" (
+) else if exist "%TARGET_DIR%\ion\main.py" (
 	set "LAUNCHER=python main.py --listen --port 8188 --enable-cors --cpu"
-	set "LAUNCHER_DIR=%TARGET_DIR%\ComfyUI"
+	set "LAUNCHER_DIR=%TARGET_DIR%\ion"
 ) else (
-	echo [ERROR] Could not find ComfyUI launcher under "%TARGET_DIR%"
+	echo [ERROR] Could not find ion launcher under "%TARGET_DIR%"
 	echo [HINT] Expected one of:
 	echo        %TARGET_DIR%\run_cpu.bat
 	echo        %TARGET_DIR%\main.py
-	echo        %TARGET_DIR%\ComfyUI\main.py
+	echo        %TARGET_DIR%\ion\main.py
 	exit /b 1
 )
 
 pushd "%LAUNCHER_DIR%"
-set COMFYUI_HOST=%COMFYUI_HOST%
-set COMFYUI_WS=%COMFYUI_WS%
-set COMFYUI_MOCK=%COMFYUI_MOCK%
+set ion_HOST=%ion_HOST%
+set ion_WS=%ion_WS%
+set ion_MOCK=%ion_MOCK%
 
 if exist "%TARGET_DIR%\run_cpu.bat" (
 	call "%TARGET_DIR%\run_cpu.bat"

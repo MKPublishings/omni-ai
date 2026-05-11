@@ -72,11 +72,11 @@ Display in Chat + Fullscreen Preview Modal
 - Quality: Demo/placeholder quality (suitable for testing)
 - Triggers: Only used if Cloudflare AI is unavailable
 
-**Removed Provider: ComfyUI**
+**Removed Provider: ion**
 - Status: **Disabled (not available)**
 - Why: Requires local server setup; not reliably available in production
-- Migration: All ComfyUI routes have been removed from the provider chain
-- Note: Images are no longer routed through ComfyUI
+- Migration: All ion routes have been removed from the provider chain
+- Note: Images are no longer routed through ion
 
 ---
 
@@ -580,7 +580,7 @@ When instructing ION about the image generator, emphasize:
    - Specify anatomy details to avoid AI artifacts
    - Use consistent style terminology
    - Test and iterate
-6. **Limitations**: ComfyUI is disabled; only Cloudflare AI + SVG fallback
+6. **Limitations**: ion is disabled; only Cloudflare AI + SVG fallback
 7. **Error Handling**: System auto-corrects MIME types and clamps parameters
 8. **UI/UX**: Portal-based rendering ensures proper stacking; works on all devices
 
@@ -598,7 +598,7 @@ When instructing ION about the image generator, emphasize:
 | Image download | ✅ Active | Works with proper filename |
 | MIME correction | ✅ Active | Auto-detects SVG in PNG |
 | Cloudflare AI | ✅ Active | Primary provider |
-| ComfyUI | ❌ Disabled | Removed from provider chain |
+| ion | ❌ Disabled | Removed from provider chain |
 | SVG fallback | ✅ Active | Emergency backup only |
 | Base64 normalization | ✅ Active | Cross-origin rendering |
 | Prompt detection | ✅ Active | Regex-based routing |

@@ -56,7 +56,7 @@ class CreditLedger:
     # ---------------------------------------------------------
     def meter(self, job_id: str, event: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Called for every ComfyUI websocket event.
+        Called for every ion websocket event.
         Tracks GPU time, node usage, etc.
         """
         if event.get("type") == "node_completed":

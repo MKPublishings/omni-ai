@@ -13,7 +13,7 @@ test('ion image telemetry builds completion logs with the expected event shape',
     jobId: 'job-1',
     promptId: 'prompt-1',
     status: 'completed',
-    gateway: 'comfyui',
+    gateway: 'ion',
     checkpoint: 'ion-citizen-xl-vpred-v2.0',
     styleFamily: 'lofi_aesthetic',
     artifactCount: 2,
@@ -32,7 +32,7 @@ test('ion image telemetry builds completion logs with the expected event shape',
   assert.equal(log.event, 'ion.image.job.completed');
   assert.equal(log.errorCode, null);
   assert.equal(log.artifactCount, 2);
-  assert.equal(log.gateway, 'comfyui');
+  assert.equal(log.gateway, 'ion');
 });
 
 test('ion image telemetry routes logs through the injected emitter when present', () => {

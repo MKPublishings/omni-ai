@@ -10,7 +10,7 @@ interface CreateIonImageGenerationLogInput {
   jobId: string;
   promptId: string | null;
   status: 'completed' | 'failed';
-  gateway: 'mock' | 'comfyui' | null;
+  gateway: 'mock' | 'ion' | null;
   checkpoint: string;
   styleFamily: StyleFamilyId;
   artifactCount: number;

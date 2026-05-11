@@ -11,11 +11,11 @@ import {
 type EnvironmentSource = Record<string, unknown>;
 
 export interface ImageGenEnvironment {
-  comfyuiHost: string;
-  comfyuiFetchHost: string;
-  comfyuiWs: string;
-  comfyuiMock: boolean;
-  comfyuiRequestTimeoutMs: number;
+  ionHost: string;
+  ionFetchHost: string;
+  ionWs: string;
+  ionMock: boolean;
+  ionRequestTimeoutMs: number;
   defaultCheckpoint: string;
   defaultPredictionType: ImagePredictionType;
   defaultVae: string;
@@ -91,14 +91,14 @@ function readScheduler(source: EnvironmentSource, key: string, fallback: ImageSc
 }
 
 export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEnvironmentSource()): ImageGenEnvironment {
-  const comfyuiHost = readText(source, 'COMFYUI_HOST', 'http://localhost:8188');
+  const ionHost = readText(source, 'ion_HOST', 'http://localhost:8188');
 
   return {
-    comfyuiHost,
-    comfyuiFetchHost: readText(source, 'COMFYUI_FETCH_HOST', comfyuiHost),
-    comfyuiWs: readText(source, 'COMFYUI_WS', 'ws://localhost:8188/ws'),
-    comfyuiMock: readBoolean(source, 'COMFYUI_MOCK', true),
-    comfyuiRequestTimeoutMs: readNumber(source, 'COMFYUI_REQUEST_TIMEOUT_MS', 120000),
+    ionHost,
+    ionFetchHost: readText(source, 'ion_FETCH_HOST', ionHost),
+    ionWs: readText(source, 'ion_WS', 'ws://localhost:8188/ws'),
+    ionMock: readBoolean(source, 'ion_MOCK', true),
+    ionRequestTimeoutMs: readNumber(source, 'ion_REQUEST_TIMEOUT_MS', 120000),
     defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
     defaultPredictionType: readText(source, 'DEFAULT_PREDICTION_TYPE', 'epsilon') as ImagePredictionType,
     defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl_vae.safetensors'),

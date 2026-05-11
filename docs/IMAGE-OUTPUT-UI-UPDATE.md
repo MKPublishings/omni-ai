@@ -13,7 +13,7 @@ Extended with rich image metadata structure:
 image?: {
   src: string
   filename?: string
-  gateway?: string          // New: Shows "mock" or "comfyui"
+  gateway?: string          // New: Shows "mock" or "ion"
   quality?: string          // New: Quality setting
   mode?: string             // New: Generation mode
   styleFamily?: string      // New: Style preset
@@ -51,7 +51,7 @@ Updated `parseAssistantResponse()` to extract complete metadata from API respons
 
 **Extracted Fields:**
 ```
-✅ Gateway type (mock or comfyui)
+✅ Gateway type (mock or ion)
 ✅ Quality and mode settings
 ✅ Model checkpoint and parameters
 ✅ Sampler, scheduler, steps, CFG scale
@@ -69,7 +69,7 @@ Redesigned message bubble image section with:
 - Image with proper styling (rounded, bordered)
 - Quick metadata chips:
   - 📄 Filename
-  - 🔌 Gateway (mock/comfyui)
+  - 🔌 Gateway (mock/ion)
   - 📐 Resolution (e.g., "1024x1536")
   - ✨ Quality level
 - Two action buttons:
@@ -149,7 +149,7 @@ User sees:
 
 **Always Available:**
 - `filename` - Generated filename with timestamp
-- `gateway` - "mock", "comfyui", or "ai-direct-fallback"
+- `gateway` - "mock", "ion", or "ai-direct-fallback"
 - `resolution` - Image dimensions
 - `quality` - Quality setting
 

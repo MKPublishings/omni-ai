@@ -50,7 +50,7 @@ test('worker /api/image queue seam preserves submission and status response cont
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_QUEUE_V1: '1',
-    COMFYUI_MOCK: 'true',
+    ion_MOCK: 'true',
     DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
     IMAGE_STORAGE_PATH: './tmp/images',
     THUMBNAIL_STORAGE_PATH: './tmp/thumbs',

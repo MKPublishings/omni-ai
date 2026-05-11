@@ -1,12 +1,12 @@
 type EnvironmentSource = Record<string, unknown>;
 
-export type IonImageProviderKind = 'ion-native' | 'comfyui' | 'cloudflare-ai';
+export type IonImageProviderKind = 'ion-native' | 'ion' | 'cloudflare-ai';
 
 export interface IonImageV3RuntimeConfig {
   enabled: boolean;
   primaryProvider: IonImageProviderKind;
   fallbackProvider: IonImageProviderKind | null;
-  fallbackOnComfyDown: boolean;
+  fallbackOnIonDown: boolean;
   fallbackOnTimeout: boolean;
   fallbackModel: string;
 }
@@ -31,7 +31,7 @@ function readProviderKind(
   fallback: IonImageProviderKind,
 ): IonImageProviderKind {
   const value = String(source[key] ?? '').trim().toLowerCase();
-  if (value === 'ion-native' || value === 'comfyui' || value === 'cloudflare-ai') {
+  if (value === 'ion-native' || value === 'ion' || value === 'cloudflare-ai') {
     return value;
   }
 
@@ -44,7 +44,7 @@ function readOptionalProviderKind(source: EnvironmentSource, key: string): IonIm
     return null;
   }
 
-  if (value === 'ion-native' || value === 'comfyui' || value === 'cloudflare-ai') {
+  if (value === 'ion-native' || value === 'ion' || value === 'cloudflare-ai') {
     return value;
   }
 
@@ -68,7 +68,7 @@ export function readIonImageV3RuntimeConfig(source: EnvironmentSource = getDefau
     enabled,
     primaryProvider,
     fallbackProvider,
-    fallbackOnComfyDown: readBoolean(source, 'ION_IMAGE_FALLBACK_ON_COMFYUI_DOWN', true),
+    fallbackOnIonDown: readBoolean(source, 'ION_IMAGE_FALLBACK_ON_ion_DOWN', true),
     fallbackOnTimeout: readBoolean(source, 'ION_IMAGE_FALLBACK_ON_TIMEOUT', true),
     fallbackModel: readText(source, 'ION_IMAGE_FALLBACK_MODEL', '@cf/stabilityai/stable-diffusion-xl-base-1.0'),
   };

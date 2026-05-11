@@ -49,9 +49,9 @@ export const IMAGE_GENERATION_ERROR_CODES = {
     retriable: true,
     suggestedAction: 'retry_post_processing',
   },
-  E_COMFYUI_DOWN: {
-    code: 'E_COMFYUI_DOWN',
-    message: 'ComfyUI is unavailable.',
+  E_ion_DOWN: {
+    code: 'E_ion_DOWN',
+    message: 'ion is unavailable.',
     retriable: true,
     suggestedAction: 'check_gateway',
   },
