@@ -5,10 +5,10 @@
  * Usage: node scripts/diagnose-image-pipeline.js
  */
 
-const ion_HOST = process.env.ion_HOST || 'http://localhost:8188';
-const ion_FETCH_HOST = process.env.ion_FETCH_HOST || ion_HOST;
-const ion_MOCK = ['1', 'true', 'yes', 'on'].includes(String(process.env.ion_MOCK || 'true').trim().toLowerCase());
-const ion_REQUEST_TIMEOUT = Number(process.env.ion_REQUEST_TIMEOUT_MS || 120000);
+const ion_HOST = process.env.ION_HOST || 'http://localhost:8188';
+const ion_FETCH_HOST = process.env.ION_FETCH_HOST || ion_HOST;
+const ion_MOCK = ['1', 'true', 'yes', 'on'].includes(String(process.env.ION_MOCK || 'true').trim().toLowerCase());
+const ion_REQUEST_TIMEOUT = Number(process.env.ION_REQUEST_TIMEOUT_MS || 120000);
 
 console.log('🔍 ION Image Pipeline Diagnostic Report\n');
 console.log('='.repeat(60));

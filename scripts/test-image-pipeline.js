@@ -84,7 +84,7 @@ async function testPipeline() {
       console.log('  Likely cause: ion /prompt endpoint rejected request');
     } else if (String(error?.message || '').includes('ECONNREFUSED')) {
       console.log('\n⚠️  Connection refused - ion not reachable');
-      console.log(`  Check if ion is running at: ${process.env.ion_HOST || 'http://localhost:8188'}`);
+      console.log(`  Check if ion is running at: ${process.env.ION_HOST || 'http://localhost:8188'}`);
     }
     
     console.log('\n' + '='.repeat(70));

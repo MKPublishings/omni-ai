@@ -1,10 +1,10 @@
 const DEFAULT_WORKER_URL = "https://ionirix.com";
 const DEFAULT_DASHBOARD_URL = "https://dashboard-ionirix.vercel.app";
-const DEFAULT_ion_HOST = "https://worker-ion.ionirix.com";
+const DEFAULT_ION_HOST = "https://worker-ion.ionirix.com";
 
 const WORKER_URL = String(process.env.ION_ORCHESTRATOR_URL || DEFAULT_WORKER_URL).replace(/\/+$/, "");
 const DASHBOARD_URL = String(process.env.ION_DASHBOARD_URL || DEFAULT_DASHBOARD_URL).replace(/\/+$/, "");
-const ion_HOST = String(process.env.ion_HOST || DEFAULT_ion_HOST).replace(/\/+$/, "");
+const ion_HOST = String(process.env.ION_HOST || DEFAULT_ION_HOST).replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = Number(process.env.ION_SMOKE_TIMEOUT_MS || 90_000);
 const REQUIRE_WORKER_SUCCESS = ["1", "true", "yes", "on"].includes(
   String(process.env.ION_VALIDATOR_REQUIRE_WORKER || "").trim().toLowerCase()

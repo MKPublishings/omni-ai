@@ -1,6 +1,6 @@
 #!/bin/bash
-export ion_HOST=$ion_HOST
-export ion_WS=$ion_WS
-export ion_MOCK=$ion_MOCK
+export ION_HOST=$ION_HOST
+export ION_WS=$ION_WS
+export ION_MOCK=$ION_MOCK
 
 python main.py --listen --port 8188 --enable-cors

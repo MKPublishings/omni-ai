@@ -22,9 +22,9 @@ binding = "AI"
 
 [vars]
 ION_IMAGE_PIPELINE_V2 = "1"
-ion_HOST = "https://img.ionirix.com"
-ion_WS = "wss://img.ionirix.com/ws"
-ion_MOCK = "false"
+ION_HOST = "https://img.ionirix.com"
+ION_WS = "wss://img.ionirix.com/ws"
+ION_MOCK = "false"
 DEFAULT_CHECKPOINT = "sd_xl_turbo_1.0_fp16.safetensors"
 DEFAULT_VAE = "sdxl_vae.safetensors"
 DEFAULT_SAMPLER = "dpmpp_2m_sde_heun"

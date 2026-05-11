@@ -103,8 +103,10 @@ export interface Env {
   ION_FAST_CHAT?: string;
   ION_NATIVE_STREAMING?: string;
   ION_IMAGE_PIPELINE_V2?: string;
+  ION_IMAGE_PIPELINE_V3?: string;
   ION_IMAGE_QUEUE_V1?: string;
   ION_IMAGE_DIRECT_FALLBACK_ON_PROMPT_403?: string;
+  ION_IMAGE_FALLBACK_ON_ION_DOWN?: string;
   ION_IMAGE_FALLBACK_ON_ion_DOWN?: string;
   TURNSTILE_SECRET_KEY?: string;
   TURNSTILE_SITE_KEY?: string;
@@ -1395,7 +1397,7 @@ function shouldUseDirectFallbackOnPrompt403(env: Env): boolean {
 }
 
 function shouldFallbackOnIonDown(env: Env): boolean {
-  return isEnabledFlag(env.ION_IMAGE_FALLBACK_ON_ion_DOWN);
+  return isEnabledFlag(env.ION_IMAGE_FALLBACK_ON_ION_DOWN ?? env.ION_IMAGE_FALLBACK_ON_ion_DOWN);
 }
 
 function getRequestCountryCode(request: Request): string {

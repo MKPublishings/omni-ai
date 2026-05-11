@@ -25,6 +25,19 @@ function readBoolean(source: EnvironmentSource, key: string, fallback: boolean):
   return ['1', 'true', 'yes', 'on'].includes(value);
 }
 
+function readBooleanAny(source: EnvironmentSource, keys: string[], fallback: boolean): boolean {
+  for (const key of keys) {
+    const value = String(source[key] ?? '').trim().toLowerCase();
+    if (!value) {
+      continue;
+    }
+
+    return ['1', 'true', 'yes', 'on'].includes(value);
+  }
+
+  return fallback;
+}
+
 function readProviderKind(
   source: EnvironmentSource,
   key: string,
@@ -68,7 +81,7 @@ export function readIonImageV3RuntimeConfig(source: EnvironmentSource = getDefau
     enabled,
     primaryProvider,
     fallbackProvider,
-    fallbackOnIonDown: readBoolean(source, 'ION_IMAGE_FALLBACK_ON_ion_DOWN', true),
+    fallbackOnIonDown: readBooleanAny(source, ['ION_IMAGE_FALLBACK_ON_ION_DOWN', 'ION_IMAGE_FALLBACK_ON_ion_DOWN'], true),
     fallbackOnTimeout: readBoolean(source, 'ION_IMAGE_FALLBACK_ON_TIMEOUT', true),
     fallbackModel: readText(source, 'ION_IMAGE_FALLBACK_MODEL', '@cf/stabilityai/stable-diffusion-xl-base-1.0'),
   };

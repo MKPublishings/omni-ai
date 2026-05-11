@@ -1,8 +1,8 @@
 @echo off
 setlocal
 
-if defined ion_DIR (
-	set "TARGET_DIR=%ion_DIR%"
+if defined ION_DIR (
+	set "TARGET_DIR=%ION_DIR%"
 ) else (
 	set "TARGET_DIR=C:\ion"
 )
@@ -26,9 +26,9 @@ if exist "%TARGET_DIR%\run_cpu.bat" (
 )
 
 pushd "%LAUNCHER_DIR%"
-set ion_HOST=%ion_HOST%
-set ion_WS=%ion_WS%
-set ion_MOCK=%ion_MOCK%
+set ION_HOST=%ION_HOST%
+set ION_WS=%ION_WS%
+set ION_MOCK=%ION_MOCK%
 
 if exist "%TARGET_DIR%\run_cpu.bat" (
 	call "%TARGET_DIR%\run_cpu.bat"

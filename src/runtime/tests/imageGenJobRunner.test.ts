@@ -12,9 +12,9 @@ import {
 
 test('image job runner executes queued requests and persists artifacts plus metadata', async () => {
   const orchestrator = new IonImageOrchestrator();
-  const queue = new InMemoryImageJobQueue({ ion_MOCK: 'true' });
+  const queue = new InMemoryImageJobQueue({ ION_MOCK: 'true' });
   const storage = new InMemoryImageArtifactStorage({
-    ion_MOCK: 'true',
+    ION_MOCK: 'true',
     IMAGE_STORAGE_PATH: './tmp/images',
     THUMBNAIL_STORAGE_PATH: './tmp/thumbs',
     METADATA_DB_URL: 'memory://image-meta',
@@ -34,7 +34,7 @@ test('image job runner executes queued requests and persists artifacts plus meta
 
   const queued = await queue.enqueue(request);
   const completed = await runNextIonImageJob(queue, storage, {
-    ion_MOCK: 'true',
+    ION_MOCK: 'true',
     DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   });
 

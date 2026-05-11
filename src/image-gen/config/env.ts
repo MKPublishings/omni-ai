@@ -58,9 +58,31 @@ function readText(source: EnvironmentSource, key: string, fallback: string): str
   return value || fallback;
 }
 
+function readTextAny(source: EnvironmentSource, keys: string[], fallback: string): string {
+  for (const key of keys) {
+    const value = String(source[key] ?? '').trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return fallback;
+}
+
 function readNumber(source: EnvironmentSource, key: string, fallback: number): number {
   const value = Number(source[key]);
   return Number.isFinite(value) ? value : fallback;
+}
+
+function readNumberAny(source: EnvironmentSource, keys: string[], fallback: number): number {
+  for (const key of keys) {
+    const value = Number(source[key]);
+    if (Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return fallback;
 }
 
 function readBoolean(source: EnvironmentSource, key: string, fallback: boolean): boolean {
@@ -70,6 +92,19 @@ function readBoolean(source: EnvironmentSource, key: string, fallback: boolean):
   }
 
   return ['1', 'true', 'yes', 'on'].includes(value);
+}
+
+function readBooleanAny(source: EnvironmentSource, keys: string[], fallback: boolean): boolean {
+  for (const key of keys) {
+    const value = String(source[key] ?? '').trim().toLowerCase();
+    if (!value) {
+      continue;
+    }
+
+    return ['1', 'true', 'yes', 'on'].includes(value);
+  }
+
+  return fallback;
 }
 
 function readSampler(source: EnvironmentSource, key: string, fallback: ImageSampler): ImageSampler {
@@ -91,14 +126,14 @@ function readScheduler(source: EnvironmentSource, key: string, fallback: ImageSc
 }
 
 export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEnvironmentSource()): ImageGenEnvironment {
-  const ionHost = readText(source, 'ion_HOST', 'http://localhost:8188');
+  const ionHost = readTextAny(source, ['ION_HOST', 'ion_HOST'], 'http://localhost:8188');
 
   return {
     ionHost,
-    ionFetchHost: readText(source, 'ion_FETCH_HOST', ionHost),
-    ionWs: readText(source, 'ion_WS', 'ws://localhost:8188/ws'),
-    ionMock: readBoolean(source, 'ion_MOCK', true),
-    ionRequestTimeoutMs: readNumber(source, 'ion_REQUEST_TIMEOUT_MS', 120000),
+    ionFetchHost: readTextAny(source, ['ION_FETCH_HOST', 'ion_FETCH_HOST'], ionHost),
+    ionWs: readTextAny(source, ['ION_WS', 'ion_WS'], 'ws://localhost:8188/ws'),
+    ionMock: readBooleanAny(source, ['ION_MOCK', 'ion_MOCK'], true),
+    ionRequestTimeoutMs: readNumberAny(source, ['ION_REQUEST_TIMEOUT_MS', 'ion_REQUEST_TIMEOUT_MS'], 120000),
     defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
     defaultPredictionType: readText(source, 'DEFAULT_PREDICTION_TYPE', 'epsilon') as ImagePredictionType,
     defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl_vae.safetensors'),

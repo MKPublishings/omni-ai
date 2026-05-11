@@ -11,10 +11,10 @@ import { buildPhotogrammetryBlueprint, mergePromptTokens, resolvePhotogrammetryR
 interface Env {
   AI?: Ai;
   ION_IMAGE_PIPELINE_V2?: string;
-  ion_HOST?: string;
-  ion_WS?: string;
-  ion_MOCK?: string;
-  ion_REQUEST_TIMEOUT_MS?: string;
+  ION_HOST?: string;
+  ION_WS?: string;
+  ION_MOCK?: string;
+  ION_REQUEST_TIMEOUT_MS?: string;
   DEFAULT_CHECKPOINT?: string;
 }
 

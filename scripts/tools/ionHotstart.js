@@ -4,19 +4,19 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const DEFAULT_HOST = String(process.env.ion_HOST || "http://127.0.0.1:8188").replace(/\/+$/, "");
-const DEFAULT_START_BAT = process.env.ion_START_BAT || "C:/ion/ion/start-ion.bat";
-const READY_TIMEOUT_MS = Number(process.env.ION_Ion_READY_TIMEOUT_MS || 180_000);
-const READY_POLL_MS = Number(process.env.ION_Ion_READY_POLL_MS || 2_000);
-const OPEN_UI = !["0", "false", "off", "no"].includes(String(process.env.ION_Ion_OPEN_UI || "1").toLowerCase());
-const WARMUP_ENABLED = !["0", "false", "off", "no"].includes(String(process.env.ION_Ion_WARMUP_ENABLED || "1").toLowerCase());
-const WARMUP_TEXT = String(process.env.ION_Ion_WARMUP_TEXT || "warmup");
-const WARMUP_NEGATIVE = String(process.env.ION_Ion_WARMUP_NEGATIVE || "blurry, lowres, noisy, artifacts");
-const WARMUP_WIDTH = Number(process.env.ION_Ion_WARMUP_WIDTH || 768);
-const WARMUP_HEIGHT = Number(process.env.ION_Ion_WARMUP_HEIGHT || 768);
-const WARMUP_WORKFLOW_PATH = process.env.ION_Ion_WARMUP_WORKFLOW || "";
-const WARMUP_GROK_MODEL = String(process.env.ION_Ion_WARMUP_MODEL || "grok-imagine-image-beta");
-const WARMUP_GROK_RESOLUTION = String(process.env.ION_Ion_WARMUP_RESOLUTION || "1K").toUpperCase() === "2K" ? "2K" : "1K";
+const DEFAULT_HOST = String(process.env.ION_HOST || "http://127.0.0.1:8188").replace(/\/+$/, "");
+const DEFAULT_START_BAT = process.env.ION_START_BAT || "C:/ion/ion/start-ion.bat";
+const READY_TIMEOUT_MS = Number(process.env.ION_ION_READY_TIMEOUT_MS || 180_000);
+const READY_POLL_MS = Number(process.env.ION_ION_READY_POLL_MS || 2_000);
+const OPEN_UI = !["0", "false", "off", "no"].includes(String(process.env.ION_ION_OPEN_UI || "1").toLowerCase());
+const WARMUP_ENABLED = !["0", "false", "off", "no"].includes(String(process.env.ION_ION_WARMUP_ENABLED || "1").toLowerCase());
+const WARMUP_TEXT = String(process.env.ION_ION_WARMUP_TEXT || "warmup");
+const WARMUP_NEGATIVE = String(process.env.ION_ION_WARMUP_NEGATIVE || "blurry, lowres, noisy, artifacts");
+const WARMUP_WIDTH = Number(process.env.ION_ION_WARMUP_WIDTH || 768);
+const WARMUP_HEIGHT = Number(process.env.ION_ION_WARMUP_HEIGHT || 768);
+const WARMUP_WORKFLOW_PATH = process.env.ION_ION_WARMUP_WORKFLOW || "";
+const WARMUP_GROK_MODEL = String(process.env.ION_ION_WARMUP_MODEL || "grok-imagine-image-beta");
+const WARMUP_GROK_RESOLUTION = String(process.env.ION_ION_WARMUP_RESOLUTION || "1K").toUpperCase() === "2K" ? "2K" : "1K";
 
 function resolveWarmupAspectRatio(width, height) {
   if (!(Number.isFinite(width) && Number.isFinite(height)) || width <= 0 || height <= 0) {
@@ -120,7 +120,7 @@ function buildMinimalWarmupPayload() {
       "2": {
         class_type: "SaveImage",
         inputs: {
-          filename_prefix: String(process.env.ION_Ion_WARMUP_PREFIX || "ion-warmup"),
+          filename_prefix: String(process.env.ION_ION_WARMUP_PREFIX || "ion-warmup"),
           images: ["1", 0],
         },
       },
@@ -201,7 +201,7 @@ async function main() {
     log("• sending warmup prompt...");
     await enqueueWarmup(DEFAULT_HOST);
   } else {
-    log("• warmup skipped (ION_Ion_WARMUP_ENABLED=0)");
+    log("• warmup skipped (ION_ION_WARMUP_ENABLED=0)");
   }
 
   openUi(DEFAULT_HOST);

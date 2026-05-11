@@ -322,7 +322,7 @@ export class ionClient implements IModelGateway {
     }
 
     // ===== DEBUG LOGGING =====
-    if (process.env.ion_DEBUG === '1') {
+    if (process.env.ION_DEBUG === '1') {
       console.log('[ionClient] Submitting workflow payload:', payload);
     }
 
@@ -453,7 +453,7 @@ export class ionClient implements IModelGateway {
 
     // Before failing, try one last query to /history to see if the job actually completed.
     // This handles the case where ion finished but event notification was delayed.
-    if (process.env.ion_DEBUG === '1') {
+    if (process.env.ION_DEBUG === '1') {
       console.warn(
         `[ionClient] Polling timeout for ${promptId}. Attempting fallback history query...`
       );
@@ -478,7 +478,7 @@ export class ionClient implements IModelGateway {
     throw new Error(
       `Timed out while polling ion progress for ${promptId} ` +
       `(checked ${maxAttempts} times over ~${(maxAttempts * pollIntervalMs) / 1000}s). ` +
-      `If the image actually finished rendering, increase ion_REQUEST_TIMEOUT_MS or use WebSocket streaming.`
+      `If the image actually finished rendering, increase ION_REQUEST_TIMEOUT_MS or use WebSocket streaming.`
     );
   }
 
@@ -651,7 +651,7 @@ export class ionClient implements IModelGateway {
 
     checkpointInputs.ckpt_name = replacement;
 
-    if (process.env.ion_DEBUG === '1') {
+    if (process.env.ION_DEBUG === '1') {
       console.warn(
         `[ionClient] Replaced unsupported ckpt_name '${requestedCheckpoint}' with '${replacement}' from ion object_info.`,
       );

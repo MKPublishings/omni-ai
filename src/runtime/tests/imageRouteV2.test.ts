@@ -50,7 +50,7 @@ test('worker /api/image uses ion-native v3 contract by default', async () => {
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    ion_MOCK: 'true',
+    ION_MOCK: 'true',
     DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
   } as any;
 
@@ -133,9 +133,9 @@ test('worker /api/image remains available when ion is unreachable because ion-na
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    ion_MOCK: 'false',
-    ion_HOST: 'http://127.0.0.1:1',
-    ion_REQUEST_TIMEOUT_MS: '25',
+    ION_MOCK: 'false',
+    ION_HOST: 'http://127.0.0.1:1',
+    ION_REQUEST_TIMEOUT_MS: '25',
     MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
   } as any;
 
@@ -246,9 +246,9 @@ test('worker /api/image ignores deprecated legacy fallback flags and still serve
       fetch: async () => new Response('not-found', { status: 404 }),
     },
     ION_IMAGE_PIPELINE_V2: '1',
-    ion_MOCK: 'false',
-    ion_HOST: 'http://127.0.0.1:1',
-    ion_REQUEST_TIMEOUT_MS: '25',
+    ION_MOCK: 'false',
+    ION_HOST: 'http://127.0.0.1:1',
+    ION_REQUEST_TIMEOUT_MS: '25',
     MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
   } as any;
 
@@ -324,8 +324,8 @@ test('worker /api/image no longer depends on ion prompt endpoint for default pat
         fetch: async () => new Response('not-found', { status: 404 }),
       },
       ION_IMAGE_PIPELINE_V2: '1',
-      ion_MOCK: 'false',
-      ion_HOST: 'http://localhost:8188',
+      ION_MOCK: 'false',
+      ION_HOST: 'http://localhost:8188',
       MODEL_IMAGE: '@cf/black-forest-labs/flux-1-schnell',
     } as any;
 

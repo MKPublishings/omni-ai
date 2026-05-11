@@ -19,13 +19,48 @@ function readText(key: string, fallback: string): string {
   return value || fallback
 }
 
+function readTextAny(keys: string[], fallback: string): string {
+  for (const key of keys) {
+    const value = String(process.env[key] || '').trim()
+    if (value) {
+      return value
+    }
+  }
+
+  return fallback
+}
+
+function readBooleanAny(keys: string[], fallback: boolean): boolean {
+  for (const key of keys) {
+    const value = String(process.env[key] || '').trim().toLowerCase()
+    if (!value) {
+      continue
+    }
+
+    return ['1', 'true', 'yes', 'on'].includes(value)
+  }
+
+  return fallback
+}
+
+function readNumberAny(keys: string[], fallback: number): number {
+  for (const key of keys) {
+    const value = Number(process.env[key])
+    if (Number.isFinite(value)) {
+      return value
+    }
+  }
+
+  return fallback
+}
+
 export async function POST() {
   return NextResponse.json({
     gateway: {
-      host: readText('ion_HOST', 'http://localhost:8188'),
-      wsUrl: readText('ion_WS', 'ws://localhost:8188/ws'),
-      mock: readBoolean('ion_MOCK', true),
-      requestTimeoutMs: readNumber('ion_REQUEST_TIMEOUT_MS', 120000),
+      host: readTextAny(['ION_HOST', 'ion_HOST'], 'http://localhost:8188'),
+      wsUrl: readTextAny(['ION_WS', 'ion_WS'], 'ws://localhost:8188/ws'),
+      mock: readBooleanAny(['ION_MOCK', 'ion_MOCK'], true),
+      requestTimeoutMs: readNumberAny(['ION_REQUEST_TIMEOUT_MS', 'ion_REQUEST_TIMEOUT_MS'], 120000),
       defaultCheckpoint: readText('DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
     },
     queue: {

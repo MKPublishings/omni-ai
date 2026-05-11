@@ -84,10 +84,10 @@ test('environment readers apply defaults and overrides deterministically', () =>
   assert.equal(defaults.defaultCheckpoint, 'grok-imagine-image-beta');
 
   const overridden = readImageGenEnvironment({
-    ion_HOST: 'http://127.0.0.1:9000',
-    ion_FETCH_HOST: 'https://internal-ion.example.com',
-    ion_WS: 'ws://127.0.0.1:9000/ws',
-    ion_MOCK: 'false',
+    ION_HOST: 'http://127.0.0.1:9000',
+    ION_FETCH_HOST: 'https://internal-ion.example.com',
+    ION_WS: 'ws://127.0.0.1:9000/ws',
+    ION_MOCK: 'false',
     DEFAULT_STEPS: '32',
     RATE_LIMIT_PER_HOUR: '45',
   });
@@ -102,10 +102,10 @@ test('environment readers apply defaults and overrides deterministically', () =>
 
 test('ion config normalizes connection endpoints', () => {
   const config = resolveionConfig({
-    ion_HOST: 'http://localhost:8188///',
-    ion_FETCH_HOST: 'https://internal-ion.example.com///',
-    ion_WS: 'ws://localhost:8188/ws',
-    ion_MOCK: 'true',
+    ION_HOST: 'http://localhost:8188///',
+    ION_FETCH_HOST: 'https://internal-ion.example.com///',
+    ION_WS: 'ws://localhost:8188/ws',
+    ION_MOCK: 'true',
   });
 
   assert.equal(config.host, 'https://internal-ion.example.com');
