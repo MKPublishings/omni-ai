@@ -93,6 +93,27 @@ function resolveCloudflareModel(source: EnvironmentSource): string {
   return config.fallbackModel;
 }
 
+function normalizeCloudflareDimensions(width: number, height: number): { width: number; height: number } {
+  const maxEdge = 2048;
+  const minEdge = 256;
+  const block = 8;
+
+  const safeWidth = Number.isFinite(width) && width > 0 ? width : 1024;
+  const safeHeight = Number.isFinite(height) && height > 0 ? height : 1024;
+  const largest = Math.max(safeWidth, safeHeight);
+  const scale = largest > maxEdge ? maxEdge / largest : 1;
+
+  const quantize = (value: number) => {
+    const rounded = Math.round(value / block) * block;
+    return Math.max(minEdge, Math.min(maxEdge, rounded));
+  };
+
+  return {
+    width: quantize(safeWidth * scale),
+    height: quantize(safeHeight * scale),
+  };
+}
+
 async function runComfyProvider(
   input: IonImageV3GenerationInput,
   source: EnvironmentSource,
@@ -115,12 +136,19 @@ async function runCloudflareAiProvider(
   const model = resolveCloudflareModel(source);
   const positivePrompt = parsePositivePrompt(input.prompt);
   const animeLike = isAnimeLikePrompt(positivePrompt);
+  const cloudflareDimensions = normalizeCloudflareDimensions(
+    request.parameters.width,
+    request.parameters.height,
+  );
+
+  request.parameters.width = cloudflareDimensions.width;
+  request.parameters.height = cloudflareDimensions.height;
 
   const generated = await runner.run(model, {
     prompt: positivePrompt,
     negative_prompt: parseNegativePrompt(animeLike),
-    width: request.parameters.width,
-    height: request.parameters.height,
+    width: cloudflareDimensions.width,
+    height: cloudflareDimensions.height,
     seed: request.parameters.seed,
     num_steps: resolveCloudflareSteps(positivePrompt),
     guidance: resolveCloudflareGuidance(positivePrompt),
@@ -133,8 +161,8 @@ async function runCloudflareAiProvider(
     workflow: {
       mode: 'cloudflare-ai-fallback',
       model,
-      width: request.parameters.width,
-      height: request.parameters.height,
+      width: cloudflareDimensions.width,
+      height: cloudflareDimensions.height,
     },
     promptId: `cfai-${request.requestId}`,
     imageBytes: normalized.bytes,
