@@ -94,6 +94,22 @@
       },
       "problemMatcher": [],
       "isBackground": false
+    },
+    {
+      "label": "Start ComfyUI GPU Server",
+      "type": "shell",
+      "command": "C:/ComfyUI/ComfyUI/start-ion.bat",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Warmup GPU",
+      "type": "shell",
+      "command": "python C:/ComfyUI/ComfyUI/warmup.py",
+      "problemMatcher": []
     }
   ]
 }

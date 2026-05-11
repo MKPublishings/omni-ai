@@ -1,0 +1,14 @@
+{
+  "folders": [
+    { "path": "C:\\ComfyUI\\ComfyUI" },
+    { "path": "C:\\ComfyUI\\ComfyUI\\models" },
+    { "path": "C:\\ComfyUI\\ComfyUI\\custom_nodes" },
+    { "path": "C:\\ComfyUI\\ComfyUI\\workflows" }
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "files.autoSave": "onWindowChange",
+    "editor.wordWrap": "on",
+    "python.analysis.autoImportCompletions": true
+  }
+}
