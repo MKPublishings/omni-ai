@@ -1,0 +1,28 @@
+{
+  "1": {
+    "class_type": "GrokImageNode",
+    "inputs": {
+      "model": "grok-imagine-image-beta",
+      "prompt": "Ion, interpret this prompt as a cinematic seed... [YOUR PROMPT HERE]",
+      "aspect_ratio": "9:16",
+      "number_of_images": 1,
+      "seed": 0,
+      "resolution": "1K"
+    }
+  },
+  "2": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "Grok",
+      "images": [
+        "1",
+        0
+      ]
+    }
+  },
+  "metadata": {
+    "pipeline": "grok-only",
+    "notes": "GrokImageNode is self-contained: no CLIP, sampler, or VAE nodes required.",
+    "target_resolution": "1024x1536 via 9:16 at 1K"
+  }
+}
