@@ -41,6 +41,96 @@ interface ComfyUIObjectInfoResponse {
   };
 }
 
+interface ComfyUIErrorBody {
+  error?: {
+    type?: string;
+    message?: string;
+    details?: string;
+  };
+  node_errors?: Record<string, {
+    errors?: Array<{
+      type?: string;
+      message?: string;
+      details?: string;
+      extra_info?: {
+        input_name?: string;
+        input_config?: unknown[];
+        received_value?: unknown;
+      };
+    }>;
+    class_type?: string;
+  }>;
+}
+
+function extractResponseBodyFromErrorMessage(message: string): string {
+  const marker = ' Body: ';
+  const index = message.indexOf(marker);
+  if (index < 0) {
+    return '';
+  }
+  return message.slice(index + marker.length).trim();
+}
+
+function parseComfyUIErrorBody(message: string): ComfyUIErrorBody | null {
+  const bodyText = extractResponseBodyFromErrorMessage(message);
+  if (!bodyText) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(bodyText) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    return parsed as ComfyUIErrorBody;
+  } catch {
+    return null;
+  }
+}
+
+function inferCheckpointValidationFailure(errorBody: ComfyUIErrorBody): string | null {
+  const nodeErrors = errorBody.node_errors || {};
+  for (const [nodeId, nodeError] of Object.entries(nodeErrors)) {
+    const classType = String(nodeError.class_type || '').trim();
+    if (classType !== 'CheckpointLoaderSimple') {
+      continue;
+    }
+
+    for (const entry of nodeError.errors || []) {
+      const inputName = String(entry.extra_info?.input_name || '').trim();
+      if (inputName !== 'ckpt_name') {
+        continue;
+      }
+
+      const receivedValue = String(entry.extra_info?.received_value ?? '').trim();
+      const inputConfig = Array.isArray(entry.extra_info?.input_config)
+        ? entry.extra_info?.input_config
+        : [];
+      const allowedValues = Array.isArray(inputConfig[0]) ? inputConfig[0] : [];
+
+      if (allowedValues.length === 0) {
+        return [
+          `Checkpoint validation failed at node ${nodeId}: ${receivedValue || '(empty ckpt_name)'}.`,
+          'ComfyUI reports zero available checkpoints (ckpt_name options list is empty).',
+          'This is a server model-discovery issue, not a workflow JSON shape issue.',
+          'Verify the running ComfyUI instance has models in its active models/checkpoints directory and restart ComfyUI.',
+        ].join(' ');
+      }
+
+      if (receivedValue && !allowedValues.includes(receivedValue)) {
+        const sample = allowedValues.slice(0, 5).map((value) => String(value)).join(', ');
+        return [
+          `Checkpoint validation failed at node ${nodeId}: '${receivedValue}' is not in ComfyUI's allowed ckpt_name list.`,
+          sample ? `Available examples: ${sample}.` : '',
+          'Use an exact filename from ComfyUI object info (no path, exact extension).',
+        ].join(' ').trim();
+      }
+    }
+  }
+
+  return null;
+}
+
 function isComfyNodeId(key: string): boolean {
   return /^\d+$/.test(String(key).trim());
 }
@@ -217,10 +307,11 @@ export class ComfyUIClient implements IModelGateway {
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('(400)')) {
+          const parsedBody = parseComfyUIErrorBody(error.message);
+          const checkpointFailure = parsedBody ? inferCheckpointValidationFailure(parsedBody) : null;
           throw new Error(
             `ComfyUI rejected the workflow (400 Bad Request). ` +
-            `Validation passed, but ComfyUI found the payload invalid. ` +
-            `Check checkpoint availability and node parameters. ` +
+            `${checkpointFailure || 'Validation passed, but ComfyUI found the payload invalid. Check checkpoint availability and node parameters.'} ` +
             `Original error: ${error.message}`
           );
         }
