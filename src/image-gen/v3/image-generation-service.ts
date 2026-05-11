@@ -6,6 +6,7 @@ import type { IonImagePipelineResult } from '../shared/types';
 import type { IonImageV2RouteResponse } from '../shared/types';
 import { readIonImageV3RuntimeConfig, type IonImageProviderKind } from './runtime-config';
 import { renderIonNativeImage } from './ion-native-renderer';
+import { mergePromptTokens } from '../orchestration/photogrammetry-blueprint';
 
 type EnvironmentSource = Record<string, unknown>;
 
@@ -62,13 +63,14 @@ function parsePositivePrompt(value: string): string {
   return String(value || '').trim();
 }
 
-function parseNegativePrompt(animeLike: boolean): string {
+function parseNegativePrompt(baseNegativePrompt: string, animeLike: boolean): string {
   const baseline = 'blurry, deformed anatomy, extra limbs, warped face, low contrast, artifacts, over-smoothed';
+  const merged = mergePromptTokens(baseNegativePrompt, baseline);
   if (!animeLike) {
-    return baseline;
+    return merged;
   }
 
-  return `${baseline}, photoreal artifacts, wax skin, monochrome haze`;
+  return mergePromptTokens(merged, 'photoreal artifacts, wax skin, monochrome haze');
 }
 
 function isAnimeLikePrompt(prompt: string): boolean {
@@ -80,13 +82,24 @@ function isAnimeLikePrompt(prompt: string): boolean {
   return /\b(anime|manga|waifu|niji|chibi|cel\s*shad|lineart|otaku|kawaii|ghibli)\b/i.test(normalized);
 }
 
-function resolveCloudflareGuidance(prompt: string): number {
-  return isAnimeLikePrompt(prompt) ? 8 : 7;
+function resolveCloudflareGuidance(prompt: string, requestGuidance: number): number {
+  const baseline = Number.isFinite(requestGuidance) && requestGuidance > 0
+    ? requestGuidance
+    : isAnimeLikePrompt(prompt)
+      ? 8
+      : 7;
+
+  return Math.max(4, Math.min(12, baseline));
 }
 
-function resolveCloudflareSteps(prompt: string): number {
-  const preferred = isAnimeLikePrompt(prompt) ? 20 : 18;
-  return Math.min(20, Math.max(1, preferred));
+function resolveCloudflareSteps(prompt: string, requestSteps: number): number {
+  const preferred = Number.isFinite(requestSteps) && requestSteps > 0
+    ? requestSteps
+    : isAnimeLikePrompt(prompt)
+      ? 20
+      : 18;
+
+  return Math.min(36, Math.max(1, preferred));
 }
 
 function resolveCloudflareModel(source: EnvironmentSource): string {
@@ -135,7 +148,11 @@ async function runCloudflareAiProvider(
 
   const request = await buildIonImageGenerationRequest(input, source);
   const model = resolveCloudflareModel(source);
-  const positivePrompt = parsePositivePrompt(input.prompt);
+  const positivePrompt = mergePromptTokens(
+    request.prompt.qualityTags,
+    request.prompt.styleTags,
+    request.prompt.positive,
+  );
   const animeLike = isAnimeLikePrompt(positivePrompt);
   const cloudflareDimensions = normalizeCloudflareDimensions(
     request.parameters.width,
@@ -146,13 +163,13 @@ async function runCloudflareAiProvider(
   request.parameters.height = cloudflareDimensions.height;
 
   const generated = await runner.run(model, {
-    prompt: positivePrompt,
-    negative_prompt: parseNegativePrompt(animeLike),
+    prompt: parsePositivePrompt(positivePrompt),
+    negative_prompt: parseNegativePrompt(request.prompt.negative, animeLike),
     width: cloudflareDimensions.width,
     height: cloudflareDimensions.height,
     seed: request.parameters.seed,
-    num_steps: resolveCloudflareSteps(positivePrompt),
-    guidance: resolveCloudflareGuidance(positivePrompt),
+    num_steps: resolveCloudflareSteps(positivePrompt, request.parameters.steps),
+    guidance: resolveCloudflareGuidance(positivePrompt, request.parameters.cfgScale),
   });
 
   const normalized = await normalizeGeneratedImageOutput(generated);

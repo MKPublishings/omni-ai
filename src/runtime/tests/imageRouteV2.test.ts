@@ -172,6 +172,59 @@ test('worker /api/image remains available when ComfyUI is unreachable because io
   }
 });
 
+test('worker /api/image sends photogrammetry-enhanced prompts through cloudflare-ai fallback', async () => {
+  const memory = new MemoryNamespace();
+  const mind = new MemoryNamespace();
+  const aiCalls: Array<Record<string, unknown>> = [];
+
+  const env = {
+    AI: {
+      run: async (_model: string, input: Record<string, unknown>) => {
+        aiCalls.push(input);
+        return { image: new Uint8Array([137, 80, 78, 71]) };
+      },
+    },
+    MEMORY: memory as any,
+    MIND: mind as any,
+    ASSETS: {
+      fetch: async () => new Response('not-found', { status: 404 }),
+    },
+    ION_IMAGE_PIPELINE_V2: '1',
+    ION_IMAGE_PROVIDER_PRIMARY: 'cloudflare-ai',
+    ION_IMAGE_PROVIDER_FALLBACK: 'none',
+    ION_IMAGE_FALLBACK_MODEL: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+    DEFAULT_CHECKPOINT: 'ion-citizen-xl-vpred-v2.0',
+  } as any;
+
+  const request = new Request('https://example.test/api/image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: 'usr_test',
+      prompt: 'Photorealistic portrait of a person in natural light.',
+      width: 1024,
+      height: 1536,
+      seed: 42,
+    }),
+  });
+
+  const response = await worker.fetch(request, env, createExecutionContext() as any);
+  const body = await response.json() as Record<string, any>;
+  const cfRequest = aiCalls[0] || {};
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('X-ION-Image-Provider'), 'cloudflare-ai');
+  assert.match(String(cfRequest.prompt || ''), /photogrammetry-grade scene reconstruction/i);
+  assert.match(String(cfRequest.prompt || ''), /single clearly isolated subject/i);
+  assert.match(String(cfRequest.negative_prompt || ''), /no overlapping anatomy/i);
+  assert.match(String(cfRequest.negative_prompt || ''), /no hidden eyes/i);
+  assert.equal(cfRequest.num_steps, 32);
+  assert.equal(cfRequest.guidance, 7);
+  assert.match(String(body.metadata?.prompt?.positive || ''), /photogrammetry-grade scene reconstruction/i);
+});
+
 test('worker /api/image ignores deprecated legacy fallback flags and still serves ion-native output', async () => {
   const consoleMessages: string[] = [];
   const originalConsoleInfo = console.info;

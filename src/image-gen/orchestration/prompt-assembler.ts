@@ -1,5 +1,6 @@
 import { getCheckpointConfig } from '../config/models.config';
 import { BASE_NEGATIVE_PROMPT, getStylePreset } from '../shared/style-presets';
+import { buildPhotogrammetryBlueprint, mergePromptTokens } from './photogrammetry-blueprint';
 import {
   buildKimonoPromptBundle,
   isKimonoSpringPrompt,
@@ -46,10 +47,13 @@ export function assemblePrompt(
   const stylePreset = getStylePreset(styleFamily);
   const styleTags = stylePreset.positivePrefix.split(',').map((value) => value.trim()).filter(Boolean);
   const qualityTags = [...checkpoint.qualityTags];
+  const photogrammetry = buildPhotogrammetryBlueprint(intent.rawPrompt);
 
   if (checkpoint.sourceTag) {
     qualityTags.push(checkpoint.sourceTag);
   }
+
+  qualityTags.push(...photogrammetry.positiveTags);
 
   const styleNegative = stylePreset.negativeAdditions;
   const strictNegative = buildStrictNegatives(intent).join(', ');
@@ -70,6 +74,7 @@ export function assemblePrompt(
         BASE_NEGATIVE_PROMPT,
         styleNegative,
         strictNegative,
+        photogrammetry.negativeTags.join(', '),
         kimono.negativeTokens.join(', '),
       ]),
       qualityTags,
@@ -85,10 +90,11 @@ export function assemblePrompt(
     BASE_NEGATIVE_PROMPT,
     styleNegative,
     strictNegative,
+    photogrammetry.negativeTags.join(', '),
   ]);
 
   return {
-    positive: Array.from(new Set(positiveTokens)).join(', '),
+    positive: mergePromptTokens(positiveTokens),
     negative,
     qualityTags,
     styleTags,

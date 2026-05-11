@@ -6,6 +6,7 @@ import { bootstrapSafeTensorGovernance } from "../../../src/image-gen/safe-tenso
 import { executeIonImagePipeline } from "../../../src/image-gen/app/ion-image-pipeline";
 import { buildIonImageV2RouteResult } from "../../../src/image-gen/app/ion-image-v2-route-service";
 import { generateIonImageV3RouteResult } from "../../../src/image-gen/v3/image-generation-service";
+import { buildPhotogrammetryBlueprint, mergePromptTokens, resolvePhotogrammetryRenderTuning } from "../../../src/image-gen/orchestration/photogrammetry-blueprint";
 
 interface Env {
   AI?: Ai;
@@ -273,15 +274,40 @@ function resolveDimensions(_body: ImageRequest): NormalizedDimensions {
 
 function buildQualityPrompt(basePrompt: string): string {
   const core = String(basePrompt || "").trim();
-  const suffix =
-    "strict prompt fidelity, preserve requested subject and context, highly detailed textures, high-frequency micro detail, physically plausible lighting, realistic materials, crisp focus, clean edges, 4k-grade detail retention";
-  return `${core}, ${suffix}`;
+  const blueprint = buildPhotogrammetryBlueprint(core);
+  const suffix = [
+    "strict prompt fidelity",
+    "preserve requested subject and context",
+    "highly detailed textures",
+    "high-frequency micro detail",
+    "physically plausible lighting",
+    "realistic materials",
+    "crisp focus",
+    "clean edges",
+    "4k-grade detail retention",
+  ];
+  return mergePromptTokens(core, suffix, blueprint.positiveTags);
 }
 
-function mergeNegativePrompt(baseNegativePrompt?: string): string {
+function mergeNegativePrompt(baseNegativePrompt?: string, sourcePrompt?: string): string {
   const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, flat shading, plastic look, muddy details, haze, fog veil, inverted colors, color inversion, photographic negative, negative image, inverted luminance, inverted tonemapping";
-  if (!baseNegativePrompt) return antiArtifacts;
-  return `${baseNegativePrompt.trim()}, ${antiArtifacts}`;
+  const blueprint = buildPhotogrammetryBlueprint(String(sourcePrompt || ''));
+  return mergePromptTokens(baseNegativePrompt, antiArtifacts, blueprint.negativeTags);
+}
+
+function resolveLegacyRenderParameters(prompt: string): { numSteps: number; guidance: number } {
+  const tuning = resolvePhotogrammetryRenderTuning(prompt);
+  if (!tuning) {
+    return {
+      numSteps: 20,
+      guidance: 9,
+    };
+  }
+
+  return {
+    numSteps: tuning.targetSteps,
+    guidance: tuning.targetGuidance,
+  };
 }
 
 async function tryNormalizeGeneratedBytes(value: unknown): Promise<Uint8Array | null> {
@@ -390,7 +416,8 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
   let lastError: string | null = null;
 
   const prompt = buildQualityPrompt(body.prompt);
-  const negativePrompt = mergeNegativePrompt(body.negative_prompt);
+  const negativePrompt = mergeNegativePrompt(body.negative_prompt, body.prompt);
+  const renderTuning = resolveLegacyRenderParameters(body.prompt);
 
   for (let i = 0; i < MAX_GENERATION_ATTEMPTS; i += 1) {
     attempts += 1;
@@ -402,8 +429,8 @@ async function generateWithinSizeRange(env: Env, body: ImageRequest): Promise<{
         width,
         height,
         seed: body.seed,
-        num_steps: 20,
-        guidance: 9
+        num_steps: renderTuning.numSteps,
+        guidance: renderTuning.guidance
       });
     } catch (error: any) {
       lastError = String(error?.message || "unknown error");

@@ -55,6 +55,19 @@ test('parameter optimizer applies SDXL bucket defaults and overrides', () => {
   assert.equal(parameters.cfgScale, 5);
 });
 
+test('parameter optimizer raises render settings for photogrammetry portrait prompts', () => {
+  const parameters = optimizeParameters('semi_realistic_2_5d', 'ion-citizen-xl-vpred-v2.0', {
+    userId: 'usr_test',
+    sessionId: 'sess_test',
+    prompt: 'Photorealistic portrait of a person in natural light.',
+  });
+
+  assert.equal(parameters.steps, 32);
+  assert.equal(parameters.cfgScale, 7);
+  assert.equal(parameters.sampler, 'dpmpp_2m_sde_heun');
+  assert.equal(parameters.scheduler, 'karras');
+});
+
 test('safety filter blocks configured banned terms', () => {
   const decision = evaluateImagePromptSafety('child sexual content', '');
   assert.equal(decision.allowed, false);
@@ -87,6 +100,23 @@ test('orchestrator constructs a GenerationRequest for the workflow builder seam'
 
   const reasoning = await orchestrator.getReasoningChain(request.requestId);
   assert.equal(reasoning.includes('submit'), true);
+});
+
+test('orchestrator injects photogrammetry controls for realistic portrait prompts', async () => {
+  const orchestrator = new IonImageOrchestrator();
+  const request = await orchestrator.processRequest({
+    userId: 'usr_test',
+    sessionId: 'sess_test',
+    prompt: 'Photorealistic portrait of a person in natural light.',
+  });
+
+  assert.match(request.prompt.positive, /photogrammetry-grade scene reconstruction/i);
+  assert.match(request.prompt.positive, /single clearly isolated subject/i);
+  assert.match(request.prompt.negative, /no overlapping anatomy/i);
+  assert.match(request.prompt.negative, /no hidden eyes/i);
+  assert.equal(request.parameters.steps, 32);
+  assert.equal(request.parameters.cfgScale, 7);
+  assert.equal(request.parameters.sampler, 'dpmpp_2m_sde_heun');
 });
 
 test('kimono strict mode injects anatomy guidance and composition defaults', async () => {
