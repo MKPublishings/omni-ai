@@ -354,7 +354,7 @@ Potentially optional, depending on implementation choices:
 
 ## Risk Controls
 
-- Keep `COMFYUI_MOCK=true` support from day one to avoid blocking development on GPU availability.
+- Keep `COMFYUI_MOCK=false` as the default path, while preserving optional `COMFYUI_MOCK=true` support for local/dev fallback when GPU availability is limited.
 - Preserve the existing `/api/image` response envelope until frontend consumers are updated.
 - Keep attestation and prompt policy checks ahead of the new generation subsystem, not inside ComfyUI-specific code.
 - Do not hard cut from Flux/SD/OpenAI/Stability to ComfyUI until side-by-side prompt evaluation is complete.
