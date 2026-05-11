@@ -298,8 +298,41 @@ function extractAssistantContent(rawText: string) {
 }
 
 function isImagePrompt(message: string) {
-  const normalized = String(message || '').trim().toLowerCase()
-  return /(^|\s)\/image\b|\b(generate|create|make|draw|render|illustrate|design|craft|show)\b(?:\s+me|\s+us)?(?:\s+an?|\s+some)?[\s\S]{0,60}\b(image|art|picture|photo|poster|illustration|wallpaper|logo|portrait|icon|banner|cover)\b|\bimage of\b|\bpicture of\b|\bmake this into an image\b|\bturn this into an image\b|\bcreate art\b|\bgenerate art\b/.test(normalized)
+  const text = String(message || '').trim().toLowerCase()
+  
+  // Pattern 1: /image command
+  if (/^\/image\b/.test(text)) {
+    return true
+  }
+  
+  // Pattern 2: Direct imperative commands at start
+  // "create/generate/make... an image/picture/art..."
+  if (/^(please\s+)?(create|generate|make|draw|render|illustrate|design|produce|craft|build|show|sketch)\s+(?:me\s+)?(?:an?\s+)?(?:a\s+)?[\s\S]{0,80}?\b(image|art|picture|photo|artwork|poster|illustration|wallpaper|logo|portrait|icon|banner|cover|graphic|scene|character|design|drawing)\b/i.test(text)) {
+    return true
+  }
+  
+  // Pattern 3: Explicit "image/picture of..." requests
+  if (/\b(?:image|picture|photo|artwork|art)\s+(?:of|showing|depicting|featuring)\s+/i.test(text)) {
+    return true
+  }
+  
+  // Pattern 4: Question-form requests
+  // "can you/would you/could you create/make/generate..."
+  if (/(?:can\s+you|could\s+you|would\s+you|will\s+you|please)\s+(?:create|generate|make|draw|render|illustrate|design|produce|craft|build|show)\s+(?:me\s+)?(?:an?\s+)?(?:a\s+)?\b(?:image|art|picture|photo|artwork)\b/i.test(text)) {
+    return true
+  }
+  
+  // Pattern 5: "I want/need an image of..."
+  if (/\b(?:i\s+want|i\s+need|we\s+want|we\s+need)\s+(?:an?\s+)?(?:a\s+)?\b(?:image|picture|photo|artwork|art)\b/i.test(text)) {
+    return true
+  }
+  
+  // Pattern 6: "make this into an image" or "turn this into art"
+  if (/\b(?:make|turn|convert|change)\s+(?:this|that|it)\s+(?:into|to)\s+(?:an?\s+)?(?:a\s+)?\b(?:image|art|picture|photo)\b/i.test(text)) {
+    return true
+  }
+  
+  return false
 }
 
 function buildImageSuccessCopy(message: string, filename?: string) {
