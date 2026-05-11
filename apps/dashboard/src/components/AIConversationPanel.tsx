@@ -1,4 +1,5 @@
 import { forwardRef, HTMLAttributes, useState, useRef, useEffect, useImperativeHandle } from 'react'
+import { createPortal } from 'react-dom'
 import { clsx } from 'clsx'
 import { Button } from './Button'
 import { ConversationSkeleton } from './Skeleton'
@@ -226,6 +227,7 @@ const MessageBubble = ({ message }: { message: Message }): React.ReactElement =>
   const imageSrc = toDisplayText(message.image?.src)
   const imageFilename = sanitizeImageFilename(toDisplayText(message.image?.filename) || 'image.png')
   const [showImageModal, setShowImageModal] = useState(false)
+  const canRenderImageModal = showImageModal && typeof document !== 'undefined'
 
   useEffect(() => {
     if (!showImageModal || typeof document === 'undefined') {
@@ -284,36 +286,34 @@ const MessageBubble = ({ message }: { message: Message }): React.ReactElement =>
               </div>
             </div>
 
-            {showImageModal ? (
-              <>
+            {canRenderImageModal
+              ? createPortal(
                 <div
-                  className="fixed inset-0 z-[120] flex items-center justify-center bg-pine-black-900/72 px-4 py-6 backdrop-blur-[2px]"
+                  className="fixed inset-0 z-[9999] bg-pine-black-900/95"
                   role="dialog"
                   aria-modal="true"
                   aria-label="Image preview"
                   onClick={() => setShowImageModal(false)}
                 >
-                  <div
-                    className="w-full max-w-[78rem] rounded-2xl border border-quantum-white/14 bg-pine-black-900/88 p-2 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:p-3"
-                    onClick={(event) => event.stopPropagation()}
-                  >
+                  <div className="relative h-screen w-screen" onClick={(event) => event.stopPropagation()}>
                     <img
                       src={imageSrc}
                       alt={toDisplayText(message.image?.filename) || 'Generated image preview'}
-                      className="max-h-[82vh] w-full rounded-xl object-contain"
+                      className="h-full w-full object-contain"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowImageModal(false)}
+                      className="absolute right-3 top-3 inline-flex h-12 w-12 items-center justify-center rounded-full border border-quantum-white/25 bg-pine-black-900/72 text-2xl leading-none text-quantum-white transition hover:bg-pine-black-900/90 sm:right-5 sm:top-5"
+                      aria-label="Close image preview"
+                    >
+                      ×
+                    </button>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowImageModal(false)}
-                  className="fixed right-6 top-6 z-[121] inline-flex h-10 w-10 items-center justify-center rounded-full border border-quantum-white/25 bg-pine-black-900/62 text-lg text-quantum-white transition hover:bg-pine-black-900/82"
-                  aria-label="Close image preview"
-                >
-                  ×
-                </button>
-              </>
-            ) : null}
+                </div>,
+                document.body,
+              )
+              : null}
           </div>
         ) : null}
         {!isUser && sources.length > 0 ? (
