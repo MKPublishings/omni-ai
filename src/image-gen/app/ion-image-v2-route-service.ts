@@ -63,10 +63,27 @@ function normalizeRoutePresentation(input: BuildIonImageV2RouteResultInput): { q
   };
 }
 
-function makeIonImageFilename(styleId: string): string {
+function extensionFromMimeType(mimeType: string): string {
+  const normalized = String(mimeType || '').trim().toLowerCase()
+  if (normalized === 'image/svg+xml') {
+    return 'svg'
+  }
+
+  if (normalized === 'image/jpeg' || normalized === 'image/jpg') {
+    return 'jpg'
+  }
+
+  if (normalized === 'image/webp') {
+    return 'webp'
+  }
+
+  return 'png'
+}
+
+function makeIonImageFilename(styleId: string, mimeType: string): string {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const safeStyle = String(styleId || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
-  return `ionirix_${safeStyle}_${timestamp}.png`;
+  return `ionirix_${safeStyle}_${timestamp}.${extensionFromMimeType(mimeType)}`;
 }
 
 export async function buildIonImageV2RouteResult(
@@ -75,7 +92,7 @@ export async function buildIonImageV2RouteResult(
   const presentation = normalizeRoutePresentation(input);
   const normalized = await normalizeGeneratedImageOutput(input.pipelineResult.imageBytes);
   const imageDataUrl = `data:${normalized.mimeType};base64,${bytesToBase64(normalized.bytes)}`;
-  const filename = makeIonImageFilename(input.pipelineResult.request.ionMetadata.styleFamily);
+  const filename = makeIonImageFilename(input.pipelineResult.request.ionMetadata.styleFamily, normalized.mimeType);
 
   const body = buildIonImageV2RouteResponse({
     ...input,
