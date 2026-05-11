@@ -310,6 +310,7 @@ type AssistantPayload = {
   imageCheckpoint: string
   imageResolution: string
   imageGateway: string
+  imageMetadata?: ImageMetadata
   sources: Array<{
     title: string
     url: string
@@ -505,33 +506,44 @@ async function parseAssistantResponse(response: Response) {
   }
 
   const payload = await response.json().catch(() => ({})) as ImageRouteJsonPayload
-  const imageMetadata: ImageMetadata | undefined = payload.metadata ? {
-    src: payload.imageDataUrl || '',
-    filename: payload.image?.filename || payload.metadata?.image?.filename || payload.filename || '',
-    gateway: payload.image?.gateway || payload.metadata?.pipeline?.gateway || '',
-    quality: payload.metadata?.request?.quality || '',
-    mode: payload.metadata?.request?.mode || '',
-    styleFamily: payload.metadata?.request?.styleFamily || '',
-    resolution: payload.image?.resolution || payload.metadata?.image?.resolution || '',
-    ratio: (payload.metadata?.image as any)?.ratio || '',
-    mimeType: (payload.metadata?.image as any)?.mimeType || '',
+  const meta = payload.metadata
+  const metaImage = meta?.image as Record<string, unknown> | undefined
+  const metaModel = meta?.model as Record<string, unknown> | undefined
+  const metaPipeline = meta?.pipeline as Record<string, unknown> | undefined
+  const metaRequest = meta?.request as Record<string, unknown> | undefined
+  const metaPrompt = meta?.prompt as Record<string, unknown> | undefined
+
+  function str(v: unknown): string { return typeof v === 'string' ? v : '' }
+  function num(v: unknown): number | undefined { return typeof v === 'number' ? v : undefined }
+  function strArr(v: unknown): string[] | undefined { return Array.isArray(v) ? v.map(String) : undefined }
+
+  const imageMetadata: ImageMetadata | undefined = meta ? {
+    src: str(payload.imageDataUrl),
+    filename: str(payload.image?.filename) || str(metaImage?.filename) || str(payload.filename),
+    gateway: str(payload.image?.gateway) || str(metaPipeline?.gateway),
+    quality: str(metaRequest?.quality),
+    mode: str(metaRequest?.mode),
+    styleFamily: str(metaRequest?.styleFamily),
+    resolution: str(payload.image?.resolution) || str(metaImage?.resolution),
+    ratio: str(metaImage?.ratio),
+    mimeType: str(metaImage?.mimeType),
     model: {
-      checkpoint: payload.image?.checkpoint || payload.metadata?.model?.checkpoint || '',
-      outputModel: payload.image?.model || payload.metadata?.model?.outputModel || '',
-      sampler: (payload.metadata?.model as any)?.sampler || '',
-      scheduler: (payload.metadata?.model as any)?.scheduler || '',
-      steps: (payload.metadata?.model as any)?.steps,
-      cfgScale: (payload.metadata?.model as any)?.cfgScale,
-      seed: (payload.metadata?.model as any)?.seed,
+      checkpoint: str(payload.image?.checkpoint) || str(metaModel?.checkpoint),
+      outputModel: str(payload.image?.model) || str(metaModel?.outputModel),
+      sampler: str(metaModel?.sampler),
+      scheduler: str(metaModel?.scheduler),
+      steps: num(metaModel?.steps),
+      cfgScale: num(metaModel?.cfgScale),
+      seed: num(metaModel?.seed),
     },
     prompt: {
-      positive: (payload.metadata?.prompt as any)?.positive || '',
-      negative: (payload.metadata?.prompt as any)?.negative || '',
+      positive: str(metaPrompt?.positive),
+      negative: str(metaPrompt?.negative),
     },
     pipeline: {
-      requestId: (payload.metadata?.pipeline as any)?.requestId || '',
-      promptId: (payload.metadata?.pipeline as any)?.promptId || '',
-      reasoningChain: (payload.metadata?.pipeline as any)?.reasoningChain,
+      requestId: str(metaPipeline?.requestId),
+      promptId: str(metaPipeline?.promptId),
+      reasoningChain: strArr(metaPipeline?.reasoningChain),
     },
   } : undefined
 
@@ -541,11 +553,11 @@ async function parseAssistantResponse(response: Response) {
       ? payload.response || payload.content || ''
       : payload.details || payload.message || payload.error || payload.content || '',
     imageDataUrl: payload.imageDataUrl || '',
-    imageFilename: payload.image?.filename || payload.metadata?.image?.filename || payload.filename || '',
-    imageModel: payload.image?.model || payload.metadata?.model?.outputModel || payload.metadata?.model?.checkpoint || '',
-    imageCheckpoint: payload.image?.checkpoint || payload.metadata?.model?.checkpoint || '',
-    imageResolution: payload.image?.resolution || payload.metadata?.image?.resolution || '',
-    imageGateway: payload.image?.gateway || payload.metadata?.pipeline?.gateway || '',
+    imageFilename: str(payload.image?.filename) || str(metaImage?.filename) || str(payload.filename),
+    imageModel: str(payload.image?.model) || str(metaModel?.outputModel) || str(metaModel?.checkpoint),
+    imageCheckpoint: str(payload.image?.checkpoint) || str(metaModel?.checkpoint),
+    imageResolution: str(payload.image?.resolution) || str(metaImage?.resolution),
+    imageGateway: str(payload.image?.gateway) || str(metaPipeline?.gateway),
     imageMetadata,
     sources: normalizeSources(payload.sources),
   }
