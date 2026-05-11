@@ -3826,6 +3826,15 @@ export default {
           if (imagePipelineV2Enabled) {
             try {
               const imagePipelineStartedAt = Date.now();
+              
+              // Log pipeline startup details
+              logger.log("ion_image_pipeline_start", {
+                userId,
+                promptLength: promptText.length,
+                stylePackRequested: effectiveStylePack || requestedStylePack,
+                dimensions: `${effectiveWidth}x${effectiveHeight}`
+              });
+              
               const pipelineResult = await executeIonImagePipeline(
                 {
                   userId,
@@ -3839,6 +3848,11 @@ export default {
               );
 
               const totalMs = Date.now() - imagePipelineStartedAt;
+              logger.log("ion_image_pipeline_success", {
+                userId,
+                totalMs,
+                gatewayKind: pipelineResult.gatewayKind
+              });
               const renderingStyleSource = effectiveStylePack ? "session-or-request" : "auto";
               const cameraSource = promptInferredCamera ? "prompt" : (requestedCameraRaw ? "session-or-request" : "none");
               const lightingSource = promptInferredLighting ? "prompt" : (requestedLightingRaw ? "session-or-request" : "none");
@@ -3903,7 +3917,23 @@ export default {
                 }
               );
             } catch (pipelineErr: any) {
+              const errorMessage = String((pipelineErr as any)?.message || pipelineErr || "Unknown error");
+              const errorName = String((pipelineErr as any)?.name || "Error");
+              
+              logger.log("ion_image_pipeline_error", {
+                userId,
+                errorName,
+                errorMessage,
+                isComfyPromptDenied: isComfyPromptAccessDeniedError(pipelineErr),
+                willFallback: isComfyPromptAccessDeniedError(pipelineErr) && env.AI && typeof (env.AI as { run?: unknown }).run === "function"
+              });
+              
               if (isComfyPromptAccessDeniedError(pipelineErr) && env.AI && typeof (env.AI as { run?: unknown }).run === "function") {
+                logger.log("ion_image_pipeline_fallback_triggered", {
+                  userId,
+                  reason: "ComfyUI access denied - using SDXL fallback"
+                });
+                
                 return buildDirectAiImageFallbackResponse({
                   env,
                   userId,
