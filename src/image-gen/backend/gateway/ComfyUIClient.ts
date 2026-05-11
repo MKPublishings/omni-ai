@@ -1,4 +1,5 @@
 import { resolveComfyUIConfig } from '../../config/comfyui.config';
+import { validateComfyUIWorkflow, formatValidationErrors } from './workflow-validator';
 import type {
   IModelGateway,
   JobStatus,
@@ -118,22 +119,55 @@ export class ComfyUIClient implements IModelGateway {
   }
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
-    const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt: workflow }),
-    });
-
-    const promptId = String(response.prompt_id || '').trim();
-    if (!promptId) {
-      throw new Error('ComfyUI did not return a prompt id.');
+    // ===== VALIDATION LAYER =====
+    // Catch malformed workflows before submission
+    const validationResult = validateComfyUIWorkflow(workflow);
+    if (!validationResult.valid) {
+      const errorMessage = formatValidationErrors(validationResult);
+      throw new Error(`ComfyUI workflow validation failed:\n${errorMessage}`);
     }
 
-    this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(workflow);
+    // ===== PAYLOAD PREPARATION =====
+    // Ensure workflow is properly serialized
+    let payload: string;
+    try {
+      payload = JSON.stringify({ prompt: workflow });
+    } catch (e) {
+      throw new Error(`Failed to serialize workflow to JSON: ${e instanceof Error ? e.message : String(e)}`);
+    }
 
-    return { promptId };
+    // ===== SUBMISSION =====
+    try {
+      const response = await this.fetchJson<ComfyUIPromptResponse>(this.config.promptPath, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: payload,
+      });
+
+      const promptId = String(response.prompt_id || '').trim();
+      if (!promptId) {
+        throw new Error('ComfyUI did not return a prompt_id.');
+      }
+
+      this.lastSubmittedCheckpoint = extractCheckpointFromWorkflow(workflow);
+
+      return { promptId };
+    } catch (error) {
+      // Enhanced error handling for 400 errors
+      if (error instanceof Error) {
+        if (error.message.includes('(400)')) {
+          throw new Error(
+            `ComfyUI rejected the workflow (400 Bad Request). ` +
+            `Validation passed, but ComfyUI found the payload invalid. ` +
+            `Check checkpoint availability and node parameters. ` +
+            `Original error: ${error.message}`
+          );
+        }
+      }
+      throw error;
+    }
   }
 
   async getJobStatus(promptId: string): Promise<JobStatus> {

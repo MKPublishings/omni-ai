@@ -1,4 +1,5 @@
 import { getCheckpointConfig } from '../../config/models.config';
+import { buildUniversalBaseGraph } from './templates/universal-base-graph';
 import type { ComfyUIWorkflow, GenerationRequest } from '../../shared/types';
 
 function buildPositiveText(request: GenerationRequest): string {
@@ -17,64 +18,21 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
   const positiveText = buildPositiveText(request);
   const negativeText = request.prompt.negative;
 
-  const workflow: ComfyUIWorkflow = {
-    '1': {
-      class_type: 'CheckpointLoaderSimple',
-      inputs: {
-        ckpt_name: runtimeCheckpoint,
-      },
-    },
-    '2': {
-      class_type: 'CLIPTextEncode',
-      inputs: {
-        text: positiveText,
-        clip: ['1', 1],
-      },
-    },
-    '3': {
-      class_type: 'CLIPTextEncode',
-      inputs: {
-        text: negativeText,
-        clip: ['1', 1],
-      },
-    },
-    '4': {
-      class_type: 'EmptyLatentImage',
-      inputs: {
-        width: request.parameters.width,
-        height: request.parameters.height,
-        batch_size: request.parameters.batchSize,
-      },
-    },
-    '5': {
-      class_type: 'KSampler',
-      inputs: {
-        seed: request.parameters.seed,
-        steps: request.parameters.steps,
-        cfg: request.parameters.cfgScale,
-        sampler_name: request.parameters.sampler,
-        scheduler: request.parameters.scheduler,
-        denoise: 1,
-        model: ['1', 0],
-        positive: ['2', 0],
-        negative: ['3', 0],
-        latent_image: ['4', 0],
-      },
-    },
-    '6': {
-      class_type: 'VAEDecode',
-      inputs: {
-        samples: ['5', 0],
-        vae: ['1', 2],
-      },
-    },
-    '7': {
-      class_type: 'SaveImage',
-      inputs: {
-        filename_prefix: `ion-${request.requestId}`,
-        images: ['6', 0],
-      },
-    },
+  // Build using Universal Base Graph template
+  const workflow = buildUniversalBaseGraph({
+    checkpointName: runtimeCheckpoint,
+    positivePrompt: positiveText,
+    negativePrompt: negativeText,
+    width: request.parameters.width,
+    height: request.parameters.height,
+    batchSize: request.parameters.batchSize,
+    seed: request.parameters.seed,
+    steps: request.parameters.steps,
+    cfgScale: request.parameters.cfgScale,
+    sampler: request.parameters.sampler,
+    scheduler: request.parameters.scheduler,
+    denoise: 1,
+    filenamePrefix: `ion-${request.requestId}`,
     metadata: {
       request_id: request.requestId,
       checkpoint: checkpoint.id,
@@ -85,10 +43,11 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
       style_family: request.ionMetadata.styleFamily,
       original_prompt: request.ionMetadata.originalUserPrompt,
     },
-  };
+  });
 
+  // Inject v_prediction model sampling if needed
   if (checkpoint.predictionType === 'v_prediction') {
-    workflow['8'] = {
+    (workflow as any)['8'] = {
       class_type: 'ModelSamplingDiscrete',
       inputs: {
         model: ['1', 0],
@@ -97,10 +56,8 @@ export function buildComfyUIWorkflow(request: GenerationRequest): ComfyUIWorkflo
       },
     };
 
-    (workflow['5'] as Record<string, unknown>).inputs = {
-      ...((workflow['5'] as Record<string, any>).inputs || {}),
-      model: ['8', 0],
-    };
+    // Update sampler to use the discrete sampling node
+    ((workflow as any)['5'] as any).inputs.model = ['8', 0];
   }
 
   return workflow;
