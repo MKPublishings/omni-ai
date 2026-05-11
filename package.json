@@ -46,6 +46,7 @@
     "smoke:chat-image-intent": "node ./scripts/smoke/chatImageIntentSmoke.js",
     "validate:dashboard-api": "node ./scripts/tools/checkDashboardApiBase.js",
     "validate:image:relay-paths": "node ./scripts/tools/validateImageRelayPaths.js",
+    "comfy:hotstart": "node ./scripts/tools/comfyHotstart.js",
     "bench:chat-latency": "node ./scripts/bench/chatLatency.js",
     "smoke:policy-lockstep": "node ./scripts/smoke/policyLockstepSmoke.js",
     "validate:engine": "node ./ION-image-engine/utils/validator.js",
