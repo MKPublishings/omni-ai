@@ -1,3 +1,94 @@
+// --- Step 1: Integrate real validation models (stub) ---
+// In production, replace with CLIP/BLIP/LLaVA or similar
+import fs from "fs";
+function semanticImagePromptMatch(image: Uint8Array, prompt: string): boolean {
+  // TODO: Integrate with a vision-language model
+  return true;
+}
+
+// --- Step 2: Color & region checks (stub) ---
+function checkColorRegions(image: Uint8Array, requiredColors: string[]): boolean {
+  // TODO: Implement color histogram or segmentation analysis
+  return true;
+}
+
+// --- Step 3: Mechanical & anatomical checks (stub) ---
+function checkMechanicalIntegration(image: Uint8Array): boolean {
+  // TODO: Use edge detection or a trained discriminator
+  return true;
+}
+function checkAnatomy(image: Uint8Array): boolean {
+  // TODO: Use pose estimation or a vision model
+  return true;
+}
+
+// --- Step 4: Logging & retry ---
+function logFailedGeneration(details: any) {
+  // In production, log to file/db
+  try {
+    fs.appendFileSync("generation_failures.log", JSON.stringify(details) + "\n");
+  } catch {}
+}
+async function retryGeneration(env: Env, body: ImageRequest, maxRetries = 2): Promise<any> {
+  let lastResult = null;
+  for (let i = 0; i < maxRetries; ++i) {
+    lastResult = await generateWithinSizeRange(env, body);
+    if (
+      semanticImagePromptMatch(lastResult.image, body.prompt) &&
+      checkColorRegions(lastResult.image, ["magenta", "green", "red"]) &&
+      checkMechanicalIntegration(lastResult.image) &&
+      checkAnatomy(lastResult.image)
+    ) {
+      return lastResult;
+    }
+    logFailedGeneration({ prompt: body.prompt, attempt: i + 1, reasons: "validation failed" });
+  }
+  return lastResult;
+}
+
+// --- Step 5: Prompt-to-feature mapping (stub) ---
+function extractPromptFeatures(prompt: string): Record<string, any> {
+  // TODO: Parse prompt for spatial/attribute constraints
+  return { headsetSide: "left", coreColor: "red", angle: "side" };
+}
+
+// --- Step 6: User feedback loop (stub) ---
+function recordUserFeedback(imageId: string, feedback: string) {
+  // In production, store feedback in db
+  try {
+    fs.appendFileSync("user_feedback.log", JSON.stringify({ imageId, feedback }) + "\n");
+  } catch {}
+}
+// --- Post-generation validation utilities ---
+interface ImageValidationResult {
+  valid: boolean;
+  reasons: string[];
+}
+
+// Placeholder: In production, use a vision model or feature extractor
+function validateImageAgainstPrompt(image: Uint8Array, prompt: string): ImageValidationResult {
+  // TODO: Integrate with a vision-language model (e.g., CLIP, BLIP, LLaVA) for semantic validation
+  // For now, return valid=true as a stub
+  return { valid: true, reasons: [] };
+}
+
+// Example: Color region check (stub)
+function checkColorRegions(image: Uint8Array, requiredColors: string[]): boolean {
+  // TODO: Implement color histogram or segmentation check
+  return true;
+}
+
+// Example: Mechanical plausibility check (stub)
+function checkMechanicalIntegration(image: Uint8Array): boolean {
+  // TODO: Use edge detection or a trained discriminator
+  return true;
+}
+
+// Example: Anatomy check (stub)
+function checkAnatomy(image: Uint8Array): boolean {
+  // TODO: Use pose estimation or a vision model
+  return true;
+}
 import {
   isReadableByteStream,
   normalizeGeneratedImageOutput,
@@ -761,8 +852,26 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
   };
 
   try {
-    const generated = await generateWithinSizeRange(env, body);
+    // Step 5: Extract prompt features (for future use)
+    const features = extractPromptFeatures(body.prompt);
+
+    // Step 4: Retry with validation
+    const generated = await retryGeneration(env, body, 2);
     const mime = detectImageMime(generated.image);
+
+    // Step 1-3: Validation
+    if (
+      !semanticImagePromptMatch(generated.image, body.prompt) ||
+      !checkColorRegions(generated.image, ["magenta", "green", "red"]) ||
+      !checkMechanicalIntegration(generated.image) ||
+      !checkAnatomy(generated.image)
+    ) {
+      logFailedGeneration({ prompt: body.prompt, reasons: "final validation failed" });
+      return Response.json({
+        success: false,
+        error: "Generated image did not pass validation checks"
+      }, { status: 422 });
+    }
 
     if (generated.width !== MODEL_RENDER_WIDTH || generated.height !== MODEL_RENDER_HEIGHT) {
       return Response.json(
