@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const img = document.createElement('img');
       img.src = imageUrl;
       img.className = 'chat-image';
-      img.alt = 'Generated Image';
+      img.alt = '';
       img.addEventListener('click', function() {
         popupImage.src = imageUrl;
         popup.classList.remove('hidden');
@@ -25,13 +25,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const actions = document.createElement('div');
         actions.className = 'chat-actions';
         const viewBtn = document.createElement('button');
-        viewBtn.textContent = 'View';
+        viewBtn.title = 'View';
+        viewBtn.innerHTML = '<span aria-label="View" style="font-size:1.1em;">👁️</span>';
         viewBtn.onclick = () => {
           popupImage.src = imageUrl;
           popup.classList.remove('hidden');
         };
         const downloadBtn = document.createElement('button');
-        downloadBtn.textContent = 'Download';
+        downloadBtn.title = 'Download';
+        downloadBtn.innerHTML = '<span aria-label="Download" style="font-size:1.1em;">⬇️</span>';
         downloadBtn.onclick = () => {
           const a = document.createElement('a');
           a.href = imageUrl;
