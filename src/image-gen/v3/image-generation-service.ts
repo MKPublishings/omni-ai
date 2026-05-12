@@ -174,6 +174,7 @@ async function runCloudflareAiProvider(
   const request = await buildIonImageGenerationRequest(input, source);
   const model = resolveCloudflareModel(source);
   const positivePrompt = mergePromptTokens(
+    request.ionMetadata.originalUserPrompt,
     request.prompt.qualityTags,
     request.prompt.styleTags,
     request.prompt.positive,

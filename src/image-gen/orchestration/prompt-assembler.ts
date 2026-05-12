@@ -110,7 +110,7 @@ export function assemblePrompt(
     };
   }
 
-  const positiveTokens = [...qualityTags, ...styleTags, ...expanded.tags];
+  const positiveTokens = [intent.rawPrompt, ...qualityTags, ...styleTags, ...expanded.tags];
   const negative = mergeNegativePrompts([
     BASE_NEGATIVE_PROMPT,
     styleNegative,
