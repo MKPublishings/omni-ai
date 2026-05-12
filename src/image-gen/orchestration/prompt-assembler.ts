@@ -21,6 +21,13 @@ export interface PromptAssemblyOptions {
   styleProfile?: KimonoStyleProfileId | null;
 }
 
+function isPhotorealLandscapePrompt(prompt: string): boolean {
+  const lower = String(prompt || '').toLowerCase();
+  const photoreal = /(photo[-\s]?realistic|photorealistic|realistic|cinema photo|dslr|natural light)/.test(lower);
+  const landscape = /(desert|landscape|vista|panorama|mountain|forest|cityscape|street scene|skyline|ocean|beach|valley|canyon|dune|oasis)/.test(lower);
+  return photoreal && landscape;
+}
+
 function buildStrictNegatives(intent: ParsedIntent): string[] {
   const negatives: string[] = [];
   const lower = intent.rawPrompt.toLowerCase();
@@ -45,7 +52,10 @@ export function assemblePrompt(
 ): PromptAssemblyResult {
   const checkpoint = getCheckpointConfig(checkpointId);
   const stylePreset = getStylePreset(styleFamily);
-  const styleTags = stylePreset.positivePrefix.split(',').map((value) => value.trim()).filter(Boolean);
+  const forcePhotorealLandscape = isPhotorealLandscapePrompt(intent.rawPrompt);
+  const styleTags = forcePhotorealLandscape
+    ? ['photorealistic', 'cinematic lighting', 'natural color tones', 'landscape photography']
+    : stylePreset.positivePrefix.split(',').map((value) => value.trim()).filter(Boolean);
   const qualityTags = [...checkpoint.qualityTags];
   const photogrammetry = buildPhotogrammetryBlueprint(intent.rawPrompt);
 
@@ -55,7 +65,9 @@ export function assemblePrompt(
 
   qualityTags.push(...photogrammetry.positiveTags);
 
-  const styleNegative = stylePreset.negativeAdditions;
+  const styleNegative = forcePhotorealLandscape
+    ? 'anime, illustration, cartoon, painting, portrait, close-up face'
+    : stylePreset.negativeAdditions;
   const strictNegative = buildStrictNegatives(intent).join(', ');
   const shouldUseKimonoMode = isKimonoSpringPrompt(intent.rawPrompt) || Boolean(options.styleProfile);
 

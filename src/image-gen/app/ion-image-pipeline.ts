@@ -25,6 +25,7 @@ export interface IonImagePipelineInput {
   userId: string;
   prompt: string;
   mode?: string;
+  checkpoint?: string;
   stylePack?: string;
   width?: number;
   height?: number;
@@ -155,7 +156,7 @@ export async function buildIonImageGenerationRequest(
     sessionId: `img-${crypto.randomUUID()}`,
     prompt: input.prompt,
     styleFamily: resolveStyleFamily(input.stylePack),
-    checkpoint: env.defaultCheckpoint,
+    checkpoint: input.checkpoint || env.defaultCheckpoint,
     variationMode: input.variationMode,
     anatomyStrictMode: input.anatomyStrictMode,
     styleProfile: input.styleProfile,

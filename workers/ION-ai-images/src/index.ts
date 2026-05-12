@@ -73,6 +73,7 @@ function buildRuntimeConfig(env: Env): Record<string, unknown> {
 interface ImageRequest {
   userId?: string;
   prompt: string;
+  checkpoint?: string;
   negative_prompt?: string;
   width?: number;
   height?: number;
@@ -199,6 +200,7 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         {
           userId: String(body.userId || "anonymous").trim() || "anonymous",
           prompt: normalizedPrompt,
+          checkpoint: String(body.checkpoint || '').trim() || undefined,
           stylePack: body.stylePack,
           width: body.width,
           height: body.height,
@@ -233,6 +235,7 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         userId: String(body.userId || "anonymous").trim() || "anonymous",
         prompt: normalizedPrompt,
         mode: String(body.mode || "simple").trim() || "simple",
+        checkpoint: String(body.checkpoint || '').trim() || undefined,
         stylePack: body.stylePack,
         width: body.width,
         height: body.height,

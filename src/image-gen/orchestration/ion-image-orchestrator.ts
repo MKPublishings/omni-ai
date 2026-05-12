@@ -48,7 +48,12 @@ export class IonImageOrchestrator implements IOrchestrator {
         : subjectDomain === 'environment' || subjectDomain === 'architecture'
           ? 'cinematic'
           : undefined;
-    const checkpointId = userInput.checkpoint || this.env.defaultCheckpoint;
+    const lowerPrompt = String(userInput.prompt || '').toLowerCase();
+    const isPhotorealLandscapePrompt =
+      /(photo[-\s]?realistic|photorealistic|realistic|cinema photo|dslr|natural light)/.test(lowerPrompt)
+      && /(desert|landscape|vista|panorama|mountain|forest|cityscape|street scene|skyline|ocean|beach|valley|canyon|dune|oasis)/.test(lowerPrompt);
+    const checkpointId = userInput.checkpoint
+      || (isPhotorealLandscapePrompt ? 'sd_xl_turbo_1.0_fp16.safetensors' : this.env.defaultCheckpoint);
     const expanded = expandTags(intent);
     const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded, {
       variationMode: userInput.variationMode,
