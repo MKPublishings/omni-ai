@@ -8,6 +8,11 @@ import { buildIonImageV2RouteResult } from "../../../src/image-gen/app/ion-image
 import { generateIonImageV3RouteResult } from "../../../src/image-gen/v3/image-generation-service";
 import { buildPhotogrammetryBlueprint, mergePromptTokens, resolvePhotogrammetryRenderTuning } from "../../../src/image-gen/orchestration/photogrammetry-blueprint";
 
+// Minimal Ai interface for type safety
+interface Ai {
+  run(model: string, payload: any): Promise<any>;
+}
+
 interface Env {
   AI?: Ai;
   ION_IMAGE_PIPELINE_V2?: string;
@@ -16,6 +21,29 @@ interface Env {
   ION_MOCK?: string;
   ION_REQUEST_TIMEOUT_MS?: string;
   DEFAULT_CHECKPOINT?: string;
+}
+// Type guards for sampler, scheduler, and ageTier
+const allowedSamplers = [
+  "ddim", "dpmpp_2m", "dpmpp_2m_karras", "dpmpp_2m_sde", "dpmpp_2m_sde_heun",
+  "dpmpp_3m_sde", "dpmpp_sde", "euler", "euler_ancestral", "heun", "uni_pc"
+] as const;
+type Sampler = typeof allowedSamplers[number];
+function validateSampler(val: any): Sampler | undefined {
+  const s = String(val || "").trim().toLowerCase();
+  return allowedSamplers.includes(s as Sampler) ? (s as Sampler) : undefined;
+}
+
+const allowedSchedulers = [
+  "exponential", "karras", "normal", "sgm_uniform", "simple"
+] as const;
+type Scheduler = typeof allowedSchedulers[number];
+function validateScheduler(val: any): Scheduler | undefined {
+  const s = String(val || "").trim().toLowerCase();
+  return allowedSchedulers.includes(s as Scheduler) ? (s as Scheduler) : undefined;
+}
+
+function validateAgeTier(val: any): "adult" | "minor" {
+  return String(val).toLowerCase() === "minor" ? "minor" : "adult";
 }
 
 function readBoolean(value: unknown, fallback: boolean): boolean {
@@ -166,7 +194,7 @@ function mapV2Failure(error: unknown): { status: number; code: string; message: 
 async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
   let body: ImageRequest;
   try {
-    body = await request.json<ImageRequest>();
+    body = await request.json();
   } catch {
     return Response.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
   }
@@ -211,8 +239,8 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
           cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
           cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
           denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
-          sampler: String(body.sampler || "").trim().toLowerCase() || undefined,
-          scheduler: String(body.scheduler || "").trim().toLowerCase() || undefined,
+          sampler: validateSampler(body.sampler),
+          scheduler: validateScheduler(body.scheduler),
           batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
           mode: String(body.mode || "simple").trim() || "simple",
           quality: body.quality,
@@ -248,8 +276,8 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         cfgScale: Number.isFinite(Number(body.cfgScale)) ? Number(body.cfgScale) : undefined,
         cfgRescale: Number.isFinite(Number(body.cfgRescale)) ? Number(body.cfgRescale) : undefined,
         denoise: Number.isFinite(Number(body.denoise)) ? Number(body.denoise) : undefined,
-        sampler: String(body.sampler || "").trim().toLowerCase() || undefined,
-        scheduler: String(body.scheduler || "").trim().toLowerCase() || undefined,
+        sampler: validateSampler(body.sampler),
+        scheduler: validateScheduler(body.scheduler),
         batchSize: Number.isFinite(Number(body.batchSize)) ? Number(body.batchSize) : undefined,
       },
       env as unknown as Record<string, unknown>,
@@ -275,7 +303,7 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         source: "none",
       },
       safety: {
-        ageTier: String(body.safetyProfile?.ageTier || "adult"),
+        ageTier: validateAgeTier(body.safetyProfile?.ageTier),
         explicitAllowed: Boolean(body.safetyProfile?.explicitAllowed),
         illegalBlocked: body.safetyProfile?.illegalBlocked !== false,
       },
@@ -346,12 +374,26 @@ function buildQualityPrompt(basePrompt: string): string {
     "crisp focus",
     "clean edges",
     "4k-grade detail retention",
+    // Enhancements for realism
+    "subtle material imperfections",
+    "realistic light bounce",
+    "natural hair randomness",
+    "microfabric texture",
+    "complex tech integration",
+    "depth-consistent focus",
+    "anatomically correct proportions"
   ];
   return mergePromptTokens(core, suffix, blueprint.positiveTags);
 }
 
 function mergeNegativePrompt(baseNegativePrompt?: string, sourcePrompt?: string): string {
-  const antiArtifacts = "blurry, blur, pixelated, compression artifacts, soft focus, low detail, low resolution, noise, washed out textures, over-smoothed surfaces, flat shading, plastic look, muddy details, haze, fog veil, inverted colors, color inversion, photographic negative, negative image, inverted luminance, inverted tonemapping";
+  const antiArtifacts = [
+    "blurry", "blur", "pixelated", "compression artifacts", "soft focus", "low detail", "low resolution", "noise",
+    "washed out textures", "over-smoothed surfaces", "flat shading", "plastic look", "muddy details", "haze", "fog veil",
+    "inverted colors", "color inversion", "photographic negative", "negative image", "inverted luminance", "inverted tonemapping",
+    // Enhancements for realism
+    "unrealistic material transitions", "unnatural hair clumping", "uniform fabric", "floating tech", "depth inconsistency", "anatomical distortion"
+  ].join(", ");
   const blueprint = buildPhotogrammetryBlueprint(String(sourcePrompt || ''));
   return mergePromptTokens(baseNegativePrompt, antiArtifacts, blueprint.negativeTags);
 }
@@ -692,7 +734,7 @@ export default {
 async function handleGenerate(request: Request, env: Env): Promise<Response> {
   let body: ImageRequest;
   try {
-    body = await request.json<ImageRequest>();
+    body = await request.json();
   } catch {
     return Response.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
   }
@@ -779,7 +821,7 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
       );
     }
 
-    return new Response(generated.image, {
+    return new Response(new Blob([generated.image]), {
       headers: {
         "Content-Type": mime,
         "Cache-Control": "no-store",
