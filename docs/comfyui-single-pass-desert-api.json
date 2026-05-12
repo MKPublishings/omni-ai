@@ -1,0 +1,117 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "sd_xl_turbo_1.0_fp16.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "(desert landscape, sand dunes, sunlight, no people, no buildings:1.4)",
+      "clip": [
+        "1",
+        1
+      ]
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "(photorealistic, cinematic lighting, natural color tones:0.9)",
+      "clip": [
+        "1",
+        1
+      ]
+    }
+  },
+  "4": {
+    "class_type": "ConditioningAverage",
+    "inputs": {
+      "conditioning_to": [
+        "2",
+        0
+      ],
+      "conditioning_from": [
+        "3",
+        0
+      ],
+      "conditioning_to_strength": 0.7
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "people, person, face, portrait, building, house, city, architecture, text, logo, watermark",
+      "clip": [
+        "1",
+        1
+      ]
+    }
+  },
+  "6": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 576,
+      "batch_size": 1
+    }
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 123456789,
+      "steps": 24,
+      "cfg": 6,
+      "sampler_name": "dpmpp_2m_karras",
+      "scheduler": "karras",
+      "denoise": 1,
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "4",
+        0
+      ],
+      "negative": [
+        "5",
+        0
+      ],
+      "latent_image": [
+        "6",
+        0
+      ]
+    }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "7",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "photoreal_desert_single_pass",
+      "images": [
+        "8",
+        0
+      ]
+    }
+  },
+  "metadata": {
+    "render_mode": "single_pass",
+    "latent_merge": false,
+    "cache_clear": true,
+    "output_frame": "final",
+    "notes": "Minimal single-pass desert workflow for diagnosing latent layering artifacts."
+  }
+}

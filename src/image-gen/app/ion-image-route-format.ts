@@ -31,6 +31,12 @@ export interface BuildIonImageV2RouteResponseInput {
 export function buildIonImageV2RouteResponse(
   input: BuildIonImageV2RouteResponseInput,
 ): IonImageV2RouteResponse {
+  const workflowMetadata = input.pipelineResult.workflow.metadata as Record<string, unknown> | undefined;
+  const effectiveBatchSize = Number(workflowMetadata?.effective_batch_size);
+  const resolvedBatchSize = Number.isFinite(effectiveBatchSize) && effectiveBatchSize > 0
+    ? Math.floor(effectiveBatchSize)
+    : input.pipelineResult.request.parameters.batchSize;
+
   const metadata: IonImageV2Metadata = {
     pipeline: {
       version: 'v2',
@@ -81,7 +87,7 @@ export function buildIonImageV2RouteResponse(
       cfgScale: input.pipelineResult.request.parameters.cfgScale,
       cfgRescale: input.pipelineResult.request.parameters.cfgRescale,
       seed: input.pipelineResult.request.parameters.seed,
-      batchSize: input.pipelineResult.request.parameters.batchSize,
+      batchSize: resolvedBatchSize,
     },
     prompt: {
       positive: input.pipelineResult.request.prompt.positive,

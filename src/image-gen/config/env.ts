@@ -30,6 +30,7 @@ export interface ImageGenEnvironment {
   defaultClipSkip: number;
   forceSinglePass: boolean;
   cacheClearPerRender: boolean;
+  strictCheckpointSelection: boolean;
   maxQueueSize: number;
   maxConcurrentJobs: number;
   jobTimeoutMs: number;
@@ -150,6 +151,7 @@ export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEn
     defaultClipSkip: readNumber(source, 'DEFAULT_CLIP_SKIP', 2),
     forceSinglePass: readBooleanAny(source, ['ION_RENDER_SINGLE_PASS', 'RENDER_SINGLE_PASS'], true),
     cacheClearPerRender: readBooleanAny(source, ['ION_CACHE_CLEAR_PER_RENDER', 'CACHE_CLEAR_PER_RENDER'], true),
+    strictCheckpointSelection: readBooleanAny(source, ['ION_STRICT_CHECKPOINT_SELECTION', 'STRICT_CHECKPOINT_SELECTION'], true),
     maxQueueSize: readNumber(source, 'MAX_QUEUE_SIZE', 100),
     maxConcurrentJobs: readNumber(source, 'MAX_CONCURRENT_JOBS', 1),
     jobTimeoutMs: readNumber(source, 'JOB_TIMEOUT_MS', 295000),

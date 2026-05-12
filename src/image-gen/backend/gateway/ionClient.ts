@@ -1,4 +1,5 @@
 import { resolveionConfig } from '../../config/ion.config';
+import { readImageGenEnvironment } from '../../config/env';
 import { validateionWorkflow, formatValidationErrors } from './workflow-validator';
 import type {
   IModelGateway,
@@ -300,11 +301,13 @@ function isBypassableOptionalReadFailure(message: string, path: string): boolean
 
 export class ionClient implements IModelGateway {
   private readonly config;
+  private readonly env;
   private lastSubmittedCheckpoint: string | null = null;
   private lastHealthFailure: string | null = null;
 
   constructor(source?: Record<string, unknown>) {
     this.config = resolveionConfig(source);
+    this.env = readImageGenEnvironment(source);
   }
 
   async submitWorkflow(workflow: Record<string, unknown>): Promise<{ promptId: string }> {
@@ -663,6 +666,15 @@ export class ionClient implements IModelGateway {
 
     if (availableCheckpoints.includes(requestedCheckpoint)) {
       return;
+    }
+
+    if (this.env.strictCheckpointSelection) {
+      const preview = availableCheckpoints.slice(0, 10).join(', ');
+      throw new Error(
+        `Requested checkpoint '${requestedCheckpoint}' is not available on ion host. ` +
+        `Strict checkpoint selection is enabled. ` +
+        `${preview ? `Available checkpoints: ${preview}` : 'No checkpoints were reported by ion object_info.'}`,
+      );
     }
 
     const replacement = availableCheckpoints[0];
