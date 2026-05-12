@@ -1,0 +1,28 @@
+{
+  "name": "postfx_chain",
+  "version": "1.0.0",
+  "stages": [
+    {
+      "id": "tone_map",
+      "type": "ToneMap",
+      "operator": "reinhard",
+      "exposure": 1.03
+    },
+    {
+      "id": "micro_contrast",
+      "type": "MicroContrast",
+      "amount": 0.2
+    },
+    {
+      "id": "color_balance",
+      "type": "ColorBalance",
+      "temperature": 0.03,
+      "tint": 0.01
+    },
+    {
+      "id": "grain",
+      "type": "FilmGrain",
+      "amount": 0.04
+    }
+  ]
+}

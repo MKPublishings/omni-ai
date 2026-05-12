@@ -1,0 +1,23 @@
+{
+  "name": "portrait_pipeline",
+  "version": "1.0.0",
+  "description": "Portrait correction chain for depth, anatomy segmentation, edge fidelity, and light coherence.",
+  "nodes": [
+    { "id": "depth_estimator", "type": "DepthEstimator", "provider": "zoedepth", "strength": 0.65 },
+    { "id": "segmentation_masker", "type": "SegmentationMasker", "provider": "sam", "enforce": true },
+    { "id": "base_ksampler", "type": "KSampler", "sampler": "dpmpp_2m_karras", "steps": 24 },
+    { "id": "controlnet_depth", "type": "ControlNetDepth", "strength": 0.65 },
+    { "id": "controlnet_segmentation", "type": "ControlNetSegmentation", "strength": 0.6 },
+    { "id": "vae_decode", "type": "VAEDecode" },
+    { "id": "edge_enhancer", "type": "EdgeEnhancer", "method": "highpass_adaptive_sharpen", "edge_threshold": 0.42 },
+    { "id": "light_normalizer", "type": "LightNormalizer", "light_vector": [45, 30] },
+    { "id": "postfx_chain", "type": "PostFXChain", "ref": "postfx_chain.json" }
+  ],
+  "parameters": {
+    "depth_strength": 0.65,
+    "segmentation_enforce": true,
+    "light_vector": [45, 30],
+    "edge_threshold": 0.42,
+    "anatomy_protection_mask": true
+  }
+}
