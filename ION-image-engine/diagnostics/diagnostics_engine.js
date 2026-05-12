@@ -139,6 +139,13 @@ class DiagnosticsEngine {
     };
 
     if (!renderOutput.boundingBox) {
+      detection.detected = true;
+      detection.severity = 'CRITICAL';
+      detection.indicators.push('FACE_BOUNDING_BOX_MISSING');
+      detection.details.push({
+        issue: 'Face bounding box missing from render output',
+        message: 'Cannot verify face integrity without bounding box.'
+      });
       return detection;
     }
 

@@ -118,7 +118,17 @@ function inferContextTags(prompt) {
     const tags = [];
 
     if (/(headshot|face|selfie)/.test(lower)) {
-        tags.push("subject framing", "detailed facial rendering");
+        tags.push(
+            "subject framing",
+            "detailed facial rendering",
+            "no obscured facial features",
+            "no merged faces",
+            "no face distortion",
+            "no face cropping",
+            "no hidden eyes",
+            "no waxy skin",
+            "true-to-lens facial proportions"
+        );
     }
     if (/(landscape|panorama|wide shot|vista)/.test(lower)) {
         tags.push("wide-angle composition", "depth layering");

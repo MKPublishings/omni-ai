@@ -23,7 +23,7 @@ class ProportionalEnforcer {
       limbLength: config.limbLength || 0.43, // Arms and legs proportional
       faceHeightRatio: config.faceHeightRatio || 0.12, // Face as % of body
       torsoRatio: config.torsoRatio || 0.28, // Torso length ratio
-      toleranceMargin: !isStylized ? (config.toleranceMargin || 0.05) : 0.15, // 5% strict, 15% stylized
+      toleranceMargin: !isStylized ? 0.025 : 0.10, // 2.5% strict, 10% stylized (tighter for faces)
       
       // Anime-specific proportions (stylized mode)
       animeEyeSize: config.animeEyeSize || 0.15, // Larger eyes in anime
@@ -124,7 +124,6 @@ class ProportionalEnforcer {
     if (characterDimensions.faceHeight) {
       const faceRatio = characterDimensions.faceHeight / characterDimensions.bodyHeight;
       const expectedFaceRatio = this.config.animeMode ? this.config.animeEyeSize : this.config.faceHeightRatio;
-      
       if (Math.abs(faceRatio - expectedFaceRatio) > tolerance) {
         analysis.violations.push({
           type: 'FACE_HEIGHT',
@@ -136,6 +135,16 @@ class ProportionalEnforcer {
         analysis.corrections.push('face_height_adjusted');
         analysis.isValid = false;
       }
+    } else {
+      // If face is expected but missing, treat as violation
+      analysis.violations.push({
+        type: 'FACE_HEIGHT_MISSING',
+        detected: null,
+        expected: this.config.faceHeightRatio,
+        severity: 'CRITICAL',
+        message: 'Face height missing from character dimensions.'
+      });
+      analysis.isValid = false;
     }
 
     analysis.correctedDimensions = corrected;
