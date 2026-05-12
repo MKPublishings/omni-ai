@@ -75,14 +75,27 @@ function parsePositivePrompt(value: string): string {
   return String(value || '').trim();
 }
 
-function parseNegativePrompt(baseNegativePrompt: string, animeLike: boolean): string {
-  const baseline = 'blurry, deformed anatomy, extra limbs, warped face, low contrast, artifacts, over-smoothed';
-  const merged = mergePromptTokens(baseNegativePrompt, baseline);
-  if (!animeLike) {
-    return merged;
+function isLandscapeEnvironmentPrompt(prompt: string): boolean {
+  const normalized = parsePositivePrompt(prompt).toLowerCase();
+  if (!normalized) {
+    return false;
   }
 
-  return mergePromptTokens(merged, 'photoreal artifacts, wax skin, monochrome haze');
+  return /\b(wide landscape|landscape|panorama|vista|mountain|forest|valley|canyon|desert|dune|oasis|coast|ocean|beach|skyline)\b/i.test(normalized);
+}
+
+function parseNegativePrompt(baseNegativePrompt: string, positivePrompt: string, animeLike: boolean): string {
+  const baseline = 'blurry, deformed anatomy, extra limbs, warped face, low contrast, artifacts, over-smoothed';
+  const hardNoHuman = 'people, person, human, face, portrait, character, anime, illustration, selfie, close-up, upper body, bust, fashion, figure, humanoid';
+  const merged = mergePromptTokens(baseNegativePrompt, baseline);
+  const withLandscapeGuard = isLandscapeEnvironmentPrompt(positivePrompt)
+    ? mergePromptTokens(merged, hardNoHuman)
+    : merged;
+  if (!animeLike) {
+    return withLandscapeGuard;
+  }
+
+  return mergePromptTokens(withLandscapeGuard, 'photoreal artifacts, wax skin, monochrome haze');
 }
 
 function isAnimeLikePrompt(prompt: string): boolean {
@@ -176,7 +189,7 @@ async function runCloudflareAiProvider(
 
   const generated = await runner.run(model, {
     prompt: parsePositivePrompt(positivePrompt),
-    negative_prompt: parseNegativePrompt(request.prompt.negative, animeLike),
+    negative_prompt: parseNegativePrompt(request.prompt.negative, positivePrompt, animeLike),
     width: cloudflareDimensions.width,
     height: cloudflareDimensions.height,
     batch_size: 1,

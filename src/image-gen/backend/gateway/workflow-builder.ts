@@ -4,7 +4,7 @@ import { buildUniversalBaseGraph } from '../templates/universal-base-graph';
 import type { ionWorkflow, GenerationRequest } from '../../shared/types';
 
 const MAX_CLIP_TEXT_CHARS = 1400;
-const DEFAULT_SDXL_MODEL = 'sd_xl_turbo_1.0_fp16.safetensors';
+const DEFAULT_SDXL_MODEL = 'ion-citizen-xl-vpred-v2.0';
 
 function hashToInt(input: string): number {
   let hash = 2166136261;

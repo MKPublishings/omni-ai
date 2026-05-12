@@ -38,13 +38,15 @@ function readText(value: unknown, fallback: string): string {
 }
 
 function buildRuntimeConfig(env: Env): Record<string, unknown> {
+  const forcedCheckpoint = "ion-citizen-xl-vpred-v2.0";
+
   return {
     gateway: {
       host: readText(env.ION_HOST, "http://localhost:8188"),
       wsUrl: readText(env.ION_WS, "ws://localhost:8188/ws"),
       mock: readBoolean(env.ION_MOCK, true),
       requestTimeoutMs: readNumber(env.ION_REQUEST_TIMEOUT_MS, 120000),
-      defaultCheckpoint: readText(env.DEFAULT_CHECKPOINT, "sd_xl_turbo_1.0_fp16.safetensors"),
+      defaultCheckpoint: forcedCheckpoint,
     },
     queue: {
       runtime: "memory",

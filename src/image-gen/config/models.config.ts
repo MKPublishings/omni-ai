@@ -83,6 +83,7 @@ export function getCheckpointConfig(checkpointId: string): CheckpointConfig {
   return (
     CHECKPOINT_REGISTRY[checkpointId]
     || CHECKPOINT_REGISTRY[env.defaultCheckpoint]
+    || CHECKPOINT_REGISTRY['ion-citizen-xl-vpred-v2.0']
     || CHECKPOINT_REGISTRY['sd_xl_turbo_1.0_fp16.safetensors']
     || Object.values(CHECKPOINT_REGISTRY)[0]
   );

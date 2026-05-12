@@ -55,13 +55,15 @@ function readNumberAny(keys: string[], fallback: number): number {
 }
 
 export async function POST() {
+  const forcedCheckpoint = 'ion-citizen-xl-vpred-v2.0'
+
   return NextResponse.json({
     gateway: {
       host: readTextAny(['ION_HOST', 'ion_HOST'], 'http://localhost:8188'),
       wsUrl: readTextAny(['ION_WS', 'ion_WS'], 'ws://localhost:8188/ws'),
       mock: readBooleanAny(['ION_MOCK', 'ion_MOCK'], true),
       requestTimeoutMs: readNumberAny(['ION_REQUEST_TIMEOUT_MS', 'ion_REQUEST_TIMEOUT_MS'], 120000),
-      defaultCheckpoint: readText('DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
+      defaultCheckpoint: forcedCheckpoint,
     },
     queue: {
       runtime: readText('IMAGE_QUEUE_RUNTIME', 'memory') === 'kv' ? 'kv' : 'memory',

@@ -29,6 +29,8 @@ const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
   'submit',
 ];
 
+const FORCED_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0';
+
 export class IonImageOrchestrator implements IOrchestrator {
   private readonly reasoningChains = new Map<string, ReasoningStepId[]>();
   private readonly env;
@@ -52,8 +54,7 @@ export class IonImageOrchestrator implements IOrchestrator {
     const isPhotorealLandscapePrompt =
       /(photo[-\s]?realistic|photorealistic|realistic|cinema photo|dslr|natural light)/.test(lowerPrompt)
       && /(desert|landscape|vista|panorama|mountain|forest|cityscape|street scene|skyline|ocean|beach|valley|canyon|dune|oasis)/.test(lowerPrompt);
-    const checkpointId = userInput.checkpoint
-      || (isPhotorealLandscapePrompt ? 'sd_xl_turbo_1.0_fp16.safetensors' : this.env.defaultCheckpoint);
+    const checkpointId = FORCED_CHECKPOINT;
     const expanded = expandTags(intent);
     const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded, {
       variationMode: userInput.variationMode,

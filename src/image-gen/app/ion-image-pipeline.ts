@@ -1,7 +1,6 @@
 import { buildionWorkflow } from '../backend/gateway/workflow-builder';
 import { ionClient } from '../backend/gateway/ionClient';
 import { MockionClient } from '../backend/gateway/MockionClient';
-import { readImageGenEnvironment } from '../config/env';
 import { getImageGenerationError } from '../shared/error-codes';
 import { getCheckpointConfig } from '../config/models.config';
 import type {
@@ -49,9 +48,10 @@ const HARD_RESET_LANDSCAPE_MODES = new Set([
   'landscape-debug',
 ]);
 
-const HARD_RESET_POSITIVE_PROMPT = 'photorealistic wide desert landscape, sand dunes, clear sky, no people, no buildings, high detail, 8k, natural colors';
-const HARD_RESET_NEGATIVE_PROMPT = 'people, person, face, portrait, building, house, city, architecture, text, logo, watermark';
-const HARD_RESET_CHECKPOINT = 'sd_xl_turbo_1.0_fp16.safetensors';
+const HARD_RESET_POSITIVE_PROMPT = 'wide-angle photo of an empty mountain valley, no people, no characters, only environment, natural depth layering, realistic landscape photography';
+const HARD_RESET_NEGATIVE_PROMPT = 'people, person, human, face, portrait, character, anime, illustration, selfie, close-up, upper body, bust, fashion, figure, humanoid, building, house, city, architecture, text, logo, watermark';
+const HARD_RESET_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0';
+const FORCED_CHECKPOINT = 'ion-citizen-xl-vpred-v2.0';
 
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
   const parsed = Number(value);
@@ -143,7 +143,6 @@ export async function buildIonImageGenerationRequest(
   source?: EnvironmentSource,
 ): Promise<GenerationRequest> {
   const envSource = getEnvironmentSource(source);
-  const env = readImageGenEnvironment(envSource);
 
   if (isHardResetLandscapeMode(input.mode)) {
     return buildHardResetLandscapeRequest(input);
@@ -156,7 +155,7 @@ export async function buildIonImageGenerationRequest(
     sessionId: `img-${crypto.randomUUID()}`,
     prompt: input.prompt,
     styleFamily: resolveStyleFamily(input.stylePack),
-    checkpoint: input.checkpoint || env.defaultCheckpoint,
+    checkpoint: FORCED_CHECKPOINT,
     variationMode: input.variationMode,
     anatomyStrictMode: input.anatomyStrictMode,
     styleProfile: input.styleProfile,

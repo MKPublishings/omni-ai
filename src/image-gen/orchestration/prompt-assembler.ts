@@ -37,7 +37,20 @@ function buildStrictNegatives(intent: ParsedIntent): string[] {
   }
 
   if (!/(person|people|girl|boy|woman|man|character|warrior)/.test(lower)) {
-    negatives.push('people', 'characters', 'human');
+    negatives.push(
+      'people',
+      'person',
+      'human',
+      'face',
+      'portrait',
+      'character',
+      'selfie',
+      'close-up',
+      'upper body',
+      'bust',
+      'figure',
+      'humanoid',
+    );
   }
 
   return negatives;
@@ -66,7 +79,7 @@ export function assemblePrompt(
   qualityTags.push(...photogrammetry.positiveTags);
 
   const styleNegative = forcePhotorealLandscape
-    ? 'anime, illustration, cartoon, painting, portrait, close-up face'
+    ? 'anime, illustration, cartoon, painting, portrait, close-up face, person, people, human, selfie, upper body, bust, fashion, humanoid'
     : stylePreset.negativeAdditions;
   const strictNegative = buildStrictNegatives(intent).join(', ');
   const shouldUseKimonoMode = isKimonoSpringPrompt(intent.rawPrompt) || Boolean(options.styleProfile);

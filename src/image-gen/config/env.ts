@@ -130,6 +130,7 @@ function readScheduler(source: EnvironmentSource, key: string, fallback: ImageSc
 
 export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEnvironmentSource()): ImageGenEnvironment {
   const ionHost = readTextAny(source, ['ION_HOST', 'ion_HOST'], 'http://localhost:8188');
+  const forcedCheckpoint = 'ion-citizen-xl-vpred-v2.0';
 
   return {
     ionHost,
@@ -137,7 +138,7 @@ export function readImageGenEnvironment(source: EnvironmentSource = getDefaultEn
     ionWs: readTextAny(source, ['ION_WS', 'ion_WS'], 'ws://localhost:8188/ws'),
     ionMock: readBooleanAny(source, ['ION_MOCK', 'ion_MOCK'], true),
     ionRequestTimeoutMs: readNumberAny(source, ['ION_REQUEST_TIMEOUT_MS', 'ion_REQUEST_TIMEOUT_MS'], 120000),
-    defaultCheckpoint: readText(source, 'DEFAULT_CHECKPOINT', 'sd_xl_turbo_1.0_fp16.safetensors'),
+    defaultCheckpoint: forcedCheckpoint,
     defaultPredictionType: readText(source, 'DEFAULT_PREDICTION_TYPE', 'epsilon') as ImagePredictionType,
     defaultVae: readText(source, 'DEFAULT_VAE', 'sdxl_vae.safetensors'),
     defaultSampler: readSampler(source, 'DEFAULT_SAMPLER', 'dpmpp_2m_sde_heun'),

@@ -99,7 +99,7 @@ const DEFAULT_IMAGE_RUNTIME_CONFIG: DashboardImageRuntimeConfig = {
     wsUrl: 'ws://localhost:8188/ws',
     mock: true,
     requestTimeoutMs: 120000,
-    defaultCheckpoint: 'sd_xl_turbo_1.0_fp16.safetensors',
+    defaultCheckpoint: 'ion-citizen-xl-vpred-v2.0',
   },
   queue: {
     runtime: 'memory',
