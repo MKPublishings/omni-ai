@@ -31,7 +31,7 @@ detection:
       eyeOcclusion: 0.10  # Eyes covered/obscured
       mouthOcclusion: 0.10  # Mouth covered/obscured
       sideProfileCut: 0.08  # Profile edges cut
-    action: "flag_and_prevent_output"
+    action: "flag_and_suggest_correction"
     severity: "CRITICAL"
     correction: "Reduce face-focus weight and adjust camera distance"
 
