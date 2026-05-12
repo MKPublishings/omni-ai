@@ -46,7 +46,7 @@ function inferCaptureMode(prompt: string): PhotogrammetryBlueprint['captureMode'
     return 'environment';
   }
 
-  if (/\b(landscape|vista|mountain|forest|cityscape|street scene|panorama)\b/.test(lower)) {
+  if (/\b(landscape|vista|mountain|forest|cityscape|street scene|panorama|desert|dune|oasis|canyon|valley)\b/.test(lower)) {
     return 'scene';
   }
 

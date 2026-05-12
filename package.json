@@ -60,6 +60,8 @@
     "forensics:image": "node ./scripts/tools/runImageForensicsSweep.js",
     "forensics:image:strict": "node ./scripts/tools/runImageForensicsSweep.js --strict",
     "forensics:image:build-output": "node ./scripts/tools/runImageForensicsSweep.js --strict --include-build-output",
+    "diagnose:prompt-intent": "tsx src/scripts/diagnose-prompt-intent.ts",
+    "test:prompt-intent-regression": "npm run diagnose:prompt-intent -- --print-failures",
     "mind:tokens": "node ./scripts/tools/printTaskTokens.js",
     "mind:tokens:set": "node ./scripts/tools/updateTaskTokenStatus.js",
     "mind:tokens:active": "node ./scripts/tools/printActiveTaskTokens.js",

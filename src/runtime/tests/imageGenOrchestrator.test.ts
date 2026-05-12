@@ -25,6 +25,18 @@ test('style router prefers explicit selection and falls back from mood', () => {
   assert.equal(resolveStyleFamily('retro_90s_cel', intent), 'retro_90s_cel');
 });
 
+test('photorealistic environment prompts preserve non-human subject intent', () => {
+  const intent = parseIntent('Photo-realistic desert at golden hour with wind-swept dunes, wide shot.');
+  const styleFamily = resolveStyleFamily(undefined, intent);
+  const expanded = expandTags(intent);
+
+  assert.equal(intent.subject, 'desert');
+  assert.equal(intent.framing, 'wide shot');
+  assert.equal(styleFamily, 'semi_realistic_2_5d');
+  assert.equal(expanded.tags.includes('desert'), true);
+  assert.equal(expanded.tags.includes('wide_shot'), true);
+});
+
 test('prompt assembler adapts quality conventions by checkpoint family', () => {
   const intent = parseIntent('Draw a warrior girl standing on a cliff at sunset.');
   const expanded = expandTags(intent);

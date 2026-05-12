@@ -1,5 +1,20 @@
 import type { ParsedIntent } from '../shared/types';
 
+const LANDSCAPE_SUBJECT_PATTERNS: Array<{ pattern: RegExp; subject: string }> = [
+  { pattern: /\bdesert\b/i, subject: 'desert' },
+  { pattern: /\bmountain(s)?\b/i, subject: 'mountain' },
+  { pattern: /\bforest\b|\bwoods\b|\bgrove\b/i, subject: 'forest' },
+  { pattern: /\bcity\b|\bcityscape\b|\burban\b/i, subject: 'cityscape' },
+  { pattern: /\bocean\b|\bsea\b|\bbeach\b/i, subject: 'seascape' },
+  { pattern: /\bvalley\b/i, subject: 'valley' },
+  { pattern: /\bcanyon\b/i, subject: 'canyon' },
+  { pattern: /\bskyline\b/i, subject: 'skyline' },
+];
+
+function hasLandscapeSignal(prompt: string): boolean {
+  return /(desert|landscape|vista|panorama|mountain|forest|cityscape|skyline|ocean|beach|valley|canyon)/i.test(prompt);
+}
+
 function inferMood(prompt: string): string {
   const lower = prompt.toLowerCase();
   if (/(dramatic|epic|cinematic|intense|warrior|battle)/.test(lower)) return 'dramatic';
@@ -12,6 +27,7 @@ function inferMood(prompt: string): string {
 
 function inferSetting(prompt: string): string {
   const lower = prompt.toLowerCase();
+  if (/(desert|dune|sandstorm|oasis)/.test(lower)) return 'desert';
   if (/(sunset|golden hour|cliff|mountain)/.test(lower)) return 'outdoor vista';
   if (/(bedroom|room|studio|interior|indoors)/.test(lower)) return 'interior';
   if (/(forest|woods|grove)/.test(lower)) return 'forest';
@@ -25,6 +41,7 @@ function inferFraming(prompt: string): string {
   if (/(close[-\s]?up|portrait|headshot|face)/.test(lower)) return 'portrait';
   if (/(full[-\s]?body|standing|head[-\s]?to[-\s]?toe)/.test(lower)) return 'full body';
   if (/(wide shot|landscape|panorama|vista)/.test(lower)) return 'wide shot';
+  if (hasLandscapeSignal(lower)) return 'wide shot';
   return 'upper body';
 }
 
@@ -41,6 +58,13 @@ function inferSubject(prompt: string): string {
   if (/(1girl|girl|woman|female|heroine|warrior girl)/.test(lower)) return '1girl';
   if (/(1boy|boy|man|male|warrior)/.test(lower)) return '1boy';
   if (/(couple|2 people|two people)/.test(lower)) return '2people';
+
+  for (const entry of LANDSCAPE_SUBJECT_PATTERNS) {
+    if (entry.pattern.test(lower)) {
+      return entry.subject;
+    }
+  }
+
   return 'subject';
 }
 
