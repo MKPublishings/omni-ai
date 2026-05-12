@@ -1,15 +1,4 @@
 {
-  "base": [
-    "no distortion",
-    "no extra limbs",
-    "no artifacts",
-    "no watermark",
-    "no blurry details",
-    "no deformed anatomy"
-  ],
-  "noOcean": [
-    "no ocean",
-    "no beach",
-    "no water horizon"
-  ]
+  "base": [],
+  "noOcean": []
 }
