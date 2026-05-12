@@ -26,6 +26,12 @@ export interface IonImageV3RouteResult {
   headers: Record<string, string>;
 }
 const CLOUDFLARE_MAX_STEPS = 20;
+const SINGLE_FRAME_RETRY_HINT = 'single continuous composition, one frame only, no collage, no split panels, no contact sheet, no triptych, no stacked frames';
+
+interface ParsedImageDimensions {
+  width: number;
+  height: number;
+}
 
 function isIonDownError(error: unknown): boolean {
   const name = String((error as { name?: string } | null)?.name || '').trim().toUpperCase();
@@ -39,6 +45,11 @@ function isTimeoutError(error: unknown): boolean {
 
 function shouldFallback(error: unknown, source: EnvironmentSource): boolean {
   const config = readIonImageV3RuntimeConfig(source);
+  const name = String((error as { name?: string } | null)?.name || '').trim().toUpperCase();
+  if (name === 'E_LAYERED_STRIP') {
+    return true;
+  }
+
   if (isIonDownError(error)) {
     return config.fallbackOnIonDown;
   }
@@ -243,6 +254,165 @@ function mapProviderHeader(provider: IonImageProviderKind | null): string {
   return 'ion-native';
 }
 
+function readUInt16BE(bytes: Uint8Array, offset: number): number {
+  return (bytes[offset] << 8) | bytes[offset + 1];
+}
+
+function readUInt32BE(bytes: Uint8Array, offset: number): number {
+  return (
+    (bytes[offset] << 24) |
+    (bytes[offset + 1] << 16) |
+    (bytes[offset + 2] << 8) |
+    bytes[offset + 3]
+  ) >>> 0;
+}
+
+function readUInt24LE(bytes: Uint8Array, offset: number): number {
+  return bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16);
+}
+
+function parsePngDimensions(bytes: Uint8Array): ParsedImageDimensions | null {
+  if (bytes.length < 24) {
+    return null;
+  }
+
+  const isPng =
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a;
+
+  if (!isPng) {
+    return null;
+  }
+
+  return {
+    width: readUInt32BE(bytes, 16),
+    height: readUInt32BE(bytes, 20),
+  };
+}
+
+function parseJpegDimensions(bytes: Uint8Array): ParsedImageDimensions | null {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) {
+    return null;
+  }
+
+  let offset = 2;
+  while (offset + 9 < bytes.length) {
+    if (bytes[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+
+    const marker = bytes[offset + 1];
+    offset += 2;
+    if (marker === 0xd9 || marker === 0xda) {
+      break;
+    }
+
+    if (offset + 1 >= bytes.length) {
+      break;
+    }
+
+    const segmentLength = readUInt16BE(bytes, offset);
+    if (segmentLength < 2 || offset + segmentLength > bytes.length) {
+      break;
+    }
+
+    const isSofMarker =
+      (marker >= 0xc0 && marker <= 0xc3) ||
+      (marker >= 0xc5 && marker <= 0xc7) ||
+      (marker >= 0xc9 && marker <= 0xcb) ||
+      (marker >= 0xcd && marker <= 0xcf);
+
+    if (isSofMarker && segmentLength >= 7) {
+      const height = readUInt16BE(bytes, offset + 3);
+      const width = readUInt16BE(bytes, offset + 5);
+      return { width, height };
+    }
+
+    offset += segmentLength;
+  }
+
+  return null;
+}
+
+function parseWebpDimensions(bytes: Uint8Array): ParsedImageDimensions | null {
+  if (bytes.length < 30) {
+    return null;
+  }
+
+  const isRiff = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46;
+  const isWebp = bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+  if (!isRiff || !isWebp) {
+    return null;
+  }
+
+  const chunk = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
+  if (chunk === 'VP8X' && bytes.length >= 30) {
+    const width = 1 + readUInt24LE(bytes, 24);
+    const height = 1 + readUInt24LE(bytes, 27);
+    return { width, height };
+  }
+
+  if (chunk === 'VP8 ' && bytes.length >= 30) {
+    const width = bytes[26] | (bytes[27] << 8);
+    const height = bytes[28] | (bytes[29] << 8);
+    return { width: width & 0x3fff, height: height & 0x3fff };
+  }
+
+  if (chunk === 'VP8L' && bytes.length >= 25) {
+    const b1 = bytes[21];
+    const b2 = bytes[22];
+    const b3 = bytes[23];
+    const b4 = bytes[24];
+    const width = 1 + (((b2 & 0x3f) << 8) | b1);
+    const height = 1 + (((b4 & 0x0f) << 10) | (b3 << 2) | ((b2 & 0xc0) >> 6));
+    return { width, height };
+  }
+
+  return null;
+}
+
+function parseImageDimensions(bytes: Uint8Array): ParsedImageDimensions | null {
+  return parsePngDimensions(bytes) || parseJpegDimensions(bytes) || parseWebpDimensions(bytes);
+}
+
+function shouldRetryForLayeredStrip(
+  bytes: Uint8Array,
+  requestedWidth: number,
+  requestedHeight: number,
+): boolean {
+  const dimensions = parseImageDimensions(bytes);
+  if (!dimensions || dimensions.width <= 0 || dimensions.height <= 0) {
+    return false;
+  }
+
+  const observedRatio = dimensions.width / dimensions.height;
+  const expectedRatio = requestedWidth > 0 && requestedHeight > 0
+    ? requestedWidth / requestedHeight
+    : 1;
+
+  const veryTallStrip = dimensions.height >= dimensions.width * 1.95;
+  const heavilyOffExpectedAspect = expectedRatio >= 1 && observedRatio <= expectedRatio * 0.6;
+
+  return veryTallStrip || heavilyOffExpectedAspect;
+}
+
+function buildSingleFrameRetryInput(input: IonImageV3GenerationInput): IonImageV3GenerationInput {
+  const prompt = String(input.prompt || '').trim();
+  const retriedPrompt = mergePromptTokens(prompt, SINGLE_FRAME_RETRY_HINT);
+
+  return {
+    ...input,
+    prompt: retriedPrompt,
+  };
+}
+
 export async function generateIonImageV3RouteResult(
   input: IonImageV3GenerationInput,
   source: EnvironmentSource,
@@ -251,13 +421,29 @@ export async function generateIonImageV3RouteResult(
   const providers = resolveProviderChain(source);
   let lastError: unknown = null;
   let activeProvider: IonImageProviderKind | null = null;
+  let stripRetryUsed = false;
 
   for (let index = 0; index < providers.length; index += 1) {
     const provider = providers[index]!;
     const isLastProvider = index === providers.length - 1;
 
     try {
-      const pipelineResult = await runProvider(provider, input, source);
+      const requestedWidth = Number(input.width) || 0;
+      const requestedHeight = Number(input.height) || 0;
+      let pipelineResult = await runProvider(provider, input, source);
+
+      if (shouldRetryForLayeredStrip(pipelineResult.imageBytes, requestedWidth, requestedHeight)) {
+        const retryInput = buildSingleFrameRetryInput(input);
+        pipelineResult = await runProvider(provider, retryInput, source);
+        stripRetryUsed = true;
+
+        if (shouldRetryForLayeredStrip(pipelineResult.imageBytes, requestedWidth, requestedHeight)) {
+          const layeredError = new Error('Provider returned layered strip output after retry');
+          layeredError.name = 'E_LAYERED_STRIP';
+          throw layeredError;
+        }
+      }
+
       activeProvider = provider;
       const fallbackUsed = index > 0;
       const primaryProvider = providers[0] || provider;
@@ -297,7 +483,8 @@ export async function generateIonImageV3RouteResult(
           'X-ION-Image-Provider': mapProviderHeader(activeProvider),
           'X-ION-Fallback-Used': fallbackUsed ? '1' : '0',
           'X-ION-Primary-Provider': mapProviderHeader(primaryProvider),
-          'Access-Control-Expose-Headers': 'X-ION-Image-Model, X-ION-Image-Provider, X-ION-Fallback-Used, X-ION-Primary-Provider',
+          'X-ION-Strip-Retry-Used': stripRetryUsed ? '1' : '0',
+          'Access-Control-Expose-Headers': 'X-ION-Image-Model, X-ION-Image-Provider, X-ION-Fallback-Used, X-ION-Primary-Provider, X-ION-Strip-Retry-Used',
         },
       };
     } catch (error) {
