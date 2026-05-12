@@ -219,6 +219,10 @@ export interface IonGenerationMetadata {
   styleFamily: StyleFamilyId;
   inferredMood: string;
   confidence: number;
+  subjectDomain?: 'portrait' | 'environment' | 'architecture' | 'product' | 'mixed' | 'unknown';
+  primarySubject?: string;
+  subjectPriorityAnchors?: string[];
+  latentIsolationNonce?: string;
   styleProfileId?: KimonoStyleProfileId;
   compositionPreset?: ImageCompositionPreset;
   anatomyStrictMode?: boolean;
@@ -475,6 +479,11 @@ export interface IonImagePromptAnalytics {
   negativePromptLength: number;
   qualityTagCount: number;
   styleTagCount: number;
+  subjectDomain?: 'portrait' | 'environment' | 'architecture' | 'product' | 'mixed' | 'unknown';
+  subjectAnchorCount?: number;
+  semanticAlignmentScore?: number;
+  clipSimilarityEstimate?: number;
+  clipSimilaritySource?: 'heuristic';
 }
 
 export interface IonImageGenerationLog {

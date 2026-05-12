@@ -37,6 +37,19 @@ test('photorealistic environment prompts preserve non-human subject intent', () 
   assert.equal(expanded.tags.includes('wide_shot'), true);
 });
 
+test('orchestrator routes environment prompts through non-portrait path metadata', async () => {
+  const orchestrator = new IonImageOrchestrator();
+  const request = await orchestrator.processRequest({
+    userId: 'usr_test',
+    sessionId: 'sess_test',
+    prompt: 'Photo-realistic desert with architectural ruins, panoramic landscape.',
+  });
+
+  assert.equal(request.ionMetadata.subjectDomain === 'environment' || request.ionMetadata.subjectDomain === 'architecture' || request.ionMetadata.subjectDomain === 'mixed', true);
+  assert.equal(request.ionMetadata.compositionPreset, 'cinematic');
+  assert.equal((request.ionMetadata.subjectPriorityAnchors || []).length > 0, true);
+});
+
 test('prompt assembler adapts quality conventions by checkpoint family', () => {
   const intent = parseIntent('Draw a warrior girl standing on a cliff at sunset.');
   const expanded = expandTags(intent);

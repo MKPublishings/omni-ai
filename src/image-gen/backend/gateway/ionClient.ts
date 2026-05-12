@@ -745,10 +745,16 @@ export class ionClient implements IModelGateway {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.requestTimeoutMs);
     const target = `${this.config.host}${path}`;
+    const headers = new Headers(init.headers);
+    const runNonce = crypto.randomUUID();
+    headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
+    headers.set('Pragma', 'no-cache');
+    headers.set('X-ION-Run-Nonce', runNonce);
 
     try {
       return await fetch(target, {
         ...init,
+        headers,
         signal: controller.signal,
       });
     } catch (error) {

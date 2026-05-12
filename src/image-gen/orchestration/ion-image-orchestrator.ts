@@ -11,6 +11,7 @@ import { assemblePrompt } from './prompt-assembler';
 import { evaluateImagePromptSafety } from './safety-filter';
 import { resolveStyleFamily } from './style-router';
 import { expandTags } from './tag-expander';
+import { buildSubjectPriorityAnchors, classifySubjectDomain } from './subject-domain-classifier';
 import { readImageGenEnvironment } from '../config/env';
 import { buildIonImageExecutionPlan } from './entity-capability-router';
 
@@ -39,6 +40,14 @@ export class IonImageOrchestrator implements IOrchestrator {
   async processRequest(userInput: UserInput): Promise<GenerationRequest> {
     const intent = parseIntent(userInput.prompt);
     const styleFamily = resolveStyleFamily(userInput.styleFamily, intent);
+    const subjectDomain = classifySubjectDomain(intent);
+    const subjectPriorityAnchors = buildSubjectPriorityAnchors(intent, subjectDomain);
+    const inferredCompositionPreset =
+      subjectDomain === 'portrait'
+        ? 'portrait'
+        : subjectDomain === 'environment' || subjectDomain === 'architecture'
+          ? 'cinematic'
+          : undefined;
     const checkpointId = userInput.checkpoint || this.env.defaultCheckpoint;
     const expanded = expandTags(intent);
     const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded, {
@@ -59,7 +68,7 @@ export class IonImageOrchestrator implements IOrchestrator {
     const model = optimizeModelConfig(checkpointId, userInput);
     const parameters = optimizeParameters(styleFamily, checkpointId, {
       ...userInput,
-      compositionPreset: userInput.compositionPreset || prompt.compositionPreset,
+      compositionPreset: userInput.compositionPreset || prompt.compositionPreset || inferredCompositionPreset,
     });
     const executionPlan = buildIonImageExecutionPlan({
       userInput,
@@ -96,8 +105,12 @@ export class IonImageOrchestrator implements IOrchestrator {
         styleFamily,
         inferredMood: expanded.inferredMood,
         confidence: 0.9,
+        subjectDomain,
+        primarySubject: intent.subject,
+        subjectPriorityAnchors,
+        latentIsolationNonce: requestId,
         styleProfileId: prompt.styleProfileId,
-        compositionPreset: userInput.compositionPreset || prompt.compositionPreset || undefined,
+        compositionPreset: userInput.compositionPreset || prompt.compositionPreset || inferredCompositionPreset,
         anatomyStrictMode: Boolean(userInput.anatomyStrictMode),
         kimonoMode: prompt.kimonoMode,
         executionPlan,

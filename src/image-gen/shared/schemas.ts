@@ -104,6 +104,10 @@ export const generationRequestSchema = z.object({
     styleFamily: z.enum(STYLE_FAMILY_IDS),
     inferredMood: z.string().min(1),
     confidence: z.number().min(0).max(1),
+    subjectDomain: z.enum(['portrait', 'environment', 'architecture', 'product', 'mixed', 'unknown']).optional(),
+    primarySubject: z.string().min(1).optional(),
+    subjectPriorityAnchors: z.array(z.string().min(1)).optional(),
+    latentIsolationNonce: z.string().min(1).optional(),
     executionPlan: z
       .object({
         ticketId: z.string().min(1),

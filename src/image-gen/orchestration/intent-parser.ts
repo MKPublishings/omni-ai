@@ -2,13 +2,16 @@ import type { ParsedIntent } from '../shared/types';
 
 const LANDSCAPE_SUBJECT_PATTERNS: Array<{ pattern: RegExp; subject: string }> = [
   { pattern: /\bdesert\b/i, subject: 'desert' },
-  { pattern: /\bmountain(s)?\b/i, subject: 'mountain' },
+  { pattern: /\bmountain(s)?\b|\balpine\b|\bsummit\b/i, subject: 'mountain' },
   { pattern: /\bforest\b|\bwoods\b|\bgrove\b/i, subject: 'forest' },
-  { pattern: /\bcity\b|\bcityscape\b|\burban\b/i, subject: 'cityscape' },
-  { pattern: /\bocean\b|\bsea\b|\bbeach\b/i, subject: 'seascape' },
+  { pattern: /\bcity\b|\bcityscape\b|\burban\b|\bdowntown\b|\bavenue\b/i, subject: 'cityscape' },
+  { pattern: /\bocean\b|\bsea\b|\bbeach\b|\bcoast(al)?\b|\bshore\b/i, subject: 'seascape' },
   { pattern: /\bvalley\b/i, subject: 'valley' },
-  { pattern: /\bcanyon\b/i, subject: 'canyon' },
+  { pattern: /\bcanyon\b|\boverlook\b/i, subject: 'canyon' },
   { pattern: /\bskyline\b/i, subject: 'skyline' },
+  { pattern: /\binterior\b|\broom\b|\boffice\b|\bkitchen\b|\blobby\b/i, subject: 'interior' },
+  { pattern: /\bwatch\b|\bcamera\b|\bbottle\b|\bsneaker\b|\bshoe\b|\bchair\b|\bproduct\b/i, subject: 'product' },
+  { pattern: /\bsandstone\b|\bstrata\b|\bterrain\b|\bplain\b|\briver\b|\bbridge\b|\blake\b|\broad\b/i, subject: 'landscape' },
 ];
 
 function hasLandscapeSignal(prompt: string): boolean {
@@ -38,9 +41,11 @@ function inferSetting(prompt: string): string {
 
 function inferFraming(prompt: string): string {
   const lower = prompt.toLowerCase();
-  if (/(close[-\s]?up|portrait|headshot|face)/.test(lower)) return 'portrait';
+  const explicitlyNotPortrait = /(no close[-\s]?ups?|no portrait|without portrait|no visible faces|no faces|no face|no headshot)/.test(lower);
+
+  if (!explicitlyNotPortrait && /(close[-\s]?up|portrait|headshot|face)/.test(lower)) return 'portrait';
   if (/(full[-\s]?body|standing|head[-\s]?to[-\s]?toe)/.test(lower)) return 'full body';
-  if (/(wide shot|landscape|panorama|vista)/.test(lower)) return 'wide shot';
+  if (/(wide shot|wide composition|landscape|panorama|vista)/.test(lower)) return 'wide shot';
   if (hasLandscapeSignal(lower)) return 'wide shot';
   return 'upper body';
 }
@@ -55,9 +60,12 @@ function inferTimeOfDay(prompt: string): string {
 
 function inferSubject(prompt: string): string {
   const lower = prompt.toLowerCase();
-  if (/(1girl|girl|woman|female|heroine|warrior girl)/.test(lower)) return '1girl';
-  if (/(1boy|boy|man|male|warrior)/.test(lower)) return '1boy';
-  if (/(couple|2 people|two people)/.test(lower)) return '2people';
+  const explicitNoHuman = /(no people|no humans|without people|without humans|no person|no faces|no visible faces)/.test(lower);
+
+  if (/(\b1girl\b|\bgirl\b|\bwoman\b|\bfemale\b|\bheroine\b|warrior girl)/.test(lower)) return '1girl';
+  if (/(\b1boy\b|\bboy\b|\bman\b|\bmale\b|\bwarrior\b)/.test(lower)) return '1boy';
+  if (!explicitNoHuman && /(couple|2 people|two people)/.test(lower)) return '2people';
+  if (!explicitNoHuman && /(\bperson\b|\bpeople\b|\bhuman\b|\bmodel\b|\btraveler\b|\bexplorer\b)/.test(lower)) return 'person';
 
   for (const entry of LANDSCAPE_SUBJECT_PATTERNS) {
     if (entry.pattern.test(lower)) {

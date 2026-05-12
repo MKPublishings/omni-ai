@@ -58,6 +58,8 @@ interface CaseReport {
     recommendations: string[];
   };
   phase5: {
+    clipSimilarityEstimate: number;
+    semanticDrift: boolean;
     passed: boolean;
   };
 }
@@ -97,6 +99,23 @@ function tokenizePrompt(prompt: string): string[] {
     .split(/[^a-z0-9-]+/)
     .map((token) => token.trim())
     .filter(Boolean);
+}
+
+function jaccardSimilarity(left: string, right: string): number {
+  const a = new Set(tokenizePrompt(left));
+  const b = new Set(tokenizePrompt(right));
+  if (a.size === 0 || b.size === 0) {
+    return 0;
+  }
+
+  let overlap = 0;
+  for (const token of a) {
+    if (b.has(token)) {
+      overlap += 1;
+    }
+  }
+
+  return Number((overlap / (a.size + b.size - overlap)).toFixed(3));
 }
 
 function scoreWeights(prompt: string, subjectTerms: string[]): { subjectWeight: number; styleWeight: number } {
@@ -170,6 +189,8 @@ function buildCaseReport(input: {
   const hasHumanTokenInPositive = /\b(1girl|1boy|portrait|headshot|person|human)\b/i.test(promptResult.positive);
   const hasHumanSuppressionInNegative = /no extra people|human|people|characters/i.test(promptResult.negative);
   const portraitPriorTriggered = blueprint.captureMode === 'portrait' || intent.framing === 'portrait';
+  const clipSimilarityEstimate = jaccardSimilarity(testCase.prompt, promptResult.positive);
+  const semanticDrift = clipSimilarityEstimate < 0.15;
 
   const recommendations: string[] = [];
   if (!subjectMatch) {
@@ -183,6 +204,9 @@ function buildCaseReport(input: {
   }
   if (!testCase.allowPortrait && hasHumanTokenInPositive) {
     recommendations.push('Remove human subject expansion tags from positive prompt for non-human scenes.');
+  }
+  if (semanticDrift) {
+    recommendations.push('CLIP similarity estimate below 0.3; increase subject anchors and reduce style-token dominance.');
   }
 
   const passed =
@@ -221,6 +245,8 @@ function buildCaseReport(input: {
       recommendations,
     },
     phase5: {
+      clipSimilarityEstimate,
+      semanticDrift,
       passed,
     },
   };
