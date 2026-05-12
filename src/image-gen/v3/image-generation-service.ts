@@ -29,7 +29,7 @@ const CLOUDFLARE_MAX_STEPS = 20;
 
 function isIonDownError(error: unknown): boolean {
   const name = String((error as { name?: string } | null)?.name || '').trim().toUpperCase();
-  return name === 'E_ion_DOWN';
+  return name === 'E_ION_DOWN';
 }
 
 function isTimeoutError(error: unknown): boolean {
@@ -259,6 +259,8 @@ export async function generateIonImageV3RouteResult(
     try {
       const pipelineResult = await runProvider(provider, input, source);
       activeProvider = provider;
+      const fallbackUsed = index > 0;
+      const primaryProvider = providers[0] || provider;
       const routeResult = await buildIonImageV2RouteResult({
         userId: input.userId,
         mode: String(input.mode || 'simple').trim() || 'simple',
@@ -293,7 +295,9 @@ export async function generateIonImageV3RouteResult(
           ...routeResult.headers,
           'X-ION-Image-Route': 'image-gen-v3',
           'X-ION-Image-Provider': mapProviderHeader(activeProvider),
-          'Access-Control-Expose-Headers': 'X-ION-Image-Model, X-ION-Image-Provider',
+          'X-ION-Fallback-Used': fallbackUsed ? '1' : '0',
+          'X-ION-Primary-Provider': mapProviderHeader(primaryProvider),
+          'Access-Control-Expose-Headers': 'X-ION-Image-Model, X-ION-Image-Provider, X-ION-Fallback-Used, X-ION-Primary-Provider',
         },
       };
     } catch (error) {
