@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         msgDiv.appendChild(actions);
       }
     } else {
+      // Only show text for non-image messages
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble';
       bubble.textContent = content;
