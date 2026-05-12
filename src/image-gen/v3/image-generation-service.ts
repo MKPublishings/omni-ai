@@ -168,6 +168,8 @@ async function runCloudflareAiProvider(
     negative_prompt: parseNegativePrompt(request.prompt.negative, animeLike),
     width: cloudflareDimensions.width,
     height: cloudflareDimensions.height,
+    batch_size: 1,
+    num_images: 1,
     seed: request.parameters.seed,
     num_steps: resolveCloudflareSteps(positivePrompt, request.parameters.steps),
     guidance: resolveCloudflareGuidance(positivePrompt, request.parameters.cfgScale),

@@ -219,8 +219,8 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
         },
         {
           ...(env as unknown as Record<string, unknown>),
-          ION_IMAGE_PROVIDER_PRIMARY: "cloudflare-ai",
-          ION_IMAGE_PROVIDER_FALLBACK: "ion-native",
+          ION_IMAGE_PROVIDER_PRIMARY: "ion",
+          ION_IMAGE_PROVIDER_FALLBACK: "cloudflare-ai",
         },
       );
 

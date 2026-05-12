@@ -74,8 +74,8 @@ function getDefaultSource(): EnvironmentSource {
 
 export function readIonImageV3RuntimeConfig(source: EnvironmentSource = getDefaultSource()): IonImageV3RuntimeConfig {
   const enabled = readBoolean(source, 'ION_IMAGE_PIPELINE_V3', true);
-  const primaryProvider = readProviderKind(source, 'ION_IMAGE_PROVIDER_PRIMARY', 'cloudflare-ai');
-  const fallbackProvider = readOptionalProviderKind(source, 'ION_IMAGE_PROVIDER_FALLBACK') ?? 'ion-native';
+  const primaryProvider = readProviderKind(source, 'ION_IMAGE_PROVIDER_PRIMARY', 'ion');
+  const fallbackProvider = readOptionalProviderKind(source, 'ION_IMAGE_PROVIDER_FALLBACK') ?? 'cloudflare-ai';
 
   return {
     enabled,
