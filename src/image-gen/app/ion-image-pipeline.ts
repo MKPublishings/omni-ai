@@ -3,6 +3,7 @@ import { ionClient } from '../backend/gateway/ionClient';
 import { MockionClient } from '../backend/gateway/MockionClient';
 import { readImageGenEnvironment } from '../config/env';
 import { getImageGenerationError } from '../shared/error-codes';
+import { getCheckpointConfig } from '../config/models.config';
 import type {
   ionWorkflow,
   GenerationRequest,
@@ -23,6 +24,7 @@ type EnvironmentSource = Record<string, unknown>;
 export interface IonImagePipelineInput {
   userId: string;
   prompt: string;
+  mode?: string;
   stylePack?: string;
   width?: number;
   height?: number;
@@ -40,12 +42,112 @@ export interface IonImagePipelineInput {
   compositionPreset?: ImageCompositionPreset;
 }
 
+const HARD_RESET_LANDSCAPE_MODES = new Set([
+  'hard-reset-desert',
+  'hard-reset-landscape',
+  'landscape-debug',
+]);
+
+const HARD_RESET_POSITIVE_PROMPT = 'photorealistic wide desert landscape, sand dunes, clear sky, no people, no buildings, high detail, 8k, natural colors';
+const HARD_RESET_NEGATIVE_PROMPT = 'people, person, face, portrait, building, house, city, architecture, text, logo, watermark';
+const HARD_RESET_CHECKPOINT = 'sd_xl_turbo_1.0_fp16.safetensors';
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.max(min, Math.min(max, parsed));
+}
+
+function isHardResetLandscapeMode(mode: string | undefined): boolean {
+  return HARD_RESET_LANDSCAPE_MODES.has(String(mode || '').trim().toLowerCase());
+}
+
+function buildHardResetLandscapeRequest(input: IonImagePipelineInput): GenerationRequest {
+  const requestId = crypto.randomUUID();
+  const checkpoint = getCheckpointConfig(HARD_RESET_CHECKPOINT);
+  const width = Number.isFinite(input.width) && Number(input.width) > Number(input.height || 0)
+    ? Number(input.width)
+    : 1024;
+  const height = Number.isFinite(input.height) && Number(input.height) > 0 && Number(input.height) < width
+    ? Number(input.height)
+    : 576;
+  const seed = Number.isFinite(input.seed)
+    ? Math.max(1, Math.floor(Number(input.seed)))
+    : Math.floor(Math.random() * 2_147_483_647) || 1;
+
+  return {
+    requestId,
+    userId: input.userId,
+    sessionId: `img-${crypto.randomUUID()}`,
+    priority: 'interactive',
+    timestamp: new Date().toISOString(),
+    prompt: {
+      positive: HARD_RESET_POSITIVE_PROMPT,
+      negative: HARD_RESET_NEGATIVE_PROMPT,
+      qualityTags: ['high detail', 'natural colors', 'photorealistic'],
+      styleTags: ['landscape photography'],
+    },
+    model: {
+      checkpoint: checkpoint.id,
+      predictionType: checkpoint.predictionType,
+      vae: checkpoint.vae,
+      loras: [],
+      clipSkip: checkpoint.clipSkip,
+    },
+    parameters: {
+      width,
+      height,
+      steps: Math.round(clampNumber(input.steps, 24, 20, 30)),
+      cfgScale: clampNumber(input.cfgScale, 6, 5, 7),
+      cfgRescale: Number(checkpoint.recommendedCfgRescale || 0),
+      denoise: 1,
+      sampler: 'dpmpp_2m_karras',
+      scheduler: 'karras',
+      seed,
+      batchSize: 1,
+    },
+    postProcessing: {
+      upscale: {
+        enabled: false,
+        model: '4x-UltraSharp',
+        scale: 2,
+      },
+      format: 'png',
+      quality: 95,
+      embedMetadata: true,
+      generateThumbnail: true,
+    },
+    ionMetadata: {
+      reasoningChain: ['intent_parse', 'profile_check', 'param_optimize', 'workflow_build', 'submit'],
+      originalUserPrompt: input.prompt,
+      styleFamily: 'semi_realistic_2_5d',
+      inferredMood: 'neutral',
+      confidence: 1,
+      subjectDomain: 'environment',
+      primarySubject: 'desert landscape',
+      subjectPriorityAnchors: ['desert landscape', 'sand dunes', 'clear sky', 'no people', 'no buildings'],
+      latentIsolationNonce: requestId,
+      compositionPreset: 'cinematic',
+      anatomyStrictMode: true,
+      kimonoMode: false,
+    },
+  };
+}
+
 export async function buildIonImageGenerationRequest(
   input: IonImagePipelineInput,
   source?: EnvironmentSource,
 ): Promise<GenerationRequest> {
   const envSource = getEnvironmentSource(source);
   const env = readImageGenEnvironment(envSource);
+
+  if (isHardResetLandscapeMode(input.mode)) {
+    return buildHardResetLandscapeRequest(input);
+  }
+
   const orchestrator = new IonImageOrchestrator(envSource);
 
   return orchestrator.processRequest({
