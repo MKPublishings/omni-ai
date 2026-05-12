@@ -32,6 +32,18 @@ export async function normalizeGeneratedImageOutput(raw: unknown): Promise<Norma
     throw new Error('Empty image response');
   }
 
+  if (Array.isArray(raw)) {
+    for (let index = raw.length - 1; index >= 0; index -= 1) {
+      try {
+        return await normalizeGeneratedImageOutput(raw[index]);
+      } catch {
+        // Continue scanning from newest/final candidate to oldest.
+      }
+    }
+
+    throw new Error('Unsupported image response format');
+  }
+
   if (raw instanceof ArrayBuffer) {
     return { bytes: new Uint8Array(raw), mimeType: 'image/png' };
   }
@@ -46,12 +58,37 @@ export async function normalizeGeneratedImageOutput(raw: unknown): Promise<Norma
     return { bytes: new Uint8Array(buffer), mimeType: 'image/png' };
   }
 
+  const imageNode = (raw as { image?: unknown })?.image;
+  const resultBytes = (raw as { result?: { bytes?: unknown } })?.result?.bytes;
+  const resultImageNode = (raw as { result?: { image?: unknown } })?.result?.image;
+  const dataNodes = (raw as { data?: Array<{ b64_json?: unknown }> })?.data;
+  const outputNodes = (raw as { output?: Array<{ image?: unknown }> })?.output;
+
+  const dataCandidate = Array.isArray(dataNodes) && dataNodes.length > 0
+    ? dataNodes[dataNodes.length - 1]?.b64_json
+    : undefined;
+  const outputCandidate = Array.isArray(outputNodes) && outputNodes.length > 0
+    ? outputNodes[outputNodes.length - 1]?.image
+    : undefined;
+
   const candidate =
-    (raw as { image?: unknown })?.image ??
-    (raw as { result?: { bytes?: unknown; image?: unknown } })?.result?.bytes ??
-    (raw as { result?: { image?: unknown } })?.result?.image ??
-    (raw as { data?: Array<{ b64_json?: unknown }> })?.data?.[0]?.b64_json ??
-    (raw as { output?: Array<{ image?: unknown }> })?.output?.[0]?.image;
+    (Array.isArray(imageNode) && imageNode.length > 0 ? imageNode[imageNode.length - 1] : imageNode) ??
+    (Array.isArray(resultBytes) && resultBytes.length > 0 ? resultBytes[resultBytes.length - 1] : resultBytes) ??
+    (Array.isArray(resultImageNode) && resultImageNode.length > 0 ? resultImageNode[resultImageNode.length - 1] : resultImageNode) ??
+    dataCandidate ??
+    outputCandidate;
+
+  if (Array.isArray(candidate)) {
+    for (let index = candidate.length - 1; index >= 0; index -= 1) {
+      try {
+        return await normalizeGeneratedImageOutput(candidate[index]);
+      } catch {
+        // Continue scanning from newest/final candidate to oldest.
+      }
+    }
+
+    throw new Error('Unsupported image response format');
+  }
 
   if (candidate instanceof ArrayBuffer) {
     return { bytes: new Uint8Array(candidate), mimeType: 'image/png' };
