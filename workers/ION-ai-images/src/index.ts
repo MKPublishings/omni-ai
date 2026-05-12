@@ -221,6 +221,8 @@ async function handleGenerateV2(request: Request, env: Env): Promise<Response> {
           ...(env as unknown as Record<string, unknown>),
           ION_IMAGE_PROVIDER_PRIMARY: "ion",
           ION_IMAGE_PROVIDER_FALLBACK: "cloudflare-ai",
+          ION_IMAGE_FALLBACK_ON_ION_DOWN: "1",
+          ION_IMAGE_FALLBACK_ON_TIMEOUT: "1",
         },
       );
 
