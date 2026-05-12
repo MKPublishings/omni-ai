@@ -278,6 +278,11 @@ function normalizeStatus(value: string | undefined): JobStatus['status'] {
   return 'processing';
 }
 
+function parseOutputNodeId(key: string): number {
+  const parsed = Number(String(key || '').trim());
+  return Number.isFinite(parsed) ? parsed : -1;
+}
+
 function isBypassableRead403(message: string, path: string): boolean {
   const normalized = String(message || '').toLowerCase();
   return normalized.includes('(403)') && normalized.includes(path.toLowerCase());
@@ -406,21 +411,38 @@ export class ionClient implements IModelGateway {
       throw new Error(`ion history for ${promptId} did not include outputs.`);
     }
 
-    for (const output of Object.values(historyEntry.outputs)) {
-      const image = output.images?.[0];
-      if (!image?.filename) {
-        continue;
+    const candidateImages = Object.entries(historyEntry.outputs)
+      .flatMap(([nodeId, output]) => {
+        const images = Array.isArray(output.images) ? output.images : [];
+        return images.map((image, imageIndex) => ({
+          nodeId,
+          nodeRank: parseOutputNodeId(nodeId),
+          imageIndex,
+          image,
+        }));
+      })
+      .filter((entry) => Boolean(entry.image?.filename));
+
+    candidateImages.sort((left, right) => {
+      if (left.nodeRank !== right.nodeRank) {
+        return left.nodeRank - right.nodeRank;
       }
 
+      return left.imageIndex - right.imageIndex;
+    });
+
+    const finalImage = candidateImages[candidateImages.length - 1]?.image;
+
+    if (finalImage?.filename) {
       const bytes = await this.fetchBytes(this.config.viewPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          filename: image.filename,
-          subfolder: image.subfolder || '',
-          type: image.type || 'output',
+          filename: finalImage.filename,
+          subfolder: finalImage.subfolder || '',
+          type: finalImage.type || 'output',
         }),
       });
 

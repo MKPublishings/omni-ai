@@ -75,6 +75,11 @@ export class IonImageOrchestrator implements IOrchestrator {
       ...userInput,
       compositionPreset: userInput.compositionPreset || prompt.compositionPreset || inferredCompositionPreset,
     });
+
+    if (isPhotorealLandscapePrompt) {
+      parameters.batchSize = 1;
+    }
+
     const executionPlan = buildIonImageExecutionPlan({
       userInput,
       styleFamily,

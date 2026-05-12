@@ -109,6 +109,12 @@ export function buildionWorkflow(request: GenerationRequest): ionWorkflow {
   const runtimeCheckpoint = normalizeRuntimeCheckpointName(
     requestedCheckpoint || checkpoint.runtimeCheckpoint || checkpoint.id || DEFAULT_SDXL_MODEL,
   );
+  const singlePassRequested = env.forceSinglePass
+    || request.ionMetadata.subjectDomain === 'environment'
+    || request.ionMetadata.subjectDomain === 'architecture';
+  const effectiveBatchSize = singlePassRequested
+    ? 1
+    : Math.max(1, Math.floor(Number(request.parameters.batchSize) || 1));
 
   // Build using Universal Base Graph template
   const workflow = buildUniversalBaseGraph({
@@ -117,7 +123,7 @@ export function buildionWorkflow(request: GenerationRequest): ionWorkflow {
     negativePrompt: effectiveNegativeText,
     width: request.parameters.width,
     height: request.parameters.height,
-    batchSize: request.parameters.batchSize,
+    batchSize: effectiveBatchSize,
     seed: isolatedSeed,
     steps: request.parameters.steps,
     cfgScale: request.parameters.cfgScale,
@@ -138,6 +144,11 @@ export function buildionWorkflow(request: GenerationRequest): ionWorkflow {
       primary_subject: request.ionMetadata.primarySubject || '',
       subject_anchors: (request.ionMetadata.subjectPriorityAnchors || []).join(', '),
       render_path: request.ionMetadata.subjectDomain === 'portrait' ? 'portrait' : 'environment',
+      render_mode: singlePassRequested ? 'single_pass' : 'multi_pass',
+      latent_merge: false,
+      output_frame: 'final',
+      cache_clear: env.cacheClearPerRender,
+      effective_batch_size: effectiveBatchSize,
       latent_isolation_nonce: latentIsolationNonce,
       isolated_seed: isolatedSeed,
       original_prompt: request.ionMetadata.originalUserPrompt,
