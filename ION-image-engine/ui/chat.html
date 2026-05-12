@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ION Image Engine Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="chat-container">
+    <h1>ION Image Engine Chat</h1>
+    <div id="chatWindow" class="chat-window"></div>
+    <form id="chatForm" class="chat-form">
+      <input type="text" id="chatInput" placeholder="Type your prompt..." required autocomplete="off" />
+      <input type="text" id="profileInput" value="photoreal" style="display:none;" />
+      <input type="number" id="seedInput" value="0" style="display:none;" />
+      <button type="submit">Send</button>
+    </form>
+    <div id="popup" class="popup hidden">
+      <span id="closePopup">&times;</span>
+      <img id="popupImage" src="" alt="Popup Image" />
+    </div>
+  </div>
+  <script src="chat.js"></script>
+</body>
+</html>
