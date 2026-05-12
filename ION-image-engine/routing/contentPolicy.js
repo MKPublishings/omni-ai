@@ -1,132 +1,56 @@
-const ILLEGAL_TERMS = [
-    "child sexual abuse",
-    "csam",
-    "sexual content with minor",
-    "fake passport",
-    "counterfeit id",
-    "credit card fraud",
-    "bank fraud",
-    "wire fraud",
-    "drug trafficking",
-    "build a bomb",
-    "explosive recipe",
-    "terror attack",
-    "ransomware",
-    "steal password",
-    "bypass police"
+
+const { normalizePromptLanguage, containsAnimeKeywords } = require("../core/promptNormalizer");
+
+// List of illegal/explicit prompt patterns (expand as needed)
+const ILLEGAL_PATTERNS = [
+	/child sexual abuse/i,
+	/underage\s*(teen|child|minor)/i,
+	/non-consensual/i,
+	/rape|assault|molest/i
 ];
 
-const ADULT_TERMS = [
-    "nude",
-    "nudity",
-    "explicit nudity",
-    "erotic",
-    "porn",
-    "sexual content",
-    "sex scene",
-    "adult content",
-    "fetish"
+const EXPLICIT_PATTERNS = [
+	/erotic|nude|sex|sexual|porn|explicit|nsfw/i
 ];
 
-const ANIME_ART_TERMS = [
-    "anime",
-    "manga",
-    "cel-shaded",
-    "cel shaded",
-    "illustration",
-    "character design"
-];
-
-function normalizeText(value) {
-    return String(value || "").toLowerCase().trim();
+function isIllegalPrompt(prompt) {
+	return ILLEGAL_PATTERNS.some((re) => re.test(prompt));
 }
 
-function escapeRegExp(value) {
-    return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function isExplicitPrompt(prompt) {
+	return EXPLICIT_PATTERNS.some((re) => re.test(prompt));
 }
 
-function buildTermPattern(term) {
-    const tokens = String(term || "")
-        .trim()
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((token) => escapeRegExp(token));
-    if (!tokens.length) {
-        return /$^/;
-    }
-    return new RegExp(`\\b${tokens.join("\\s+")}\\b`, "i");
-}
-
-function detectMatches(text, terms) {
-    return terms.filter((term) => buildTermPattern(term).test(text));
-}
-
-function isMinor(options = {}) {
-    if (options.isMinor === true) return true;
-    const age = Number(options.userAge);
-    if (Number.isFinite(age)) {
-        return age < 18;
-    }
-    return false;
-}
-
+/**
+ * Evaluates a prompt for content policy compliance.
+ * @param {string} prompt - The user prompt to check.
+ * @param {object} options - { userAge: number }
+ * @returns {{ allowed: boolean, reason: string }}
+ */
 function evaluateContentPolicy(prompt, options = {}) {
-    const text = normalizeText(prompt);
-    const illegalMatches = detectMatches(text, ILLEGAL_TERMS);
-    const adultMatches = detectMatches(text, ADULT_TERMS);
-    const animeContextMatches = detectMatches(text, ANIME_ART_TERMS);
-    const animeContextSafe = animeContextMatches.length > 0 && illegalMatches.length === 0 && adultMatches.length === 0;
-    const minor = isMinor(options);
+	const userAge = Number(options.userAge) || 0;
+	const norm = normalizePromptLanguage(prompt);
+	const cleaned = norm.cleanedPrompt || "";
 
-    if (illegalMatches.length > 0) {
-        return {
-            allowed: false,
-            reason: "illegal-content",
-            advice: "I can’t help generate illegal content. Please choose a legal and safe request.",
-            matchedTerms: illegalMatches,
-            moderation: "hard-block",
-            flags: {
-                illegal: true,
-                adult: adultMatches.length > 0,
-                minor
-            }
-        };
-    }
+	// 1. Block illegal content
+	if (isIllegalPrompt(cleaned)) {
+		return { allowed: false, reason: "illegal-content" };
+	}
 
-    if (adultMatches.length > 0 && minor) {
-        return {
-            allowed: false,
-            reason: "minor-adult-content",
-            advice: "I can’t help create adult content for users under 18. Please choose a non-adult prompt.",
-            matchedTerms: adultMatches,
-            moderation: "hard-block",
-            flags: {
-                illegal: false,
-                adult: true,
-                minor: true
-            }
-        };
-    }
+	// 2. Block explicit content for minors
+	if (userAge < 18 && isExplicitPrompt(cleaned)) {
+		return { allowed: false, reason: "minor-adult-content" };
+	}
 
-    return {
-        allowed: true,
-        reason: animeContextSafe ? "contextual-anime-safe" : "allowed",
-        advice: adultMatches.length > 0 && !minor
-            ? "Adult request detected and allowed for an adult user."
-            : animeContextSafe
-                ? "Anime art prompt detected and treated as safe creative content under contextual moderation."
-            : "",
-        matchedTerms: adultMatches,
-        moderation: animeContextSafe ? "contextual" : "standard",
-        flags: {
-            illegal: false,
-            adult: adultMatches.length > 0,
-            minor
-        }
-    };
+	// 3. Contextual moderation for anime (example: always allow safe anime prompts)
+	if (containsAnimeKeywords(cleaned)) {
+		return { allowed: true, reason: "contextual-anime-safe" };
+	}
+
+	// 4. Allow all other prompts by default
+	return { allowed: true, reason: "allowed" };
 }
 
 module.exports = {
-    evaluateContentPolicy
+	evaluateContentPolicy
 };
