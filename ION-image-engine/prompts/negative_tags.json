@@ -197,6 +197,23 @@
     "no burn-in text",
     "no overlay text",
     "no filter text"
+  ],
+
+  "suppress_sci_fi_mech": [
+    "no cybernetics",
+    "no mechanical parts",
+    "no robots",
+    "no androids",
+    "no mecha",
+    "no cyberpunk",
+    "no neon lights",
+    "no glowing green",
+    "no glowing pink",
+    "no wires",
+    "no headphones",
+    "no tech augmentations",
+    "no sci-fi armor",
+    "no excessive technology"
   ]
 }
 
