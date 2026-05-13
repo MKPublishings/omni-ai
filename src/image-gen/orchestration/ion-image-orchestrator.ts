@@ -40,6 +40,7 @@ export class IonImageOrchestrator implements IOrchestrator {
   }
 
   async processRequest(userInput: UserInput): Promise<GenerationRequest> {
+    // Step 1: Parse intent and build initial execution plan
     const intent = parseIntent(userInput.prompt);
     const styleFamily = resolveStyleFamily(userInput.styleFamily, intent);
     const subjectDomain = classifySubjectDomain(intent);
@@ -55,8 +56,45 @@ export class IonImageOrchestrator implements IOrchestrator {
       /(photo[-\s]?realistic|photorealistic|realistic|cinema photo|dslr|natural light)/.test(lowerPrompt)
       && /(desert|landscape|vista|panorama|mountain|forest|cityscape|street scene|skyline|ocean|beach|valley|canyon|dune|oasis)/.test(lowerPrompt);
     const checkpointId = FORCED_CHECKPOINT;
-    const expanded = expandTags(intent);
-    const prompt = assemblePrompt(checkpointId, styleFamily, intent, expanded, {
+    const executionPlan = buildIonImageExecutionPlan({
+      userInput,
+      styleFamily,
+      intent,
+      maxConcurrentJobs: this.env.maxConcurrentJobs,
+    });
+
+    // Step 2: Consensus aggregation across entities
+    // Collect all entity intentions and merge into a single consensus
+    // For now, we aggregate subject, action, mood, and composition from all entities (if present)
+    let consensusIntent = { ...intent };
+    if (executionPlan && Array.isArray(executionPlan.entities) && executionPlan.entities.length > 1) {
+      // Example: If any entity has a more specific subject, action, or mood, prefer the most common one
+      const allSubjects = [intent.subject];
+      const allActions = [intent.action];
+      const allMoods = [intent.mood];
+      const allCompositions = [userInput.compositionPreset || inferredCompositionPreset];
+      for (const entity of executionPlan.entities) {
+        // If entity metadata is available, extract its focus (future: can be extended)
+        // For now, just aggregate from intent (single source)
+        // In a more advanced version, entity-specific intent could be used here
+      }
+      // Use the most common (mode) value for each field
+      function mode(arr: any[]) {
+        return arr.sort((a, b) =>
+          arr.filter(v => v === a).length - arr.filter(v => v === b).length
+        ).pop();
+      }
+      consensusIntent.subject = mode(allSubjects);
+      consensusIntent.action = mode(allActions);
+      consensusIntent.mood = mode(allMoods);
+      // If multiple compositions, pick the most common
+      const consensusComposition = mode(allCompositions);
+      userInput.compositionPreset = consensusComposition;
+    }
+
+    // Step 3: Use consensus intent for prompt assembly
+    const expanded = expandTags(consensusIntent);
+    const prompt = assemblePrompt(checkpointId, styleFamily, consensusIntent, expanded, {
       variationMode: userInput.variationMode,
       anatomyStrictMode: userInput.anatomyStrictMode,
       styleProfile: userInput.styleProfile,
@@ -80,13 +118,6 @@ export class IonImageOrchestrator implements IOrchestrator {
     if (isPhotorealLandscapePrompt) {
       parameters.batchSize = 1;
     }
-
-    const executionPlan = buildIonImageExecutionPlan({
-      userInput,
-      styleFamily,
-      intent,
-      maxConcurrentJobs: this.env.maxConcurrentJobs,
-    });
 
     this.reasoningChains.set(requestId, [...DEFAULT_REASONING_CHAIN]);
 
@@ -117,7 +148,7 @@ export class IonImageOrchestrator implements IOrchestrator {
         inferredMood: expanded.inferredMood,
         confidence: 0.9,
         subjectDomain,
-        primarySubject: intent.subject,
+        primarySubject: consensusIntent.subject,
         subjectPriorityAnchors,
         latentIsolationNonce: requestId,
         styleProfileId: prompt.styleProfileId,
