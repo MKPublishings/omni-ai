@@ -82,7 +82,7 @@ export class IonImageOrchestrator implements IOrchestrator {
       // Map each entity intent to a constitutional Point and feature (for demo, use P2-operational/workflow-orchestration)
       const mergedPayloads = executionPlan.entities.map((entity, idx) => ({
         ...intent,
-        entityId: entity.id || idx,
+        entityId: entity.agentId || idx,
         // Extend here for entity-specific intent if available
       }));
 

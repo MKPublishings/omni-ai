@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/bootstrap/run-dev.ts",
+    "build": "tsc -p tsconfig.json --outDir dist",
     "validate": "tsx scripts/validate-hierarchy.ts",
     "audit": "tsx scripts/audit-compliance.ts",
     "ui:refresh": "tsx scripts/render-command-center.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "tsx --test tests/*.test.ts"
   },
+  "main": "dist/src/index.js",
   "devDependencies": {
     "@types/node": "^22.13.4",
     "tsx": "^4.21.0",
