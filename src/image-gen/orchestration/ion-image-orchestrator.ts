@@ -39,6 +39,13 @@ export class IonImageOrchestrator implements IOrchestrator {
     this.env = readImageGenEnvironment(source);
   }
 
+  // Helper: get the most common value in an array
+  private mode<T>(arr: T[]): T {
+    return arr.sort((a, b) =>
+      arr.filter(v => v === a).length - arr.filter(v => v === b).length
+    ).pop() as T;
+  }
+
   async processRequest(userInput: UserInput): Promise<GenerationRequest> {
     // Step 1: Parse intent and build initial execution plan
     const intent = parseIntent(userInput.prompt);
@@ -79,16 +86,11 @@ export class IonImageOrchestrator implements IOrchestrator {
         // In a more advanced version, entity-specific intent could be used here
       }
       // Use the most common (mode) value for each field
-      function mode(arr: any[]) {
-        return arr.sort((a, b) =>
-          arr.filter(v => v === a).length - arr.filter(v => v === b).length
-        ).pop();
-      }
-      consensusIntent.subject = mode(allSubjects);
-      consensusIntent.action = mode(allActions);
-      consensusIntent.mood = mode(allMoods);
+      consensusIntent.subject = this.mode(allSubjects);
+      consensusIntent.action = this.mode(allActions);
+      consensusIntent.mood = this.mode(allMoods);
       // If multiple compositions, pick the most common
-      const consensusComposition = mode(allCompositions);
+      const consensusComposition = this.mode(allCompositions);
       userInput.compositionPreset = consensusComposition;
     }
 
