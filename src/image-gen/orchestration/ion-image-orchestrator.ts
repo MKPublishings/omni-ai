@@ -1,5 +1,5 @@
 import { getImageGenerationError } from '../shared/error-codes';
-import { hierarchyEngine, registerAllPoints } from '../../../ionirix-hierarchy/src/index.js';
+import { hierarchyEngine, registerAllPoints } from 'ionirix-eight-point-hierarchy';
 import type {
   GenerationRequest,
   IOrchestrator,
