@@ -1,4 +1,5 @@
 import { getImageGenerationError } from '../shared/error-codes';
+import { hierarchyEngine, registerAllPoints } from '../../../ionirix-hierarchy/src/index.js';
 import type {
   GenerationRequest,
   IOrchestrator,
@@ -70,26 +71,40 @@ export class IonImageOrchestrator implements IOrchestrator {
       maxConcurrentJobs: this.env.maxConcurrentJobs,
     });
 
-    // Step 2: Consensus aggregation across entities
-    // Collect all entity intentions and merge into a single consensus
-    // For now, we aggregate subject, action, mood, and composition from all entities (if present)
+    // Step 2: Consensus aggregation across entities using Ionirix Eight-Point Hierarchy
+    // Ensure hierarchy engine is initialized and all points are registered
+    if (!hierarchyEngine.getRegistry().getAll().length) {
+      await registerAllPoints();
+    }
+
     let consensusIntent = { ...intent };
     if (executionPlan && Array.isArray(executionPlan.entities) && executionPlan.entities.length > 1) {
-      // Example: If any entity has a more specific subject, action, or mood, prefer the most common one
-      const allSubjects = [intent.subject];
-      const allActions = [intent.action];
-      const allMoods = [intent.mood];
+      // Map each entity intent to a constitutional Point and feature (for demo, use P2-operational/workflow-orchestration)
+      const mergedPayloads = executionPlan.entities.map((entity, idx) => ({
+        ...intent,
+        entityId: entity.id || idx,
+        // Extend here for entity-specific intent if available
+      }));
+
+      // Emit a hierarchy event for each entity intent (simulate operational workflow merge)
+      const mergeResults = await Promise.all(
+        mergedPayloads.map(payload =>
+          hierarchyEngine.execute({
+            pointId: 'P2',
+            featureId: 'workflow-orchestration',
+            payload
+          })
+        )
+      );
+
+      // Merge results into a unified consensus intent (for now, take the most common subject/action/mood)
+      const allSubjects = mergeResults.map(r => r.result.artifact).filter(Boolean);
+      const allActions = mergedPayloads.map(p => p.action).filter(Boolean);
+      const allMoods = mergedPayloads.map(p => p.mood).filter(Boolean);
       const allCompositions = [userInput.compositionPreset || inferredCompositionPreset];
-      for (const entity of executionPlan.entities) {
-        // If entity metadata is available, extract its focus (future: can be extended)
-        // For now, just aggregate from intent (single source)
-        // In a more advanced version, entity-specific intent could be used here
-      }
-      // Use the most common (mode) value for each field
       consensusIntent.subject = this.mode(allSubjects);
       consensusIntent.action = this.mode(allActions);
       consensusIntent.mood = this.mode(allMoods);
-      // If multiple compositions, pick the most common
       const consensusComposition = this.mode(allCompositions);
       userInput.compositionPreset = consensusComposition;
     }
