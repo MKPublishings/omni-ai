@@ -11,18 +11,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "types": ["node"],
     "paths": {
-      "@/engines/*": ["src/engines/*"],
-      "@/api/*": ["src/api/*"],
-      "@/tools/*": ["src/tools/*"],
-      "@/types/*": ["src/types/*"],
-      "@/schemas/*": ["src/schemas/*"],
-      "@/middleware/*": ["src/middleware/*"],
-      "@/*": ["src/*"]
+      "@/engines/*": ["./src/engines/*"],
+      "@/api/*": ["./src/api/*"],
+      "@/tools/*": ["./src/tools/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/schemas/*": ["./src/schemas/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/*": ["./src/*"],
+      "*": ["./*"]
     }
   },
   "include": ["src/**/*", "worker-configuration.d.ts"]
 }
-
