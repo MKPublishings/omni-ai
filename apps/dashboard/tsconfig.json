@@ -1,33 +1,26 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es6"
-    ],
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
     "downlevelIteration": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "image-gen/*": ["./src/image-gen/*"],
+      "backend/*": ["./src/backend/*"],
+      "lib/*": ["./src/lib/*"]
     },
     "allowImportingTsExtensions": true
   },
@@ -38,10 +31,5 @@
     ".next/types/**/*.ts",
     "out/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "e2e",
-    "playwright.config.ts",
-    "test-results"
-  ]
+  "exclude": ["node_modules", "e2e", "playwright.config.ts", "test-results"]
 }
