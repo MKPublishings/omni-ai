@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { POST } from '../app/api/image/route'
+import { POST } from '../app/api/route'
 
 test('dashboard /api/image route forwards body to the upstream worker when direct relay is disabled', async () => {
   const previousApiUrl = process.env.NEXT_PUBLIC_ION_API_URL

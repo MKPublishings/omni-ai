@@ -12,7 +12,7 @@ import {
   buildSdxlEnhancementMetadata,
   type EnhancedPromptResult,
   type SdxlParameterOptimization,
-} from '../../../src/image-gen/integration/sdxl-ion-enhancer.ts';
+} from '../../image-gen/integration/sdxl-ion-enhancer.ts';
 
 test('SDXL ION Enhancement - Prompt Building', async (t) => {
   await t.test('builds enhanced prompt for anime style', () => {
