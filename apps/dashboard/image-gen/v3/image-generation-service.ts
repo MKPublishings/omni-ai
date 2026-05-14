@@ -1,7 +1,7 @@
 import { executeIonImagePipeline, type IonImagePipelineInput } from '../app/ion-image-pipeline';
 import { buildIonImageGenerationRequest } from '../app/ion-image-pipeline';
 import { buildIonImageV2RouteResult } from '../app/ion-image-v2-route-service';
-import { normalizeGeneratedImageOutput } from '../../shared/image-output';
+import { normalizeGeneratedImageOutput } from '../shared/image-output';
 import type { IonImagePipelineResult } from '../shared/types';
 import type { IonImageV2RouteResponse } from '../shared/types';
 import { readIonImageV3RuntimeConfig, type IonImageProviderKind } from './runtime-config';
