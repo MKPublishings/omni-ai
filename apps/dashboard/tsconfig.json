@@ -19,8 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["../src/*"],
-      "image-gen/*": ["../src/image-gen/*"],
-      "lib/*": ["../src/lib/*"]
+      "components/*": ["../src/components/*"],
+      "lib/*": ["../src/lib/*"],
+      "image-gen/*": ["../src/image-gen/*"]
     },
 
     "allowImportingTsExtensions": true
