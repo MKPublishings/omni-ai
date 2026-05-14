@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
+    ,
+    "prebuild": "npm run build --workspace ionirix-eight-point-hierarchy || npm --prefix ../../packages/ionirix-hierarchy run build"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.16.2",
