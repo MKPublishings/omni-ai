@@ -1,9 +1,9 @@
-// apps/dashboard/src/lib/ion-image-v3.ts
+// apps/dashboard/image-gen/v3/ion-image-v3.ts
 
-import { imageGenerationService } from '../../../src/image-gen/v3/image-generation-service';
-import { buildionWorkflow } from '../../../src/image-gen/app/ion-image-pipeline';
-import { ionImageV2RouteService } from '../../../src/image-gen/app/ion-image-v2-route-service';
-import { ImageGenTypes } from '../../../src/image-gen/shared/types';
+import { imageGenerationService } from './image-generation-service';
+import { buildionWorkflow } from '../app/ion-image-pipeline';
+import { ionImageV2RouteService } from '../app/ion-image-v2-route-service';
+import { ImageGenTypes } from '../shared/types';
 
 export interface IonImageV3Request {
   prompt: string;
