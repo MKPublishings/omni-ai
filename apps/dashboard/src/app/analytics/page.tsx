@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import DashboardShell from '@/components/dashboard/DashboardShell'
-import GlassCard from '@/components/cards/GlassCard'
-import StatCard from '@/components/stats/StatCard'
-import Table from '@/components/table/Table'
+import DashboardShell from '@/components/DashboardShell'
+import GlassCard from '@/components/GlassCard'
+import StatCard from '@/components/StatCard'
+import Table from '@/components/Table'
 import { getDashboardData } from '@/lib/dashboard'
 import { DashboardSystemEvent, DashboardSystemStatus, fetchSystemEvents, fetchSystemStatus, LIVE_REFRESH_INTERVAL_MS } from '@/lib/dashboard'
 
