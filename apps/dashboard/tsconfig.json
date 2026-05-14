@@ -37,7 +37,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "out/types/**/*.ts"
-,     "../../src/image-gen/v3/image-generation-service.ts"  ],
+  ],
   "exclude": [
     "node_modules",
     "e2e",

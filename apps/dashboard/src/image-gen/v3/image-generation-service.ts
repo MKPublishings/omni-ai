@@ -1,6 +1,6 @@
 // src/image-gen/v3/image-generation-service.ts
 
-import { ImageGenTypes } from '../../../apps/dashboard/src/image-gen/shared/types';
+import { ImageGenTypes } from '../shared/types';
 
 /**
  * imageGenerationService (v3)
