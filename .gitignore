@@ -206,3 +206,15 @@ __pycache__/
 .venv/
 venv/
 .vercel
+# Ensure the gateway directory exists inside the dashboard app
+mkdir -p apps/dashboard/src/backend/gateway
+
+# Move or copy your gateway files into the correct location
+cp src/backend/gateway/workflow-builder.ts apps/dashboard/src/backend/gateway/
+cp src/backend/gateway/ionClient.ts apps/dashboard/src/backend/gateway/
+cp src/backend/gateway/MockionClient.ts apps/dashboard/src/backend/gateway/
+
+# (Optional but recommended)
+# Verify they are tracked by Git
+git add apps/dashboard/src/backend/gateway
+git commit -m "Fix: include gateway modules inside dashboard for Next.js build"
