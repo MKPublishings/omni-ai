@@ -18,13 +18,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["../src/*"],
-      "components/*": ["../src/components/*"],
-      "lib/*": ["../src/lib/*"],
-      "image-gen/*": ["../src/image-gen/*"]
-    },
-
-    "allowImportingTsExtensions": true
+      "@/*": ["./src/*"]
+    }
   },
 
   "include": [
@@ -34,10 +29,5 @@
     ".next/types/**/*.ts"
   ],
 
-  "exclude": [
-    "node_modules",
-    "e2e",
-    "playwright.config.ts",
-    "test-results"
-  ]
+  "exclude": ["node_modules"]
 }
