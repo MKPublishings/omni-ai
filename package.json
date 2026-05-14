@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "wrangler dev",
+    "postinstall": "node ./scripts/postinstall-copy-hierarchy.js",
     "hierarchy:dev": "npm --prefix ./ionirix-hierarchy run dev",
     "hierarchy:validate": "npm --prefix ./ionirix-hierarchy run validate",
     "hierarchy:audit": "npm --prefix ./ionirix-hierarchy run audit",
