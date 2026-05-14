@@ -23,3 +23,6 @@ import type {
 import { IonImageOrchestrator } from '../../../apps/dashboard/src/image-gen/orchestration/ion-image-orchestrator';
 
 // ...rest of the file content will be filled in next step
+export function buildionWorkflow(config: any) {
+  // your workflow logic here
+}
