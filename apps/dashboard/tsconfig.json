@@ -18,7 +18,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "image-gen/*": ["./image-gen/*"]
     }
   },
 

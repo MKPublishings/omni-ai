@@ -1,19 +1,13 @@
 import { getImageGenerationError } from '../shared/error-codes';
-import { hierarchyEngine, registerAllPoints } from 'ionirix-eight-point-hierarchy';
-import type {
-  GenerationRequest,
-  IOrchestrator,
-  ReasoningStepId,
-  UserInput,
-} from '../shared/types';
+import type { GenerationRequest, IOrchestrator, ReasoningStepId, UserInput } from '../shared/types';
+import { readImageGenEnvironment } from '../config/env';
 import { parseIntent } from './intent-parser';
-import { optimizeModelConfig, optimizeParameters } from './parameter-optimizer';
+import { resolveStyleFamily } from './style-router';
+import { classifySubjectDomain, buildSubjectPriorityAnchors } from './subject-domain-classifier';
+import { expandTags } from './tag-expander';
 import { assemblePrompt } from './prompt-assembler';
 import { evaluateImagePromptSafety } from './safety-filter';
-import { resolveStyleFamily } from './style-router';
-import { expandTags } from './tag-expander';
-import { buildSubjectPriorityAnchors, classifySubjectDomain } from './subject-domain-classifier';
-import { readImageGenEnvironment } from '../config/env';
+import { optimizeModelConfig, optimizeParameters } from './parameter-optimizer';
 import { buildIonImageExecutionPlan } from './entity-capability-router';
 
 const DEFAULT_REASONING_CHAIN: ReasoningStepId[] = [
@@ -71,12 +65,7 @@ export class IonImageOrchestrator implements IOrchestrator {
       maxConcurrentJobs: this.env.maxConcurrentJobs,
     });
 
-    // Step 2: Consensus aggregation across entities using Ionirix Eight-Point Hierarchy
-    // Ensure hierarchy engine is initialized and all points are registered
-    if (!hierarchyEngine.getRegistry().getAll().length) {
-      await registerAllPoints();
-    }
-
+    // Step 2: Consensus aggregation across entities
     let consensusIntent = { ...intent };
     if (executionPlan && Array.isArray(executionPlan.entities) && executionPlan.entities.length > 1) {
       // Map each entity intent to a constitutional Point and feature (for demo, use P2-operational/workflow-orchestration)
@@ -86,19 +75,8 @@ export class IonImageOrchestrator implements IOrchestrator {
         // Extend here for entity-specific intent if available
       }));
 
-      // Emit a hierarchy event for each entity intent (simulate operational workflow merge)
-      const mergeResults = await Promise.all(
-        mergedPayloads.map(payload =>
-          hierarchyEngine.execute({
-            pointId: 'P2',
-            featureId: 'workflow-orchestration',
-            payload
-          })
-        )
-      );
-
       // Merge results into a unified consensus intent (for now, take the most common subject/action/mood)
-      const allSubjects = mergeResults.map(r => r.result.artifact).filter(Boolean);
+      const allSubjects = mergedPayloads.map(p => p.subject).filter(Boolean);
       const allActions = mergedPayloads.map(p => p.action).filter(Boolean);
       const allMoods = mergedPayloads.map(p => p.mood).filter(Boolean);
       const allCompositions = [userInput.compositionPreset || inferredCompositionPreset];
