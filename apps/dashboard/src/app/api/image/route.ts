@@ -1,5 +1,5 @@
 import { buildionWorkflow } from 'image-gen/app/ion-image-pipeline';
-import { ionImageV2RouteService } from 'image-gen/app/ion-image-v3-route-service';
+import { ionImageV2RouteService } from 'image-gen/app/ion-image-v2-route-service';
 import { imageGenerationService } from 'image-gen/v3/image-generation-service';
 import { ImageGenTypes } from 'image-gen/shared/types';
 import { NextRequest, NextResponse } from 'next/server';
