@@ -1,55 +1,52 @@
-// ion-image-pipeline.ts
-// Single, clean, production‑safe export used by ion-image-v3 and route.ts
+// src/image-gen/app/ion-image-pipeline.ts
 
-import {
-  buildWorkflow as dashboardBuildWorkflow,
-} from '../../../apps/dashboard/src/image-gen/backend/gateway/workflow-builder';
-
-import { ionClient } from '../../../apps/dashboard/src/image-gen/backend/gateway/ionClient';
-import { MockionClient } from '../../../apps/dashboard/src/image-gen/backend/gateway/MockionClient';
-
-import { readImageGenEnvironment } from '../../../apps/dashboard/src/image-gen/config/env';
-import { getImageGenerationError } from '../../../apps/dashboard/src/image-gen/shared/error-codes';
-import { getCheckpointConfig } from '../../../apps/dashboard/src/image-gen/config/models.config';
-
-import type {
-  ionWorkflow,
-  GenerationRequest,
-  ImageCompositionPreset,
-  ImageVariationMode,
-  ImageSampler,
-  ImageScheduler,
-  IModelGateway,
-  ImageJobStatus,
-  IonImagePipelineResult,
-  KimonoStyleProfileId,
-  StyleFamilyId,
-} from '../../../apps/dashboard/src/image-gen/shared/types';
-
-import { IonImageOrchestrator } from '../../../apps/dashboard/src/image-gen/orchestration/ion-image-orchestrator';
+import { ImageGenTypes } from '../shared/types'
+import { getCheckpointConfig } from '../config/models.config'
+import { getImageGenerationError } from '../shared/error-codes'
+import { readImageGenEnvironment } from '../config/env'
+import { IonImageOrchestrator } from '../orchestration/ion-image-orchestrator'
+import { ionClient, mockIonClient } from '../backend/gateway/clients'
 
 /**
- * This is the ONLY exported function.
- * It wraps the dashboard workflow builder so the dashboard can import:
- *   import { buildionWorkflow } from 'image-gen/app/ion-image-pipeline'
+ * Build a workflow configuration for the Ion Image Pipeline.
+ * This is the ONLY exported function from this file.
  */
-export function buildionWorkflow(config: {
-  request: GenerationRequest;
-  userId: string;
-  modelGateway?: IModelGateway;
-}): ionWorkflow {
-  const env = readImageGenEnvironment();
+export function buildIonWorkflow(config: {
+  prompt: string
+  negativePrompt?: string
+  width: number
+  height: number
+  steps: number
+  sampler: ImageGenTypes.ImageSampler
+  scheduler: ImageGenTypes.ImageScheduler
+  model: string
+  seed?: number
+  userId?: string
+  stylePack?: string
+}) {
+  const env = readImageGenEnvironment()
+  const client = env.useMockClient ? mockIonClient() : ionClient()
 
-  const gateway =
-    config.modelGateway ??
-    (env.useMockGateway ? new MockionClient() : new ionClient());
+  const checkpoint = getCheckpointConfig(config.model)
+  if (!checkpoint) {
+    throw getImageGenerationError('UNKNOWN_MODEL')
+  }
 
-  return dashboardBuildWorkflow({
-    request: config.request,
+  const orchestrator = new IonImageOrchestrator({
+    client,
+    checkpoint,
+    width: config.width,
+    height: config.height,
+    steps: config.steps,
+    sampler: config.sampler,
+    scheduler: config.scheduler,
+    seed: config.seed ?? Math.floor(Math.random() * 999999999),
+    stylePack: config.stylePack,
     userId: config.userId,
-    gateway,
-    getCheckpointConfig,
-    getImageGenerationError,
-    IonImageOrchestrator,
-  });
+  })
+
+  return orchestrator.build({
+    prompt: config.prompt,
+    negativePrompt: config.negativePrompt ?? '',
+  })
 }
