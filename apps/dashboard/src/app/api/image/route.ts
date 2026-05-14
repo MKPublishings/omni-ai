@@ -4,6 +4,7 @@ import { imageGenerationService } from 'image-gen/v3/image-generation-service';
 import { ImageGenTypes } from 'image-gen/shared/types';
 import { NextRequest, NextResponse } from 'next/server';
 import { ionImageV3 } from '@/lib/ion-image-v3';
+import { generateIonImageV3RouteResult } from '@/lib/generate-ion-image-v3-route-result';
 
 
 const IMAGE_SAMPLERS: ImageGenTypes.ImageSampler[] = ['ddim', 'euler', 'euler-ancestral', 'heun', 'lms', 'dpm2', 'dpm2-ancestral', 'dpMPP2MSampler', 'dpMPP2MSampler2', 'ddpm'];
