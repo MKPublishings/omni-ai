@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const repoRoot = path.resolve(__dirname, '..');
 
+
 // Symlink src/image-gen into apps/dashboard/node_modules for Next.js resolution
 const imageGenSrc = path.resolve(repoRoot, 'src', 'image-gen');
 const imageGenDest = path.resolve(repoRoot, 'apps', 'dashboard', 'node_modules', 'image-gen');
@@ -16,6 +17,25 @@ try {
 } catch (err) {
   console.warn('Symlink of src/image-gen failed:', err.message);
 }
+
+// Copy the entire built ionirix-eight-point-hierarchy package into apps/dashboard/node_modules for Next.js resolution
+const hierarchySrc = path.resolve(repoRoot, 'packages', 'ionirix-hierarchy');
+const hierarchyDestDashboard = path.resolve(repoRoot, 'apps', 'dashboard', 'node_modules', 'ionirix-eight-point-hierarchy');
+function copyEntireDir(srcDir, destDir) {
+  if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+  for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+    const srcPath = path.join(srcDir, entry.name);
+    const destPath = path.join(destDir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules') continue; // skip nested node_modules
+      copyEntireDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+copyEntireDir(hierarchySrc, hierarchyDestDashboard);
+console.log('Copied entire ionirix-eight-point-hierarchy package to apps/dashboard/node_modules for Next.js resolution.');
 const src = path.resolve(repoRoot, 'packages', 'ionirix-hierarchy', 'dist');
 const destRoot = path.resolve(repoRoot, 'node_modules', 'ionirix-eight-point-hierarchy');
 const destDashboard = path.resolve(repoRoot, 'apps', 'dashboard', 'node_modules', 'ionirix-eight-point-hierarchy');
