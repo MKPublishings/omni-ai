@@ -1,6 +1,6 @@
-Ion‑AI
-
 <img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/1afe4748-f4b5-4e90-85e2-743c7f000872" />
+
+Ion‑AI
 
 A Modular Intelligence Engine for Creative Systems, Simulation, and Founder‑Grade Reasoning
 Ion‑AI is the core intelligence substrate of the Ionirix ecosystem — a high‑signal, modular, and extensible AI engine built for creators, engineers, and system‑architects who need more than a model wrapper. It is a cognition framework, a prompt‑native orchestration layer, and a creative‑technical fusion engine designed to power everything from image‑generation pipelines to distributed coordination systems.
