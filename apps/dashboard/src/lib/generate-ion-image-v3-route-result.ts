@@ -1,6 +1,6 @@
 // apps/dashboard/src/lib/generate-ion-image-v3-route-result.ts
 
-import { ionImageV3 } from '../../../../image-gen/v3/ion-image-v3';
+import { ionImageV3 } from '../../image-gen/v3/ion-image-v3';
 
 export async function generateIonImageV3RouteResult({
   userId,
