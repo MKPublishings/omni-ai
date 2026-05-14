@@ -1,40 +1,60 @@
 // apps/dashboard/image-gen/v3/ion-image-v3.ts
 
-import { imageGenerationService } from './image-generation-service';
-import { buildionWorkflow } from '../app/ion-image-pipeline';
-import { ionImageV2RouteService } from '../app/ion-image-v2-route-service';
-import { ImageGenTypes } from '../shared/types';
+import { buildionWorkflow } from "../app/ion-image-pipeline";
+import type {
+  IonImageV3Request,
+  IonImageV3Result,
+  IonImageMetadata,
+} from "../../src/lib/generate-ion-image-v3-route-result";
 
-export interface IonImageV3Request {
+/**
+ * Core interface for V3 image generation.
+ */
+export interface IonImageV3Input {
   prompt: string;
-  aspectRatio?: string;
-  workflow?: ImageGenTypes.WorkflowConfig;
-  metadata?: Record<string, any>;
+  negativePrompt?: string;
+  width?: number;
+  height?: number;
+  steps?: number;
+  seed?: number | null;
+  model?: string;
+  metadata?: IonImageMetadata;
 }
 
-export interface IonImageV3Response {
-  imageUrl: string;
-  workflowUsed: string;
-  metadata?: Record<string, any>;
+/**
+ * Output returned by the V3 pipeline.
+ */
+export interface IonImageV3Output {
+  imageBase64: string;
+  seed: number;
+  metadata: IonImageMetadata;
 }
 
-export async function ionImageV3(
-  req: IonImageV3Request
-): Promise<IonImageV3Response> {
+/**
+ * Main V3 image generation function.
+ * This is the only function the orchestrator and route.ts import.
+ */
+export async function runIonImageV3(
+  input: IonImageV3Input
+): Promise<IonImageV3Output> {
   const workflow = buildionWorkflow({
-    prompt: req.prompt,
-    aspectRatio: req.aspectRatio ?? '1:1',
-    ...req.workflow,
+    prompt: input.prompt,
+    negativePrompt: input.negativePrompt ?? "",
+    width: input.width ?? 1024,
+    height: input.height ?? 1024,
+    steps: input.steps ?? 28,
+    seed: input.seed ?? null,
+    model: input.model ?? "ion-v3",
+    metadata: input.metadata ?? {},
   });
 
-  const result = await imageGenerationService.generate({
-    workflow,
-    metadata: req.metadata ?? {},
-  });
+  const result: IonImageV3Result = await workflow.run();
 
   return {
-    imageUrl: result.imageUrl,
-    workflowUsed: workflow.name,
+    imageBase64: result.imageBase64,
+    seed: result.seed,
     metadata: result.metadata,
   };
 }
+
+export type { IonImageV3Request, IonImageV3Result };
