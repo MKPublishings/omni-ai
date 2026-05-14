@@ -1,8 +1,9 @@
 import { buildionWorkflow } from 'image-gen/app/ion-image-pipeline';
-import { ionImageV2RouteService } from 'image-gen/app/ion-image-v2-route-service';
+import { ionImageV2RouteService } from 'image-gen/app/ion-image-v3-route-service';
 import { imageGenerationService } from 'image-gen/v3/image-generation-service';
 import { ImageGenTypes } from 'image-gen/shared/types';
 import { NextRequest, NextResponse } from 'next/server';
+import { generateIonImageV3RouteResult } from '@/lib/ion-image-v3';
 
 const IMAGE_SAMPLERS: ImageGenTypes.ImageSampler[] = ['ddim', 'euler', 'euler-ancestral', 'heun', 'lms', 'dpm2', 'dpm2-ancestral', 'dpMPP2MSampler', 'dpMPP2MSampler2', 'ddpm'];
 const IMAGE_SCHEDULERS: ImageGenTypes.ImageScheduler[] = ['normal', 'karras'];
@@ -141,7 +142,7 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
       })
     }
 
-    const pipelineResult = await executeIonImagePipeline(
+    const pipelineResult = await generateIonImageV3RouteResult(
       {
         userId,
         prompt,
@@ -160,7 +161,7 @@ async function buildDirectRelayResponse(body: Record<string, unknown>) {
       process.env as Record<string, unknown>,
     )
 
-    const responsePayload = await buildIonImageV2RouteResult({
+    const responsePayload = await generateIonImageV3RouteResult({
       userId,
       mode: String(body.mode || 'simple').trim() || 'simple',
       quality: typeof body.quality === 'string' ? body.quality : undefined,
