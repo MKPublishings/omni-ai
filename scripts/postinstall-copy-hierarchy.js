@@ -1,8 +1,21 @@
+
 // This script copies the built ionirix-eight-point-hierarchy package to node_modules for CI/CD environments that do not support workspace linking.
 const fs = require('fs');
 const path = require('path');
-
 const repoRoot = path.resolve(__dirname, '..');
+
+// Symlink src/image-gen into apps/dashboard/node_modules for Next.js resolution
+const imageGenSrc = path.resolve(repoRoot, 'src', 'image-gen');
+const imageGenDest = path.resolve(repoRoot, 'apps', 'dashboard', 'node_modules', 'image-gen');
+try {
+  if (fs.existsSync(imageGenDest)) {
+    fs.rmSync(imageGenDest, { recursive: true, force: true });
+  }
+  fs.symlinkSync(imageGenSrc, imageGenDest, 'junction');
+  console.log('Symlinked src/image-gen into apps/dashboard/node_modules/image-gen');
+} catch (err) {
+  console.warn('Symlink of src/image-gen failed:', err.message);
+}
 const src = path.resolve(repoRoot, 'packages', 'ionirix-hierarchy', 'dist');
 const destRoot = path.resolve(repoRoot, 'node_modules', 'ionirix-eight-point-hierarchy');
 const destDashboard = path.resolve(repoRoot, 'apps', 'dashboard', 'node_modules', 'ionirix-eight-point-hierarchy');
