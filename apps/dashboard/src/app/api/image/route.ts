@@ -1,15 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { buildionWorkflow } from 'image-gen/app/ion-image-pipeline';
+import { ionImageV2RouteService } from 'image-gen/app/ion-image-v2-route-service';
+import { imageGenerationService } from 'image-gen/v3/image-generation-service';
+import { ImageGenTypes } from 'image-gen/shared/types';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { executeIonImagePipeline } from '../../../../../../src/image-gen/app/ion-image-pipeline'
-import { buildIonImageV2RouteResult } from '../../../../../../src/image-gen/app/ion-image-v2-route-service'
-import { generateIonImageV3RouteResult } from '../../../../../../src/image-gen/v3/image-generation-service'
-import {
-  IMAGE_SAMPLERS,
-  IMAGE_SCHEDULERS,
-  type ImageSampler,
-  type ImageScheduler,
-} from '../../../../../../src/image-gen/shared/types'
-
+const IMAGE_SAMPLERS: ImageGenTypes.ImageSampler[] = ['ddim', 'euler', 'euler-ancestral', 'heun', 'lms', 'dpm2', 'dpm2-ancestral', 'dpMPP2MSampler', 'dpMPP2MSampler2', 'ddpm'];
+const IMAGE_SCHEDULERS: ImageGenTypes.ImageScheduler[] = ['normal', 'karras'];
 export const runtime = 'nodejs'
 
 const MOCK_IMAGE_DATA_URL = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiMwYjE2MjAiLz48c3RvcCBvZmZzZXQ9IjAuNSIgc3RvcC1jb2xvcj0iIzEzM2I1ZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA4YmY5YiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSIyMDQiIGN5PSIyMjAiIHI9IjEyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA4KSIvPjxjaXJjbGUgY3g9Ijc5MCIgY3k9IjMwMCIgcj0iMTgwIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDYpIi8+PHBhdGggZD0iTTIwMCA3MjBjMTEwLTE2MCAyMjAtMjQwIDMzMC0yNDBzMjIwIDgwIDMzMCAyNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjE4KSIgc3Ryb2tlLXdpZHRoPSIzMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHRleHQgeD0iMTEwIiB5PSI4MjAiIGZpbGw9IiNlNmYyZmYiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBUaW1lcyBOZXcgUm9tYW4sIHNlcmlmIiBmb250LXNpemU9IjY0IjBmb250LXdlaWdodD0iNjAwIj5JT04gSW1hZ2U8L3RleHQ+PHRleHQgeD0iMTEwIiB5PSI4ODAiIGZpbGw9InJnYmEoMjMwLDI0MiwyNTUsMC43MikiIGZvbnQtZmFtaWx5PSJHZWFnaWEsIFRpbWVzIE5ldyBSb21hbiwgc2VyaWYiIGZvbnQtc2l6ZT0iMzAiPkRhc2hib2FyZCBsb2NhbCBpbWFnZSBmYWxsYmFjayBpcyBvbmxpbmUuPC90ZXh0Pjwvc3ZnPg=='
@@ -31,7 +27,7 @@ function normalizeAgeTier(value: unknown): 'adult' | 'minor' {
   return String(value || '').trim().toLowerCase() === 'minor' ? 'minor' : 'adult'
 }
 
-function parseSampler(value: unknown): ImageSampler | undefined {
+function parseSampler(value: unknown): ImageGenTypes.ImageSampler | undefined {
   if (typeof value !== 'string') {
     return undefined
   }
@@ -42,11 +38,11 @@ function parseSampler(value: unknown): ImageSampler | undefined {
   }
 
   return (IMAGE_SAMPLERS as readonly string[]).includes(normalized)
-    ? (normalized as ImageSampler)
+    ? (normalized as ImageGenTypes.ImageSampler)
     : undefined
 }
 
-function parseScheduler(value: unknown): ImageScheduler | undefined {
+function parseScheduler(value: unknown): ImageGenTypes.ImageScheduler | undefined {
   if (typeof value !== 'string') {
     return undefined
   }
@@ -57,7 +53,7 @@ function parseScheduler(value: unknown): ImageScheduler | undefined {
   }
 
   return (IMAGE_SCHEDULERS as readonly string[]).includes(normalized)
-    ? (normalized as ImageScheduler)
+    ? (normalized as ImageGenTypes.ImageScheduler)
     : undefined
 }
 
