@@ -21,8 +21,8 @@
       "@/schemas/*": ["src/schemas/*"],
       "@/middleware/*": ["src/middleware/*"],
       "@/*": ["src/*"]
-      }
-    },
+    }
+  },
   "include": ["src/**/*", "worker-configuration.d.ts"]
 }
 
