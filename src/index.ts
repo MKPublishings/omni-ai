@@ -72,6 +72,7 @@ import { buildIonImageV2RouteResult } from "./image-gen/app/ion-image-v2-route-s
 import { generateIonImageV3RouteResult } from "./image-gen/v3/image-generation-service";
 import type { AgentProfile, Department, Priority } from "./mind/contracts/taskShardContracts";
 import blackwellAgentProfilesConfig from "../config/blackwell-agent-profiles.json";
+import { link } from "fs/promises";
 export { IONSession } from "./memory/session";
 
 export interface Env {
@@ -5113,3 +5114,4 @@ type GenerateTaskShardRequestBody = {
   decay_at?: string;
   created_by?: string;
 };
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
